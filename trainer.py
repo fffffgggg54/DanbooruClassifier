@@ -104,6 +104,7 @@ FLAGS['trainSetSize'] = 0.8
 
 FLAGS['batch_size'] = 128
 FLAGS['num_workers'] = 4
+if (hasTPU == True): FLAGS['num_workers'] = 4
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 
 # training config
@@ -623,7 +624,7 @@ def main():
     if (hasTPU == False):
         trainCycle(image_datasets, model)
     elif (hasTPU == True):
-        xmp.spawn(_mp_fn, args=(FLAGS, image_datasets, model), nprocs=FLAGS['num_cores'], start_method='fork')
+        xmp.spawn(_mp_fn, args=(FLAGS, image_datasets, model), nprocs=FLAGS['num_tpu_cores'], start_method='fork')
     
 
 
