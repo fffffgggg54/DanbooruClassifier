@@ -5,10 +5,12 @@
 # put -r "C:\Users\fredo\OneDrive - Lake Washington School District\Code\ML\danbooru2021\classification\" /Users/fredoguan/Code/ML/danbooru2021/classification
 # python "/Users/fredoguan/Code/ML/danbooru2021/classification/trainer.py"
 
+# python /home/fredo_guan/Code/DanbooruClassifier/trainer.py
+
 import os
 hasTPU = False
 
-if "COLAB_TPU_ADDR" in os.environ: hasTPU = True
+if os.path.isfile("/home/fredo_guan/.hasTPU"): hasTPU = True
 
 import torch
 import torch.cuda.amp
