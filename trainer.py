@@ -5,7 +5,10 @@
 # put -r "C:\Users\fredo\OneDrive - Lake Washington School District\Code\ML\danbooru2021\classification\" /Users/fredoguan/Code/ML/danbooru2021/classification
 # python "/Users/fredoguan/Code/ML/danbooru2021/classification/trainer.py"
 
+import os
 hasTPU = False
+
+if "COLAB_TPU_ADDR" in os.environ: hasTPU = True
 
 import torch
 import torch.cuda.amp
@@ -35,6 +38,16 @@ import handleMultiLabel as MLCSL
 import MLDecoderHead
 import cvt
 from tresnet import TResnetS, TResnetM, TResnetL, TResnetXL
+
+if hasTPU == True:
+    import torch_xla
+    import torch_xla.core.xla_model as xm
+    import torch_xla.debug.metrics as met
+    import torch_xla.distributed.parallel_loader as pl
+    import torch_xla.distributed.xla_multiprocessing as xmp
+    import torch_xla.utils.utils as xu
+    import torch_xla.utils.gcsfs
+    SERIAL_EXEC = xmp.MpSerialExecutor()
 
 
 
@@ -576,7 +589,11 @@ def trainCycle(image_datasets, model):
     #time_elapsed = time.time() - startTime
     #print(f'Training complete in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
 
-
+def _mp_fn(rank, flags, image_datasets, model):
+    global FLAGS
+    FLAGS = flags
+    torch.set_default_tensor_type('torch.FloatTensor')
+    trainCycle(image_datasets, model)
 
 #@profile
 def main():
@@ -590,6 +607,7 @@ def main():
     model = modelSetup(classes)
     
     if (hasTPU == False): trainCycle(image_datasets, model)
+    else if (hasTPU == True): xmp.spawn(_mp_fn, args=(FLAGS, image_datasets, model), nprocs=FLAGS['num_cores'], start_method='fork')
     
 
 
