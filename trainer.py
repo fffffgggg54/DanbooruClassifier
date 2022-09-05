@@ -37,7 +37,7 @@ import danbooruDataset
 import handleMultiLabel as MLCSL
 import MLDecoderHead
 import cvt
-from tresnet import TResnetS, TResnetM, TResnetL, TResnetXL
+#from tresnet import TResnetS, TResnetM, TResnetL, TResnetXL
 
 if hasTPU == True:
     import torch_xla
