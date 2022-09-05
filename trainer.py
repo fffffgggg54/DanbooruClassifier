@@ -346,8 +346,7 @@ def getData():
         transforms.ToTensor(),
         #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ]),
-        cacheRoot = FLAGS['cacheRoot'],
-        hasTPU = hasTPU
+        cacheRoot = FLAGS['cacheRoot']
         )
     global classes
     classes = myDataset.classes
