@@ -19,7 +19,7 @@ import _pickle as cPickle
 import os
 hasTPU = False
 
-if "COLAB_TPU_ADDR" in os.environ: hasTPU = True
+if os.path.isfile("/home/fredo_guan/.hasTPU"): hasTPU = True
 
 
 if hasTPU == True:
