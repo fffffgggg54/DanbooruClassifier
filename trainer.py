@@ -48,6 +48,16 @@ if hasTPU == True:
     import torch_xla.utils.utils as xu
     import torch_xla.utils.gcsfs
     SERIAL_EXEC = xmp.MpSerialExecutor()
+    from google.cloud import storage
+
+    client = storage.Client.create_anonymous_client()
+    bucket = client.get_bucket('danbooru2021_dataset_zzz')
+    import bz2
+    import pickle
+    import io
+    #import _pickle as cPickle
+    #import cPickle
+    import time
 
 
 
@@ -64,6 +74,7 @@ FLAGS = {}
 
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
 if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
+if (hasTPU == True): FLAGS['rootPath'] = "/home/fredo_guan/danbooru2021/"
 FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + "original/"
 FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
@@ -73,6 +84,7 @@ FLAGS['postDFPickle'] = FLAGS['postMetaRoot'] + "postData.pkl"
 FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
+
 
 # post importer config
 
@@ -332,7 +344,8 @@ def getData():
         transforms.ToTensor(),
         #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ]),
-        cacheRoot = FLAGS['cacheRoot']
+        cacheRoot = FLAGS['cacheRoot'],
+        hasTPU = hasTPU
         )
     global classes
     classes = myDataset.classes
@@ -600,7 +613,7 @@ def main():
     #gc.set_debug(gc.DEBUG_LEAK)
     # load json files
 
-    
+
     
     image_datasets = getData()
     
