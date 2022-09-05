@@ -606,8 +606,10 @@ def main():
     
     model = modelSetup(classes)
     
-    if (hasTPU == False): trainCycle(image_datasets, model)
-    else if (hasTPU == True): xmp.spawn(_mp_fn, args=(FLAGS, image_datasets, model), nprocs=FLAGS['num_cores'], start_method='fork')
+    if (hasTPU == False):
+        trainCycle(image_datasets, model)
+    elif (hasTPU == True):
+        xmp.spawn(_mp_fn, args=(FLAGS, image_datasets, model), nprocs=FLAGS['num_cores'], start_method='fork')
     
 
 
