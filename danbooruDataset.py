@@ -252,13 +252,14 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
         postID = int(postData.loc["id"])
         
         if hasTPU == True:
-            try:
-                cachePath = "https://storage.googleapis.com/danbooru2021_dataset_zzz/cache/" + str(index % 1000).zfill(4) + "/" + str(index) + ".pkl.bz2"
-                #blob = bucket.blob(cachePath)
-                response = requests.get(cachePath)
-                file_obj = response.content
-                pkl = bz2.open(io.BytesIO(file_obj))
-                image, postTags, _ = pickle.load(pkl)
+            #try:
+            cachePath = "https://storage.googleapis.com/danbooru2021_dataset_zzz/cache/" + str(index % 1000).zfill(4) + "/" + str(index) + ".pkl.bz2"
+            #blob = bucket.blob(cachePath)
+            response = requests.get(cachePath)
+            file_obj = response.content
+            pkl = bz2.open(io.BytesIO(file_obj))
+            image, postTags, _ = pickle.load(pkl)
+            '''
             except:
             
                 postTagList = set(postData.loc["tag_string"]).intersection(set(self.tagList.to_list()))
@@ -301,7 +302,7 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
                 image = transforms.functional.pil_to_tensor(image)
                 
                 postTags = torch.Tensor(postTags)
-        
+            '''
         else:
         
             try:
