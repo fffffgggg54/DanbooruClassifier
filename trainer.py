@@ -381,11 +381,7 @@ def modelSetup(classes):
     
     return model
 
-def trainCycle():
-    
-    image_datasets = getData()
-    
-    model = modelSetup(classes)
+def trainCycle(image_datasets, model):
     startTime = time.time()
     if(hasTPU == False):
     
@@ -611,11 +607,11 @@ def trainCycle():
     #time_elapsed = time.time() - startTime
     #print(f'Training complete in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
 
-def _mp_fn(rank, flags):
+def _mp_fn(rank, flags, image_datasets, model):
     global FLAGS
     FLAGS = flags
     torch.set_default_tensor_type('torch.FloatTensor')
-    trainCycle()
+    trainCycle(image_datasets, model)
 
 #@profile
 def main():
@@ -623,12 +619,15 @@ def main():
     # load json files
 
 
-
+    
+    image_datasets = getData()
+    
+    model = modelSetup(classes)
     
     if (hasTPU == False):
-        trainCycle()
+        trainCycle(image_datasets, model)
     elif (hasTPU == True):
-        xmp.spawn(_mp_fn, args=(FLAGS,), nprocs=FLAGS['num_tpu_cores'], start_method='fork')
+        xmp.spawn(_mp_fn, args=(FLAGS, image_datasets, model,), nprocs=FLAGS['num_tpu_cores'], start_method='fork')
     
 
 
