@@ -455,7 +455,7 @@ def trainCycle(image_datasets, model):
     
     startTime = time.time()
     cycleTime = time.time()
-    stepsPerPrintout = 50
+    stepsPerPrintout = FLAGS['stepsPerPrintout']
     torch.backends.cudnn.benchmark = True
     
     for epoch in range(FLAGS['num_epochs']):
@@ -543,13 +543,14 @@ def trainCycle(image_datasets, model):
                         AP_regular.append(accuracy)
                         #AP_ema.append(MLCSL.mAP(targets, preds_ema))
                         AccuracyRunning.append(MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2)))
-                
-                if i % FLAGS['stepsPerPrintout'] == 0:
+                print(device)
+                if i % stepsPerPrintout == 0:
+                    print(device)
                     if (phase == 'train'):
                         targets_batch = tags.cpu().detach().numpy()
                         preds_regular_batch = preds.cpu().detach().numpy()
                         accuracy = MLCSL.mAP(targets_batch, preds_regular_batch)
-                    
+                    print(device)
                     imagesPerSecond = (FLAGS['batch_size']*stepsPerPrintout)/(time.time() - cycleTime)
                     cycleTime = time.time()
 
@@ -576,10 +577,8 @@ def trainCycle(image_datasets, model):
 
                 if phase == 'train':
                     scheduler.step()
-                #prof.step()
-            #if phase == 'train':
-                #expLRScheduler.step()
-                #gc.collect()
+                
+                print(device)
                     
                     
         torch.set_printoptions(profile="full")
