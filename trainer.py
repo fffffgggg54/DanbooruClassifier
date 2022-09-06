@@ -382,6 +382,7 @@ def modelSetup(classes):
     return model
 
 def trainCycle(image_datasets, model):
+    print("starting training")
     startTime = time.time()
     if(hasTPU == False):
     
