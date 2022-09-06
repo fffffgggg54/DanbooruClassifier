@@ -547,8 +547,9 @@ def trainCycle(image_datasets, model):
                 if i % stepsPerPrintout == 0:
                     print(device)
                     if (phase == 'train'):
-                        targets_batch = tags.numpy()
-                        preds_regular_batch = preds.numpy()
+                        targets_batch = tags.cpu().detach().numpy()
+                        preds_regular_batch = preds.cpu().detach().numpy()
+                        print(device)
                         accuracy = MLCSL.mAP(targets_batch, preds_regular_batch)
                     print(device)
                     imagesPerSecond = (FLAGS['batch_size']*stepsPerPrintout)/(time.time() - cycleTime)
