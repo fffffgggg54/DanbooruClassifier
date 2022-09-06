@@ -273,7 +273,7 @@ def getData():
     
     
     
-    
+    '''
     try:
         print("attempting to read pickled post metadata file at " + FLAGS['tagDFPickle'])
         tagData = pd.read_pickle(FLAGS['tagDFPickle'])
@@ -305,9 +305,9 @@ def getData():
     
     tagData.to_pickle(FLAGS['tagDFPickleFiltered'])
     postData.to_pickle(FLAGS['postDFPickleFiltered'])
-
-    #tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
-    #postData = pd.read_pickle(FLAGS['postDFPickleFiltered'])
+    '''
+    tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
+    postData = pd.read_pickle(FLAGS['postDFPickleFiltered'])
     #print(postData.info())
     
 
