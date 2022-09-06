@@ -530,6 +530,7 @@ def trainCycle(image_datasets, model):
                             loss.backward()
                         if (hasTPU == True):                # tpu case
                             xm.optimizer_step(optimizer)
+                            tracker.add(FLAGS['batch_size'])
                         else:                               # apple gpu/cpu case
                             optimizer.step()
                         
