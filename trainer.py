@@ -544,7 +544,7 @@ def trainCycle(image_datasets, model):
                         #AP_ema.append(MLCSL.mAP(targets, preds_ema))
                         AccuracyRunning.append(MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2)))
                 
-                if i % stepsPerPrintout == 0:
+                if i % FLAGS['stepsPerPrintout'] == 0:
                     if (phase == 'train'):
                         targets_batch = tags.cpu().detach().numpy()
                         preds_regular_batch = preds.cpu().detach().numpy()
@@ -561,6 +561,7 @@ def trainCycle(image_datasets, model):
                     #    if tagVal.item() != 0:
                     #        currPostTags.append((tagNames[tagIndex], tagVal.item()))
                     print('[%d/%d][%d/%d]\tLoss: %.4f\tAccuracy: %.4f\tImages/Second: %.4f' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), loss, accuracy, imagesPerSecond))
+                    if (hasTPU == True): print("Rate={:.2f} GlobalRate={:.2f}".format(tracker.rate(), tracker.global_rate()))
                     #print(id[0])
                     #print(currPostTags)
                     #print(sorted(batchTagAccuracy, key = lambda x: x[1], reverse=True))
