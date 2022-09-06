@@ -495,7 +495,7 @@ def trainCycle(image_datasets, model):
                 
 
                 imageBatch = images.to(device, non_blocking=True)
-                tagBatch = tags.to(device,, non_blocking=True)
+                tagBatch = tags.to(device, non_blocking=True)
                 
                 model.zero_grad()
                 with torch.set_grad_enabled(phase == 'train'):
