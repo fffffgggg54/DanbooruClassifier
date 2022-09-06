@@ -258,7 +258,7 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
             response = requests.get(cachePath)
             file_obj = response.content
             pkl = bz2.open(io.BytesIO(file_obj))
-            image, postTags, _ = pickle.load(pkl)
+            image, postTags, _ = cPickle.load(pkl)
             '''
             except:
             
