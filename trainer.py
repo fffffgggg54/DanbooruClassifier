@@ -105,13 +105,13 @@ FLAGS['trainSetSize'] = 0.8
 
 FLAGS['batch_size'] = 128
 FLAGS['num_workers'] = 4
-if (hasTPU == True): FLAGS['num_workers'] = 4
+if (hasTPU == True): FLAGS['num_workers'] = 12
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 
 # training config
 
 FLAGS['learning_rate'] = 3e-4
-FLAGS['num_epochs'] = 10
+FLAGS['num_epochs'] = 100
 FLAGS['weight_decay'] = 1e-4
 
 # device config
@@ -365,7 +365,7 @@ def getData():
 def modelSetup(classes):
     #model = cvt.get_cls_model(len(classes), config=modelConfCust1)
     #model = cvt.get_cls_model(len(classes), config=modelConf13)
-    
+    model = cvt.get_cls_model(len(classes), config=modelConf21)
     
     
     #model = models.resnet152(weights=models.ResNet152_Weights.DEFAULT)
@@ -373,8 +373,8 @@ def modelSetup(classes):
     #model = models.resnet101(weights=models.ResNet101_Weights.DEFAULT)
     #model = models.resnet34()
     #model = models.resnet34(weights = models.ResNet34_Weights.DEFAULT)
-    model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
-    model.fc = nn.Linear(model.fc.in_features, len(classes))
+    #model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
+    #model.fc = nn.Linear(model.fc.in_features, len(classes))
     
     #model = TResnetM({'num_classes':len(classes)})
     #model.load_state_dict(torch.load("/home/fredo/Code/ML/danbooru2021/tresnet_m.pth"), strict=False)
@@ -582,8 +582,10 @@ def trainCycle(image_datasets, model):
                     #for tagIndex, tagVal in enumerate(torch.mul(preds, tagBatch)[0]):
                     #    if tagVal.item() != 0:
                     #        currPostTags.append((tagNames[tagIndex], tagVal.item()))
-                    print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), loss, imagesPerSecond))
-                    if (hasTPU == True): print("Rate={:.2f} GlobalRate={:.2f}".format(tracker.rate(), tracker.global_rate()))
+                    
+                    if (hasTPU == True): xm.master_print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), loss, imagesPerSecond))
+                    else: print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), loss, imagesPerSecond))
+                    if (hasTPU == True): xm.master_print("Rate={:.2f} GlobalRate={:.2f}".format(tracker.rate(), tracker.global_rate()))
                     #print(id[0])
                     #print(currPostTags)
                     #print(sorted(batchTagAccuracy, key = lambda x: x[1], reverse=True))
