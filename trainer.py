@@ -532,7 +532,7 @@ def trainCycle(image_datasets, model):
                         
 
                         #ema.update(model)
-                        prior.update(device2)
+                        prior.update(outputs.to(device2))
                     
                     if (phase == 'val'):
                         # for mAP calculation
