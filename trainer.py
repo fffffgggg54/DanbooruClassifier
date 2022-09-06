@@ -103,7 +103,7 @@ FLAGS['trainSetSize'] = 0.8
 
 # dataloader config
 
-FLAGS['batch_size'] = 128
+FLAGS['batch_size'] = 64
 FLAGS['num_workers'] = 4
 if (hasTPU == True): FLAGS['num_workers'] = 12
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
