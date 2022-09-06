@@ -285,9 +285,6 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
                 #print("Getting image from " + imageURL)
                 response = requests.get(imageURL)
                 image = Image.open(BytesIO(response.content))
-                myFile = open(path, "wb")
-                myFile.write(response.content)
-                myFile.close()
                 image = image.convert("RGBA")
                 
                 color = (255,255,255)
