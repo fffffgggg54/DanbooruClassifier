@@ -282,7 +282,7 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
                 
 
                 imageURL = postData.loc["file_url"]
-                #print("Getting image from " + imageURL)
+                print("Getting image from " + imageURL)
                 response = requests.get(imageURL)
                 image = Image.open(BytesIO(response.content))
                 image = image.convert("RGBA")

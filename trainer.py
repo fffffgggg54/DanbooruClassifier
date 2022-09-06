@@ -313,7 +313,7 @@ def getData():
     # get posts that are not banned
     queryStartTime = time.time()
     postData.query("is_banned == False", inplace = True)
-    blockedIDs = [5190773, 5142098, 5210705, 5344403, 5237708, 5344394, 5190771, 5237705, 5174387, 5344400, 5344397, 5174384, 4473254]
+    blockedIDs = [5190773, 5142098, 5210705, 5344403, 5237708, 5344394, 5190771, 5237705, 5174387, 5344400, 5344397, 5174384, 4473254, 283992]
     for postID in blockedIDs: postData.query("id != @postID", inplace = True)
     print("banned post query time: " + str(time.time()-queryStartTime))
     
