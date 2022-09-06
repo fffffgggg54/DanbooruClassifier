@@ -545,9 +545,9 @@ def trainCycle(image_datasets, model):
                         '''
                         #AP_ema.append(MLCSL.mAP(targets, preds_ema))
                         AccuracyRunning.append(MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2)))
-                print(device)
+                #print(device)
                 if i % stepsPerPrintout == 0:
-                    print(device)
+                    #print(device)
                     '''
                     if (phase == 'train'):
                         targets_batch = tags.detach().cpu().numpy()
@@ -567,7 +567,7 @@ def trainCycle(image_datasets, model):
                     #for tagIndex, tagVal in enumerate(torch.mul(preds, tagBatch)[0]):
                     #    if tagVal.item() != 0:
                     #        currPostTags.append((tagNames[tagIndex], tagVal.item()))
-                    print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), loss, imagesPerSecond))
+                    print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), float(loss.cpu()), imagesPerSecond))
                     if (hasTPU == True): print("Rate={:.2f} GlobalRate={:.2f}".format(tracker.rate(), tracker.global_rate()))
                     #print(id[0])
                     #print(currPostTags)
@@ -584,7 +584,7 @@ def trainCycle(image_datasets, model):
                 if phase == 'train':
                     scheduler.step()
                 
-                print(device)
+                #print(device)
                     
                     
         torch.set_printoptions(profile="full")
