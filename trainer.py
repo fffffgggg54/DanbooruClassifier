@@ -501,9 +501,24 @@ def trainCycle(image_datasets, model):
                 model.zero_grad()
                 with torch.set_grad_enabled(phase == 'train'):
                     # TODO switch between using autocast and not using it
-                    with torch.cuda.amp.autocast():
+                    if(hasTPU == False):
+                        with torch.cuda.amp.autocast():
+                            outputs = model(imageBatch)
+                            
+                            preds = torch.sigmoid(outputs)
+                            outputs = outputs.float()
+                            if phase == 'val':
+                                #output_ema = torch.sigmoid(ema.module(imageBatch)).cpu()
+                                output_regular = preds.cpu()
+                            #loss = criterion(torch.mul(preds, tagBatch), tagBatch)
+                            #loss = criterion(outputs, tagBatch)
+                            #loss = criterion(preds, tagBatch)
+
+                            #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
+                            loss = criterion(outputs.to(device2), tagBatch.to(device2))
+                    elif (hasTPU == True):
                         outputs = model(imageBatch)
-                        
+                            
                         preds = torch.sigmoid(outputs)
                         outputs = outputs.float()
                         if phase == 'val':
@@ -535,28 +550,27 @@ def trainCycle(image_datasets, model):
                         prior.update(outputs.to(device2))
                     
                     if (phase == 'val'):
-                        '''
+                        
                         # for mAP calculation
                         targets = tags.cpu().detach().numpy()
                         preds_regular = output_regular.cpu().detach().numpy()
                         #preds_ema = output_ema.cpu().detach().numpy()
                         accuracy = MLCSL.mAP(targets, preds_regular)
                         AP_regular.append(accuracy)
-                        '''
+                        
                         #AP_ema.append(MLCSL.mAP(targets, preds_ema))
                         AccuracyRunning.append(MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2)))
                 #print(device)
                 if i % stepsPerPrintout == 0:
-                    #print(device)
-                    '''
+                    
                     if (phase == 'train'):
-                        targets_batch = tags.detach().cpu().numpy()
-                        preds_regular_batch = preds.detach().cpu().numpy()
+                        targets_batch = tags.cpu().detach().numpy()
+                        preds_regular_batch = preds.cpu().detach().numpy()
                         print(device)
                         accuracy = MLCSL.mAP(targets_batch, preds_regular_batch)
                         
-                    '''
-                    #print(device)
+                    
+
                     imagesPerSecond = (FLAGS['batch_size']*stepsPerPrintout)/(time.time() - cycleTime)
                     cycleTime = time.time()
 
@@ -567,7 +581,7 @@ def trainCycle(image_datasets, model):
                     #for tagIndex, tagVal in enumerate(torch.mul(preds, tagBatch)[0]):
                     #    if tagVal.item() != 0:
                     #        currPostTags.append((tagNames[tagIndex], tagVal.item()))
-                    print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), float(loss.cpu()), imagesPerSecond))
+                    print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), loss, imagesPerSecond))
                     if (hasTPU == True): print("Rate={:.2f} GlobalRate={:.2f}".format(tracker.rate(), tracker.global_rate()))
                     #print(id[0])
                     #print(currPostTags)
