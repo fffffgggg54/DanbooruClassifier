@@ -547,8 +547,8 @@ def trainCycle(image_datasets, model):
                 if i % stepsPerPrintout == 0:
                     print(device)
                     if (phase == 'train'):
-                        targets_batch = tags.cpu().detach().numpy()
-                        preds_regular_batch = preds.cpu().detach().numpy()
+                        targets_batch = tags.cpu().detach()
+                        preds_regular_batch = preds.cpu().detach()
                         print(device)
                         accuracy = MLCSL.mAP(targets_batch, preds_regular_batch)
                     print(device)
