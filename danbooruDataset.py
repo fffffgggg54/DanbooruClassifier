@@ -11,10 +11,12 @@ from PIL import Image, ImageOps, ImageDraw
 import PIL
 import requests
 from io import BytesIO
+import io
+import time
 import random
 import bz2
 import pickle
-import _pickle as cPickle
+#import _pickle as cPickle
 
 import os
 hasTPU = False
@@ -35,12 +37,7 @@ if hasTPU == True:
 
     client = storage.Client.create_anonymous_client()
     bucket = client.get_bucket('danbooru2021_dataset_zzz')
-    import bz2
-    import pickle
-    import io
-    #import _pickle as cPickle
-    #import cPickle
-    import time
+
 
 
 from PIL import PngImagePlugin
@@ -258,7 +255,7 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
             cachePath = "https://storage.googleapis.com/danbooru2021_dataset_zzz/cache/" + str(index % 1000).zfill(4) + "/" + str(index) + ".pkl.bz2"
             pkl = bz2.open(io.BytesIO(requests.get(cachePath).content))
             
-            image, postTags, _ = cPickle.load(pkl)
+            image, postTags, _ = pickle.load(pkl)
             '''
             except:
             
