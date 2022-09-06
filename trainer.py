@@ -393,6 +393,8 @@ def trainCycle(image_datasets, model):
         #testData = torch.utils.data.DataLoader(testSet, batch_size=batch_size, shuffle=False, num_workers=workers, persistent_workers = True, pin_memory = True)
         dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=FLAGS['batch_size'], shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=2, pin_memory = True, drop_last=True, generator=torch.Generator().manual_seed(42)) for x in image_datasets} # set up dataloaders
         dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
+        device = FLAGS['device']
+        device2 = FLAGS['device2']
         
     elif (hasTPU == True):
         samplers = {x: torch.utils.data.distributed.DistributedSampler(
@@ -409,6 +411,7 @@ def trainCycle(image_datasets, model):
                                                     generator=torch.Generator().manual_seed(42)) for x in image_datasets} # set up dataloaders
         lr = FLAGS['learning_rate'] * xm.xrt_world_size()
         device = xm.xla_device()
+        device2 = device
         if(FLAGS['num_tpu_cores'] > 1): parallelDataloaders = {x: pl.ParallelLoader(dataloaders[x], [device]) for x in dataloaders}
     
     model = model.to(FLAGS['device'])
@@ -433,7 +436,7 @@ def trainCycle(image_datasets, model):
     
     
     criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
-    #criterion = MLCSL.PartialSelectiveLoss(FLAGS['device'], prior_path=None, clip=0, gamma_pos=2, gamma_neg=10, gamma_unann=10, alpha_pos=1, alpha_neg=1, alpha_unann=1)
+    #criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0, gamma_pos=2, gamma_neg=10, gamma_unann=10, alpha_pos=1, alpha_neg=1, alpha_unann=1)
     parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
     optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=0)
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=0.2)
@@ -491,8 +494,8 @@ def trainCycle(image_datasets, model):
             for i, (images, tags, id) in loaderIterable:
                 
 
-                imageBatch = images.to(FLAGS['device'], non_blocking=True)
-                tagBatch = tags.to(FLAGS['device'], non_blocking=True)
+                imageBatch = images.to(device, non_blocking=True)
+                tagBatch = tags.to(device,, non_blocking=True)
                 
                 model.zero_grad()
                 with torch.set_grad_enabled(phase == 'train'):
@@ -509,8 +512,8 @@ def trainCycle(image_datasets, model):
                         #loss = criterion(outputs, tagBatch)
                         #loss = criterion(preds, tagBatch)
 
-                        #loss = criterion(outputs.to(FLAGS['device2']), tagBatch.to(FLAGS['device2']), lastPrior)
-                        loss = criterion(outputs.to(FLAGS['device2']), tagBatch.to(FLAGS['device2']))
+                        #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
+                        loss = criterion(outputs.to(device2), tagBatch.to(device2)
                     #model.zero_grad()
                     # backward + optimize only if in training phase
                     # TODO this is slow, profile and optimize
@@ -528,7 +531,7 @@ def trainCycle(image_datasets, model):
                         
 
                         #ema.update(model)
-                        prior.update(outputs.to(FLAGS['device2']))
+                        prior.update(device2)
                     
                     if (phase == 'val'):
                         # for mAP calculation
@@ -538,7 +541,7 @@ def trainCycle(image_datasets, model):
                         accuracy = MLCSL.mAP(targets, preds_regular)
                         AP_regular.append(accuracy)
                         #AP_ema.append(MLCSL.mAP(targets, preds_ema))
-                        AccuracyRunning.append(MLCSL.getAccuracy(outputs.to(FLAGS['device2']), tagBatch.to(FLAGS['device2'])))
+                        AccuracyRunning.append(MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2)))
                 
                 if i % stepsPerPrintout == 0:
                     if (phase == 'train'):
