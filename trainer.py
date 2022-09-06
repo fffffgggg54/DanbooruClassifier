@@ -405,7 +405,7 @@ def trainCycle(image_datasets, model):
                                                     generator=torch.Generator().manual_seed(42)) for x in image_datasets} # set up dataloaders
         lr = FLAGS['learning_rate'] * xm.xrt_world_size()
         device = xm.xla_device()
-        if(FLAGS['num_tpu_cores'] > 1): dataloaders = {x: pl.ParallelLoader(dataloaders[x], [device]) for x in dataloaders}
+        if(FLAGS['num_tpu_cores'] > 1): parallelDataloaders = {x: pl.ParallelLoader(dataloaders[x], [device]) for x in dataloaders}
     
     model = model.to(FLAGS['device'])
 
@@ -482,7 +482,9 @@ def trainCycle(image_datasets, model):
                 with_stack=True
                 ) as prof:
             '''
-            for i, (images, tags, id) in enumerate(dataloaders[phase]):
+            if (hasTPU == True): loaderIterable = enumerate(parallelDataloaders[phase].per_device_loader(device))
+            else: loaderIterable = enumerate(dataloaders[phase])
+            for i, (images, tags, id) in loaderIterable:
                 
 
                 imageBatch = images.to(FLAGS['device'], non_blocking=True)
