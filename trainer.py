@@ -513,7 +513,7 @@ def trainCycle(image_datasets, model):
                         #loss = criterion(preds, tagBatch)
 
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        loss = criterion(outputs.to(device2), tagBatch.to(device2)
+                        loss = criterion(outputs.to(device2), tagBatch.to(device2))
                     #model.zero_grad()
                     # backward + optimize only if in training phase
                     # TODO this is slow, profile and optimize
