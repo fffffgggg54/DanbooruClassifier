@@ -250,14 +250,14 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
         #postData.tag_string = postData.tag_string.split()
         
         postID = int(postData.loc["id"])
+        image = torch.Tensor()
+        postTags = torch.Tensor()
         
         if hasTPU == True:
             #try:
             cachePath = "https://storage.googleapis.com/danbooru2021_dataset_zzz/cache/" + str(index % 1000).zfill(4) + "/" + str(index) + ".pkl.bz2"
-            #blob = bucket.blob(cachePath)
-            response = requests.get(cachePath)
-            file_obj = response.content
-            pkl = bz2.open(io.BytesIO(file_obj))
+            pkl = bz2.open(io.BytesIO(requests.get(cachePath).content))
+            
             image, postTags, _ = cPickle.load(pkl)
             '''
             except:
@@ -400,7 +400,7 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
         
         if self.transform: image = self.transform(image)
 
-            
+        
         del postData
         # if(torch.utils.data.get_worker_info().id == 1):objgraph.show_growth() 
             
