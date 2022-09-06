@@ -381,7 +381,7 @@ def modelSetup(classes):
     
     return model
 
-def trainCycle(image_datasets, model):
+def trainCycle():
     
     image_datasets = getData()
     
@@ -611,11 +611,11 @@ def trainCycle(image_datasets, model):
     #time_elapsed = time.time() - startTime
     #print(f'Training complete in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
 
-def _mp_fn(rank, flags, image_datasets, model):
+def _mp_fn(rank, flags):
     global FLAGS
     FLAGS = flags
     torch.set_default_tensor_type('torch.FloatTensor')
-    trainCycle(image_datasets, model)
+    trainCycle()
 
 #@profile
 def main():
