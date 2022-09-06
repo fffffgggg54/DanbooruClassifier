@@ -105,12 +105,12 @@ FLAGS['trainSetSize'] = 0.8
 
 FLAGS['batch_size'] = 64
 FLAGS['num_workers'] = 4
-if (hasTPU == True): FLAGS['num_workers'] = 12
+if (hasTPU == True): FLAGS['num_workers'] = 22
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 
 # training config
 
-FLAGS['learning_rate'] = 3e-4
+FLAGS['learning_rate'] = 1e-3
 FLAGS['num_epochs'] = 100
 FLAGS['weight_decay'] = 1e-4
 
