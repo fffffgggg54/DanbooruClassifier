@@ -1,7 +1,8 @@
-
+# put -r "C:\Users\fredo\Documents\GitHub\DanbooruClassifier\" /home/fredo/Code/ML/danbooru2021/classification
 # put -r "C:\Users\fredo\OneDrive - Lake Washington School District\Code\ML\danbooru2021\classification\" /home/fredo/Code/ML/danbooru2021/classification
 # python "/home/fredo/Code/ML/danbooru2021/classification/trainer.py"
 
+# put -r "C:\Users\fredo\Documents\GitHub\DanbooruClassifier\" /Users/fredoguan/Code/ML/danbooru2021/classification
 # put -r "C:\Users\fredo\OneDrive - Lake Washington School District\Code\ML\danbooru2021\classification\" /Users/fredoguan/Code/ML/danbooru2021/classification
 # python "/Users/fredoguan/Code/ML/danbooru2021/classification/trainer.py"
 
@@ -414,7 +415,7 @@ def trainCycle(image_datasets, model):
         device2 = device
         if(FLAGS['num_tpu_cores'] > 1): parallelDataloaders = {x: pl.ParallelLoader(dataloaders[x], [device]) for x in dataloaders}
     
-    model = model.to(FLAGS['device'])
+    model = model.to(device)
 
     print("initialized training, time spent: " + str(time.time() - startTime))
     
@@ -431,7 +432,7 @@ def trainCycle(image_datasets, model):
     
     # use partial label approaches from http://arxiv.org/abs/2110.10955v1
     #ema = MLCSL.ModelEma(model, 0.9997)  # 0.9997^641=0.82
-    prior = MLCSL.ComputePrior(classes, FLAGS['device2'])
+    prior = MLCSL.ComputePrior(classes, device2)
     
     
     
