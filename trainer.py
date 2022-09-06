@@ -309,7 +309,10 @@ def getData():
     postData = pd.read_pickle(FLAGS['postDFPickleFiltered'])
     #print(postData.info())
     
-    
+    # get posts that are not deleted
+    queryStartTime = time.time()
+    postData.query("is_deleted == False", inplace = True)
+    print("deleted post query time: " + str(time.time()-queryStartTime))
     
     
     
