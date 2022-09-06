@@ -382,6 +382,10 @@ def modelSetup(classes):
     return model
 
 def trainCycle(image_datasets, model):
+    
+    image_datasets = getData()
+    
+    model = modelSetup(classes)
     startTime = time.time()
     if(hasTPU == False):
     
@@ -619,15 +623,12 @@ def main():
     # load json files
 
 
-    
-    image_datasets = getData()
-    
-    model = modelSetup(classes)
+
     
     if (hasTPU == False):
-        trainCycle(image_datasets, model)
+        trainCycle()
     elif (hasTPU == True):
-        xmp.spawn(_mp_fn, args=(FLAGS, image_datasets, model,), nprocs=FLAGS['num_tpu_cores'], start_method='fork')
+        xmp.spawn(_mp_fn, args=(FLAGS,), nprocs=FLAGS['num_tpu_cores'], start_method='fork')
     
 
 
