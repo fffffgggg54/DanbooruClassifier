@@ -260,7 +260,7 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
                 image, postTags, _ = pickle.load(pkl)
             except:
             
-                postTagList = set(postData.loc["tag_string"].split()).intersection(set(self.tagList.to_list()))
+                postTagList = set(postData.loc["tag_string"]).intersection(set(self.tagList.to_list()))
 
                 # one-hot encode the tags of a given post
                 # TODO find better way to find matching tags
