@@ -267,31 +267,31 @@ modelConf13 = {
 
 def getData():
     startTime = time.time()
-    '''
-    #tagData = pd.read_pickle(FLAGS['postDFPickle'])
+
+    #tagData = pd.read_pickle(FLAGS['tagDFPickle'])
     #postData = pd.read_pickle(FLAGS['postDFPickle'])
     
     
     
     
     try:
-        print("attempting to read pickled post metadata file at " + tagDFPickle)
-        tagData = pd.read_pickle(tagDFPickle)
+        print("attempting to read pickled post metadata file at " + FLAGS['tagDFPickle'])
+        tagData = pd.read_pickle(FLAGS['tagDFPickle'])
     except:
-        print("pickled post metadata file at " + tagDFPickle + " not found")
+        print("pickled post metadata file at " + FLAGS['tagDFPickle'] + " not found")
         tagData = parallelJsonReader.dataImporter(FLAGS['tagListFile'])   # read tags from json in parallel
-        print("saving pickled post metadata to " + tagDFPickle)
-        tagData.to_pickle(tagDFPickle)
+        print("saving pickled post metadata to " + FLAGS['tagDFPickle'])
+        tagData.to_pickle(FLAGS['tagDFPickle'])
     
     #postData = pd.concat(map(dataImporter, glob.iglob(postMetaDir + 'posts*')), ignore_index=True) # read all post metadata files in metadata dir
     try:
-        print("attempting to read pickled post metadata file at " + postDFPickle)
-        postData = pd.read_pickle(postDFPickle)
+        print("attempting to read pickled post metadata file at " + FLAGS['postDFPickle'])
+        postData = pd.read_pickle(FLAGS['postDFPickle'])
     except:
-        print("pickled post metadata file at " + postDFPickle + " not found")
+        print("pickled post metadata file at " + FLAGS['postDFPickle'] + " not found")
         postData = parallelJsonReader.dataImporter(FLAGS['postListFile'], keep = 1)    # read posts
-        print("saving pickled post metadata to " + postDFPickle)
-        postData.to_pickle(postDFPickle)
+        print("saving pickled post metadata to " + FLAGS['postDFPickle'])
+        postData.to_pickle(FLAGS['postDFPickle'])
         
         
     
@@ -305,29 +305,17 @@ def getData():
     
     tagData.to_pickle(FLAGS['tagDFPickleFiltered'])
     postData.to_pickle(FLAGS['postDFPickleFiltered'])
-    '''
-    tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
-    postData = pd.read_pickle(FLAGS['postDFPickleFiltered'])
+
+    #tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
+    #postData = pd.read_pickle(FLAGS['postDFPickleFiltered'])
     #print(postData.info())
     
-    # get posts that are not deleted
-    queryStartTime = time.time()
-    postData.query("is_deleted == False", inplace = True)
-    print("deleted post query time: " + str(time.time()-queryStartTime))
-    
-    
-    
-    
-    queryStartTime = time.time()
-    postData.query("is_banned == False", inplace = True)
-    blockedIDs = [5190773, 5142098, 5210705, 5344403, 5237708, 5344394, 5190771, 5237705, 5174387, 5344400, 5344397, 5174384]
-    for postID in blockedIDs: postData.query("id != @postID", inplace = True)
-    print("banned post query time: " + str(time.time()-queryStartTime))
-    
+
     postData = postData[['id', 'tag_string', 'file_ext', 'file_url']]
     #postData = postData[['id', 'tag_string']]
     postData = postData.convert_dtypes()
     print(postData.info())
+    
     '''
     npPostData = {}
     npPostData['id'] = np.array(postData.pop('id'))
