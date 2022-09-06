@@ -550,25 +550,26 @@ def trainCycle(image_datasets, model):
                         prior.update(outputs.to(device2))
                     
                     if (phase == 'val'):
-                        
+                        '''
                         # for mAP calculation
                         targets = tags.cpu().detach().numpy()
                         preds_regular = output_regular.cpu().detach().numpy()
                         #preds_ema = output_ema.cpu().detach().numpy()
                         accuracy = MLCSL.mAP(targets, preds_regular)
                         AP_regular.append(accuracy)
-                        
+                        '''
                         #AP_ema.append(MLCSL.mAP(targets, preds_ema))
                         AccuracyRunning.append(MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2)))
                 #print(device)
                 if i % stepsPerPrintout == 0:
                     
                     if (phase == 'train'):
+                        '''
                         targets_batch = tags.cpu().detach().numpy()
                         preds_regular_batch = preds.cpu().detach().numpy()
                         print(device)
                         accuracy = MLCSL.mAP(targets_batch, preds_regular_batch)
-                        
+                        '''
                     
 
                     imagesPerSecond = (FLAGS['batch_size']*stepsPerPrintout)/(time.time() - cycleTime)
