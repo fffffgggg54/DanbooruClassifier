@@ -104,7 +104,7 @@ FLAGS['trainSetSize'] = 0.8
 
 # device config
 
-FLAGS['num_tpu_cores'] = 8
+FLAGS['num_tpu_cores'] = xm.xrt_world_size()
 FLAGS['ngpu'] = torch.cuda.is_available()
 FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
 FLAGS['device2'] = FLAGS['device']
@@ -114,7 +114,7 @@ if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
 # dataloader config
 
-FLAGS['batch_size'] = 64
+FLAGS['batch_size'] = 32
 if (hasTPU == True): FLAGS['batch_size'] = FLAGS['batch_size'] * FLAGS['num_tpu_cores']
 FLAGS['num_workers'] = 4
 if (hasTPU == True): FLAGS['num_workers'] = 22
@@ -123,7 +123,6 @@ if(torch.has_mps == True): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['learning_rate'] = 1e-3
-if (hasTPU == True): FLAGS['learning_rate'] = FLAGS['learning_rate'] * FLAGS['num_tpu_cores']
 FLAGS['num_epochs'] = 100
 FLAGS['weight_decay'] = 1e-4
 
