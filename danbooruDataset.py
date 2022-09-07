@@ -253,7 +253,7 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
         bruh = False
         if hasTPU == True:
             try:
-                cachePath = "https://storage.googleapis.com/danbooru2021_dataset_zzz/cache/" + str(index % 1000).zfill(4) + "/" + str(index) + ".pkl.bz2"
+                cachePath = "https://storage.googleapis.com/danbooru2021_dataset_zzz/cache/" + str(postID % 1000).zfill(4) + "/" + str(postID) + ".pkl.bz2"
                 response = requests.get(cachePath)
                 pkl = bz2.open(io.BytesIO(response.content))
                 image, postTags, _ = cPickle.load(pkl)
@@ -261,7 +261,7 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
             except Exception as e:
                 #print(e)
                 try:
-                    cachePath = "/home/fredo_guan/cache/" + str(index % 1000).zfill(4) + "/" + str(index) + ".pkl.bz2"
+                    cachePath = "/home/fredo_guan/cache/" + str(postID % 1000).zfill(4) + "/" + str(postID) + ".pkl.bz2"
                     print(os.path.isfile(cachePath))
                     cachedSample = bz2.open(cachePath, 'rb')
                     image, postTags,_ = cPickle.load(cachedSample)
