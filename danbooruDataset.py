@@ -250,7 +250,7 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
         postID = int(postData.loc["id"])
         image = torch.Tensor()
         postTags = torch.Tensor()
-        bruh == False
+        bruh = False
         if hasTPU == True:
             try:
                 cachePath = "https://storage.googleapis.com/danbooru2021_dataset_zzz/cache/" + str(index % 1000).zfill(4) + "/" + str(index) + ".pkl.bz2"
