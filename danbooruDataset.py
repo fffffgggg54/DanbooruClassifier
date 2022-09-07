@@ -322,6 +322,7 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
                     
                     cacheDir = create_dir("/home/fredo_guan/cache/" + str(postID % 1000).zfill(4))
                     cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
+                    print(cachePath)
                     with bz2.BZ2File(cachePath, 'w') as cachedSample:
                         cPickle.dump((image, postTags, postID), cachedSample)
                     #print(os.path.isfile(cachePath))
