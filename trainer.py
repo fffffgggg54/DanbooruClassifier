@@ -114,7 +114,7 @@ if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
 # dataloader config
 
-FLAGS['batch_size'] = 16
+FLAGS['batch_size'] = 8
 if (hasTPU == True): FLAGS['batch_size'] = FLAGS['batch_size'] * FLAGS['num_tpu_cores']
 FLAGS['num_workers'] = 4
 if (hasTPU == True): FLAGS['num_workers'] = 11
@@ -360,8 +360,8 @@ def getData():
     return image_datasets
 
 def modelSetup(classes):
-    #model = cvt.get_cls_model(len(classes), config=modelConfCust1)
-    model = cvt.get_cls_model(len(classes), config=modelConf13)
+    model = cvt.get_cls_model(len(classes), config=modelConfCust1)
+    #model = cvt.get_cls_model(len(classes), config=modelConf13)
     #model = cvt.get_cls_model(len(classes), config=modelConf21)
     
     
