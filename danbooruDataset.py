@@ -250,7 +250,7 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
         postID = int(postData.loc["id"])
         image = torch.Tensor()
         postTags = torch.Tensor()
-        
+        bruh == False
         if hasTPU == True:
             try:
                 cachePath = "https://storage.googleapis.com/danbooru2021_dataset_zzz/cache/" + str(index % 1000).zfill(4) + "/" + str(index) + ".pkl.bz2"
@@ -418,9 +418,9 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
         
         if self.transform: image = self.transform(image)
 
-        if (bruh is not None):
-            if (bruh == True): 
-                print("asdfasdfasfd")
+
+        if (bruh == True): 
+            print("asdfasdfasfd")
         
         del postData
         # if(torch.utils.data.get_worker_info().id == 1):objgraph.show_growth() 
