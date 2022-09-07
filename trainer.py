@@ -361,8 +361,8 @@ def getData():
 
 def modelSetup(classes):
     #model = cvt.get_cls_model(len(classes), config=modelConfCust1)
-    #model = cvt.get_cls_model(len(classes), config=modelConf13)
-    model = cvt.get_cls_model(len(classes), config=modelConf21)
+    model = cvt.get_cls_model(len(classes), config=modelConf13)
+    #model = cvt.get_cls_model(len(classes), config=modelConf21)
     
     
     #model = models.resnet152(weights=models.ResNet152_Weights.DEFAULT)
