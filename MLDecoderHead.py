@@ -10,7 +10,10 @@ from torch.nn.modules.transformer import _get_activation_fn
 def add_ml_decoder_head(model, num_classes=-1, num_of_groups=-1, decoder_embedding=768, zsl=0):
     if num_classes == -1:
         num_classes = model.num_classes
-    num_features = model.num_features
+    try:
+        num_features = model.num_features
+    except:
+        num_features = model.head.in_features
     if hasattr(model, 'global_pool') and hasattr(model, 'fc'):  # resnet50
         model.global_pool = nn.Identity()
         del model.fc
