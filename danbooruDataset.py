@@ -323,7 +323,7 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
                     cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
                     with bz2.BZ2File(cachePath, 'w') as cachedSample:
                         cPickle.dump((image, postTags, postID), cachedSample)
-                    assert os.path.isfile(cachePath)
+                    print(os.path.isfile(cachePath))
             
         elif(hasTPU == False):
         
