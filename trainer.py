@@ -114,7 +114,7 @@ if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
 # dataloader config
 
-FLAGS['batch_size'] = 8
+FLAGS['batch_size'] = 32
 if (hasTPU == True): FLAGS['batch_size'] = FLAGS['batch_size'] * FLAGS['num_tpu_cores']
 FLAGS['num_workers'] = 4
 if (hasTPU == True): FLAGS['num_workers'] = 11
@@ -360,7 +360,7 @@ def getData():
     return image_datasets
 
 def modelSetup(classes):
-    model = cvt.get_cls_model(len(classes), config=modelConfCust1)
+    #model = cvt.get_cls_model(len(classes), config=modelConfCust1)
     #model = cvt.get_cls_model(len(classes), config=modelConf13)
     #model = cvt.get_cls_model(len(classes), config=modelConf21)
     
@@ -369,9 +369,9 @@ def modelSetup(classes):
     #model = models.resnet152()
     #model = models.resnet101(weights=models.ResNet101_Weights.DEFAULT)
     #model = models.resnet34()
-    #model = models.resnet34(weights = models.ResNet34_Weights.DEFAULT)
+    model = models.resnet34(weights = models.ResNet34_Weights.DEFAULT)
     #model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
-    #model.fc = nn.Linear(model.fc.in_features, len(classes))
+    model.fc = nn.Linear(model.fc.in_features, len(classes))
     
     #model = TResnetM({'num_classes':len(classes)})
     #model.load_state_dict(torch.load("/home/fredo/Code/ML/danbooru2021/tresnet_m.pth"), strict=False)
