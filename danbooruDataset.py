@@ -258,47 +258,55 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
                 image, postTags, _ = pickle.load(pkl)
             
             except:
-            
-                postTagList = set(postData.loc["tag_string"]).intersection(set(self.tagList.to_list()))
+                try:
+                    cachePath = "/home/fredo_guan/cache/" + str(index % 1000).zfill(4) + "/" + str(index) + ".pkl.bz2"
+                    cachedSample = bz2.BZ2File(cachePath, 'rb')
+                    image, postTags,_ = cPickle.load(cachedSample)
+                except:
+                    postTagList = set(postData.loc["tag_string"]).intersection(set(self.tagList.to_list()))
 
-                # one-hot encode the tags of a given post
-                # TODO find better way to find matching tags
-                postTags = []
-                for key in list(self.tagList.to_list()):
-                    match = False
-                    for tag in postTagList:
-                        if tag == key:
-                            match = True
+                    # one-hot encode the tags of a given post
+                    # TODO find better way to find matching tags
+                    postTags = []
+                    for key in list(self.tagList.to_list()):
+                        match = False
+                        for tag in postTagList:
+                            if tag == key:
+                                match = True
+                        
+                        postTags.append(int(match))
+                
                     
-                    postTags.append(int(match))
-            
-                
-                #metaTime = time.time() - startTime
-                #startTime = time.time()
-                imagePath = str(postID % 1000).zfill(4) + "/" + str(postID) + "." + postData.loc["file_ext"]
-                #cachedImagePath = cacheRoot + imagePath
-                imagePath = self.imageRoot + imagePath
-                
+                    #metaTime = time.time() - startTime
+                    #startTime = time.time()
+                    imagePath = str(postID % 1000).zfill(4) + "/" + str(postID) + "." + postData.loc["file_ext"]
+                    #cachedImagePath = cacheRoot + imagePath
+                    imagePath = self.imageRoot + imagePath
+                    
 
-                imageURL = postData.loc["file_url"]
-                print("Getting image from " + imageURL)
-                response = requests.get(imageURL)
-                image = Image.open(BytesIO(response.content))
-                image = image.convert("RGBA")
-                
-                color = (255,255,255)
-                
-                background = Image.new('RGB', image.size, color)
-                background.paste(image, mask=image.split()[3])
-                image = background
-                
-                
-                #image = transforms.functional.pil_to_tensor(image).squeeze()
-                
-                image = transforms.functional.resize(image, (224,224))
-                image = transforms.functional.pil_to_tensor(image)
-                
-                postTags = torch.Tensor(postTags)
+                    imageURL = postData.loc["file_url"]
+                    print("Getting image from " + imageURL)
+                    response = requests.get(imageURL)
+                    image = Image.open(BytesIO(response.content))
+                    image = image.convert("RGBA")
+                    
+                    color = (255,255,255)
+                    
+                    background = Image.new('RGB', image.size, color)
+                    background.paste(image, mask=image.split()[3])
+                    image = background
+                    
+                    
+                    #image = transforms.functional.pil_to_tensor(image).squeeze()
+                    
+                    image = transforms.functional.resize(image, (224,224))
+                    image = transforms.functional.pil_to_tensor(image)
+                    
+                    postTags = torch.Tensor(postTags)
+                    
+                    cacheDir = create_dir("/home/fredo_guan/cache/" + str(postID % 1000).zfill(4))
+                    cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
+                    with bz2.BZ2File(cachePath, 'w') as cachedSample: cPickle.dump((image, postTags, postID), cachedSample)
             
         else:
         
