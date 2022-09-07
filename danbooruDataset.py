@@ -16,7 +16,7 @@ import time
 import random
 import bz2
 import pickle
-#import _pickle as cPickle
+import _pickle as cPickle
 
 import os
 hasTPU = False
@@ -255,7 +255,7 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
                 cachePath = "https://storage.googleapis.com/danbooru2021_dataset_zzz/cache/" + str(index % 1000).zfill(4) + "/" + str(index) + ".pkl.bz2"
                 response = requests.get(cachePath)
                 pkl = bz2.open(io.BytesIO(response.content))
-                image, postTags, _ = pickle.load(pkl)
+                image, postTags, _ = cPickle.load(pkl)
             
             except:
                 try:
