@@ -17,6 +17,7 @@ import random
 import bz2
 import pickle
 import _pickle as cPickle
+import json
 
 import os
 hasTPU = False
