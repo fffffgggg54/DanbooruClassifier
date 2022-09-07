@@ -283,11 +283,20 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
                     #cachedImagePath = cacheRoot + imagePath
                     imagePath = self.imageRoot + imagePath
                     
+                    try:
+                        imageURL = postData.loc["file_url"]
+                        print("Getting image from " + imageURL)
+                        response = requests.get(imageURL)
+                        image = Image.open(BytesIO(response.content))
+                    except:
+                        postURL = "https://danbooru.donmai.us/posts/" + str(postID) + ".json"
 
-                    imageURL = postData.loc["file_url"]
-                    print("Getting image from " + imageURL)
-                    response = requests.get(imageURL)
-                    image = Image.open(BytesIO(response.content))
+                        postDataFromJson = json.loads(requests.get(postURL).content)
+                        imageURL = postDataFromJson['file_url']
+                        
+                        print("Getting image from " + imageURL)
+                        response = requests.get(imageURL)
+                        image = Image.open(BytesIO(response.content))
                     image = image.convert("RGBA")
                     
                     color = (255,255,255)
@@ -308,7 +317,7 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
                     cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
                     with bz2.BZ2File(cachePath, 'w') as cachedSample: cPickle.dump((image, postTags, postID), cachedSample)
             
-        else:
+        elif(hasTPU == False):
         
             try:
                 assert self.cacheRoot is not None
