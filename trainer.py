@@ -408,7 +408,7 @@ def trainCycle(image_datasets, model):
         lr = FLAGS['learning_rate'] * xm.xrt_world_size()
         device = xm.xla_device()
         device2 = device
-        if(FLAGS['num_tpu_cores'] > 1): parallelDataloaders = {x: pl.ParallelLoader(dataloaders[x], [device]) for x in dataloaders}
+        parallelDataloaders = {x: pl.ParallelLoader(dataloaders[x], [device]) for x in dataloaders}
     
     model = model.to(device)
 
