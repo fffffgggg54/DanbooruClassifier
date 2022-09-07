@@ -292,8 +292,9 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
                         image = Image.open(BytesIO(response.content))
                     except:
                         postURL = "https://danbooru.donmai.us/posts/" + str(postID) + ".json"
-
-                        postDataFromJson = json.loads(requests.get(postURL).content)
+                        response = requests.get(postURL).content
+                        print(response)
+                        postDataFromJson = json.loads(response)
                         print(postDataFromJson)
                         imageURL = postDataFromJson['file_url']
                         
