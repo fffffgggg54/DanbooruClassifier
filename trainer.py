@@ -103,7 +103,7 @@ FLAGS['trainSetSize'] = 0.8
 
 # dataloader config
 
-FLAGS['batch_size'] = 64
+FLAGS['batch_size'] = 256
 FLAGS['num_workers'] = 4
 if (hasTPU == True): FLAGS['num_workers'] = 11
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
@@ -116,7 +116,7 @@ FLAGS['weight_decay'] = 1e-4
 
 # device config
 
-FLAGS['num_tpu_cores'] = 1
+FLAGS['num_tpu_cores'] = 8
 FLAGS['ngpu'] = torch.cuda.is_available()
 FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
 FLAGS['device2'] = FLAGS['device']
