@@ -122,6 +122,7 @@ if(torch.has_mps == True): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['learning_rate'] = 1e-3
+if (hasTPU == True): FLAGS['learning_rate'] = FLAGS['learning_rate'] * FLAGS['num_tpu_cores']
 FLAGS['num_epochs'] = 100
 FLAGS['weight_decay'] = 1e-4
 
