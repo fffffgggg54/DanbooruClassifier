@@ -294,7 +294,7 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
                         postURL = "https://danbooru.donmai.us/posts/" + str(postID) + ".json"
                         response = requests.get(postURL).content
                         print(response)
-                        postDataFromJson = json.loads(response)
+                        postDataFromJson = json.load(response)
                         print(postDataFromJson)
                         imageURL = postDataFromJson['file_url']
                         
