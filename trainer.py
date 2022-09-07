@@ -476,11 +476,11 @@ def trainCycle(image_datasets, model):
                 model.eval()   # Set model to evaluate mode
                 if (hasTPU == True):
                     if(xm.is_master_ordinal() == True):
-                        modelDir = danbooruDataset.create_dir(f'{FLAGS['rootPath']}models/')
-                        torch.save(model.to(cpu).state_dict(), f'{modelDir}saved_model_epoch_{epoch}.pth')
+                        modelDir = danbooruDataset.create_dir(FLAGS['rootPath'] + 'models/')
+                        torch.save(model.to(cpu).state_dict(), modelDir + 'saved_model_epoch_{epoch}.pth')
                 elif (hasTPU == False): 
-                    modelDir = danbooruDataset.create_dir(f'{FLAGS['rootPath']}models/')
-                    torch.save(model.to(cpu).state_dict(), f'{modelDir}saved_model_epoch_{epoch}.pth')
+                    modelDir = danbooruDataset.create_dir((FLAGS['rootPath'] + 'models/')
+                    torch.save(model.to(cpu).state_dict(), modelDir + 'saved_model_epoch_{epoch}.pth')
                 print("validation set")
             
             # For each batch in the dataloader
