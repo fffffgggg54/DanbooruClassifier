@@ -101,19 +101,6 @@ FLAGS['stopReadingAt'] = 5000
 FLAGS['workingSetSize'] = 1
 FLAGS['trainSetSize'] = 0.8
 
-# dataloader config
-
-FLAGS['batch_size'] = 256
-FLAGS['num_workers'] = 4
-if (hasTPU == True): FLAGS['num_workers'] = 22
-if(torch.has_mps == True): FLAGS['num_workers'] = 2
-
-# training config
-
-FLAGS['learning_rate'] = 1e-3
-FLAGS['num_epochs'] = 100
-FLAGS['weight_decay'] = 1e-4
-
 # device config
 
 FLAGS['num_tpu_cores'] = 8
@@ -123,6 +110,20 @@ FLAGS['device2'] = FLAGS['device']
 if(torch.has_mps == True): FLAGS['device2'] = "cpu"
 FLAGS['use_scaler'] = False
 if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
+
+# dataloader config
+
+FLAGS['batch_size'] = 64
+if (hasTPU == True): FLAGS['batch_size'] = FLAGS['batch_size'] * FLAGS['num_tpu_cores']
+FLAGS['num_workers'] = 4
+if (hasTPU == True): FLAGS['num_workers'] = 22
+if(torch.has_mps == True): FLAGS['num_workers'] = 2
+
+# training config
+
+FLAGS['learning_rate'] = 1e-3
+FLAGS['num_epochs'] = 100
+FLAGS['weight_decay'] = 1e-4
 
 # debugging config
 
