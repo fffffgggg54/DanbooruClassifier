@@ -366,12 +366,12 @@ def modelSetup(classes):
     #model = cvt.get_cls_model(len(classes), config=modelConf21)
     
     
-    #model = models.resnet152(weights=models.ResNet152_Weights.DEFAULT)
+    model = models.resnet152(weights=models.ResNet152_Weights.DEFAULT)
     #model = models.resnet152()
     #model = models.resnet101(weights=models.ResNet101_Weights.DEFAULT)
     #model = models.resnet34()
     #model = models.resnet34(weights = models.ResNet34_Weights.DEFAULT)
-    model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
+    #model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
     model.fc = nn.Linear(model.fc.in_features, len(classes))
     
     #model = TResnetM({'num_classes':len(classes)})
