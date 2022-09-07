@@ -250,6 +250,7 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
         postID = int(postData.loc["id"])
         image = torch.Tensor()
         postTags = torch.Tensor()
+        bruh == False
         if hasTPU == True:
             try:
                 cachePath = "https://storage.googleapis.com/danbooru2021_dataset_zzz/cache/" + str(index % 1000).zfill(4) + "/" + str(index) + ".pkl.bz2"
@@ -263,8 +264,9 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
                     cachePath = "/home/fredo_guan/cache/" + str(index % 1000).zfill(4) + "/" + str(index) + ".pkl.bz2"
                     cachedSample = bz2.open(cachePath, 'rb')
                     image, postTags,_ = cPickle.load(cachedSample)
+                    bruh == True
                 except Exception as e:
-                    print(e)
+                    #print(e)
                     postTagList = set(postData.loc["tag_string"]).intersection(set(self.tagList.to_list()))
 
                     # one-hot encode the tags of a given post
@@ -418,7 +420,7 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
         
         if self.transform: image = self.transform(image)
 
-
+        if bruh == True: print("asdf")
         
         del postData
         # if(torch.utils.data.get_worker_info().id == 1):objgraph.show_growth() 
