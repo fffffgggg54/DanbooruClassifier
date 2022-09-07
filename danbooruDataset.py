@@ -418,7 +418,9 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
         
         if self.transform: image = self.transform(image)
 
-        if (bruh is not None): if (bruh == True): print("asdfasdfasfd")
+        if (bruh is not None):
+            if (bruh == True): 
+                print("asdfasdfasfd")
         
         del postData
         # if(torch.utils.data.get_worker_info().id == 1):objgraph.show_growth() 
