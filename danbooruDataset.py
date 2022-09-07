@@ -262,7 +262,6 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
                 #print(e)
                 try:
                     cachePath = "/home/fredo_guan/cache/" + str(postID % 1000).zfill(4) + "/" + str(postID) + ".pkl.bz2"
-                    print(os.path.isfile(cachePath))
                     cachedSample = bz2.open(cachePath, 'rb')
                     image, postTags,_ = cPickle.load(cachedSample)
                     bruh == True
