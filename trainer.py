@@ -104,7 +104,7 @@ FLAGS['trainSetSize'] = 0.8
 
 # device config
 
-FLAGS['num_tpu_cores'] = xm.xrt_world_size()
+FLAGS['num_tpu_cores'] = 8
 FLAGS['ngpu'] = torch.cuda.is_available()
 FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
 FLAGS['device2'] = FLAGS['device']
