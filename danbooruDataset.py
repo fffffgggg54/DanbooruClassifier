@@ -289,15 +289,15 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
                     
                     try:
                         imageURL = postData.loc["file_url"]
-                        print("Getting image from " + imageURL)
+                        #print("Getting image from " + imageURL)
                         response = requests.get(imageURL)
                         image = Image.open(BytesIO(response.content))
                     except:
                         postURL = "https://danbooru.donmai.us/posts/" + str(postID) + ".json"
                         response = requests.get(postURL).content
-                        print(response)
+                        #print(response)
                         postDataFromJson = json.load(response)
-                        print(postDataFromJson)
+                        #print(postDataFromJson)
                         imageURL = postDataFromJson['file_url']
                         
                         #print("Getting image from " + imageURL)
