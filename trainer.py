@@ -479,7 +479,7 @@ def trainCycle(image_datasets, model):
                         modelDir = danbooruDataset.create_dir(FLAGS['rootPath'] + 'models/')
                         torch.save(model.to(cpu).state_dict(), modelDir + 'saved_model_epoch_{epoch}.pth')
                 elif (hasTPU == False): 
-                    modelDir = danbooruDataset.create_dir((FLAGS['rootPath'] + 'models/')
+                    modelDir = danbooruDataset.create_dir(FLAGS['rootPath'] + 'models/')
                     torch.save(model.to(cpu).state_dict(), modelDir + 'saved_model_epoch_{epoch}.pth')
                 print("validation set")
             
