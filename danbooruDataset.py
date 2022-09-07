@@ -257,6 +257,7 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
                 response = requests.get(cachePath)
                 pkl = bz2.open(io.BytesIO(response.content))
                 image, postTags, _ = cPickle.load(pkl)
+                bruh = True
             
             except Exception as e:
                 print(e)
@@ -417,6 +418,7 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
         
         if self.transform: image = self.transform(image)
 
+        if (bruh is not None): if (bruh == True): print("asdfasdfasfd")
         
         del postData
         # if(torch.utils.data.get_worker_info().id == 1):objgraph.show_growth() 
