@@ -253,8 +253,10 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
         if hasTPU == True:
             #try:
             cachePath = "https://storage.googleapis.com/danbooru2021_dataset_zzz/cache/" + str(index % 1000).zfill(4) + "/" + str(index) + ".pkl.bz2"
-            pkl = bz2.open(io.BytesIO(requests.get(cachePath).content))
-            
+            response = requests.get(cachePath)
+            print(response.content)
+            pkl = bz2.open(io.BytesIO(response.content))
+            print(pkl)
             image, postTags, _ = pickle.load(pkl)
             '''
             except:
