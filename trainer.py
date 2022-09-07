@@ -114,10 +114,10 @@ if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
 # dataloader config
 
-FLAGS['batch_size'] = 8
+FLAGS['batch_size'] = 16
 if (hasTPU == True): FLAGS['batch_size'] = FLAGS['batch_size'] * FLAGS['num_tpu_cores']
 FLAGS['num_workers'] = 4
-if (hasTPU == True): FLAGS['num_workers'] = 22
+if (hasTPU == True): FLAGS['num_workers'] = 11
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 
 # training config
@@ -361,8 +361,8 @@ def getData():
 
 def modelSetup(classes):
     #model = cvt.get_cls_model(len(classes), config=modelConfCust1)
-    #model = cvt.get_cls_model(len(classes), config=modelConf13)
-    model = cvt.get_cls_model(len(classes), config=modelConf21)
+    model = cvt.get_cls_model(len(classes), config=modelConf13)
+    #model = cvt.get_cls_model(len(classes), config=modelConf21)
     
     
     #model = models.resnet152(weights=models.ResNet152_Weights.DEFAULT)
@@ -474,7 +474,13 @@ def trainCycle(image_datasets, model):
                 else: print("training set")
             else:
                 model.eval()   # Set model to evaluate mode
-                torch.save(model.state_dict(), f'models/saved_model_epoch_{epoch}.pth')
+                if (hasTPU == True):
+                    if(xm.is_master_ordinal() == True):
+                        modelDir = danbooruDataset.create_dir(f'{FLAGS['rootPath']}models/')
+                        torch.save(model.to(cpu).state_dict(), f'{modelDir}saved_model_epoch_{epoch}.pth')
+                elif (hasTPU == False): 
+                    modelDir = danbooruDataset.create_dir(f'{FLAGS['rootPath']}models/')
+                    torch.save(model.to(cpu).state_dict(), f'{modelDir}saved_model_epoch_{epoch}.pth')
                 print("validation set")
             
             # For each batch in the dataloader
