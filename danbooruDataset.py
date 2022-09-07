@@ -258,12 +258,14 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
                 pkl = bz2.open(io.BytesIO(response.content))
                 image, postTags, _ = cPickle.load(pkl)
             
-            except Exception as e: print(e):
+            except Exception as e:
+                print(e)
                 try:
                     cachePath = "/home/fredo_guan/cache/" + str(index % 1000).zfill(4) + "/" + str(index) + ".pkl.bz2"
                     cachedSample = bz2.BZ2File(cachePath, 'rb')
                     image, postTags,_ = cPickle.load(cachedSample)
-                except Exception as e: print(e):
+                except Exception as e:
+                    print(e)
                     postTagList = set(postData.loc["tag_string"]).intersection(set(self.tagList.to_list()))
 
                     # one-hot encode the tags of a given post
