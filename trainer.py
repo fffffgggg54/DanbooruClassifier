@@ -103,7 +103,7 @@ FLAGS['trainSetSize'] = 0.8
 
 # dataloader config
 
-FLAGS['batch_size'] = 64
+FLAGS['batch_size'] = 256
 FLAGS['num_workers'] = 4
 if (hasTPU == True): FLAGS['num_workers'] = 22
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
@@ -372,8 +372,8 @@ def modelSetup(classes):
     #model.fc = nn.Linear(model.fc.in_features, len(classes))
     
     #model = TResnetM({'num_classes':len(classes)})
-    #model.load_state_dict(torch.load("/home/fredo/Code/ML/danbooru2021/tresnet_m.pth"), strict=False)
-    #model = MLDecoderHead.add_ml_decoder_head(model, num_of_groups=int(len(classes)/48))
+    model.load_state_dict(torch.load("/home/fredo/Code/ML/danbooru2021/tresnet_m.pth"), strict=False)
+    model = MLDecoderHead.add_ml_decoder_head(model, num_of_groups=int(len(classes)/48))
     
     if hasTPU == True:
         model = xmp.MpModelWrapper(model)
