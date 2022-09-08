@@ -593,13 +593,14 @@ def trainCycle(image_datasets, model):
                     #print(sorted(batchTagAccuracy, key = lambda x: x[1], reverse=True))
                     
                 #losses.append(loss)
+                '''
                 if (phase == 'val'):
                     if best is None:
                         best = (float(loss), epoch, i, accuracy.item())
                     elif best[0] > float(loss):
                         best = (float(loss), epoch, i, accuracy.item())
                         print(f"NEW BEST: {best}!")
-
+                '''
                 if phase == 'train':
                     scheduler.step()
                 
