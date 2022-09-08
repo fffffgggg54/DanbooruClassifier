@@ -254,7 +254,7 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
         if hasTPU == True:
             try:
                 blob = bucket.blob('cache/' + str(postID % 1000).zfill(4) + "/" + str(postID) + ".pkl.bz2")
-                print(blob.exists())
+                #print(blob.exists())
                 file_obj = blob.download_as_bytes()
                 #print(file_obj)
                 pkl = bz2.open(io.BytesIO(file_obj))
