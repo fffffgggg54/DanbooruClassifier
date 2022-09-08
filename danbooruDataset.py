@@ -22,7 +22,7 @@ import json
 import os
 hasTPU = False
 
-if os.path.isfile("/home/fredo_guan/.hasTPU"): hasTPU = True
+if 'XRT_TPU_CONFIG' in os.environ: hasTPU = True
 
 
 if hasTPU == True:
