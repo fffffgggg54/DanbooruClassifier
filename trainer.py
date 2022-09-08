@@ -409,7 +409,7 @@ def trainCycle(image_datasets, model):
         lr = FLAGS['learning_rate'] * xm.xrt_world_size()
         device = xm.xla_device()
         device2 = device
-        parallelDataloaders = {x: pl.ParallelLoader(dataloaders[x], [device]) for x in dataloaders}
+        #parallelDataloaders = {x: pl.ParallelLoader(dataloaders[x], [device]) for x in dataloaders}
     
     model = model.to(device)
 
@@ -465,6 +465,7 @@ def trainCycle(image_datasets, model):
         AccuracyRunning = []
         AP_ema = []
         lastPrior = None
+        parallelDataloaders = {x: pl.ParallelLoader(dataloaders[x], [device]) for x in dataloaders}
         # Each epoch has a training and validation phase
         for phase in ['train', 'val']:
             if phase == 'train':
