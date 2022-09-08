@@ -116,7 +116,7 @@ if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
 FLAGS['batch_size'] = 256
 FLAGS['num_workers'] = 4
-if (hasTPU == True): FLAGS['num_workers'] = 11
+if (hasTPU == True): FLAGS['num_workers'] = 22
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 
 # training config
