@@ -466,7 +466,7 @@ def trainCycle(image_datasets, model):
         AP_ema = []
         lastPrior = None
         # Each epoch has a training and validation phase
-        for phase in [''''train',''' 'val']:
+        for phase in ['val']:
             if phase == 'train':
                 model.train()  # Set model to training mode
                 if (hasTPU == True): xm.master_print("training set")
