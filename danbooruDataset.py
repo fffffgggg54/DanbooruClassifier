@@ -256,7 +256,7 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
                 blob = bucket.blob('cache/' + str(postID % 1000).zfill(4) + "/" + str(postID) + ".pkl.bz2")
                 print(blob.exists())
                 file_obj = blob.download_as_bytes()
-                print(file_obj)
+                #print(file_obj)
                 pkl = bz2.open(io.BytesIO(file_obj))
                 image, postTags, _ = pickle.load(pkl)
                 '''
