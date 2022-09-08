@@ -518,12 +518,12 @@ def getAccuracy(preds, targs):
         P = targs * preds
         N = targs_inv * preds
         Perror = P.sum(dim=0) / (targs.sum(dim=0) + epsilon)
-        Nerror = N.sum(dim=0) / (targs_inv.sum(dim=0) + epsilon)
+        Nerror = (1-N).sum(dim=0) / (targs_inv.sum(dim=0) + epsilon)
         TP = P.mean(dim=0) * classLikelihood
         FP = (1-P).mean(dim=0) * classLikelihood
         TN = (1-N).mean(dim=0) * classLikelihoodInv
         FN = N.mean(dim=0) * classLikelihoodInv
-        return torch.column_stack([TP, TN, FP, FN, Perror, Nerror])
+        return torch.column_stack([TP, TN, FP, FN, Pscore, Nscore])
 
 class AverageMeter(object):
     def __init__(self):
