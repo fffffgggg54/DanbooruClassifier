@@ -474,8 +474,8 @@ def trainCycle(image_datasets, model):
             else:
                 model.eval()   # Set model to evaluate mode
                 if (hasTPU == True):
-                    modelDir = danbooruDataset.create_dir(FLAGS['rootPath'] + 'models/')
-                    xm.save(model.state_dict(), modelDir + 'saved_model_epoch_{epoch}.pth', master_only=True, global_master=True)
+                    #modelDir = danbooruDataset.create_dir(FLAGS['rootPath'] + 'models/')
+                    #xm.save(model.state_dict(), modelDir + 'saved_model_epoch_{epoch}.pth', master_only=True, global_master=True)
                 elif (hasTPU == False): 
                     modelDir = danbooruDataset.create_dir(FLAGS['rootPath'] + 'models/')
                     torch.save(model.cpu().state_dict(), modelDir + 'saved_model_epoch_{epoch}.pth')
