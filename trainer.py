@@ -388,7 +388,7 @@ def trainCycle(image_datasets, model):
     
         #trainData = torch.utils.data.DataLoader(trainSet, batch_size=batch_size, shuffle=True, num_workers=workers, persistent_workers = True, pin_memory = True)
         #testData = torch.utils.data.DataLoader(testSet, batch_size=batch_size, shuffle=False, num_workers=workers, persistent_workers = True, pin_memory = True)
-        dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=FLAGS['batch_size'], shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=2, pin_memory = True, drop_last=True, generator=torch.Generator().manual_seed(42)) for x in image_datasets} # set up dataloaders
+        dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=FLAGS['batch_size'], shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=5, pin_memory = True, drop_last=True, generator=torch.Generator().manual_seed(42)) for x in image_datasets} # set up dataloaders
         dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
         device = FLAGS['device']
         device2 = FLAGS['device2']
