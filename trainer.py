@@ -522,7 +522,7 @@ def trainCycle(image_datasets, model):
                             
                         preds = torch.sigmoid(outputs)
                         outputs = outputs.float()
-                        if phase == 'val':
+                        #if phase == 'val':
                             #output_ema = torch.sigmoid(ema.module(imageBatch)).cpu()
                             #output_regular = preds.cpu()
                         #loss = criterion(torch.mul(preds, tagBatch), tagBatch)
