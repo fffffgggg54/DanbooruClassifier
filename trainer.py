@@ -114,15 +114,15 @@ if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
 # dataloader config
 
-FLAGS['batch_size'] = 48
+FLAGS['batch_size'] = 16
 FLAGS['num_workers'] = 4
 if (hasTPU == True): FLAGS['num_workers'] = 22
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 
 # training config
 
-FLAGS['learning_rate'] = 1e-3
 FLAGS['num_epochs'] = 20
+FLAGS['learning_rate'] = 1e-3
 FLAGS['weight_decay'] = 1e-4
 
 # debugging config
