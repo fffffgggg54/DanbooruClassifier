@@ -606,22 +606,22 @@ def trainCycle(image_datasets, model):
                 
                 #print(device)
                     
-                    
-        torch.set_printoptions(profile="full")
-        
-        AvgAccuracy = torch.stack(AccuracyRunning)
-        AvgAccuracy = AvgAccuracy.mean(dim=0)
-        LabelledAccuracy = list(zip(tagNames, AvgAccuracy.tolist()))
-        LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[1][0], reverse=True)
-        
-        print(*LabelledAccuracySorted, sep="\n")
-        torch.set_printoptions(profile="default")
-        
-        
-        #prior.save_prior()
-        #prior.get_top_freq_classes()
-        lastPrior = prior.avg_pred_train
-        print(lastPrior[:30])
+        if torch_xla.core.xla_model.is_master_ordinal(local=False) == True:          
+            torch.set_printoptions(profile="full")
+            
+            AvgAccuracy = torch.stack(AccuracyRunning)
+            AvgAccuracy = AvgAccuracy.mean(dim=0)
+            LabelledAccuracy = list(zip(tagNames, AvgAccuracy.tolist()))
+            LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[1][0], reverse=True)
+            
+            print(*LabelledAccuracySorted, sep="\n")
+            torch.set_printoptions(profile="default")
+            
+            
+            #prior.save_prior()
+            #prior.get_top_freq_classes()
+            lastPrior = prior.avg_pred_train
+            print(lastPrior[:30])
         '''
         mAP_score_regular = np.mean(AP_regular)
         #mAP_score_ema = np.mean(AP_ema)
