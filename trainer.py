@@ -428,7 +428,7 @@ def trainCycle(image_datasets, model):
     
     # use partial label approaches from http://arxiv.org/abs/2110.10955v1
     #ema = MLCSL.ModelEma(model, 0.9997)  # 0.9997^641=0.82
-    prior = MLCSL.ComputePrior(classes, device2)
+    #prior = MLCSL.ComputePrior(classes, device2)
     
     
     
@@ -464,7 +464,7 @@ def trainCycle(image_datasets, model):
         AP_regular = []
         AccuracyRunning = []
         AP_ema = []
-        lastPrior = None
+        #lastPrior = None
         parallelDataloaders = {x: pl.ParallelLoader(dataloaders[x], [device]) for x in dataloaders}
         # Each epoch has a training and validation phase
         for phase in ['train', 'val']:
@@ -550,7 +550,7 @@ def trainCycle(image_datasets, model):
                         
 
                         #ema.update(model)
-                        prior.update(outputs.to(device2))
+                        #prior.update(outputs.to(device2))
                     
                     if (phase == 'val'):
                         '''
@@ -621,8 +621,8 @@ def trainCycle(image_datasets, model):
             
             #prior.save_prior()
             #prior.get_top_freq_classes()
-            lastPrior = prior.avg_pred_train
-            print(lastPrior[:30])
+            #lastPrior = prior.avg_pred_train
+            #print(lastPrior[:30])
         '''
         mAP_score_regular = np.mean(AP_regular)
         #mAP_score_ema = np.mean(AP_ema)
