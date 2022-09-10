@@ -114,7 +114,7 @@ if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
 # dataloader config
 
-FLAGS['batch_size'] = 64
+FLAGS['batch_size'] = 32
 FLAGS['num_workers'] = 4
 if (hasTPU == True): FLAGS['num_workers'] = 22
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
@@ -635,7 +635,7 @@ def trainCycle(image_datasets, model):
         
         time_elapsed = time.time() - epochTime
         print(f'epoch {epoch} complete in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
-        print(best)
+        #print(best)
         
 
         gc.collect()

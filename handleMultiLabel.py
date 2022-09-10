@@ -518,7 +518,7 @@ def getAccuracy(preds, targs):
         P = targs * preds
         N = targs_inv * preds
         Pscore = P.sum(dim=0) / (targs.sum(dim=0) + epsilon)
-        Nscore = (1-N).sum(dim=0) / (targs_inv.sum(dim=0) + epsilon)
+        Nscore = 1 - (N.sum(dim=0) / (targs_inv.sum(dim=0) + epsilon))
         TP = P.mean(dim=0) * classLikelihood
         FP = (1-P).mean(dim=0) * classLikelihood
         TN = (1-N).mean(dim=0) * classLikelihoodInv
