@@ -511,7 +511,7 @@ def mAP_partial(targs, preds):
 def getAccuracy(preds, targs):
     epsilon = 1e-12
     with torch.no_grad():
-        #preds = torch.sigmoid(preds).detach()
+        preds = torch.sigmoid(preds).detach()
         targs_inv = 1 - targs
         batchSize = targs.size(dim=0)
         P = targs * preds
