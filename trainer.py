@@ -432,7 +432,7 @@ def trainCycle(image_datasets, model):
     
     
     
-    criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
+    criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=8, gamma_pos=2, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0, gamma_pos=2, gamma_neg=10, gamma_unann=10, alpha_pos=1, alpha_neg=1, alpha_unann=1)
     parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
     optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=0)
@@ -470,8 +470,8 @@ def trainCycle(image_datasets, model):
         for phase in ['train', 'val']:
             if phase == 'train':
                 model.train()  # Set model to training mode
-                if (hasTPU == True): xm.master_print("training set")
-                else: print("training set")
+                #if (hasTPU == True): xm.master_print("training set")
+                print("training set")
             else:
                 model.eval()   # Set model to evaluate mode
                 if (hasTPU == True):
