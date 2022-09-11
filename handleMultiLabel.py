@@ -509,20 +509,22 @@ def mAP_partial(targs, preds):
 
 
 def getAccuracy(preds, targs):
-    epsilon = 1e-8
+    epsilon = 1e-12
     with torch.no_grad():
-        preds = torch.sigmoid(preds).detach()
+        #preds = torch.sigmoid(preds).detach()
         targs_inv = 1 - targs
-        classLikelihood = targs.sum(0)/targs.size(dim=0)
-        classLikelihoodInv = targs_inv.sum(0)/targs.size(dim=0)
+        batchSize = targs.size(dim=0)
         P = targs * preds
         N = targs_inv * preds
+        
         Pscore = P.sum(dim=0) / (targs.sum(dim=0) + epsilon)
         Nscore = 1-(N.sum(dim=0) / (targs_inv.sum(dim=0) + epsilon))
-        TP = P.mean(dim=0) * classLikelihood
-        FN = (1-P).mean(dim=0) * classLikelihood
-        FP = N.mean(dim=0) * classLikelihoodInv
-        TN = (1-N).mean(dim=0) * classLikelihoodInv
+        
+        TP = P.sum(dim=0) / batchSize
+        FN = (targs - P).sum(dim=0) / batchSize
+        FP = N.sum(dim=0) / batchSize
+        TN = (targs_inv - N).sum(dim=0) / batchSize
+        
         return torch.column_stack([TP, FN, FP, TN, Pscore, Nscore])
 
 class AverageMeter(object):
