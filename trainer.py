@@ -122,8 +122,8 @@ if(torch.has_mps == True): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['num_epochs'] = 20
-FLAGS['learning_rate'] = 1e-3
-FLAGS['weight_decay'] = 1e-4
+FLAGS['learning_rate'] = 3e-3
+FLAGS['weight_decay'] = 1e-2
 
 # debugging config
 
