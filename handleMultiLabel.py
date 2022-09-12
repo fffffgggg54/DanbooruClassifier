@@ -517,15 +517,18 @@ def getAccuracy(preds, targs):
         P = targs * preds
         N = targs_inv * preds
         
-        Pscore = P.sum(dim=0) / (targs.sum(dim=0) + epsilon)
-        Nscore = 1-(N.sum(dim=0) / (targs_inv.sum(dim=0) + epsilon))
         
         TP = P.sum(dim=0) / batchSize
         FN = (targs - P).sum(dim=0) / batchSize
         FP = N.sum(dim=0) / batchSize
         TN = (targs_inv - N).sum(dim=0) / batchSize
         
-        return torch.column_stack([TP, FN, FP, TN, Pscore, Nscore])
+        Precall = TP / (TP + FN)
+        Nrecall = TN / (TN + FP)
+        Pprecision = TP / (TP + FP)
+        Nprecision = TN / (TN + FN)
+        
+        return torch.column_stack([TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision])
 
 class AverageMeter(object):
     def __init__(self):
