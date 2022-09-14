@@ -523,10 +523,10 @@ def getAccuracy(preds, targs):
         FP = N.sum(dim=0) / batchSize
         TN = (targs_inv - N).sum(dim=0) / batchSize
         
-        Precall = TP / (TP + FN)
-        Nrecall = TN / (TN + FP)
-        Pprecision = TP / (TP + FP)
-        Nprecision = TN / (TN + FN)
+        Precall = TP / (TP + FN + epsilon)
+        Nrecall = TN / (TN + FP + epsilon)
+        Pprecision = TP / (TP + FP + epsilon)
+        Nprecision = TN / (TN + FN + epsilon)
         
         return torch.column_stack([TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision])
 
