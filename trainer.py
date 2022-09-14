@@ -115,7 +115,7 @@ if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 # dataloader config
 
 FLAGS['batch_size'] = 512
-FLAGS['num_workers'] = 6
+FLAGS['num_workers'] = 8
 if (hasTPU == True): FLAGS['num_workers'] = 11
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 
