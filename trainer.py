@@ -1,6 +1,6 @@
 # put -r "C:\Users\fredo\Documents\GitHub\DanbooruClassifier\" /home/fredo/Code/ML/danbooru2021/classification
 # put -r "C:\Users\fredo\OneDrive - Lake Washington School District\Code\ML\danbooru2021\classification\" /home/fredo/Code/ML/danbooru2021/classification
-# python "/home/fredo/Code/ML/danbooru2021/classification/trainer.py"
+# python "/home/fredo/Code/ML/DanbooruClassifier/trainer.py"
 
 # put -r "C:\Users\fredo\Documents\GitHub\DanbooruClassifier\" /Users/fredoguan/Code/ML/danbooru2021/classification
 # put -r "C:\Users\fredo\OneDrive - Lake Washington School District\Code\ML\danbooru2021\classification\" /Users/fredoguan/Code/ML/danbooru2021/classification
@@ -407,7 +407,7 @@ def trainCycle(image_datasets, model):
         AccuracyRunning = []
         AP_ema = []
         #lastPrior = None
-        parallelDataloaders = {x: pl.ParallelLoader(dataloaders[x], [device]) for x in dataloaders}
+        if (hasTPU == True): parallelDataloaders = {x: pl.ParallelLoader(dataloaders[x], [device]) for x in dataloaders}
         # Each epoch has a training and validation phase
         for phase in ['train', 'val']:
             if phase == 'train':
