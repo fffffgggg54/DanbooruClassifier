@@ -131,64 +131,6 @@ FLAGS['verbose_debug'] = False
 FLAGS['stepsPerPrintout'] = 50
 
 classes = None
-'''
-# root directory of danbooru dataset
-#rootPath = "D:/Datasets/danbooru2021/"
-#rootPath = "C:/Users/Fredo/Downloads/Datasets/danbooru2021/"
-rootPath = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
-#rootPath = "/media/fredo/Datasets/danbooru2021/"
-if(torch.has_mps == True): rootPath = "/Users/fredoguan/Datasets/danbooru2021/"
-#cacheRoot = "G:/DanbooruCache/"
-#postMetaDir = rootPath + "metadata/"
-postMetaDir = rootPath #+ "TenthMeta/"
-imageRoot = rootPath + "original/"
-# file names
-tagListFile = "data_tags.json"
-postListFile = "data_posts.json"
-postDFPickle = postMetaDir + "postData.pkl"
-tagDFPickle = postMetaDir + "tagData.pkl"
-postDFPickleFiltered = postMetaDir + "postDataFiltered.pkl"
-tagDFPickleFiltered = postMetaDir + "tagDataFiltered.pkl"
-cacheRoot = rootPath + "cache/"
-'''
-
-'''
-# dataset config
-# minimum number of posts for a tag to be included in potential outputs
-#minPostCount = 50000
-trainSetSize = 0.8
-
-workingSetSize = 1
-'''
-'''
-# importer config
-# set line count of json chunks
-chunkSize = 1000
-# number of threads to use for json parsing
-importerProcessCount = 10
-if(torch.has_mps == True): importerProcessCount = 7
-stopReadingAt = 5000
-'''
-'''
-# Number of workers for dataloader
-workers = 4
-if(torch.has_mps == True): workers = 5
-# Batch size during training
-batch_size = 256
-# Number of training epochs
-num_epochs = 30
-# Number of GPUs available. Use 0 for CPU mode.
-ngpu = torch.cuda.is_available()
-# Decide which device we want to run on
-device = torch.device("cuda:0" if (torch.cuda.is_available() and ngpu > 0) else "mps" if (torch.has_mps == True) else "cpu")
-device2 = device
-if(torch.has_mps == True): device2 = "cpu"
-lr = 3e-4
-weight_decay = 1e-4
-
-'''
-
-
 
     
     
