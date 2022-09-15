@@ -459,8 +459,8 @@ def trainCycle(image_datasets, model):
                             
 
                             #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                            #loss = criterion(outputs.to(device2), tagBatch.to(device2))
-                        loss = criterion(outputs.cpu(), tags.cpu())
+                            loss = criterion(outputs.to(device2), tagBatch.to(device2))
+                            #loss = criterion(outputs.cpu(), tags.cpu())
                     elif (hasTPU == True):
                         outputs = model(imageBatch)
                             
