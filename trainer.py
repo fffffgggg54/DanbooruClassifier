@@ -513,7 +513,6 @@ def trainCycle(image_datasets, model):
                         
                         targets_batch = tags.cpu().detach().numpy()
                         preds_regular_batch = preds.cpu().detach().numpy()
-                        print(device)
                         accuracy = MLCSL.mAP(targets_batch, preds_regular_batch)
                         
                     
