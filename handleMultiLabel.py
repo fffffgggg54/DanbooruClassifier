@@ -615,19 +615,22 @@ class DistibutionAgnosticSeesawLossWithLogits(nn.Module):
        Set to 0.8 for default following the paper.
     """
 
-    def __init__(self, p: float = 0.8):
+    def __init__(self, device, p: float = 0.8):
         super().__init__()
         self.eps = 1.0e-6
         self.p = p
         self.s = None
         self.class_counts = None
+        self.device = device
 
     def forward(self, logits, targets):
         if self.class_counts is None:
             self.class_counts = targets.sum(axis=0) + 1 # to prevent devided by zero.
         else:
             self.class_counts += targets.sum(axis=0)
-
+        
+        logits = torch.sigmoid(logits).detach().to(self.device)
+        
         conditions = self.class_counts[:, None] > self.class_counts[None, :]
         trues = (self.class_counts[None, :] / self.class_counts[:, None]) ** self.p
         falses = torch.ones(len(self.class_counts), len(self.class_counts))
