@@ -421,7 +421,7 @@ def trainCycle(image_datasets, model):
                     #xm.save(model.state_dict(), modelDir + 'saved_model_epoch_{epoch}.pth', master_only=True, global_master=True)
                 elif (hasTPU == False): 
                     modelDir = danbooruDataset.create_dir(FLAGS['rootPath'] + 'models/')
-                    torch.save(model.cpu().state_dict(), modelDir + 'saved_model_epoch_{epoch}.pth')
+                    torch.save(model.state_dict(), modelDir + 'saved_model_epoch_{epoch}.pth')
                 print("validation set")
             
             # For each batch in the dataloader
