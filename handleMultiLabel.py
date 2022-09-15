@@ -629,6 +629,8 @@ class DistibutionAgnosticSeesawLossWithLogits(nn.Module):
         else:
             self.class_counts += targets.sum(axis=0)
         
+        self.class_counts.to(self.device)
+        
         logits = torch.sigmoid(logits).detach().to(self.device)
         
         conditions = self.class_counts[:, None] > self.class_counts[None, :]
