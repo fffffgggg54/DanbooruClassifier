@@ -456,7 +456,7 @@ def trainCycle(image_datasets, model):
                                 output_regular = preds.cpu()
                             #loss = criterion(torch.mul(preds, tagBatch), tagBatch)
                             #loss = criterion(outputs, tagBatch)
-                            loss = criterion(preds, tagBatch)
+                            loss = criterion(preds.cpu(), tags.cpu())
 
                             #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
                             #loss = criterion(outputs.to(device2), tagBatch.to(device2))
