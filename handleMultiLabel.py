@@ -648,4 +648,4 @@ class DistibutionAgnosticSeesawLossWithLogits(nn.Module):
 
         sigma = numerator / (denominator + self.eps)
         loss = (- targets * torch.log(sigma + self.eps)).sum(-1)
-        return loss.mean()
+        return loss.sum()
