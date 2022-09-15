@@ -115,7 +115,7 @@ if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 # dataloader config
 
 FLAGS['batch_size'] = 512
-FLAGS['num_workers'] = 8
+FLAGS['num_workers'] = 7
 if (hasTPU == True): FLAGS['num_workers'] = 11
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 
@@ -373,8 +373,8 @@ def trainCycle(image_datasets, model):
     #prior = MLCSL.ComputePrior(classes, device2)
     
     
-    
-    criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=8, gamma_pos=2, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
+    criterion = MLCSL.DistibutionAgnosticSeesawLossWithLogits()
+    #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=8, gamma_pos=2, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0, gamma_pos=2, gamma_neg=10, gamma_unann=10, alpha_pos=1, alpha_neg=1, alpha_unann=1)
     parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
     optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=0)
@@ -456,10 +456,10 @@ def trainCycle(image_datasets, model):
                                 output_regular = preds.cpu()
                             #loss = criterion(torch.mul(preds, tagBatch), tagBatch)
                             #loss = criterion(outputs, tagBatch)
-                            #loss = criterion(preds, tagBatch)
+                            loss = criterion(preds, tagBatch)
 
                             #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                            loss = criterion(outputs.to(device2), tagBatch.to(device2))
+                            #loss = criterion(outputs.to(device2), tagBatch.to(device2))
                     elif (hasTPU == True):
                         outputs = model(imageBatch)
                             
