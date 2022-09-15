@@ -636,7 +636,7 @@ class DistibutionAgnosticSeesawLossWithLogits(nn.Module):
         conditions = self.class_counts[:, None] > self.class_counts[None, :]
         trues = (self.class_counts[None, :] / self.class_counts[:, None]) ** self.p
         falses = torch.ones(len(self.class_counts), len(self.class_counts))
-        self.s = torch.where(conditions, trues, falses)
+        self.s = torch.where(conditions.to(self.device), trues.to(self.device), falses.to(self.device))
 
         max_element, _ = logits.max(axis=-1)
         logits = logits - max_element[:, None]  # to prevent overflow
