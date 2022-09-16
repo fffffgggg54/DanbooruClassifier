@@ -311,12 +311,12 @@ def modelSetup(classes):
     #model = models.resnet101(weights=models.ResNet101_Weights.DEFAULT)
     #model = models.resnet34()
     #model = models.resnet34(weights = models.ResNet34_Weights.DEFAULT)
-    model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
-    model.fc = nn.Linear(model.fc.in_features, len(classes))
+    #model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
+    #model.fc = nn.Linear(model.fc.in_features, len(classes))
     
-    #model = TResnetM({'num_classes':len(classes)})
-    #model.load_state_dict(torch.load("/home/fredo/Code/ML/danbooru2021/tresnet_m.pth"), strict=False)
-    #model = MLDecoderHead.add_ml_decoder_head(model, num_of_groups=int(len(classes)/48))
+    model = TResnetM({'num_classes':len(classes)})
+    model.load_state_dict(torch.load("/home/fredo/Code/ML/danbooru2021/tresnet_m.pth"), strict=False)
+    model = MLDecoderHead.add_ml_decoder_head(model, num_of_groups=int(len(classes)/48))
     
     if hasTPU == True:
         model = xmp.MpModelWrapper(model)
@@ -373,8 +373,7 @@ def trainCycle(image_datasets, model):
     #prior = MLCSL.ComputePrior(classes, device2)
     
     
-    criterion = MLCSL.DistibutionAgnosticSeesawLossWithLogits(device2)
-    #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=8, gamma_pos=2, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
+    criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=12, gamma_pos=2, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0, gamma_pos=2, gamma_neg=10, gamma_unann=10, alpha_pos=1, alpha_neg=1, alpha_unann=1)
     parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
     optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=0)
