@@ -316,7 +316,7 @@ def modelSetup(classes):
     #model.fc = nn.Linear(model.fc.in_features, len(classes))
     
     model = TResnetM({'num_classes':len(classes)})
-    model.load_state_dict(torch.load("/home/fredo/Code/ML/danbooru2021/tresnet_m.pth"), strict=False)
+    #model.load_state_dict(torch.load("/home/fredo/Code/ML/danbooru2021/tresnet_m.pth"), strict=False)
     model = MLDecoderHead.add_ml_decoder_head(model, num_of_groups=int(len(classes)/48))
     
     if hasTPU == True:
