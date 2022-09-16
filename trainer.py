@@ -77,7 +77,8 @@ FLAGS = {}
 # path config for various directories and files
 # TODO replace string appending with os.path.join()
 
-FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
+#FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
+FLAGS['rootPath'] = "/media/fredo/Datasets/danbooru2021/"
 if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
 if (hasTPU == True): FLAGS['rootPath'] = "/home/fredo_guan/danbooru2021/"
 FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
@@ -119,6 +120,7 @@ FLAGS['batch_size'] = 256
 FLAGS['num_workers'] = 7
 if (hasTPU == True): FLAGS['num_workers'] = 11
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
+if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
 # training config
 
@@ -312,12 +314,12 @@ def modelSetup(classes):
     #model = models.resnet101(weights=models.ResNet101_Weights.DEFAULT)
     #model = models.resnet34()
     #model = models.resnet34(weights = models.ResNet34_Weights.DEFAULT)
-    #model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
-    #model.fc = nn.Linear(model.fc.in_features, len(classes))
+    model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
+    model.fc = nn.Linear(model.fc.in_features, len(classes))
     
-    model = TResnetM({'num_classes':len(classes)})
+    #model = TResnetM({'num_classes':len(classes)})
     #model.load_state_dict(torch.load("/home/fredo/Code/ML/danbooru2021/tresnet_m.pth"), strict=False)
-    model = MLDecoderHead.add_ml_decoder_head(model, num_of_groups=int(len(classes)/48))
+    #model = MLDecoderHead.add_ml_decoder_head(model, num_of_groups=int(len(classes)/48))
     
     if hasTPU == True:
         model = xmp.MpModelWrapper(model)
