@@ -549,7 +549,7 @@ def trainCycle(image_datasets, model):
                 
                 #print(device)
                     
-        if (hasTPU == False) || ((hasTPU == True) && (torch_xla.core.xla_model.is_master_ordinal(local=False) == True)):          
+        if (hasTPU == False) or ((hasTPU == True) and (torch_xla.core.xla_model.is_master_ordinal(local=False) == True)):          
             #torch.set_printoptions(profile="full")
             
             AvgAccuracy = torch.stack(AccuracyRunning)
