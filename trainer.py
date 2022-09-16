@@ -549,7 +549,7 @@ def trainCycle(image_datasets, model):
                 
                 #print(device)
                     
-        if torch_xla.core.xla_model.is_master_ordinal(local=False) == True:          
+        if (hasTPU == False) || ((hasTPU == True) && (torch_xla.core.xla_model.is_master_ordinal(local=False) == True)):          
             #torch.set_printoptions(profile="full")
             
             AvgAccuracy = torch.stack(AccuracyRunning)
@@ -581,7 +581,9 @@ def trainCycle(image_datasets, model):
         
 
         gc.collect()
-        if(FLAGS['verbose_debug'] == True): xm.master_print(met.metrics_report(), flush=True)
+        if(FLAGS['verbose_debug'] == True):
+            if(hasTPU == True):
+                xm.master_print(met.metrics_report(), flush=True)
         print()
     #time_elapsed = time.time() - startTime
     #print(f'Training complete in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
