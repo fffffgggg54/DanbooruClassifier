@@ -77,8 +77,8 @@ FLAGS = {}
 # path config for various directories and files
 # TODO replace string appending with os.path.join()
 
-#FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
-FLAGS['rootPath'] = "/media/fredo/Datasets/danbooru2021/"
+FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
+#FLAGS['rootPath'] = "/media/fredo/Datasets/danbooru2021/"
 if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
 if (hasTPU == True): FLAGS['rootPath'] = "/home/fredo_guan/danbooru2021/"
 FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
