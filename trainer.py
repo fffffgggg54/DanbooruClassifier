@@ -320,7 +320,7 @@ def modelSetup(classes):
     
     #model.fc = nn.Linear(model.fc.in_features, len(classes))
     
-    model = timm.create_model('vit_base_patch16_224', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('efficientnet_b3a', pretrained=True, num_classes=len(classes))
     
     #model = TResnetM({'num_classes':len(classes)})
     #model.load_state_dict(torch.load("/home/fredo/Code/ML/danbooru2021/tresnet_m.pth"), strict=False)
