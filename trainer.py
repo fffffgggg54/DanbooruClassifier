@@ -316,7 +316,7 @@ def modelSetup(classes):
     #model = models.resnet34()
     #model = models.resnet34(weights = models.ResNet34_Weights.DEFAULT)
     #model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
-    #model.fc = nn.Linear(model.fc.in_features, len(classes))
+    model.fc = nn.Linear(model.fc.in_features, len(classes))
     
     #model = TResnetM({'num_classes':len(classes)})
     #model.load_state_dict(torch.load("/home/fredo/Code/ML/danbooru2021/tresnet_m.pth"), strict=False)
