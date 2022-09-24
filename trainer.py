@@ -125,7 +125,7 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['num_epochs'] = 20
-FLAGS['learning_rate'] = 3e-3
+FLAGS['learning_rate'] = 5e-4
 FLAGS['weight_decay'] = 1e-2
 
 # debugging config
@@ -312,14 +312,15 @@ def modelSetup(classes):
     #model = models.resnet152(weights=models.ResNet152_Weights.DEFAULT)
     #model = models.resnet152()
     #model = models.resnet101(weights=models.ResNet101_Weights.DEFAULT)
+    model = models.resnet50(weights = models.ResNet50_Weights.DEFAULT)
     #model = models.resnet34()
     #model = models.resnet34(weights = models.ResNet34_Weights.DEFAULT)
     #model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
     #model.fc = nn.Linear(model.fc.in_features, len(classes))
     
-    model = TResnetM({'num_classes':len(classes)})
+    #model = TResnetM({'num_classes':len(classes)})
     #model.load_state_dict(torch.load("/home/fredo/Code/ML/danbooru2021/tresnet_m.pth"), strict=False)
-    model = MLDecoderHead.add_ml_decoder_head(model, num_of_groups=int(len(classes)/48))
+    #model = MLDecoderHead.add_ml_decoder_head(model, num_of_groups=int(len(classes)/48))
     
     if hasTPU == True:
         model = xmp.MpModelWrapper(model)
