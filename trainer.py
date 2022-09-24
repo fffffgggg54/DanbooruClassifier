@@ -125,7 +125,7 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['num_epochs'] = 20
-FLAGS['learning_rate'] = 1e-4
+FLAGS['learning_rate'] = 1e-5
 FLAGS['weight_decay'] = 1e-2
 
 # debugging config
@@ -315,10 +315,12 @@ def modelSetup(classes):
     #model = models.resnet50(weights = models.ResNet50_Weights.DEFAULT)
     #model = models.resnet34()
     #model = models.resnet34(weights = models.ResNet34_Weights.DEFAULT)
-    model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
-    model.fc = nn.Linear(model.fc.in_features, len(classes))
+    #model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
     
-    #model = timm.create_model('vit_base_patch16_224', pretrained=True, num_classes=len(classes))
+    
+    #model.fc = nn.Linear(model.fc.in_features, len(classes))
+    
+    model = timm.create_model('vit_base_patch16_224', pretrained=True, num_classes=len(classes))
     
     #model = TResnetM({'num_classes':len(classes)})
     #model.load_state_dict(torch.load("/home/fredo/Code/ML/danbooru2021/tresnet_m.pth"), strict=False)
