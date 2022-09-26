@@ -84,8 +84,8 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
 # training config
 
-FLAGS['num_epochs'] = 50
-FLAGS['learning_rate'] = 5e-4
+FLAGS['num_epochs'] = 20
+FLAGS['learning_rate'] = 3e-2
 FLAGS['weight_decay'] = 1e-2
 
 # debugging config
