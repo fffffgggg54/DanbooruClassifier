@@ -510,25 +510,24 @@ def mAP_partial(targs, preds):
 
 def getAccuracy(preds, targs):
     epsilon = 1e-12
-    with torch.no_grad():
-        preds = torch.sigmoid(preds).detach()
-        targs_inv = 1 - targs
-        batchSize = targs.size(dim=0)
-        P = targs * preds
-        N = targs_inv * preds
-        
-        
-        TP = P.sum(dim=0) / batchSize
-        FN = (targs - P).sum(dim=0) / batchSize
-        FP = N.sum(dim=0) / batchSize
-        TN = (targs_inv - N).sum(dim=0) / batchSize
-        
-        Precall = TP / (TP + FN + epsilon)
-        Nrecall = TN / (TN + FP + epsilon)
-        Pprecision = TP / (TP + FP + epsilon)
-        Nprecision = TN / (TN + FN + epsilon)
-        
-        return torch.column_stack([TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision])
+    preds = torch.sigmoid(preds).detach()
+    targs_inv = 1 - targs
+    batchSize = targs.size(dim=0)
+    P = targs * preds
+    N = targs_inv * preds
+    
+    
+    TP = P.sum(dim=0) / batchSize
+    FN = (targs - P).sum(dim=0) / batchSize
+    FP = N.sum(dim=0) / batchSize
+    TN = (targs_inv - N).sum(dim=0) / batchSize
+    
+    Precall = TP / (TP + FN + epsilon)
+    Nrecall = TN / (TN + FP + epsilon)
+    Pprecision = TP / (TP + FP + epsilon)
+    Nprecision = TN / (TN + FN + epsilon)
+    
+    return torch.column_stack([TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision])
 
 class AverageMeter(object):
     def __init__(self):

@@ -303,6 +303,7 @@ def trainCycle(image_datasets, model):
                         
                         preds = torch.sigmoid(outputs)
                         outputs = outputs.float()
+                        multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
                         if phase == 'val':
                             #output_ema = torch.sigmoid(ema.module(imageBatch)).cpu()
                             output_regular = preds.cpu()
@@ -313,6 +314,7 @@ def trainCycle(image_datasets, model):
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
                         loss = criterion(outputs.to(device2), tagBatch.to(device2))
                         #loss = criterion(outputs.cpu(), tags.cpu())
+                        #loss = loss = (1 - multiAccuracy[:,4:]).pow(2).sum()
                     
                     #model.zero_grad()
                     # backward + optimize only if in training phase
@@ -339,7 +341,7 @@ def trainCycle(image_datasets, model):
                         AP_regular.append(accuracy)
                         
                         #AP_ema.append(MLCSL.mAP(targets, preds_ema))
-                        AccuracyRunning.append(MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2)))
+                        AccuracyRunning.append(multiAccuracy)
                 #print(device)
                 if i % stepsPerPrintout == 0:
                     
