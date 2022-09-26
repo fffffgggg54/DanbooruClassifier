@@ -42,7 +42,6 @@ FLAGS = {}
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
 #FLAGS['rootPath'] = "/media/fredo/Datasets/danbooru2021/"
 if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
-if (hasTPU == True): FLAGS['rootPath'] = "/home/fredo_guan/danbooru2021/"
 FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + "original/"
 FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
