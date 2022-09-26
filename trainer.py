@@ -185,15 +185,15 @@ def modelSetup(classes):
     #model = models.resnet152(weights=models.ResNet152_Weights.DEFAULT)
     #model = models.resnet152()
     #model = models.resnet101(weights=models.ResNet101_Weights.DEFAULT)
-    #model = models.resnet50(weights = models.ResNet50_Weights.DEFAULT)
+    model = models.resnet50(weights = models.ResNet50_Weights.DEFAULT)
     #model = models.resnet34()
     #model = models.resnet34(weights = models.ResNet34_Weights.DEFAULT)
     #model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
     
     
-    #model.fc = nn.Linear(model.fc.in_features, len(classes))
+    model.fc = nn.Linear(model.fc.in_features, len(classes))
     
-    model = timm.create_model('efficientnet_b3a', pretrained=True, num_classes=len(classes))
+    #model = timm.create_model('efficientnet_b3a', pretrained=True, num_classes=len(classes))
 
 
     return model
@@ -273,7 +273,7 @@ def trainCycle(image_datasets, model):
                 
 
                 modelDir = danbooruDataset.create_dir(FLAGS['rootPath'] + 'models/')
-                torch.save(model.state_dict(), modelDir + 'saved_model_epoch_{epoch}.pth')
+                torch.save(model.state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
                 print("validation set")
             
             # For each batch in the dataloader
