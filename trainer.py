@@ -299,10 +299,10 @@ def trainCycle(image_datasets, model):
                     
                     with torch.cuda.amp.autocast():
                         outputs = model(imageBatch)
-                        
+                        multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
                         preds = torch.sigmoid(outputs)
                         outputs = outputs.float()
-                        multiAccuracy = MLCSL.getAccuracy(outputs, tagBatch)
+                        
                         if phase == 'val':
                             #output_ema = torch.sigmoid(ema.module(imageBatch)).cpu()
                             output_regular = preds.cpu()
