@@ -416,7 +416,6 @@ def trainCycle(image_datasets, model):
         
 
         gc.collect()
-        if(FLAGS['verbose_debug'] == True):
 
         print()
     #time_elapsed = time.time() - startTime
