@@ -11,10 +11,33 @@ from PIL import Image, ImageOps, ImageDraw
 import PIL
 import requests
 from io import BytesIO
+import io
+import time
 import random
 import bz2
 import pickle
 import _pickle as cPickle
+import json
+
+import os
+hasTPU = False
+
+if 'XRT_TPU_CONFIG' in os.environ: hasTPU = True
+
+
+if hasTPU == True:
+    import torch_xla
+    import torch_xla.core.xla_model as xm
+    import torch_xla.debug.metrics as met
+    import torch_xla.distributed.parallel_loader as pl
+    import torch_xla.distributed.xla_multiprocessing as xmp
+    import torch_xla.utils.utils as xu
+    import torch_xla.utils.gcsfs
+    SERIAL_EXEC = xmp.MpSerialExecutor()
+    from google.cloud import storage
+
+    client = storage.Client.create_anonymous_client()
+    bucket = client.get_bucket('danbooru2021_dataset_zzz')
 
 
 
@@ -210,7 +233,6 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
         self.tagList = pd.Series(tagList, dtype=pd.StringDtype())
         self.transform = transform  #transform, callable?
         self.cacheRoot = cacheRoot  #string
-        
 
     def __len__(self):
         return len(self.postList)
@@ -226,103 +248,190 @@ class DanbooruDatasetOLD(torch.utils.data.Dataset):
         #postData.tag_string = postData.tag_string.split()
         
         postID = int(postData.loc["id"])
-        
-        try:
-            assert self.cacheRoot is not None
-            cacheDir = create_dir(self.cacheRoot + str(postID % 1000).zfill(4))
-            cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
-            cachedSample = bz2.BZ2File(cachePath, 'rb')
-            image, postTags,_ = cPickle.load(cachedSample)
-            #print(f"got pickle from {cachePath}")
-        except:
-        
-            postTagList = set(postData.loc["tag_string"].split()).intersection(set(self.tagList.to_list()))
-
-            # one-hot encode the tags of a given post
-            # TODO find better way to find matching tags
-            postTags = []
-            for key in list(self.tagList.to_list()):
-                match = False
-                for tag in postTagList:
-                    if tag == key:
-                        match = True
-                
-                postTags.append(int(match))
-        
-            
-            #metaTime = time.time() - startTime
-            #startTime = time.time()
-            imagePath = str(postID % 1000).zfill(4) + "/" + str(postID) + "." + postData.loc["file_ext"]
-            #cachedImagePath = cacheRoot + imagePath
-            imagePath = self.imageRoot + imagePath
-            
-            try: 
-                #path = cachedImagePath
-                path = imagePath
-                image = Image.open(path)    #check if file exists
-                image.load()    # check if file valid
-            except:     #if file doesn't exist or isn't valid, download it and save/overwrite
-                imageURL = postData.loc["file_url"]
-                #print("Getting image from " + imageURL)
-                response = requests.get(imageURL)
-                image = Image.open(BytesIO(response.content))
-                myFile = open(path, "wb")
-                myFile.write(response.content)
-                myFile.close()
-            
-                #print("Image saved to " + path)
-            # TODO implement switchable cache use
-            '''
-            except FileNotFoundError:
-                
+        image = torch.Tensor()
+        postTags = torch.Tensor()
+        bruh = False
+        if hasTPU == True:
+            try:
+                blob = bucket.blob('cache/' + str(postID % 1000).zfill(4) + "/" + str(postID) + ".pkl.bz2")
+                #print(blob.exists())
+                file_obj = blob.download_as_bytes()
+                #print(file_obj)
+                pkl = bz2.open(io.BytesIO(file_obj))
+                image, postTags, _ = pickle.load(pkl)
+                '''
+                cachePath = "https://storage.googleapis.com/danbooru2021_dataset_zzz/cache/" + str(postID % 1000).zfill(4) + "/" + str(postID) + ".pkl.bz2"
+                response = requests.get(cachePath)
+                pkl = bz2.open(io.BytesIO(response.content))
+                image, postTags, _ = cPickle.load(pkl)
+                '''
+            except Exception as e:
+                print(e)
                 try:
-                    create_dir(cacheRoot + str(postID % 1000).zfill(4))
-                    #print(f"copy {imagePath} to {cachedImagePath}")
-                    image = Image.open(shutil.copy2(imagePath, cachedImagePath))
-                    image = image.convert("RGB")
-           
-                except:
-                    imageURL = postData.loc["file_url"]
-                    print("Getting image from " + imageURL)
-                    response = requests.get(imageURL)
-                    image = ImageOps.pad(Image.open(BytesIO(response.content)), (512, 512))
-                    image = image.convert("RGB")
-                    image.save(path)
-                    print("Image saved to " + path)
-            '''
-            #image = ImageOps.exif_transpose(image)
-            #imageLoadTime = time.time() - startTime
-            #startTime = time.time()
-            #process our image
-            
-            image = image.convert("RGBA")
-            
-            color = (255,255,255)
-            
-            background = Image.new('RGB', image.size, color)
-            background.paste(image, mask=image.split()[3])
-            image = background
-            
-            
-            #image = transforms.functional.pil_to_tensor(image).squeeze()
-            
-            image = transforms.functional.resize(image, (224,224))
-            image = transforms.functional.pil_to_tensor(image)
-            
-            postTags = torch.Tensor(postTags)
-            
+                    cachePath = "/home/fredo_guan/cache/" + str(postID % 1000).zfill(4) + "/" + str(postID) + ".pkl.bz2"
+                    cachedSample = bz2.open(cachePath, 'rb')
+                    image, postTags,_ = cPickle.load(cachedSample)
+                    bruh == True
+                except Exception as e:
+                    #print(e)
+                    postTagList = set(postData.loc["tag_string"]).intersection(set(self.tagList.to_list()))
 
+                    # one-hot encode the tags of a given post
+                    # TODO find better way to find matching tags
+                    postTags = []
+                    for key in list(self.tagList.to_list()):
+                        match = False
+                        for tag in postTagList:
+                            if tag == key:
+                                match = True
+                        
+                        postTags.append(int(match))
+                
+                    
+                    #metaTime = time.time() - startTime
+                    #startTime = time.time()
+                    imagePath = str(postID % 1000).zfill(4) + "/" + str(postID) + "." + postData.loc["file_ext"]
+                    #cachedImagePath = cacheRoot + imagePath
+                    imagePath = self.imageRoot + imagePath
+                    
+                    try:
+                        imageURL = postData.loc["file_url"]
+                        #print("Getting image from " + imageURL)
+                        response = requests.get(imageURL)
+                        image = Image.open(BytesIO(response.content))
+                    except:
+                        postURL = "https://danbooru.donmai.us/posts/" + str(postID) + ".json"
+                        response = requests.get(postURL).content
+                        #print(response)
+                        postDataFromJson = json.load(response)
+                        #print(postDataFromJson)
+                        imageURL = postDataFromJson['file_url']
+                        
+                        #print("Getting image from " + imageURL)
+                        response = requests.get(imageURL)
+                        image = Image.open(BytesIO(response.content))
+                    image = image.convert("RGBA")
+                    
+                    color = (255,255,255)
+                    
+                    background = Image.new('RGB', image.size, color)
+                    background.paste(image, mask=image.split()[3])
+                    image = background
+                    
+                    
+                    #image = transforms.functional.pil_to_tensor(image).squeeze()
+                    
+                    image = transforms.functional.resize(image, (224,224))
+                    image = transforms.functional.pil_to_tensor(image)
+                    
+                    postTags = torch.Tensor(postTags)
+                    
+                    cacheDir = create_dir("/home/fredo_guan/cache/" + str(postID % 1000).zfill(4))
+                    cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
+                    print(cachePath)
+                    with bz2.BZ2File(cachePath, 'w') as cachedSample:
+                        cPickle.dump((image, postTags, postID), cachedSample)
+                    #print(os.path.isfile(cachePath))
             
-            if(self.cacheRoot is not None):
+        elif(hasTPU == False):
+        
+            try:
+                assert self.cacheRoot is not None
                 cacheDir = create_dir(self.cacheRoot + str(postID % 1000).zfill(4))
                 cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
-                with bz2.BZ2File(cachePath, 'w') as cachedSample: cPickle.dump((image, postTags, postID), cachedSample)
+                cachedSample = bz2.BZ2File(cachePath, 'rb')
+                image, postTags,_ = cPickle.load(cachedSample)
+                #print(f"got pickle from {cachePath}")
+            except:
+            
+                postTagList = set(postData.loc["tag_string"].split()).intersection(set(self.tagList.to_list()))
+
+                # one-hot encode the tags of a given post
+                # TODO find better way to find matching tags
+                postTags = []
+                for key in list(self.tagList.to_list()):
+                    match = False
+                    for tag in postTagList:
+                        if tag == key:
+                            match = True
+                    
+                    postTags.append(int(match))
+            
+                
+                #metaTime = time.time() - startTime
+                #startTime = time.time()
+                imagePath = str(postID % 1000).zfill(4) + "/" + str(postID) + "." + postData.loc["file_ext"]
+                #cachedImagePath = cacheRoot + imagePath
+                imagePath = self.imageRoot + imagePath
+                
+                try: 
+                    #path = cachedImagePath
+                    path = imagePath
+                    image = Image.open(path)    #check if file exists
+                    image.load()    # check if file valid
+                except:     #if file doesn't exist or isn't valid, download it and save/overwrite
+                    imageURL = postData.loc["file_url"]
+                    #print("Getting image from " + imageURL)
+                    response = requests.get(imageURL)
+                    image = Image.open(BytesIO(response.content))
+                    myFile = open(path, "wb")
+                    myFile.write(response.content)
+                    myFile.close()
+                
+                    #print("Image saved to " + path)
+                # TODO implement switchable cache use
+                '''
+                except FileNotFoundError:
+                    
+                    try:
+                        create_dir(cacheRoot + str(postID % 1000).zfill(4))
+                        #print(f"copy {imagePath} to {cachedImagePath}")
+                        image = Image.open(shutil.copy2(imagePath, cachedImagePath))
+                        image = image.convert("RGB")
+               
+                    except:
+                        imageURL = postData.loc["file_url"]
+                        print("Getting image from " + imageURL)
+                        response = requests.get(imageURL)
+                        image = ImageOps.pad(Image.open(BytesIO(response.content)), (512, 512))
+                        image = image.convert("RGB")
+                        image.save(path)
+                        print("Image saved to " + path)
+                '''
+                #image = ImageOps.exif_transpose(image)
+                #imageLoadTime = time.time() - startTime
+                #startTime = time.time()
+                #process our image
+                
+                image = image.convert("RGBA")
+                
+                color = (255,255,255)
+                
+                background = Image.new('RGB', image.size, color)
+                background.paste(image, mask=image.split()[3])
+                image = background
+                
+                
+                #image = transforms.functional.pil_to_tensor(image).squeeze()
+                
+                image = transforms.functional.resize(image, (224,224))
+                image = transforms.functional.pil_to_tensor(image)
+                
+                postTags = torch.Tensor(postTags)
+                
+
+                
+                if(self.cacheRoot is not None):
+                    cacheDir = create_dir(self.cacheRoot + str(postID % 1000).zfill(4))
+                    cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
+                    with bz2.BZ2File(cachePath, 'w') as cachedSample: cPickle.dump((image, postTags, postID), cachedSample)
         
         image = transforms.functional.to_pil_image(image)
         
         if self.transform: image = self.transform(image)
 
-            
+        if bruh == True: print("asdf")
+        
         del postData
         # if(torch.utils.data.get_worker_info().id == 1):objgraph.show_growth() 
             
@@ -359,7 +468,7 @@ def filterDanbooruData(tagData, postData, minPostCount = 10000, blockedRatings =
     # get posts that are not banned
     queryStartTime = time.time()
     postData.query("is_banned == False", inplace = True)
-    blockedIDs = [5190773, 5142098, 5210705, 5344403, 5237708, 5344394, 5190771, 5237705, 5174387, 5344400, 5344397, 5174384]
+    blockedIDs = [5190773, 5142098, 5210705, 5344403, 5237708, 5344394, 5190771, 5237705, 5174387, 5344400, 5344397, 5174384, 4473254]
     for postID in blockedIDs: postData.query("id != @postID", inplace = True)
     print("banned post query time: " + str(time.time()-queryStartTime))
     
