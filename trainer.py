@@ -85,7 +85,7 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['num_epochs'] = 20
-FLAGS['learning_rate'] = 5e-2
+FLAGS['learning_rate'] = 3e-3
 FLAGS['weight_decay'] = 1e-2
 
 # debugging config
@@ -313,7 +313,7 @@ def trainCycle(image_datasets, model):
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2))
                         #loss = criterion(outputs.cpu(), tags.cpu())
-                        loss = (1 - multiAccuracy[:,4:]).pow(2).sum()
+                        loss = (1 - multiAccuracy[:,4:]).sum(axis=1).pow(2).mul([1,1,3,1]).sum()
                     
                     #model.zero_grad()
                     # backward + optimize only if in training phase
