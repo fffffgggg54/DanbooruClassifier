@@ -77,7 +77,7 @@ if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
 # dataloader config
 
-FLAGS['batch_size'] = 128
+FLAGS['batch_size'] = 512
 FLAGS['num_workers'] = 7
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -187,12 +187,12 @@ def modelSetup(classes):
     #model = models.resnet50(weights = models.ResNet50_Weights.DEFAULT)
     #model = models.resnet34()
     #model = models.resnet34(weights = models.ResNet34_Weights.DEFAULT)
-    #model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
+    model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
     
     
-    #model.fc = nn.Linear(model.fc.in_features, len(classes))
+    model.fc = nn.Linear(model.fc.in_features, len(classes))
     
-    model = timm.create_model('efficientnet_b3a', pretrained=True, num_classes=len(classes))
+    #model = timm.create_model('efficientnet_b3a', pretrained=True, num_classes=len(classes))
 
 
     return model
