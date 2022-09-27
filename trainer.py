@@ -85,7 +85,7 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['num_epochs'] = 20
-FLAGS['learning_rate'] = 1e-3
+FLAGS['learning_rate'] = 5e-4
 FLAGS['weight_decay'] = 1e-2
 
 # debugging config
@@ -230,7 +230,7 @@ def trainCycle(image_datasets, model):
     #prior = MLCSL.ComputePrior(classes, device2)
     
     
-    criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=8, gamma_pos=2, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
+    criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=8, gamma_pos=4, clip=0.1, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0, gamma_pos=2, gamma_neg=10, gamma_unann=10, alpha_pos=1, alpha_neg=1, alpha_unann=1)
     parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
     optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=0)
