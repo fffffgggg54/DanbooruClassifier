@@ -233,8 +233,8 @@ def trainCycle(image_datasets, model):
     criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=8, gamma_pos=4, clip=0.1, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0, gamma_pos=2, gamma_neg=10, gamma_unann=10, alpha_pos=1, alpha_neg=1, alpha_unann=1)
     parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
-    #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=0)
-    optimizer = optim.SGD(params=parameters, lr=FLAGS['learning_rate'], weight_decay=0)
+    optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=0)
+    #optimizer = optim.SGD(params=parameters, lr=FLAGS['learning_rate'], weight_decay=0)
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=0.2)
     if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
     
