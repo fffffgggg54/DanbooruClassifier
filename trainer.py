@@ -219,7 +219,7 @@ def trainCycle(image_datasets, model):
     #criterion = nn.BCEWithLogitsLoss()
     #criterion = nn.BCEWithLogitsLoss(pos_weight=tagWeights.to(FLAGS['device']))
     #criterion = nn.CrossEntropyLoss()
-    #criterion = nn.MSELoss()
+    criterion = nn.MSELoss()
     # Observe that all parameters are being optimized
     #optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
     # Decay LR by a factor of 0.1 every 7 epochs
@@ -230,7 +230,7 @@ def trainCycle(image_datasets, model):
     #prior = MLCSL.ComputePrior(classes, device2)
     
     
-    criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=6, gamma_pos=1, clip=0.1, eps=1e-8, disable_torch_grad_focal_loss=False)
+    #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=6, gamma_pos=1, clip=0.1, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0, gamma_pos=2, gamma_neg=10, gamma_unann=10, alpha_pos=1, alpha_neg=1, alpha_unann=1)
     parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
     optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=0)
