@@ -73,7 +73,7 @@ FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS[
 FLAGS['device2'] = FLAGS['device']
 if(torch.has_mps == True): FLAGS['device2'] = "cpu"
 FLAGS['use_scaler'] = False
-if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
+#if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
 # dataloader config
 
@@ -297,24 +297,24 @@ def trainCycle(image_datasets, model):
                 with torch.set_grad_enabled(phase == 'train'):
                     # TODO switch between using autocast and not using it
                     
-                    with torch.cuda.amp.autocast():
-                        outputs = model(imageBatch)
-                        multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
-                        preds = torch.sigmoid(outputs)
-                        outputs = outputs.float()
-                        
-                        if phase == 'val':
-                            #output_ema = torch.sigmoid(ema.module(imageBatch)).cpu()
-                            output_regular = preds.cpu()
-                        #loss = criterion(torch.mul(preds, tagBatch), tagBatch)
-                        #loss = criterion(outputs, tagBatch)
-                        
+                    #with torch.cuda.amp.autocast():
+                    outputs = model(imageBatch)
+                    multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
+                    preds = torch.sigmoid(outputs)
+                    outputs = outputs.float()
+                    
+                    if phase == 'val':
+                        #output_ema = torch.sigmoid(ema.module(imageBatch)).cpu()
+                        output_regular = preds.cpu()
+                    #loss = criterion(torch.mul(preds, tagBatch), tagBatch)
+                    #loss = criterion(outputs, tagBatch)
+                    
 
-                        #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        #loss = criterion(outputs.to(device2), tagBatch.to(device2))
-                        #loss = criterion(outputs.cpu(), tags.cpu())
-                        loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([1,1,3,1]).to(device2)).mean()
-                        #loss = (multiAccuracy[:,1] + multiAccuracy[:,2]).pow(2).sum()
+                    #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
+                    #loss = criterion(outputs.to(device2), tagBatch.to(device2))
+                    #loss = criterion(outputs.cpu(), tags.cpu())
+                    loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([1,1,3,1]).to(device2)).sum()
+                    #loss = (multiAccuracy[:,1] + multiAccuracy[:,2]).pow(2).sum()
                     #model.zero_grad()
                     # backward + optimize only if in training phase
                     # TODO this is slow, profile and optimize
