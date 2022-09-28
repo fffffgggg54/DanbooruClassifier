@@ -192,7 +192,7 @@ def modelSetup(classes):
     
     #model.fc = nn.Linear(model.fc.in_features, len(classes))
     
-    model = timm.create_model('efficientnet_b1', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('efficientnet_v2_l', pretrained=True, num_classes=len(classes))
 
 
     return model
