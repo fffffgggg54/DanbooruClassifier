@@ -77,7 +77,7 @@ FLAGS['use_scaler'] = False
 
 # dataloader config
 
-FLAGS['batch_size'] = 128
+FLAGS['batch_size'] = 256
 FLAGS['num_workers'] = 7
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -192,7 +192,7 @@ def modelSetup(classes):
     
     #model.fc = nn.Linear(model.fc.in_features, len(classes))
     
-    model = timm.create_model('efficientnet_b3a', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('efficientnet_b1', pretrained=True, num_classes=len(classes))
 
 
     return model
