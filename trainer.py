@@ -85,7 +85,7 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['num_epochs'] = 20
-FLAGS['learning_rate'] = 5e-4
+FLAGS['learning_rate'] = 3e-3
 FLAGS['weight_decay'] = 1e-2
 
 # debugging config
@@ -294,7 +294,7 @@ def trainCycle(image_datasets, model):
                 imageBatch = images.to(device, non_blocking=True)
                 tagBatch = tags.to(device, non_blocking=True)
                 
-                model.zero_grad()
+                
                 with torch.set_grad_enabled(phase == 'train'):
                     # TODO switch between using autocast and not using it
                     
@@ -330,7 +330,9 @@ def trainCycle(image_datasets, model):
                             scaler.update()
                         else:                               # apple gpu/cpu case
                             loss.backward()
-                            optimizer.step()
+                            if(i % 16 == 0):
+                                optimizer.step()
+                                optimizer.zero_grad()
 
                         #ema.update(model)
                         #prior.update(outputs.to(device2))
