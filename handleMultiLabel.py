@@ -336,7 +336,7 @@ class PartialSelectiveLoss(nn.Module):
 # likelihood_topk: K un-annotated labels are allowed to be assumed positive
 
 
-def edit_targets_parital_labels(targets, targets_weights, xs_neg, device, partial_loss_mode = 'selective', prior_classes=None, likelihood_topk = 100, prior_threshold=0.05):
+def edit_targets_parital_labels(targets, targets_weights, xs_neg, device, partial_loss_mode = 'negative', prior_classes=None, likelihood_topk = 100, prior_threshold=0.05):
     # targets_weights is and internal state of AsymmetricLoss class. we don't want to re-allocate it every batch
     if partial_loss_mode is None:
         targets_weights = 1.0
@@ -362,7 +362,7 @@ def edit_targets_parital_labels(targets, targets_weights, xs_neg, device, partia
         targets_weights[targets == -1] = 0
 
     elif partial_loss_mode == 'selective':
-        targets[targets == 0] = -1
+        #targets[targets == 0] = -1
         if targets_weights is None or targets_weights.shape != targets.shape:
             targets_weights = torch.ones(targets.shape, device=device)
         else:

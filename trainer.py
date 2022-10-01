@@ -85,7 +85,7 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['num_epochs'] = 20
-FLAGS['learning_rate'] = 3e-3
+FLAGS['learning_rate'] = 2e-4
 FLAGS['weight_decay'] = 1e-2
 
 # debugging config
@@ -219,7 +219,7 @@ def trainCycle(image_datasets, model):
     #criterion = nn.BCEWithLogitsLoss()
     #criterion = nn.BCEWithLogitsLoss(pos_weight=tagWeights.to(FLAGS['device']))
     #criterion = nn.CrossEntropyLoss()
-    criterion = nn.MSELoss()
+    #criterion = nn.MSELoss()
     # Observe that all parameters are being optimized
     #optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
     # Decay LR by a factor of 0.1 every 7 epochs
@@ -231,7 +231,7 @@ def trainCycle(image_datasets, model):
     
     
     #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=6, gamma_pos=1, clip=0.1, eps=1e-8, disable_torch_grad_focal_loss=False)
-    #criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0, gamma_pos=2, gamma_neg=10, gamma_unann=10, alpha_pos=1, alpha_neg=1, alpha_unann=1)
+    criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0.05, gamma_pos=1, gamma_neg=6, gamma_unann=4, alpha_pos=1, alpha_neg=1, alpha_unann=1)
     parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=0)
     optimizer = optim.SGD(params=parameters, lr=FLAGS['learning_rate'], weight_decay=0)
@@ -313,10 +313,10 @@ def trainCycle(image_datasets, model):
                     
 
                     #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                    #loss = criterion(outputs.to(device2), tagBatch.to(device2))
+                    loss = criterion(outputs.to(device2), tagBatch.to(device2))
                     #loss = criterion(outputs.cpu(), tags.cpu())
                     #loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([1,1,3,1]).to(device2)).sum()
-                    loss = (1 - multiAccuracy[:,4:]).pow(2).sum()
+                    #loss = (1 - multiAccuracy[:,4:]).pow(2).sum()
                     #loss = (multiAccuracy[:,1] + multiAccuracy[:,2]).pow(2).sum()
                     #loss = criterion(multiAccuracy, referenceTable)
                     #loss = (multiAccuracy - referenceTable).pow(2).sum()
