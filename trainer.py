@@ -227,7 +227,7 @@ def trainCycle(image_datasets, model):
     
     # use partial label approaches from http://arxiv.org/abs/2110.10955v1
     #ema = MLCSL.ModelEma(model, 0.9997)  # 0.9997^641=0.82
-    #prior = MLCSL.ComputePrior(classes, device2)
+    prior = MLCSL.ComputePrior(classes, device2)
     
     
     #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=6, gamma_pos=1, clip=0.1, eps=1e-8, disable_torch_grad_focal_loss=False)
@@ -335,7 +335,7 @@ def trainCycle(image_datasets, model):
                             optimizer.zero_grad()
 
                         #ema.update(model)
-                        #prior.update(outputs.to(device2))
+                        prior.update(outputs.to(device2))
                     
                     if (phase == 'val'):
                         
@@ -402,10 +402,10 @@ def trainCycle(image_datasets, model):
         #torch.set_printoptions(profile="default")
         
         
-        #prior.save_prior()
-        #prior.get_top_freq_classes()
-        #lastPrior = prior.avg_pred_train
-        #print(lastPrior[:30])
+        prior.save_prior()
+        prior.get_top_freq_classes()
+        lastPrior = prior.avg_pred_train
+        print(lastPrior[:30])
         
         mAP_score_regular = np.mean(AP_regular)
         #mAP_score_ema = np.mean(AP_ema)
