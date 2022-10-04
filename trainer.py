@@ -227,7 +227,7 @@ def trainCycle(image_datasets, model):
     
     # use partial label approaches from http://arxiv.org/abs/2110.10955v1
     #ema = MLCSL.ModelEma(model, 0.9997)  # 0.9997^641=0.82
-    prior = MLCSL.ComputePrior(classes, device2)
+    
     
     
     #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=6, gamma_pos=1, clip=0.1, eps=1e-8, disable_torch_grad_focal_loss=False)
@@ -254,6 +254,7 @@ def trainCycle(image_datasets, model):
     torch.backends.cudnn.benchmark = True
     
     for epoch in range(FLAGS['num_epochs']):
+        prior = MLCSL.ComputePrior(classes, device2)
         epochTime = time.time()
         
         
