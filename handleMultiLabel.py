@@ -336,7 +336,7 @@ class PartialSelectiveLoss(nn.Module):
 # likelihood_topk: K un-annotated labels are allowed to be assumed positive
 
 
-def edit_targets_parital_labels(targets, targets_weights, xs_neg, device, partial_loss_mode = 'negative', prior_classes=None, likelihood_topk = 100, prior_threshold=0.05):
+def edit_targets_parital_labels(targets, targets_weights, xs_neg, device, partial_loss_mode = 'ignore_normalize_classes', prior_classes=None, likelihood_topk = 100, prior_threshold=0.05):
     # targets_weights is and internal state of AsymmetricLoss class. we don't want to re-allocate it every batch
     if partial_loss_mode is None:
         targets_weights = 1.0
