@@ -84,7 +84,7 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
 # training config
 
-FLAGS['num_epochs'] = 20
+FLAGS['num_epochs'] = 50
 FLAGS['learning_rate'] = 5e-4
 FLAGS['weight_decay'] = 1e-2
 
@@ -314,10 +314,11 @@ def trainCycle(image_datasets, model):
                     
 
                     #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                    loss = criterion(outputs.to(device2), tagBatch.to(device2))
+                    #loss = criterion(outputs.to(device2), tagBatch.to(device2))
                     #loss = criterion(outputs.cpu(), tags.cpu())
                     #loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([1,1,3,1]).to(device2)).sum()
                     #loss = (1 - multiAccuracy[:,4:]).pow(2).sum()
+                    loss = (1 - multiAccuracy[:,4:5]).pow(2).sum()
                     #loss = (multiAccuracy[:,1] + multiAccuracy[:,2]).pow(2).sum()
                     #loss = criterion(multiAccuracy, referenceTable)
                     #loss = (multiAccuracy - referenceTable).pow(2).sum()
@@ -331,9 +332,9 @@ def trainCycle(image_datasets, model):
                             scaler.update()
                         else:                               # apple gpu/cpu case
                             loss.backward()
-                            #if(i % 16 == 0):
-                            optimizer.step()
-                            optimizer.zero_grad()
+                            if(i % 16 == 0):
+                                optimizer.step()
+                                optimizer.zero_grad()
 
                         #ema.update(model)
                         prior.update(outputs.to(device2))
