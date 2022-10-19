@@ -19,31 +19,6 @@ from copy import deepcopy
 
 
 
-
-'''
-
-
-class LeakyLossV1(nn.Module):
-    def __init__(self, device):
-        super(LeakyLossV1, self).__init__()
-        
-        self.device = device
-
-        self.targets_weights = None
-
-
-    def forward(self, logits, targets, priorValues = None):
-
-        
-'''
-
-
-
-
-
-
-
-
 class AsymmetricLoss(nn.Module):
     def __init__(self, gamma_neg=4, gamma_pos=1, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True):
         super(AsymmetricLoss, self).__init__()
@@ -507,7 +482,7 @@ def mAP_partial(targs, preds):
     mAP = results[1]
     return mAP
 
-
+# getAccuracy calculates a confusion matrix and some related values.
 def getAccuracy(preds, targs):
     epsilon = 1e-12
     preds = torch.sigmoid(preds)

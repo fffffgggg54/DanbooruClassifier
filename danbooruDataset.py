@@ -19,11 +19,6 @@ import pickle
 import _pickle as cPickle
 import json
 
-
-
-
-
-
 from PIL import PngImagePlugin
 LARGE_ENOUGH_NUMBER = 100
 PngImagePlugin.MAX_TEXT_CHUNK = LARGE_ENOUGH_NUMBER * (1024**2)
@@ -122,7 +117,7 @@ class DanbooruDataset(torch.utils.data.Dataset):
             
                 #print("Image saved to " + path)
             # TODO implement switchable cache use
-            '''
+            ''' old caching and crawling
             except FileNotFoundError:
                 
                 try:
@@ -257,6 +252,8 @@ def filterDanbooruData(tagData, postData, minPostCount = 10000, blockedRatings =
     print("split time: " + str(time.time()-queryStartTime)) #split time: 37.70384955406189
     '''
     return tagData, postData
+
+# CutoutPIL from https://github.com/Alibaba-MIIL/ASL
 
 class CutoutPIL(object):
     def __init__(self, cutout_factor=0.5):
