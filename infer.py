@@ -224,7 +224,7 @@ def main():
         }
          
     myDevice = 'cpu'
-    model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(tagNames))
     #model = cvt.get_cls_model(len(tagNames), config=modelConfCust1)
     #model.load_state_dict(torch.load("models/saved_model_epoch_4.pth", map_location=myDevice))
     model.load_state_dict(torch.load(rootPath + "models/saved_model_epoch_10.pth", map_location=myDevice))
