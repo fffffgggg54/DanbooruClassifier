@@ -325,9 +325,9 @@ def trainCycle(image_datasets, model):
                             scaler.update()
                         else:                               # apple gpu/cpu case
                             loss.backward()
-                            if(i % 16 == 0):
-                                optimizer.step()
-                                optimizer.zero_grad()
+                            #if(i % 16 == 0):
+                            optimizer.step()
+                            optimizer.zero_grad()
 
                         #ema.update(model)
                         prior.update(outputs.to(device2))
