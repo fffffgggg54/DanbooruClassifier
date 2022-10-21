@@ -222,8 +222,8 @@ def trainCycle(image_datasets, model):
     
     
     
-    #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=6, gamma_pos=1, clip=0.1, eps=1e-8, disable_torch_grad_focal_loss=False)
-    criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0.05, gamma_pos=1, gamma_neg=6, gamma_unann=4, alpha_pos=1, alpha_neg=1, alpha_unann=1)
+    criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=5, gamma_pos=0, clip=0.1, eps=1e-8, disable_torch_grad_focal_loss=False)
+    #criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0.05, gamma_pos=1, gamma_neg=6, gamma_unann=4, alpha_pos=1, alpha_neg=1, alpha_unann=1)
     parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=0)
     optimizer = optim.SGD(params=parameters, lr=FLAGS['learning_rate'], weight_decay=0)
@@ -306,7 +306,7 @@ def trainCycle(image_datasets, model):
                     
 
                     #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                    #loss = criterion(outputs.to(device2), tagBatch.to(device2))
+                    loss = criterion(outputs.to(device2), tagBatch.to(device2))
                     #loss = criterion(outputs.cpu(), tags.cpu())
                     #loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([2,1,2,1]).to(device2)).sum()
                     #loss = (1 - multiAccuracy[:,4:]).pow(2).sum()
@@ -314,7 +314,7 @@ def trainCycle(image_datasets, model):
                     #loss = (multiAccuracy[:,1] + multiAccuracy[:,2]).pow(2).sum()
                     #loss = criterion(multiAccuracy, referenceTable)
                     #loss = (multiAccuracy - referenceTable).pow(2).sum()
-                    loss = (-torch.log(multiAccuracy[0,4:])).sum()
+                    #loss = (-torch.log(multiAccuracy[0,4:])).sum()
                     #model.zero_grad()
                     # backward + optimize only if in training phase
                     # TODO this is slow, profile and optimize
