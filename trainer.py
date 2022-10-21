@@ -316,12 +316,13 @@ def trainCycle(image_datasets, model):
                     #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
                     #loss = criterion(outputs.to(device2), tagBatch.to(device2))
                     #loss = criterion(outputs.cpu(), tags.cpu())
-                    #loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([1,1,3,1]).to(device2)).sum()
+                    #loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([2,1,2,1]).to(device2)).sum()
                     #loss = (1 - multiAccuracy[:,4:]).pow(2).sum()
-                    loss = (1 - multiAccuracy[:,6:7]).pow(2).sum()
+                    #loss = (1 - multiAccuracy[:,6:7]).pow(2).sum()     # high precision with easy classes
                     #loss = (multiAccuracy[:,1] + multiAccuracy[:,2]).pow(2).sum()
                     #loss = criterion(multiAccuracy, referenceTable)
                     #loss = (multiAccuracy - referenceTable).pow(2).sum()
+                    loss = (-torch.log(accuracyMulti[0,4:])).sum()
                     #model.zero_grad()
                     # backward + optimize only if in training phase
                     # TODO this is slow, profile and optimize
