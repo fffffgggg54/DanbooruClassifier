@@ -141,14 +141,6 @@ def getData():
     postData = pd.read_pickle(FLAGS['postDFPickleFiltered'])
     #print(postData.info())
     
-    # get posts that are not banned
-    queryStartTime = time.time()
-    postData.query("is_banned == False", inplace = True)
-    blockedIDs = [5190773, 5142098, 5210705, 5344403, 5237708, 5344394, 5190771, 5237705, 5174387, 5344400, 5344397, 5174384]
-    for postID in blockedIDs: postData.query("id != @postID", inplace = True)
-    print("banned post query time: " + str(time.time()-queryStartTime))
-    
-
     postData = postData[['id', 'tag_string', 'file_ext', 'file_url']]
     #postData = postData[['id', 'tag_string']]
     postData = postData.convert_dtypes()
@@ -322,7 +314,7 @@ def trainCycle(image_datasets, model):
                     #loss = (multiAccuracy[:,1] + multiAccuracy[:,2]).pow(2).sum()
                     #loss = criterion(multiAccuracy, referenceTable)
                     #loss = (multiAccuracy - referenceTable).pow(2).sum()
-                    loss = (-torch.log(accuracyMulti[0,4:])).sum()
+                    loss = (-torch.log(multiAccuracy[0,4:])).sum()
                     #model.zero_grad()
                     # backward + optimize only if in training phase
                     # TODO this is slow, profile and optimize
