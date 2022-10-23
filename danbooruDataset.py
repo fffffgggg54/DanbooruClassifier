@@ -49,13 +49,13 @@ class DanbooruDataset(torch.utils.data.Dataset):
     def __init__(self, imageRoot, postList, tagList, transform=None, cacheRoot = None):
 
         PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True
-        self.classes = {classIndex : className for classIndex, className in enumerate(tagList)} #property of dataset?
-        self.postList = postList    #dataframe with string type, not object
-        self.imageRoot = imageRoot  #string
+        self.classes = deepcopy({classIndex : className for classIndex, className in enumerate(deepcopy(tagList))}) #property of dataset?
+        self.postList = deepcopy(postList)    #dataframe with string type, not object
+        self.imageRoot = deepcopy(imageRoot)  #string
         #self.tagList = tagList
-        self.tagList = pd.Series(tagList, dtype=pd.StringDtype())
+        self.tagList = pd.Series(deepcopy(tagList), dtype=pd.StringDtype())
         self.transform = transform  #transform, callable?
-        self.cacheRoot = cacheRoot  #string
+        self.cacheRoot = deepcopy(cacheRoot)  #string
         self.callCount = 0
 
     def __len__(self):
@@ -65,7 +65,7 @@ class DanbooruDataset(torch.utils.data.Dataset):
     #@profile
     def __getitem__(self, index):
     
-        if (self.callCount + 1) % 10000 == 0:
+        if (self.callCount + 1) % 100 == 0:
             print(gc.get_referrers(self.classes))
             print(gc.get_referrers(self.postList))
             print(gc.get_referrers(self.imageRoot))
