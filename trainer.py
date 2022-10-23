@@ -63,7 +63,7 @@ FLAGS['stopReadingAt'] = 5000
 # dataset config
 
 FLAGS['workingSetSize'] = 1
-FLAGS['trainSetSize'] = 0.8
+FLAGS['trainSetSize'] = 0
 
 # device config
 
@@ -188,12 +188,12 @@ def modelSetup(classes):
     #model = models.resnet50(weights = models.ResNet50_Weights.DEFAULT)
     #model = models.resnet34()
     #model = models.resnet34(weights = models.ResNet34_Weights.DEFAULT)
-    #model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
+    model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
     
     
     #model.fc = nn.Linear(model.fc.in_features, len(classes))
     
-    model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
+    #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
 
 
     return model
