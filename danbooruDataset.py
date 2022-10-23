@@ -72,6 +72,7 @@ class DanbooruDataset(torch.utils.data.Dataset):
             print(gc.get_referrers(self.tagList))
             print(gc.get_referrers(self.transform))
             print(gc.get_referrers(self.cacheRoot))
+        self.callCount = self.callCount + 1
         if torch.is_tensor(deepcopy(index)):
             index = deepcopy(index.item())
         
