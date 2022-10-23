@@ -70,7 +70,7 @@ class DanbooruDataset(torch.utils.data.Dataset):
         postData = deepcopy(self.postList.iloc[index])
         #postData.tag_string = postData.tag_string.split()
         
-        postID = int(postData.loc["id"])
+        postID = int(deepcopy(postData.loc["id"]))
         image = torch.Tensor()
         postTags = torch.Tensor()
         
@@ -85,7 +85,7 @@ class DanbooruDataset(torch.utils.data.Dataset):
             #print(f"got pickle from {cachePath}")
         except:
         
-            postTagList = set(postData.loc["tag_string"].split()).intersection(set(deepcopy(self.tagList.to_list())))
+            postTagList = set(deepcopy(postData.loc["tag_string"]).split()).intersection(set(deepcopy(self.tagList.to_list())))
 
             # one-hot encode the tags of a given post
             # TODO find better way to find matching tags
@@ -101,7 +101,7 @@ class DanbooruDataset(torch.utils.data.Dataset):
             
             #metaTime = time.time() - startTime
             #startTime = time.time()
-            imagePath = str(postID % 1000).zfill(4) + "/" + str(postID) + "." + postData.loc["file_ext"]
+            imagePath = str(postID % 1000).zfill(4) + "/" + str(postID) + "." + deepcopy(postData.loc["file_ext"])
             #cachedImagePath = cacheRoot + imagePath
             imagePath = deepcopy(self.imageRoot) + imagePath
             
@@ -111,7 +111,7 @@ class DanbooruDataset(torch.utils.data.Dataset):
                 image = Image.open(path)    #check if file exists
                 image.load()    # check if file valid
             except:     #if file doesn't exist or isn't valid, download it and save/overwrite
-                imageURL = postData.loc["file_url"]
+                imageURL = deepcopy(postData.loc["file_url"])
                 #print("Getting image from " + imageURL)
                 response = requests.get(imageURL)
                 image = Image.open(BytesIO(response.content))
@@ -171,8 +171,7 @@ class DanbooruDataset(torch.utils.data.Dataset):
         
         if self.transform: image = self.transform(image)
 
-        
-        del postData
+
         # if(torch.utils.data.get_worker_info().id == 1):objgraph.show_growth() 
             
             
