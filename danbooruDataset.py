@@ -79,7 +79,7 @@ class DanbooruDataset(torch.utils.data.Dataset):
         
         try:
             assert self.cacheRoot is not None
-            cacheDir = create_dir(self.cacheRoot + str(postID % 1000).zfill(4))
+            cacheDir = create_dir(deepcopy(self.cacheRoot) + str(postID % 1000).zfill(4))
             cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
             cachedSample = bz2.BZ2File(cachePath, 'rb')
             image, postTags,_ = cPickle.load(cachedSample)
