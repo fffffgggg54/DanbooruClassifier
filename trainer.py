@@ -196,7 +196,7 @@ def modelSetup(classes):
     
     #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
     
-    CVTConfig = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-w24-384-22k')
+    model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-w24-384-22k')
     model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
     
     model = transformers.CvtModel
