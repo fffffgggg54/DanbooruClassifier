@@ -175,7 +175,7 @@ class DanbooruDataset(torch.utils.data.Dataset):
         # if(torch.utils.data.get_worker_info().id == 1):objgraph.show_growth() 
             
             
-        return deepcopy((image, postTags, postID))
+        return image, postTags, postID
         
         
 
