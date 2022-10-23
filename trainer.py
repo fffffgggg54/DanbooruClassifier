@@ -78,7 +78,7 @@ FLAGS['use_scaler'] = False
 
 # dataloader config
 
-FLAGS['batch_size'] = 32
+FLAGS['batch_size'] = 128
 FLAGS['num_workers'] = 7
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -194,7 +194,7 @@ def modelSetup(classes):
     
     #model.fc = nn.Linear(model.fc.in_features, len(classes))
     
-    model = timm.create_model('efficientnet_b5', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
     
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-w24-384-22k')
     #model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
