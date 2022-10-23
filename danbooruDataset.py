@@ -58,13 +58,13 @@ class DanbooruDataset(torch.utils.data.Dataset):
         self.cacheRoot = cacheRoot  #string
 
     def __len__(self):
-        return len(self.postList)
+        return deepcopy(len(self.postList))
     
     # TODO profile and optimize
     #@profile
     def __getitem__(self, index):
-        if torch.is_tensor(index):
-            index = index.item()
+        if torch.is_tensor(deepcopy(index)):
+            index = deepcopy(index.item())
         
         #startTime = time.time()
         postData = deepcopy(self.postList.iloc[index])
@@ -77,7 +77,7 @@ class DanbooruDataset(torch.utils.data.Dataset):
         
         
         try:
-            assert self.cacheRoot is not None
+            assert deepcopy(self.cacheRoot) is not None
             cacheDir = create_dir(deepcopy(self.cacheRoot) + str(postID % 1000).zfill(4))
             cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
             cachedSample = bz2.BZ2File(cachePath, 'rb')
@@ -169,14 +169,14 @@ class DanbooruDataset(torch.utils.data.Dataset):
         
         image = transforms.functional.to_pil_image(image)
         
-        if self.transform: image = deepcopy(self.transform(image))
+        if self.transform: image = self.transform(image)
 
         
         del postData
         # if(torch.utils.data.get_worker_info().id == 1):objgraph.show_growth() 
             
             
-        return image, postTags, postID
+        return deepcopy((image, postTags, postID))
         
         
 
