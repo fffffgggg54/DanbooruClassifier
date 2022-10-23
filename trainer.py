@@ -194,10 +194,10 @@ def modelSetup(classes):
     
     #model.fc = nn.Linear(model.fc.in_features, len(classes))
     
-    #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('efficientnet_b5', pretrained=True, num_classes=len(classes))
     
-    model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-w24-384-22k')
-    model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
+    #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-w24-384-22k')
+    #model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
     
 
     return model
