@@ -20,6 +20,7 @@ import os
 
 
 import timm
+import transformers
 
 import parallelJsonReader
 import danbooruDataset
@@ -77,7 +78,7 @@ FLAGS['use_scaler'] = False
 
 # dataloader config
 
-FLAGS['batch_size'] = 128
+FLAGS['batch_size'] = 8
 FLAGS['num_workers'] = 7
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -193,7 +194,12 @@ def modelSetup(classes):
     
     #model.fc = nn.Linear(model.fc.in_features, len(classes))
     
-    model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
+    #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
+    
+    CVTConfig = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-w24-384-22k')
+    model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
+    
+    model = transformers.CvtModel
 
 
     return model
@@ -247,7 +253,7 @@ def trainCycle(image_datasets, model):
     pd.DataFrame(tagNames).to_pickle("tags.pkl")
     
     
-    MeanStackedAccuracy = torch.Tensor([2,1,4,1])
+    MeanStackedAccuracyStored = torch.Tensor([2,1,2,1])
     
     print("starting training")
     
@@ -338,9 +344,9 @@ def trainCycle(image_datasets, model):
                             scaler.update()
                         else:                               # apple gpu/cpu case
                             loss.backward()
-                            #if(i % 16 == 0):
-                            optimizer.step()
-                            optimizer.zero_grad()
+                            if(i % 16 == 0):
+                                optimizer.step()
+                                optimizer.zero_grad()
 
                         #ema.update(model)
                         prior.update(outputs.to(device2))
@@ -406,6 +412,7 @@ def trainCycle(image_datasets, model):
         LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames))
         LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[0][6], reverse=True)
         MeanStackedAccuracy = AvgAccuracy.mean(dim=0)
+        MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
         print(*LabelledAccuracySorted, sep="\n")
         #torch.set_printoptions(profile="default")
         print(MeanStackedAccuracy)
