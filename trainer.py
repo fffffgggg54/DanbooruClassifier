@@ -78,7 +78,7 @@ FLAGS['use_scaler'] = False
 
 # dataloader config
 
-FLAGS['batch_size'] = 8
+FLAGS['batch_size'] = 32
 FLAGS['num_workers'] = 7
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -343,9 +343,9 @@ def trainCycle(image_datasets, model):
                             scaler.update()
                         else:                               # apple gpu/cpu case
                             loss.backward()
-                            if(i % 16 == 0):
-                                optimizer.step()
-                                optimizer.zero_grad()
+                            #if(i % 16 == 0):
+                            optimizer.step()
+                            optimizer.zero_grad()
 
                         #ema.update(model)
                         prior.update(outputs.to(device2))
