@@ -67,7 +67,7 @@ class DanbooruDataset(torch.utils.data.Dataset):
             index = index.item()
         
         #startTime = time.time()
-        postData = self.postList.iloc[index].copy()
+        postData = deepcopy(self.postList.iloc[index])
         #postData.tag_string = postData.tag_string.split()
         
         postID = int(postData.loc["id"])
