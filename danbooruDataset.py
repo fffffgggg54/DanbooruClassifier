@@ -73,7 +73,6 @@ class DanbooruDataset(torch.utils.data.Dataset):
         postID = int(postData.loc["id"])
         image = torch.Tensor()
         postTags = torch.Tensor()
-        bruh = False
         
         
         
@@ -86,12 +85,12 @@ class DanbooruDataset(torch.utils.data.Dataset):
             #print(f"got pickle from {cachePath}")
         except:
         
-            postTagList = set(postData.loc["tag_string"].split()).intersection(set(self.tagList.to_list()))
+            postTagList = set(postData.loc["tag_string"].split()).intersection(set(deepcopy(self.tagList.to_list())))
 
             # one-hot encode the tags of a given post
             # TODO find better way to find matching tags
             postTags = []
-            for key in list(self.tagList.to_list()):
+            for key in list(deepcopy(self.tagList.to_list())):
                 match = False
                 for tag in postTagList:
                     if tag == key:
@@ -104,7 +103,7 @@ class DanbooruDataset(torch.utils.data.Dataset):
             #startTime = time.time()
             imagePath = str(postID % 1000).zfill(4) + "/" + str(postID) + "." + postData.loc["file_ext"]
             #cachedImagePath = cacheRoot + imagePath
-            imagePath = self.imageRoot + imagePath
+            imagePath = deepcopy(self.imageRoot) + imagePath
             
             try: 
                 #path = cachedImagePath
@@ -164,15 +163,14 @@ class DanbooruDataset(torch.utils.data.Dataset):
 
             
             if(self.cacheRoot is not None):
-                cacheDir = create_dir(self.cacheRoot + str(postID % 1000).zfill(4))
+                cacheDir = create_dir(deepcopy(self.cacheRoot) + str(postID % 1000).zfill(4))
                 cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
                 with bz2.BZ2File(cachePath, 'w') as cachedSample: cPickle.dump((image, postTags, postID), cachedSample)
         
         image = transforms.functional.to_pil_image(image)
         
-        if self.transform: image = self.transform(image)
+        if self.transform: image = deepcopy(self.transform(image))
 
-        if bruh == True: print("asdf")
         
         del postData
         # if(torch.utils.data.get_worker_info().id == 1):objgraph.show_growth() 
