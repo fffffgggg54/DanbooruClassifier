@@ -199,8 +199,6 @@ def modelSetup(classes):
     model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-w24-384-22k')
     model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
     
-    model = transformers.CvtModel
-
 
     return model
 
