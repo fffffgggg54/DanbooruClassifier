@@ -52,10 +52,11 @@ class DanbooruDataset(torch.utils.data.Dataset):
         self.classes = {classIndex : className for classIndex, className in enumerate(tagList)} #property of dataset?
         self.postList = postList    #dataframe with string type, not object
         self.imageRoot = imageRoot  #string
-        self.tagList = tagList
+        #self.tagList = tagList
         self.tagList = pd.Series(tagList, dtype=pd.StringDtype())
         self.transform = transform  #transform, callable?
         self.cacheRoot = cacheRoot  #string
+        self.callCount = 0
 
     def __len__(self):
         return deepcopy(len(self.postList))
@@ -63,6 +64,14 @@ class DanbooruDataset(torch.utils.data.Dataset):
     # TODO profile and optimize
     #@profile
     def __getitem__(self, index):
+    
+        if (self.callCount + 1) % 10000 == 0:
+            print(gc.get_referrers(self.classes))
+            print(gc.get_referrers(self.postList))
+            print(gc.get_referrers(self.imageRoot))
+            print(gc.get_referrers(self.tagList))
+            print(gc.get_referrers(self.transform))
+            print(gc.get_referrers(self.cacheRoot))
         if torch.is_tensor(deepcopy(index)):
             index = deepcopy(index.item())
         
@@ -171,7 +180,9 @@ class DanbooruDataset(torch.utils.data.Dataset):
         
         if self.transform: image = self.transform(image)
 
-
+        
+        del postData
+        
         # if(torch.utils.data.get_worker_info().id == 1):objgraph.show_growth() 
             
             
