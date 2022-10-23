@@ -20,6 +20,7 @@ import _pickle as cPickle
 import json
 
 from copy import deepcopy
+import gc
 
 
 
@@ -65,7 +66,7 @@ class DanbooruDataset(torch.utils.data.Dataset):
     #@profile
     def __getitem__(self, index):
     
-        if (self.callCount + 1) % 100 == 0:
+        if (self.callCount + 1) % 512 == 0:
             print(gc.get_referrers(self.classes))
             print(gc.get_referrers(self.postList))
             print(gc.get_referrers(self.imageRoot))
