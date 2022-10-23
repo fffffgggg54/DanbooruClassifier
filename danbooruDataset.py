@@ -57,7 +57,6 @@ class DanbooruDataset(torch.utils.data.Dataset):
         self.tagList = pd.Series(deepcopy(tagList), dtype=pd.StringDtype())
         self.transform = transform  #transform, callable?
         self.cacheRoot = deepcopy(cacheRoot)  #string
-        self.callCount = 0
 
     def __len__(self):
         return deepcopy(len(self.postList))
@@ -66,14 +65,7 @@ class DanbooruDataset(torch.utils.data.Dataset):
     #@profile
     def __getitem__(self, index):
     
-        if (self.callCount + 1) % 512 == 0:
-            print(gc.get_referrers(self.classes))
-            print(gc.get_referrers(self.postList))
-            print(gc.get_referrers(self.imageRoot))
-            print(gc.get_referrers(self.tagList))
-            print(gc.get_referrers(self.transform))
-            print(gc.get_referrers(self.cacheRoot))
-        self.callCount = self.callCount + 1
+
         if torch.is_tensor(deepcopy(index)):
             index = deepcopy(index.item())
         
