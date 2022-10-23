@@ -191,7 +191,7 @@ def modelSetup(classes):
     model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
     
     
-    #model.fc = nn.Linear(model.fc.in_features, len(classes))
+    model.fc = nn.Linear(model.fc.in_features, len(classes))
     
     #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
 
