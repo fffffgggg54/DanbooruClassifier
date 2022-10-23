@@ -63,7 +63,7 @@ FLAGS['stopReadingAt'] = 5000
 # dataset config
 
 FLAGS['workingSetSize'] = 1
-FLAGS['trainSetSize'] = 0.01
+FLAGS['trainSetSize'] = 0.8
 
 # device config
 
@@ -78,7 +78,7 @@ FLAGS['use_scaler'] = False
 # dataloader config
 
 FLAGS['batch_size'] = 128
-FLAGS['num_workers'] = 28
+FLAGS['num_workers'] = 7
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
@@ -188,12 +188,12 @@ def modelSetup(classes):
     #model = models.resnet50(weights = models.ResNet50_Weights.DEFAULT)
     #model = models.resnet34()
     #model = models.resnet34(weights = models.ResNet34_Weights.DEFAULT)
-    model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
+    #model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
     
     
-    model.fc = nn.Linear(model.fc.in_features, len(classes))
+    #model.fc = nn.Linear(model.fc.in_features, len(classes))
     
-    #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
 
 
     return model
@@ -317,7 +317,7 @@ def trainCycle(image_datasets, model):
                     
 
                     #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                    loss = criterion(outputs.to(device2), tagBatch.to(device2))
+                    #loss = criterion(outputs.to(device2), tagBatch.to(device2))
                     #loss = criterion(outputs.cpu(), tags.cpu())
                     
                     #loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([2,1,2,1]).to(device2)).sum()
@@ -327,7 +327,7 @@ def trainCycle(image_datasets, model):
                     #loss = criterion(multiAccuracy, referenceTable)
                     #loss = (multiAccuracy - referenceTable).pow(2).sum()
                     #loss = (-torch.log(multiAccuracy[0,4:])).sum()
-                    #loss = (1 - multiAccuracy[:,4:]).pow(2).mul((1/MeanStackedAccuracy).to(device2)).sum()
+                    loss = (1 - multiAccuracy[:,4:]).pow(2).mul((1/MeanStackedAccuracy).to(device2)).sum()
                     #model.zero_grad()
                     # backward + optimize only if in training phase
                     # TODO this is slow, profile and optimize
