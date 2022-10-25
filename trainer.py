@@ -63,7 +63,7 @@ FLAGS['stopReadingAt'] = 5000
 
 # dataset config
 
-FLAGS['workingSetSize'] = 1
+FLAGS['workingSetSize'] = 0.05
 FLAGS['trainSetSize'] = 0.8
 
 # device config
@@ -332,7 +332,8 @@ def trainCycle(image_datasets, model):
                     #loss = criterion(multiAccuracy, referenceTable)
                     #loss = (multiAccuracy - referenceTable).pow(2).sum()
                     #loss = (-torch.log(multiAccuracy[0,4:])).sum()
-                    loss = (1 - multiAccuracy[:,4:]).pow(2).mul((1/MeanStackedAccuracyStored).to(device2)).sum()
+                    #loss = (1 - multiAccuracy[:,4:]).pow(2).mul((1/MeanStackedAccuracyStored).to(device2)).sum()
+                    loss = (1 - multiAccuracy[:,4:]).sum()
                     #model.zero_grad()
                     # backward + optimize only if in training phase
                     # TODO this is slow, profile and optimize
