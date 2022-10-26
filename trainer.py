@@ -63,7 +63,7 @@ FLAGS['stopReadingAt'] = 5000
 
 # dataset config
 
-FLAGS['workingSetSize'] = 0.05
+FLAGS['workingSetSize'] = 1
 FLAGS['trainSetSize'] = 0.8
 
 # device config
