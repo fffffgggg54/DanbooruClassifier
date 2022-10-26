@@ -86,7 +86,7 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['num_epochs'] = 50
-FLAGS['learning_rate'] = 5e-4
+FLAGS['learning_rate'] = 5e-3
 FLAGS['weight_decay'] = 1e-2
 FLAGS['gradient_accumulation_iterations'] = 16
 
@@ -347,7 +347,7 @@ def trainCycle(image_datasets, model):
                             scaler.update()
                         else:                               # apple gpu/cpu case
                             loss.backward()
-                            if(i % 16 == 0):
+                            if(i % FLAGS['gradient_accumulation_iterations'] == 0):
                                 optimizer.step()
                                 optimizer.zero_grad()
 
