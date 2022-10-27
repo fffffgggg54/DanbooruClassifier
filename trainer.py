@@ -326,9 +326,10 @@ def trainCycle(image_datasets, model):
                     #loss = criterion(outputs.to(device2), tagBatch.to(device2))
                     #loss = criterion(outputs.cpu(), tags.cpu())
                     
-                    loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([2,1,2,1]).to(device2)).sum()
+                    #loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([2,1,2,1]).to(device2)).sum()
                     #loss = (1 - multiAccuracy[:,4:]).pow(2).sum()
                     #loss = (1 - multiAccuracy[:,6:7]).pow(2).sum()     # high precision with easy classes
+                    loss = ((1 / (1 - multiAccuracy[:,4:])) - 1).sum()
                     #loss = (multiAccuracy[:,1] + multiAccuracy[:,2]).pow(2).sum()
                     #loss = criterion(multiAccuracy, referenceTable)
                     #loss = (multiAccuracy - referenceTable).pow(2).sum()
