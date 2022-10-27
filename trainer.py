@@ -63,7 +63,7 @@ FLAGS['stopReadingAt'] = 5000
 
 # dataset config
 
-FLAGS['workingSetSize'] = 1
+FLAGS['workingSetSize'] = 0.1
 FLAGS['trainSetSize'] = 0.8
 
 # device config
@@ -236,7 +236,7 @@ def trainCycle(image_datasets, model):
     
     
     
-    criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=5, gamma_pos=3, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
+    criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=8, gamma_pos=5, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0.05, gamma_pos=1, gamma_neg=6, gamma_unann=4, alpha_pos=1, alpha_neg=1, alpha_unann=1)
     parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=0)
@@ -323,12 +323,12 @@ def trainCycle(image_datasets, model):
                     
 
                     #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                    #loss = criterion(outputs.to(device2), tagBatch.to(device2))
+                    loss = criterion(outputs.to(device2), tagBatch.to(device2))
                     #loss = criterion(outputs.cpu(), tags.cpu())
                     
                     #loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([2,1,2,1]).to(device2)).sum()
                     #loss = (1 - multiAccuracy[:,4:]).pow(2).sum()
-                    loss = (1 - multiAccuracy[:,6:7]).pow(2).sum()     # high precision with easy classes
+                    #loss = (1 - multiAccuracy[:,6:7]).pow(2).sum()     # high precision with easy classes
                     #loss = (multiAccuracy[:,1] + multiAccuracy[:,2]).pow(2).sum()
                     #loss = criterion(multiAccuracy, referenceTable)
                     #loss = (multiAccuracy - referenceTable).pow(2).sum()
