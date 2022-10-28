@@ -161,7 +161,7 @@ class AsymmetricLossAdaptive(nn.Module):
         self.gamma_step = gamma_step
         
         
-    def forward(self, x, y):
+    def forward(self, x, y, updateAdaptive = True, printAdaptive = False):
         """"
         Parameters
         ----------
@@ -193,9 +193,12 @@ class AsymmetricLossAdaptive(nn.Module):
             if(self.adaptive == True):
             
                 gap = pt0.sum() / (y.sum() + self.eps) - pt1.sum()  / ((1 - y).sum() + self.eps)
-                self.gamma_neg = self.gamma_neg - self.gamma_step * (gap - self.gap_target)
                 
-                #print(f'{gap}, {(gap - self.gap_target)}, {self.gamma_step * (gap - self.gap_target)}, {self.gamma_neg}')
+                if updateAdaptive == True:
+                    self.gamma_neg = self.gamma_neg - self.gamma_step * (gap - self.gap_target)
+                
+                if printAdaptive == True:
+                    print(f'{gap}, {(gap - self.gap_target)}, {self.gamma_step * (gap - self.gap_target)}, {self.gamma_neg}')
                 
             one_sided_gamma = self.gamma_pos * y + self.gamma_neg * (1 - y)
             one_sided_w = torch.pow(1 - pt, one_sided_gamma)
