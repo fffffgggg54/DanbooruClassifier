@@ -198,7 +198,7 @@ class AsymmetricLossAdaptive(nn.Module):
                     self.gamma_neg = self.gamma_neg - self.gamma_step * (gap - self.gap_target)
                 
                 if printAdaptive == True:
-                    print(f'{gap}, {(gap - self.gap_target)}, {self.gamma_step * (gap - self.gap_target)}, {self.gamma_neg}')
+                    print(f'pos: {pt0.sum() / (y.sum() + self.eps)}, neg: {pt1.sum()  / ((1 - y).sum() + self.eps)}, gap: {gap}, change: {self.gamma_step * (gap - self.gap_target)}, gamma neg: {self.gamma_neg}')
                 
             one_sided_gamma = self.gamma_pos * y + self.gamma_neg * (1 - y)
             one_sided_w = torch.pow(1 - pt, one_sided_gamma)
