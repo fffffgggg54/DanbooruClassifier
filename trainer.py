@@ -199,9 +199,9 @@ def modelSetup(classes):
     
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
     #model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
-    config = AutoConfig.from_pretrained("apple/mobilevit-small", num_labels=len(classes))
+    config = transformers.AutoConfig.from_pretrained("apple/mobilevit-small", num_labels=len(classes))
 
-    model = AutoModelForImageClassification.from_config(config)
+    model = transformers.AutoModelForImageClassification.from_config(config)
     
 
     return model
