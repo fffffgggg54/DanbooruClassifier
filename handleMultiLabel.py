@@ -192,13 +192,14 @@ class AsymmetricLossAdaptive(nn.Module):
             pt = pt0 + pt1
             if(self.adaptive == True):
             
-                gap = pt0.sum() / (y.sum() + self.eps) - pt1.sum()  / ((1 - y).sum() + self.eps)
+                gap = pt0.sum() / (y.sum() + self.eps) - pt1.sum() / ((1 - y).sum() + self.eps)
                 
                 if updateAdaptive == True:
                     self.gamma_neg = self.gamma_neg - self.gamma_step * (gap - self.gap_target)
                 
+                output = None
                 if printAdaptive == True:
-                    print(f'pos: {pt0.sum() / (y.sum() + self.eps)}, neg: {pt1.sum()  / ((1 - y).sum() + self.eps)}, gap: {gap}, change: {self.gamma_step * (gap - self.gap_target)}, gamma neg: {self.gamma_neg}')
+                    output = str(f'\tpos:\t{pt0.sum() / (y.sum() + self.eps):.4f},\tneg:\t{pt1.sum() / ((1 - y).sum() + self.eps):.4f},\tgap:\t{gap:.4f},\tchange:\t{self.gamma_step * (gap - self.gap_target):.6f},\tgamma neg:\t{self.gamma_neg:.6f}')
                 
             one_sided_gamma = self.gamma_pos * y + self.gamma_neg * (1 - y)
             one_sided_w = torch.pow(1 - pt, one_sided_gamma)
@@ -206,7 +207,7 @@ class AsymmetricLossAdaptive(nn.Module):
                 torch.set_grad_enabled(True)
             loss *= one_sided_w
 
-        return -loss.sum()
+        return -loss.sum(), output
 
 class ASLSingleLabel(nn.Module):
     '''

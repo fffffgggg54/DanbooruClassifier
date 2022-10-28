@@ -86,7 +86,7 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['num_epochs'] = 50
-FLAGS['learning_rate'] = 3e-3
+FLAGS['learning_rate'] = 5e-4
 FLAGS['weight_decay'] = 1e-2
 FLAGS['gradient_accumulation_iterations'] = 1
 
@@ -195,13 +195,13 @@ def modelSetup(classes):
     
     #model.fc = nn.Linear(model.fc.in_features, len(classes))
     
-    #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
     
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
     #model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
-    config = transformers.AutoConfig.from_pretrained("apple/mobilevit-small", num_labels=len(classes))
+    #config = transformers.AutoConfig.from_pretrained("apple/mobilevit-small", num_labels=len(classes))
 
-    model = transformers.AutoModelForImageClassification.from_config(config)
+    #model = transformers.AutoModelForImageClassification.from_config(config)
     
 
     return model
@@ -274,6 +274,7 @@ def trainCycle(image_datasets, model):
         AP_regular = []
         AccuracyRunning = []
         AP_ema = []
+        textOutput = None
         #lastPrior = None
         
         for phase in ['train', 'val']:
@@ -328,7 +329,7 @@ def trainCycle(image_datasets, model):
 
                     #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
                     #loss = criterion(outputs.to(device2), tagBatch.to(device2))
-                    loss = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
+                    loss, textOutput = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
                     #loss = criterion(outputs.cpu(), tags.cpu())
                     
                     #loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([2,1,2,1]).to(device2)).sum()
@@ -393,7 +394,7 @@ def trainCycle(image_datasets, model):
                     #        currPostTags.append((tagNames[tagIndex], tagVal.item()))
                     
                    
-                    print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f\tAccuracy: %.2f' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), loss, imagesPerSecond, accuracy))
+                    print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f\tAccuracy: %.2f%s' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), loss, imagesPerSecond, accuracy, textOutput))
                     #print(id[0])
                     #print(currPostTags)
                     #print(sorted(batchTagAccuracy, key = lambda x: x[1], reverse=True))
