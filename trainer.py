@@ -197,7 +197,7 @@ def modelSetup(classes):
     
     #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
     
-    model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
+    model = transformers.CvtForImageClassification.from_pretrained('apple/mobilevit-small')
     model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
     
 
