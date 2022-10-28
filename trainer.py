@@ -197,7 +197,8 @@ def modelSetup(classes):
     
     #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
     
-    model = transformers.CvtForImageClassification.from_pretrained('apple/mobilevit-small')
+    #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
+    model = MobileViTForImageClassification.from_pretrained("apple/mobilevit-small")
     model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
     
 
@@ -309,8 +310,8 @@ def trainCycle(image_datasets, model):
                     # TODO switch between using autocast and not using it
                     
                     #with torch.cuda.amp.autocast():
-                    outputs = model(imageBatch)
-                    #outputs = model(imageBatch).logits
+                    #outputs = model(imageBatch)
+                    outputs = model(imageBatch).logits
                     multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
                     referenceTable = MLCSL.getAccuracy(tagBatch.to(device2), tagBatch.to(device2))
                     preds = torch.sigmoid(outputs)
