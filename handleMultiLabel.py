@@ -192,7 +192,7 @@ class AsymmetricLossAdaptive(nn.Module):
             pt = pt0 + pt1
             if(self.adaptive == True):
             
-                gap = pt0.mean() - pt1.mean()
+                gap = pt0.sum() / (y.sum() + self.eps) - pt1.sum()  / ((1 - y).sum() + self.eps)
                 self.gamma_neg = self.gamma_neg - self.gamma_step * (gap - self.gap_target)
                 
                 print(f'{gap}, {self.gamma_neg}')
