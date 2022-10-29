@@ -205,7 +205,7 @@ class AsymmetricLossAdaptive(nn.Module):
                 
                 output = None
                 if printAdaptive == True:
-                    output = str(f'\tpos: {pt0.sum() / (y.sum() + self.eps):.4f},\tneg: {pt1.sum() / ((1 - y).sum() + self.eps):.4f},\tgap: {gap:.4f},\tchange: {self.gamma_step * (gap - self.gap_target):.6f},\tgamma neg: {self.gamma_neg:.6f}')
+                    output = str(f'\tpos: {pt0.sum() / (y.sum() + self.eps):.4f},\tneg: {pt1.sum() / ((1 - y).sum() + self.eps):.4f}')
                 
             one_sided_gamma = self.gamma_pos_per_class * y + self.gamma_neg_per_class * (1 - y)
             one_sided_w = torch.pow(1 - pt, one_sided_gamma)
