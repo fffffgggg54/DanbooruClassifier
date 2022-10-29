@@ -170,9 +170,10 @@ class AsymmetricLossAdaptive(nn.Module):
         """
         
         if self.gamma_neg_per_class == None or self.gamma_pos_per_class == None:
-            batchSize = y.size(dim=0)
-            self.gamma_neg_per_class = torch.ones(batchSize) * self.gamma_neg
-            self.gamma_pos_per_class = torch.ones(batchSize) * self.gamma_pos
+            classCount = y.size(dim=1)
+            
+            self.gamma_neg_per_class = torch.ones(classCount) * self.gamma_neg
+            self.gamma_pos_per_class = torch.ones(classCount) * self.gamma_pos
 
         # Calculating Probabilities
         x_sigmoid = torch.sigmoid(x)
