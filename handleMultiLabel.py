@@ -201,7 +201,7 @@ class AsymmetricLossAdaptive(nn.Module):
                 gap = pt0.sum(dim=0) / (y.sum(dim=0) + self.eps) - pt1.sum(dim=0) / ((1 - y).sum(dim=0) + self.eps)
                 
                 if updateAdaptive == True:
-                    self.gamma_neg_per_class = self.gamma_neg_per_class - (self.gamma_step * y.sum(dim=1)) * (gap - self.gap_target)
+                    self.gamma_neg_per_class = self.gamma_neg_per_class - (self.gamma_step * y.mean(dim=0)) * (gap - self.gap_target)
                 
                 output = None
                 if printAdaptive == True:
