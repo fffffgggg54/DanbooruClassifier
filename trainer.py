@@ -343,6 +343,7 @@ def trainCycle(image_datasets, model):
                     #loss = (1 - multiAccuracy[:,4:]).sum()
                     #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).sum()
                     #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).pow(2).sum()
+                    #loss = (1 - multiAccuracy[:,8]).pow(2).sum()
                     #model.zero_grad()
                     # backward + optimize only if in training phase
                     # TODO this is slow, profile and optimize

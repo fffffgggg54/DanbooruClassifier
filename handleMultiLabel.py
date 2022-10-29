@@ -145,11 +145,78 @@ class AsymmetricLossOptimized(nn.Module):
 
         return -self.loss.sum()
 
-
-
 class AsymmetricLossAdaptive(nn.Module):
     def __init__(self, gamma_neg=1, gamma_pos=1, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.1):
         super(AsymmetricLossAdaptive, self).__init__()
+
+        self.gamma_neg = gamma_neg
+        self.gamma_pos = gamma_pos
+        self.clip = clip
+        self.disable_torch_grad_focal_loss = disable_torch_grad_focal_loss
+        self.eps = eps
+        self.adaptive = adaptive
+        self.gap_target = gap_target
+        self.gamma_step = gamma_step
+        self.gamma_neg_per_class = None
+        self.gamma_pos_per_class = None
+        
+        
+    def forward(self, x, y, updateAdaptive = True, printAdaptive = False):
+        """"
+        Parameters
+        ----------
+        x: input logits
+        y: targets (multi-label binarized vector)
+        """
+        
+        if self.gamma_neg_per_class == None or self.gamma_pos_per_class == None:
+            batchSize = targs.size(dim=0)
+            self.gamma_neg_per_class = torch.ones(batchSize) * self.gamma_neg
+            self.gamma_pos_per_class = torch.ones(batchSize) * self.gamma_pos
+
+        # Calculating Probabilities
+        x_sigmoid = torch.sigmoid(x)
+        xs_pos = x_sigmoid
+        xs_neg = 1 - x_sigmoid
+
+        # Asymmetric Clipping
+        if self.clip is not None and self.clip > 0:
+            xs_neg = (xs_neg + self.clip).clamp(max=1)
+
+        # Basic CE calculation
+        los_pos = y * torch.log(xs_pos.clamp(min=self.eps))
+        los_neg = (1 - y) * torch.log(xs_neg.clamp(min=self.eps))
+        loss = los_pos + los_neg
+
+        # Asymmetric Focusing
+        if self.gamma_neg > 0 or self.gamma_pos > 0:
+            if self.disable_torch_grad_focal_loss:
+                torch.set_grad_enabled(False)
+            pt0 = xs_pos * y
+            pt1 = xs_neg * (1 - y)  # pt = p if t > 0 else 1-p
+            pt = pt0 + pt1
+            if(self.adaptive == True):
+            
+                gap = pt0.sum(dim=0) / (y.sum(dim=0) + self.eps) - pt1.sum(dim=0) / ((1 - y).sum(dim=0) + self.eps)
+                
+                if updateAdaptive == True:
+                    self.gamma_neg_per_class = self.gamma_neg_per_class - self.gamma_step * (gap - self.gap_target)
+                
+                output = None
+                if printAdaptive == True:
+                    output = str(f'\tpos: {pt0.sum() / (y.sum() + self.eps):.4f},\tneg: {pt1.sum() / ((1 - y).sum() + self.eps):.4f},\tgap: {gap:.4f},\tchange: {self.gamma_step * (gap - self.gap_target):.6f},\tgamma neg: {self.gamma_neg:.6f}')
+                
+            one_sided_gamma = self.gamma_pos_per_class * y + self.gamma_neg_per_class * (1 - y)
+            one_sided_w = torch.pow(1 - pt, one_sided_gamma)
+            if self.disable_torch_grad_focal_loss:
+                torch.set_grad_enabled(True)
+            loss *= one_sided_w
+
+        return -loss.sum(), output
+
+class AsymmetricLossAdaptiveWorking(nn.Module):
+    def __init__(self, gamma_neg=1, gamma_pos=1, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.1):
+        super(AsymmetricLossAdaptiveWorking, self).__init__()
 
         self.gamma_neg = gamma_neg
         self.gamma_pos = gamma_pos
@@ -590,7 +657,9 @@ def getAccuracy(preds, targs):
     Pprecision = TP / (TP + FP + epsilon)
     Nprecision = TN / (TN + FN + epsilon)
     
-    return torch.column_stack([TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision])
+    P4 = (4 * TP * TN) / ((4 * TN * TP) + (TN + TP) * (FP + FN))
+    
+    return torch.column_stack([TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision, P4])
 
 class AverageMeter(object):
     def __init__(self):
