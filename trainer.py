@@ -314,7 +314,7 @@ def trainCycle(image_datasets, model):
                     
                     #with torch.cuda.amp.autocast():
                     #outputs = model(imageBatch)
-                    outputs = model(imageBatch).logits
+                    outputs = model(imageBatch).logits.logit()
                     multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
                     referenceTable = MLCSL.getAccuracy(tagBatch.to(device2), tagBatch.to(device2))
                     preds = torch.sigmoid(outputs)
