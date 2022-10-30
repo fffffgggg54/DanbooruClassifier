@@ -199,7 +199,7 @@ def modelSetup(classes):
     
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
     #model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
-    config = transformers.AutoConfig.from_pretrained("facebook/levit-256", num_labels=len(classes))
+    config = transformers.AutoConfig.from_pretrained("facebook/levit-192", num_labels=len(classes))
 
     model = transformers.AutoModelForImageClassification.from_config(config)
     
