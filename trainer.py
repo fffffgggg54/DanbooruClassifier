@@ -86,7 +86,7 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['num_epochs'] = 50
-FLAGS['learning_rate'] = 3e-4
+FLAGS['learning_rate'] = 3e-5
 FLAGS['weight_decay'] = 1e-2
 FLAGS['gradient_accumulation_iterations'] = 1
 
@@ -199,9 +199,8 @@ def modelSetup(classes):
     
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
     #model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
-    config = transformers.AutoConfig.from_pretrained("facebook/levit-256", num_labels=len(classes))
 
-    model = transformers.AutoModelForImageClassification.from_config(config)
+    model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(classes))
     
 
     return model
