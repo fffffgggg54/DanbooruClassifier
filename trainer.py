@@ -78,7 +78,7 @@ FLAGS['use_scaler'] = False
 
 # dataloader config
 
-FLAGS['batch_size'] = 128
+FLAGS['batch_size'] = 512
 FLAGS['num_workers'] = 7
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -199,7 +199,7 @@ def modelSetup(classes):
     
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
     #model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
-    config = transformers.AutoConfig.from_pretrained("facebook/levit-384", num_labels=len(classes))
+    config = transformers.AutoConfig.from_pretrained("facebook/levit-256", num_labels=len(classes))
 
     model = transformers.AutoModelForImageClassification.from_config(config)
     
