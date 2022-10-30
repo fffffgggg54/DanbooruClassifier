@@ -200,7 +200,7 @@ def modelSetup(classes):
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
     #model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
 
-    model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(classes))
+    model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(classes), ignore_mismatched_sizes=True)
     
 
     return model
