@@ -190,18 +190,18 @@ def modelSetup(classes):
     #model = models.resnet50(weights = models.ResNet50_Weights.DEFAULT)
     #model = models.resnet34()
     #model = models.resnet34(weights = models.ResNet34_Weights.DEFAULT)
-    #model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
+    model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
     
     
-    #model.fc = nn.Linear(model.fc.in_features, len(classes))
+    model.fc = nn.Linear(model.fc.in_features, len(classes))
     
     #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
     
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
     #model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
-    config = transformers.AutoConfig.from_pretrained("facebook/levit-256", num_labels=len(classes))
+    #config = transformers.AutoConfig.from_pretrained("facebook/levit-256", num_labels=len(classes))
 
-    model = transformers.AutoModelForImageClassification.from_config(config)
+    #model = transformers.AutoModelForImageClassification.from_config(config)
     
 
     return model
@@ -314,7 +314,7 @@ def trainCycle(image_datasets, model):
                     
                     #with torch.cuda.amp.autocast():
                     #outputs = model(imageBatch)
-                    outputs = model(imageBatch).logits.logit()
+                    outputs = model(imageBatch).logits
                     multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
                     referenceTable = MLCSL.getAccuracy(tagBatch.to(device2), tagBatch.to(device2))
                     preds = torch.sigmoid(outputs)
