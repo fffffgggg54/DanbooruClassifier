@@ -201,12 +201,14 @@ class AsymmetricLossAdaptive(nn.Module):
                 gap = pt0.sum(dim=0) / (y.sum(dim=0) + self.eps) - pt1.sum(dim=0) / ((1 - y).sum(dim=0) + self.eps)
                 
                 if updateAdaptive == True:
-                    #self.gamma_neg_per_class = self.gamma_neg_per_class - (self.gamma_step * y.mean(dim=0)) * (gap - self.gap_target)
-                    self.gamma_neg_per_class = self.gamma_neg_per_class - (self.gamma_step * y.mean(dim=0).sqrt()) * (gap - self.gap_target)
+                    self.gamma_neg_per_class = self.gamma_neg_per_class - (self.gamma_step * y.mean(dim=0)) * (gap - self.gap_target)
+                    #self.gamma_neg_per_class = self.gamma_neg_per_class - (self.gamma_step * y.mean(dim=0).sqrt()) * (gap - self.gap_target)
+                    
                 
                 output = None
                 if printAdaptive == True:
-                    output = str(f'\tpos: {pt0.sum() / (y.sum() + self.eps):.4f},\tneg: {pt1.sum() / ((1 - y).sum() + self.eps):.4f}')
+                    #output = str(f'\tpos: {pt0.sum() / (y.sum() + self.eps):.4f},\tneg: {pt1.sum() / ((1 - y).sum() + self.eps):.4f}')
+                    output = str(f'\tpos: {pt0.sum() / (y.sum() + self.eps):.4f},\tneg: {pt1.sum() / ((1 - y).sum() + self.eps):.4f},\tmin gamma neg: {self.gamma_neg_per_class.min():.4f},\tmax gamma neg: {self.gamma_neg_per_class.max():.4f}')
                 
             one_sided_gamma = self.gamma_pos_per_class * y + self.gamma_neg_per_class * (1 - y)
             one_sided_w = torch.pow(1 - pt, one_sided_gamma)
