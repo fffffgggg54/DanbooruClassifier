@@ -90,7 +90,7 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 FLAGS['num_epochs'] = 200
 FLAGS['learning_rate'] = 3e-3
 FLAGS['weight_decay'] = 1e-2
-FLAGS['gradient_accumulation_iterations'] = 4
+FLAGS['gradient_accumulation_iterations'] = 1
 
 # debugging config
 
