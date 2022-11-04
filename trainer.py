@@ -70,7 +70,7 @@ FLAGS['trainSetSize'] = 0.8
 
 
 FLAGS['ngpu'] = torch.cuda.is_available()
-FLAGS['device'] = torch.device("cuda:1" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
+FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
 FLAGS['device2'] = FLAGS['device']
 if(torch.has_mps == True): FLAGS['device2'] = "cpu"
 FLAGS['use_scaler'] = False
@@ -78,7 +78,7 @@ FLAGS['use_scaler'] = False
 
 # dataloader config
 
-FLAGS['batch_size'] = 32
+FLAGS['batch_size'] = 64
 FLAGS['num_workers'] = 1
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -86,9 +86,9 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['num_epochs'] = 50
-FLAGS['learning_rate'] = 3e-5
+FLAGS['learning_rate'] = 3e-4
 FLAGS['weight_decay'] = 1e-2
-FLAGS['gradient_accumulation_iterations'] = 4
+FLAGS['gradient_accumulation_iterations'] = 1
 
 # debugging config
 
@@ -207,7 +207,7 @@ def modelSetup(classes):
         layer_norm_eps=1e-12,
         num_labels=len(classes))
     
-    #model = transformers.CvtForImageClassification(myCvtConfig)
+    model = transformers.CvtForImageClassification(myCvtConfig)
     
     
     #model = models.resnet152(weights=models.ResNet152_Weights.DEFAULT)
@@ -226,7 +226,7 @@ def modelSetup(classes):
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
     #model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
 
-    model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-128S", num_labels=len(classes), ignore_mismatched_sizes=True)
+    #model = transformers.AutoModelForImageClassification.from_pretrained("microsoft/cvt-13", num_labels=len(classes), ignore_mismatched_sizes=True)
     
 
     #model.load_state_dict(torch.load(model.load_state_dict(torch.load("/home/fredo/models/CvT-Cust1/saved_model_epoch_4.pth"))))
