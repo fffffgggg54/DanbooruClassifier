@@ -206,7 +206,7 @@ def modelSetup(classes):
         initializer_range=0.02,
         layer_norm_eps=1e-12)
     
-    model = transformers.CvtForImageClassification.from_pretrained(None, num_labels=len(classes), config=myCvtConfig, state_dict = torch.load("/home/fredo/models/CvT-Cust1/saved_model_epoch_4.pth", map_location=FLAGS['device']), ignore_mismatched_sizes=True)
+    model = transformers.CvtForImageClassification.from_pretrained(None, num_labels=len(classes), config=myCvtConfig, state_dict = torch.load("/home/fredo/models/CvT-Cust1/saved_model_epoch_4.pth", map_location='cpu'), ignore_mismatched_sizes=True)
     
     
     #model = models.resnet152(weights=models.ResNet152_Weights.DEFAULT)
