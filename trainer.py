@@ -78,7 +78,7 @@ FLAGS['use_scaler'] = False
 
 # dataloader config
 
-FLAGS['batch_size'] = 256
+FLAGS['batch_size'] = 64
 FLAGS['num_workers'] = 7
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -86,7 +86,7 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['num_epochs'] = 50
-FLAGS['learning_rate'] = 3e-5
+FLAGS['learning_rate'] = 3e-4
 FLAGS['weight_decay'] = 1e-2
 FLAGS['gradient_accumulation_iterations'] = 1
 
@@ -182,7 +182,32 @@ def getData():
     return image_datasets
 
 def modelSetup(classes):
+    
 
+    myCvtConfig = transformers.CvtConfig(num_channels=3,
+        patch_sizes=[7, 5, 3, 3],
+        patch_stride=[4, 3, 2, 2],
+        patch_padding=[2, 2, 1, 1],
+        embed_dim=[64, 240, 384, 896],
+        num_heads=[1, 3, 6, 14],
+        depth=[1, 4, 8, 16],
+        mlp_ratio=[4.0, 4.0, 4.0, 4.0],
+        attention_drop_rate=[0.0, 0.0, 0.0, 0.0],
+        drop_rate=[0.0, 0.0, 0.0, 0.0],
+        drop_path_rate=[0.0, 0.0, 0.0, 0.1],
+        qkv_bias=[True, True, True, True],
+        cls_token=[False, False, False, True],
+        qkv_projection_method=['dw_bn', 'dw_bn', 'dw_bn', 'dw_bn'],
+        kernel_qkv=[3, 3, 3, 3],
+        padding_kv=[1, 1, 1, 1],
+        stride_kv=[2, 2, 2, 2],
+        padding_q=[1, 1, 1, 1],
+        stride_q=[1, 1, 1, 1],
+        initializer_range=0.02,
+        layer_norm_eps=1e-12)
+    
+    model = transformers.CvtForImageClassification.from_pretrained(None, num_labels=len(classes), config=myCvtConfig, state_dict = torch.load("/home/fredo/models/CvT-Cust1/saved_model_epoch_4.pth", map_location=myDevice), ignore_mismatched_sizes=True)
+    
     
     #model = models.resnet152(weights=models.ResNet152_Weights.DEFAULT)
     #model = models.resnet152()
@@ -200,7 +225,7 @@ def modelSetup(classes):
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
     #model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
 
-    model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(classes), ignore_mismatched_sizes=True)
+    #model = transformers.AutoModelForImageClassification.from_pretrained("microsoft/cvt-13", num_labels=len(classes), ignore_mismatched_sizes=True)
     
 
     return model
