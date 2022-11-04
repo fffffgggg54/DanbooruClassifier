@@ -229,7 +229,7 @@ def modelSetup(classes):
     #model = transformers.AutoModelForImageClassification.from_pretrained("microsoft/cvt-13", num_labels=len(classes), ignore_mismatched_sizes=True)
     
 
-    model.load_state_dict(torch.load(model.load_state_dict(torch.load("/home/fredo/models/CvT-Cust1/saved_model_epoch_4.pth", map_location=myDevice))))
+    model.load_state_dict(torch.load(model.load_state_dict(torch.load("/home/fredo/models/CvT-Cust1/saved_model_epoch_4.pth"))))
 
     return model
 
