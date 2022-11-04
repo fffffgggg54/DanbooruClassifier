@@ -53,6 +53,8 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/levit'
+
 
 # post importer config
 
@@ -314,7 +316,7 @@ def trainCycle(image_datasets, model):
                 model.eval()   # Set model to evaluate mode
                 
 
-                modelDir = danbooruDataset.create_dir(FLAGS['rootPath'] + 'models/')
+                modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
                 torch.save(model.state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
                 print("validation set")
             
