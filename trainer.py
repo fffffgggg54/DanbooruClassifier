@@ -204,9 +204,10 @@ def modelSetup(classes):
         padding_q=[1, 1, 1, 1],
         stride_q=[1, 1, 1, 1],
         initializer_range=0.02,
-        layer_norm_eps=1e-12)
+        layer_norm_eps=1e-12,
+        num_labels=len(classes))
     
-    model = transformers.CvtForImageClassification.from_pretrained(None, config=myCvtConfig, state_dict = torch.load("/home/fredo/models/CvT-Cust1/saved_model_epoch_4.pth", map_location='cpu'), ignore_mismatched_sizes=True, num_labels=len(classes))
+    model = transformers.CvtForImageClassification.from_pretrained(None, config=myCvtConfig, state_dict = torch.load("/home/fredo/models/CvT-Cust1/saved_model_epoch_4.pth", map_location='cpu'), ignore_mismatched_sizes=True)
     
     
     #model = models.resnet152(weights=models.ResNet152_Weights.DEFAULT)
