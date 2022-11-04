@@ -43,7 +43,7 @@ FLAGS = {}
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
 #FLAGS['rootPath'] = "/media/fredo/Datasets/danbooru2021/"
 if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
-FLAGS['postMetaRoot'] = FLAGS['rootPath'] + "TenthMeta/"
+FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + "original/"
 FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
 FLAGS['postListFile'] = FLAGS['postMetaRoot'] + "data_posts.json"
@@ -53,7 +53,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/levit'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/mobilevit-xx-small'
 
 
 # post importer config
