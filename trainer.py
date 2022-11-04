@@ -228,7 +228,7 @@ def modelSetup(classes):
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
     #model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
 
-    model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit_256", num_labels=len(classes), ignore_mismatched_sizes=True)
+    model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(classes), ignore_mismatched_sizes=True)
     
 
     #model.load_state_dict(torch.load(model.load_state_dict(torch.load("/home/fredo/models/CvT-Cust1/saved_model_epoch_4.pth"))))
