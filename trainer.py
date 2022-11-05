@@ -88,6 +88,7 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['num_epochs'] = 200
+FLAGS['lr_warmup_epochs'] = 2
 FLAGS['learning_rate'] = 3e-4
 FLAGS['weight_decay'] = 1e-2
 FLAGS['gradient_accumulation_iterations'] = 1
@@ -275,7 +276,7 @@ def trainCycle(image_datasets, model):
     parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=0)
     optimizer = optim.SGD(params=parameters, lr=FLAGS['learning_rate'], weight_decay=0)
-    scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=2/FLAGS['num_epochs'])
+    scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
     if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
     
     # end MLCSL code
@@ -443,7 +444,8 @@ def trainCycle(image_datasets, model):
                     scheduler.step()
                 
                 #print(device)
-                    
+                if(FLAGS['ngpu'] > 0):
+                    torch.cuda.empty_cache()
         
         #torch.set_printoptions(profile="full")
         
