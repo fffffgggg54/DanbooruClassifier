@@ -92,7 +92,7 @@ FLAGS['lr_warmup_epochs'] = 2
 FLAGS['learning_rate'] = 3e-4
 FLAGS['weight_decay'] = 1e-2
 FLAGS['gradient_accumulation_iterations'] = 1
-FLAGS['resume_epoch'] = 1
+FLAGS['resume_epoch'] = 2
 
 # debugging config
 
@@ -232,8 +232,8 @@ def modelSetup(classes):
 
     model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(classes), ignore_mismatched_sizes=True)
     
-
-    model.load_state_dict(torch.load(modelDir + 'saved_model_epoch_' + str(FLAGS['resume_epoch']) + '.pth'))
+    modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
+    model.load_state_dict(torch.load(modelDir + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
 
     return model
 
