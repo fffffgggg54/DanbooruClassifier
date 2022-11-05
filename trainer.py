@@ -234,6 +234,7 @@ def modelSetup(classes):
     
     
     model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
+    model.train()
 
     return model
 
@@ -315,11 +316,12 @@ def trainCycle(image_datasets, model):
                 #if (hasTPU == True): xm.master_print("training set")
                 print("training set")
             else:
-                model.eval()   # Set model to evaluate mode
+                
                 
 
                 modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
                 torch.save(model.state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
+                model.eval()   # Set model to evaluate mode
                 print("validation set")
             
             # For each batch in the dataloader
