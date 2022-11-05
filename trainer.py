@@ -232,8 +232,8 @@ def modelSetup(classes):
 
     model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(classes), ignore_mismatched_sizes=True)
     
-    modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
-    model.load_state_dict(torch.load(modelDir + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
+    
+    model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
 
     return model
 
