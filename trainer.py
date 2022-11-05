@@ -299,7 +299,7 @@ def trainCycle(image_datasets, model):
     stepsPerPrintout = FLAGS['stepsPerPrintout']
     torch.backends.cudnn.benchmark = True
     
-    for epoch in range(FLAGS['num_epochs']):
+    for epoch in range(FLAGS['resume_epoch'], FLAGS['num_epochs']):
         prior = MLCSL.ComputePrior(classes, device2)
         epochTime = time.time()
         
