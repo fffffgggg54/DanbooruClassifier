@@ -448,8 +448,8 @@ def trainCycle(image_datasets, model):
                     scheduler.step()
                 
                 #print(device)
-                if(FLAGS['ngpu'] > 0):
-                    torch.cuda.empty_cache()
+                #if(FLAGS['ngpu'] > 0):
+                    #torch.cuda.empty_cache()
         
         #torch.set_printoptions(profile="full")
         
