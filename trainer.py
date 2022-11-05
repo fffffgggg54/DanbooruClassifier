@@ -92,6 +92,7 @@ FLAGS['lr_warmup_epochs'] = 2
 FLAGS['learning_rate'] = 3e-4
 FLAGS['weight_decay'] = 1e-2
 FLAGS['gradient_accumulation_iterations'] = 1
+FLAGS['resume_epoch'] = 1
 
 # debugging config
 
@@ -232,7 +233,7 @@ def modelSetup(classes):
     model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(classes), ignore_mismatched_sizes=True)
     
 
-    #model.load_state_dict(torch.load(model.load_state_dict(torch.load("/home/fredo/models/CvT-Cust1/saved_model_epoch_4.pth"))))
+    model.load_state_dict(torch.load(modelDir + 'saved_model_epoch_' + str(FLAGS['resume_epoch']) + '.pth'))
 
     return model
 
@@ -276,7 +277,7 @@ def trainCycle(image_datasets, model):
     parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=0)
     optimizer = optim.SGD(params=parameters, lr=FLAGS['learning_rate'], weight_decay=0)
-    scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
+    scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'], last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch'])
     if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
     
     # end MLCSL code
