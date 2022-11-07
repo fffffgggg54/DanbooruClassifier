@@ -53,7 +53,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/levit-128S/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/levit-256-1588-ASL-Balanced-PerClass/'
 
 
 # post importer config
@@ -81,7 +81,7 @@ FLAGS['use_scaler'] = False
 # dataloader config
 
 FLAGS['batch_size'] = 256
-FLAGS['num_workers'] = 18
+FLAGS['num_workers'] = 7
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
@@ -231,7 +231,7 @@ def modelSetup(classes):
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
     #model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
 
-    model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-128S", num_labels=len(classes), ignore_mismatched_sizes=True)
+    model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(classes), ignore_mismatched_sizes=True)
     
     if (FLAGS['resume_epoch'] > 0):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
@@ -436,7 +436,7 @@ def trainCycle(image_datasets, model):
                     #print(currPostTags)
                     #print(sorted(batchTagAccuracy, key = lambda x: x[1], reverse=True))
                     
-                    torch.cuda.empty_cache()
+                    #torch.cuda.empty_cache()
                 #losses.append(loss)
                 
                 if (phase == 'val'):
