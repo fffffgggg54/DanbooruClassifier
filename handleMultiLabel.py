@@ -227,7 +227,7 @@ class AsymmetricLossAdaptive(nn.Module):
         
         if self.gamma_neg_per_class == None or self.gamma_pos_per_class == None:
             classCount = y.size(dim=1)
-            currDevice = y.get_device()
+            currDevice = y.device
             self.gamma_neg_per_class = torch.ones(classCount, device=currDevice) * self.gamma_neg
             self.gamma_pos_per_class = torch.ones(classCount, device=currDevice) * self.gamma_pos
 
