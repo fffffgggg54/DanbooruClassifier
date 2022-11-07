@@ -74,7 +74,7 @@ FLAGS['trainSetSize'] = 0.8
 FLAGS['ngpu'] = torch.cuda.is_available()
 FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
 FLAGS['device2'] = FLAGS['device']
-if(torch.has_mps == True): FLAGS['device2'] = "cpu"
+#if(torch.has_mps == True): FLAGS['device2'] = "cpu"
 FLAGS['use_scaler'] = False
 #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
@@ -97,7 +97,7 @@ FLAGS['resume_epoch'] = 0
 # debugging config
 
 FLAGS['verbose_debug'] = False
-FLAGS['stepsPerPrintout'] = 250
+FLAGS['stepsPerPrintout'] = 1
 
 classes = None
 
@@ -273,7 +273,7 @@ def trainCycle(image_datasets, model):
     
     #criterion = MLCSL.Hill()
     #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=5, gamma_pos=5, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
-    criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.1)
+    criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.1).to(device2)
     #criterion = MLCSL.AsymmetricLossAdaptiveWorking(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.2)
     #criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0.05, gamma_pos=1, gamma_neg=6, gamma_unann=4, alpha_pos=1, alpha_neg=1, alpha_unann=1)
     parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
