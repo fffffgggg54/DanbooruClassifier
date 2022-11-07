@@ -53,7 +53,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/ghostnet_0.5'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/levit_128S/'
 
 
 # post importer config
@@ -74,14 +74,14 @@ FLAGS['trainSetSize'] = 0.8
 FLAGS['ngpu'] = torch.cuda.is_available()
 FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
 FLAGS['device2'] = FLAGS['device']
-#if(torch.has_mps == True): FLAGS['device2'] = "cpu"
+if(torch.has_mps == True): FLAGS['device2'] = "cpu"
 FLAGS['use_scaler'] = False
 #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
 # dataloader config
 
 FLAGS['batch_size'] = 256
-FLAGS['num_workers'] = 7
+FLAGS['num_workers'] = 18
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
@@ -97,7 +97,7 @@ FLAGS['resume_epoch'] = 0
 # debugging config
 
 FLAGS['verbose_debug'] = False
-FLAGS['stepsPerPrintout'] = 1
+FLAGS['stepsPerPrintout'] = 250
 
 classes = None
 
@@ -226,12 +226,12 @@ def modelSetup(classes):
     #model.fc = nn.Linear(model.fc.in_features, len(classes))
     
     #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('mixnet_s', pretrained=True, num_classes=len(classes))
+    #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
     #model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
 
-    #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(classes), ignore_mismatched_sizes=True)
+    model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-128S", num_labels=len(classes), ignore_mismatched_sizes=True)
     
     if (FLAGS['resume_epoch'] > 0):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
@@ -273,7 +273,7 @@ def trainCycle(image_datasets, model):
     
     #criterion = MLCSL.Hill()
     #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=5, gamma_pos=5, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
-    criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.1).to(device2)
+    criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.1)
     #criterion = MLCSL.AsymmetricLossAdaptiveWorking(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.2)
     #criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0.05, gamma_pos=1, gamma_neg=6, gamma_unann=4, alpha_pos=1, alpha_neg=1, alpha_unann=1)
     parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
@@ -436,6 +436,7 @@ def trainCycle(image_datasets, model):
                     #print(currPostTags)
                     #print(sorted(batchTagAccuracy, key = lambda x: x[1], reverse=True))
                     
+                    torch.cuda.empty_cache()
                 #losses.append(loss)
                 
                 if (phase == 'val'):
