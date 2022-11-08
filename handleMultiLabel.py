@@ -320,8 +320,7 @@ class AsymmetricLossAdaptiveWorking(nn.Module):
             pt = pt0 + pt1
             if(self.adaptive == True):
             
-                #gap = pt0.sum() / (y.sum() + self.eps) - pt1.sum() / ((1 - y).sum() + self.eps)
-                gap = pt0.mean() - pt1.mean()
+                gap = pt0.sum() / (y.sum() + self.eps) - pt1.sum() / ((1 - y).sum() + self.eps)
                 
                 
                 if updateAdaptive == True:
