@@ -49,14 +49,14 @@ class DanbooruDataset(torch.utils.data.Dataset):
 
     def __init__(self, imageRoot, postList, tagList, transform=None, cacheRoot = None):
 
-        PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True
-        self.classes = deepcopy({classIndex : className for classIndex, className in enumerate(deepcopy(tagList))}) #property of dataset?
+        #PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True
+        #self.classes = deepcopy({classIndex : className for classIndex, className in enumerate(deepcopy(tagList))}) #property of dataset?
         self.postList = deepcopy(postList)    #dataframe with string type, not object
-        self.imageRoot = deepcopy(imageRoot)  #string
+        #self.imageRoot = deepcopy(imageRoot)  #string
         #self.tagList = tagList
         self.tagList = pd.Series(deepcopy(tagList), dtype=pd.StringDtype())
         self.transform = transform  #transform, callable?
-        self.cacheRoot = deepcopy(cacheRoot)  #string
+        #self.cacheRoot = deepcopy(cacheRoot)  #string
 
     def __len__(self):
         return deepcopy(len(self.postList))

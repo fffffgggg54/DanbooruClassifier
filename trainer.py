@@ -177,7 +177,7 @@ def getData():
         cacheRoot = FLAGS['cacheRoot']
         )
     global classes
-    classes = myDataset.classes
+    classes = {classIndex : className for classIndex, className in enumerate(myDataset.tagList)}
     
     #classes = {classIndex : className for classIndex, className in enumerate(tagData.name)}
     trimmedSet, _ = torch.utils.data.random_split(myDataset, [int(FLAGS['workingSetSize'] * len(myDataset)), len(myDataset) - int(FLAGS['workingSetSize'] * len(myDataset))], generator=torch.Generator().manual_seed(42)) # discard part of dataset if desired
