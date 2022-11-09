@@ -53,7 +53,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/levit-256-1588-ASL-Balanced/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/levit-256-1588-ASL-Balanced-PerClass-dual/'
 
 
 # post importer config
