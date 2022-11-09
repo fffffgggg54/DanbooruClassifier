@@ -56,7 +56,7 @@ class DanbooruDataset(torch.utils.data.Dataset):
         #self.tagList = tagList
         self.tagList = pd.Series(deepcopy(tagList), dtype=pd.StringDtype())
         self.transform = transform  #transform, callable?
-        #self.cacheRoot = deepcopy(cacheRoot)  #string
+        self.cacheRoot = deepcopy(cacheRoot)  #string
 
     def __len__(self):
         return deepcopy(len(self.postList))
