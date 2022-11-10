@@ -365,7 +365,7 @@ def trainCycle(image_datasets, model):
 
                     #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
                     #loss = criterion(outputs.to(device2), tagBatch.to(device2))
-                    loss, textOutput = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
+                    #loss, textOutput = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
                     #loss = criterion(outputs.cpu(), tags.cpu())
                     
                     #loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([2,1,2,1]).to(device2)).sum()
@@ -379,7 +379,7 @@ def trainCycle(image_datasets, model):
                     #loss = (1 - multiAccuracy[:,4:]).sum()
                     #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).sum()
                     #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).pow(2).sum()
-                    #loss = (1 - multiAccuracy[:,8]).pow(2).sum()
+                    loss = (1 - multiAccuracy[:,8]).pow(2).sum()
                     #model.zero_grad()
                     # backward + optimize only if in training phase
                     # TODO this is slow, profile and optimize
@@ -431,7 +431,7 @@ def trainCycle(image_datasets, model):
                     #        currPostTags.append((tagNames[tagIndex], tagVal.item()))
                     
                    
-                    print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f\tAccuracy: %.2f\tP4: %.2f%s' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), loss, imagesPerSecond, accuracy, multiAccuracy[:,8].mean() * 100, textOutput))
+                    print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f\tAccuracy: %.2f\tP4: %.2f\t%s' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), loss, imagesPerSecond, accuracy, multiAccuracy[:,8].mean() * 100, textOutput))
                     #print(id[0])
                     #print(currPostTags)
                     #print(sorted(batchTagAccuracy, key = lambda x: x[1], reverse=True))
