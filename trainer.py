@@ -53,7 +53,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/levit-256-1588-P4-min/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/levit_256_1588_Hill/'
 
 
 # post importer config
@@ -92,7 +92,7 @@ FLAGS['lr_warmup_epochs'] = 2
 FLAGS['learning_rate'] = 3e-4
 FLAGS['weight_decay'] = 1e-2
 FLAGS['gradient_accumulation_iterations'] = 1
-FLAGS['resume_epoch'] = 0
+FLAGS['resume_epoch'] = 15
 
 # debugging config
 
@@ -271,9 +271,9 @@ def trainCycle(image_datasets, model):
     #ema = MLCSL.ModelEma(model, 0.9997)  # 0.9997^641=0.82
     
     
-    #criterion = MLCSL.Hill()
+    criterion = MLCSL.Hill()
     #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=5, gamma_pos=5, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
-    criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=1, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.01)
+    #criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=1, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.01)
     #criterion = MLCSL.AsymmetricLossAdaptiveWorking(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.2)
     #criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0.05, gamma_pos=1, gamma_neg=6, gamma_unann=4, alpha_pos=1, alpha_neg=1, alpha_unann=1)
     parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
@@ -364,7 +364,7 @@ def trainCycle(image_datasets, model):
                     
 
                     #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                    #loss = criterion(outputs.to(device2), tagBatch.to(device2))
+                    loss = criterion(outputs.to(device2), tagBatch.to(device2))
                     #loss, textOutput = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
                     #loss = criterion(outputs.cpu(), tags.cpu())
                     
@@ -379,7 +379,7 @@ def trainCycle(image_datasets, model):
                     #loss = (1 - multiAccuracy[:,4:]).sum()
                     #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).sum()
                     #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).pow(2).sum()
-                    loss = (1 - multiAccuracy[:,8]).pow(2).sum()
+                    #loss = (1 - multiAccuracy[:,8]).pow(2).sum()
                     #model.zero_grad()
                     # backward + optimize only if in training phase
                     # TODO this is slow, profile and optimize
