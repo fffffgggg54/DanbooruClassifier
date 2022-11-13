@@ -92,7 +92,7 @@ FLAGS['lr_warmup_epochs'] = 2
 FLAGS['learning_rate'] = 3e-4
 FLAGS['weight_decay'] = 1e-2
 FLAGS['gradient_accumulation_iterations'] = 1
-FLAGS['resume_epoch'] = 15
+FLAGS['resume_epoch'] = 26
 
 # debugging config
 
