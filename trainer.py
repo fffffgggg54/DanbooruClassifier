@@ -81,7 +81,7 @@ FLAGS['use_scaler'] = False
 # dataloader config
 
 FLAGS['batch_size'] = 256
-FLAGS['num_workers'] = 7
+FLAGS['num_workers'] = 6
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
@@ -92,7 +92,7 @@ FLAGS['lr_warmup_epochs'] = 2
 FLAGS['learning_rate'] = 3e-4
 FLAGS['weight_decay'] = 1e-2
 FLAGS['gradient_accumulation_iterations'] = 1
-FLAGS['resume_epoch'] = 26
+FLAGS['resume_epoch'] = 37
 
 # debugging config
 
