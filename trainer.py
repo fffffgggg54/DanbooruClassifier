@@ -227,12 +227,13 @@ def modelSetup(classes):
     
     #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('mixnet_l', pretrained=True, num_classes=len(classes))
     
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
     #model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
 
     #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(classes), ignore_mismatched_sizes=True)
-    model = transformers.AutoModelForImageClassification.from_pretrained("facebook/convnext-tiny-224", num_labels=len(classes), ignore_mismatched_sizes=True)
+    #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/convnext-tiny-224", num_labels=len(classes), ignore_mismatched_sizes=True)
     
     if (FLAGS['resume_epoch'] > 0):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
@@ -350,8 +351,8 @@ def trainCycle(image_datasets, model):
                     # TODO switch between using autocast and not using it
                     
                     #with torch.cuda.amp.autocast():
-                    #outputs = model(imageBatch)
-                    outputs = model(imageBatch).logits
+                    outputs = model(imageBatch)
+                    #outputs = model(imageBatch).logits
                     multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
                     referenceTable = MLCSL.getAccuracy(tagBatch.to(device2), tagBatch.to(device2))
                     preds = torch.sigmoid(outputs)
