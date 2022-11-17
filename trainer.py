@@ -53,7 +53,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/levit_256_1588_Hill/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/'
 
 
 # post importer config
@@ -80,19 +80,19 @@ FLAGS['use_scaler'] = False
 
 # dataloader config
 
-FLAGS['batch_size'] = 256
+FLAGS['batch_size'] = 64
 FLAGS['num_workers'] = 6
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
 # training config
 
-FLAGS['num_epochs'] = 200
-FLAGS['lr_warmup_epochs'] = 2
+FLAGS['num_epochs'] = 60
+FLAGS['lr_warmup_epochs'] = 5
 FLAGS['learning_rate'] = 3e-4
 FLAGS['weight_decay'] = 1e-2
 FLAGS['gradient_accumulation_iterations'] = 1
-FLAGS['resume_epoch'] = 37
+FLAGS['resume_epoch'] = 0
 
 # debugging config
 
@@ -231,7 +231,8 @@ def modelSetup(classes):
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
     #model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
 
-    model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(classes), ignore_mismatched_sizes=True)
+    #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(classes), ignore_mismatched_sizes=True)
+    model = transformers.AutoModelForImageClassification.from_pretrained("facebook/convnext-tiny-224", num_labels=len(classes), ignore_mismatched_sizes=True)
     
     if (FLAGS['resume_epoch'] > 0):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
@@ -273,7 +274,7 @@ def trainCycle(image_datasets, model):
     
     criterion = MLCSL.Hill()
     #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=5, gamma_pos=5, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
-    #criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=1, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.01)
+    #criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.01)
     #criterion = MLCSL.AsymmetricLossAdaptiveWorking(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.2)
     #criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0.05, gamma_pos=1, gamma_neg=6, gamma_unann=4, alpha_pos=1, alpha_neg=1, alpha_unann=1)
     parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
