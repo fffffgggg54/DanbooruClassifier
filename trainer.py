@@ -53,7 +53,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/mixnet-s-1588-ASL-adaptive/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/mixnet-s-1588-ASL-Balanced/'
 
 
 # post importer config
