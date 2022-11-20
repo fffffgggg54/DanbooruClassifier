@@ -281,7 +281,8 @@ def main():
     
     
     
-    outputs = model(image.unsqueeze(0)).logits.sigmoid()
+    #outputs = model(image.unsqueeze(0)).logits.sigmoid()
+    outputs = model(image.unsqueeze(0)).sigmoid()
     
     
     currPostTags = []
