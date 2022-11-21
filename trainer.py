@@ -22,6 +22,8 @@ import os
 import timm
 import transformers
 
+import timm.models.layers.ml_decoder as ml_decoder
+
 import parallelJsonReader
 import danbooruDataset
 import handleMultiLabel as MLCSL
@@ -229,7 +231,7 @@ def modelSetup(classes):
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     model = timm.create_model('mixnet_s', pretrained=True, num_classes=len(classes))
     
-    model = timm.models.layers.add_ml_decoder_head(model)
+    model = ml_decoder.add_ml_decoder_head(model)
     
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
     #model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
