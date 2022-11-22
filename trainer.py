@@ -55,7 +55,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/mixnet-s-ml-decoder-1588-Hill/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext-tiny-1588-Hill/'
 
 
 # post importer config
@@ -82,18 +82,21 @@ FLAGS['use_scaler'] = False
 
 # dataloader config
 
-FLAGS['batch_size'] = 128
 FLAGS['num_workers'] = 7
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
 # training config
 
-FLAGS['num_epochs'] = 60
-FLAGS['lr_warmup_epochs'] = 5
-FLAGS['learning_rate'] = 3e-4
-FLAGS['weight_decay'] = 1e-2
+FLAGS['num_epochs'] = 30
+FLAGS['batch_size'] = 128
 FLAGS['gradient_accumulation_iterations'] = 1
+
+FLAGS['learning_rate'] = 3e-4
+FLAGS['lr_warmup_epochs'] = 2
+
+FLAGS['weight_decay'] = 5e-2
+
 FLAGS['resume_epoch'] = 0
 
 # debugging config
@@ -229,7 +232,7 @@ def modelSetup(classes):
     
     #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('mixnet_s', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes))
     
     model = ml_decoder.add_ml_decoder_head(model)
     
@@ -282,9 +285,10 @@ def trainCycle(image_datasets, model):
     #criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.01)
     #criterion = MLCSL.AsymmetricLossAdaptiveWorking(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.2)
     #criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0.05, gamma_pos=1, gamma_neg=6, gamma_unann=4, alpha_pos=1, alpha_neg=1, alpha_unann=1)
-    parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
-    #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=0)
-    optimizer = optim.SGD(params=parameters, lr=FLAGS['learning_rate'], weight_decay=0)
+    #parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
+    #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    #optimizer = optim.SGD(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    optimizer = optim.AdamW(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
     scheduler.last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch']
     if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
