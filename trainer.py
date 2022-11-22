@@ -89,7 +89,7 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['num_epochs'] = 30
-FLAGS['batch_size'] = 128
+FLAGS['batch_size'] = 256
 FLAGS['gradient_accumulation_iterations'] = 1
 
 FLAGS['learning_rate'] = 3e-4
@@ -232,7 +232,7 @@ def modelSetup(classes):
     
     #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('convnext_nano', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('convnext_femto', pretrained=True, num_classes=len(classes))
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
