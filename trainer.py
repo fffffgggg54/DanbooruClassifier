@@ -55,7 +55,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext-femto-1588-Hill/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/swinv2_tiny_window16_256-1588-Hill/'
 
 
 # post importer config
@@ -88,12 +88,12 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
 # training config
 
-FLAGS['num_epochs'] = 30
-FLAGS['batch_size'] = 256
+FLAGS['num_epochs'] = 100
+FLAGS['batch_size'] = 64
 FLAGS['gradient_accumulation_iterations'] = 1
 
 FLAGS['learning_rate'] = 3e-4
-FLAGS['lr_warmup_epochs'] = 2
+FLAGS['lr_warmup_epochs'] = 5
 
 FLAGS['weight_decay'] = 5e-2
 
@@ -232,7 +232,7 @@ def modelSetup(classes):
     
     #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('convnext_femto', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('swinv2_tiny_window16_256', pretrained=True, num_classes=len(classes))
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
