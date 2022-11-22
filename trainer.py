@@ -288,7 +288,7 @@ def trainCycle(image_datasets, model):
     #parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.SGD(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    optimizer = optim.AdamW(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
     scheduler.last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch']
     if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
