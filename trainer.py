@@ -20,7 +20,7 @@ import os
 
 
 import timm
-import transformers
+#import transformers
 
 import timm.models.layers.ml_decoder as ml_decoder
 
@@ -192,7 +192,7 @@ def getData():
 
 def modelSetup(classes):
     
-
+    '''
     myCvtConfig = transformers.CvtConfig(num_channels=3,
         patch_sizes=[7, 5, 3, 3],
         patch_stride=[4, 3, 2, 2],
@@ -215,7 +215,7 @@ def modelSetup(classes):
         initializer_range=0.02,
         layer_norm_eps=1e-12,
         num_labels=len(classes))
-    
+    '''
     #model = transformers.CvtForImageClassification(myCvtConfig)
     
     
