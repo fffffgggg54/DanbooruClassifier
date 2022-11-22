@@ -20,7 +20,7 @@ import os
 
 
 import timm
-#import transformers
+import transformers
 
 import timm.models.layers.ml_decoder as ml_decoder
 
