@@ -83,7 +83,7 @@ FLAGS['use_scaler'] = False
 FLAGS['batch_size'] = 384
 FLAGS['num_workers'] = 25
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
-if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
+#if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
 # training config
 
