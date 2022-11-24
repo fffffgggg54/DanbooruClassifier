@@ -19,6 +19,8 @@ import pickle
 import _pickle as cPickle
 import json
 
+from memory_profiler import profile
+
 from PIL import PngImagePlugin
 LARGE_ENOUGH_NUMBER = 100
 PngImagePlugin.MAX_TEXT_CHUNK = LARGE_ENOUGH_NUMBER * (1024**2)
@@ -56,7 +58,7 @@ class DanbooruDataset(torch.utils.data.Dataset):
         return len(self.postList)
     
     # TODO profile and optimize
-    #@profile
+    @profile
     def __getitem__(self, index):
         if torch.is_tensor(index):
             index = index.item()
