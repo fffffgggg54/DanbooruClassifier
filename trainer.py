@@ -84,7 +84,7 @@ FLAGS['use_scaler'] = False
 
 FLAGS['batch_size'] = 384
 FLAGS['num_workers'] = 15
-FLAGS['postDataServerWorkerCount'] = 4
+FLAGS['postDataServerWorkerCount'] = 1
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 #if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
