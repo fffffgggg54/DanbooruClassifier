@@ -58,7 +58,6 @@ class DanbooruDataset(torch.utils.data.Dataset):
         return len(self.postList)
     
     # TODO profile and optimize
-    #@profile
     def __getitem__(self, index):
         if torch.is_tensor(index):
             index = index.item()
