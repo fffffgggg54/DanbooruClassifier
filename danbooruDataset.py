@@ -19,6 +19,8 @@ import pickle
 import _pickle as cPickle
 import json
 
+from copy import deepcopy
+
 import multiprocessing
 
 from memory_profiler import profile
@@ -216,11 +218,11 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
         
         recvConn, sendConn = multiprocessing.Pipe()
         
-        self.workQueue.put((index, sendConn))
+        self.workQueue.put(deepcopy((index, sendConn)))
         
-        postData = recvConn.recv()
+        postData = deepcopy(recvConn.recv())
         
-        postID = int(postData.loc["id"])
+        postID = deepcopy(int(postData.loc["id"]))
         image = torch.Tensor()
         postTags = torch.Tensor()
         bruh = False
@@ -228,8 +230,8 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
         
         
         try:
-            assert self.cacheRoot is not None
-            cacheDir = create_dir(self.cacheRoot + str(postID % 1000).zfill(4))
+            assert deepcopy(self.cacheRoot) is not None
+            cacheDir = create_dir(deepcopy(self.cacheRoot) + str(postID % 1000).zfill(4))
             cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
             cachedSample = bz2.BZ2File(cachePath, 'rb')
             image, postTags,_ = cPickle.load(cachedSample)
@@ -325,6 +327,7 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
         if bruh == True: print("asdf")
         
         del postData
+        del postID
         # if(torch.utils.data.get_worker_info().id == 1):objgraph.show_growth() 
             
             
