@@ -327,7 +327,6 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
         if bruh == True: print("asdf")
         
         del postData
-        del postID
         # if(torch.utils.data.get_worker_info().id == 1):objgraph.show_growth() 
             
             
