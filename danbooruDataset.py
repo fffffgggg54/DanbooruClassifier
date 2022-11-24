@@ -218,11 +218,11 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
         
         recvConn, sendConn = multiprocessing.Pipe()
         
-        self.workQueue.put(deepcopy((index, sendConn)))
+        self.workQueue.put((index, sendConn))
         
-        postData = deepcopy(recvConn.recv())
+        postData = recvConn.recv()
         
-        postID = deepcopy(int(postData.loc["id"]))
+        postID = int(postData.loc["id"])
         image = torch.Tensor()
         postTags = torch.Tensor()
         bruh = False
