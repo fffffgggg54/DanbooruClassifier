@@ -292,7 +292,8 @@ def trainCycle(image_datasets, model):
             for i, (images, tags, id) in loaderIterable:
                 imageBatch=images
                 tagBatch=tags
-                print(i)
+                if(i % 50 == 0):
+                    print(i)
                 
                 '''
                 imageBatch = images.to(device, non_blocking=True)
