@@ -81,7 +81,7 @@ FLAGS['use_scaler'] = False
 # dataloader config
 
 FLAGS['batch_size'] = 384
-FLAGS['num_workers'] = 25
+FLAGS['num_workers'] = 5
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 #if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
@@ -200,6 +200,7 @@ def modelSetup(classes):
 
     return model
 
+@profile
 def trainCycle(image_datasets, model):
     #print("starting training")
     startTime = time.time()
