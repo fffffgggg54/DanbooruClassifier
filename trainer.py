@@ -27,6 +27,8 @@ import handleMultiLabel as MLCSL
 
 from memory_profiler import profile
 
+import multiprocessing
+
 
 
 
@@ -82,6 +84,7 @@ FLAGS['use_scaler'] = False
 
 FLAGS['batch_size'] = 384
 FLAGS['num_workers'] = 5
+FLAGS['postDataServerWorkerCount'] = 1
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 #if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
@@ -98,6 +101,8 @@ FLAGS['stepsPerPrintout'] = 50
 
 classes = None
 
+serverProcessPool = []
+workQueue = multiprocessing.Queue()
 
 def getData():
     startTime = time.time()
@@ -160,9 +165,22 @@ def getData():
 
     print("finished preprocessing, time spent: " + str(time.time() - startTime))
     print(f"got {len(postData)} posts with {len(tagData)} tags") #got 3821384 posts with 423 tags
+    
+    
+    
+    for nthWorkerProcess in range(FLAGS['postDataServerWorkerCount']):
+        currProcess = multiprocessing.Process(target=danbooruDataset.DFServerWorkerProcess, args=(workQueue, postData,), daemon = True)
+        currProcess.start()
+        serverProcessPool.append(currProcess)
+        
+    
+    
+    
+    
     # TODO custom normalization values that fit the dataset better
     # TODO investigate ways to return full size images instead of crops
     # this should allow use of full sized images that vary in size, which can then be fed into a model that takes images of arbitrary precision
+    '''
     myDataset = danbooruDataset.DanbooruDataset(FLAGS['imageRoot'], postData, tagData.name, transforms.Compose([
         #transforms.Resize((224,224)),
         danbooruDataset.CutoutPIL(cutout_factor=0.5),
@@ -172,6 +190,17 @@ def getData():
         ]),
         cacheRoot = FLAGS['cacheRoot']
         )
+    '''
+    myDataset = danbooruDataset.DanbooruDatasetWithServer(FLAGS['imageRoot'], workQueue, len(postData), tagData.name, transforms.Compose([
+        #transforms.Resize((224,224)),
+        danbooruDataset.CutoutPIL(cutout_factor=0.5),
+        transforms.RandAugment(),
+        transforms.ToTensor(),
+        #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ]),
+        cacheRoot = FLAGS['cacheRoot']
+        )
+    
     global classes
     classes = myDataset.classes
     
