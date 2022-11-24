@@ -18,6 +18,7 @@ import glob
 import gc
 import os
 
+import multiprocessing
 
 import timm
 import transformers
@@ -55,7 +56,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/levit-256-1588-Hill/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/levit-128S-1588-Hill/'
 
 
 # post importer config
@@ -82,7 +83,8 @@ FLAGS['use_scaler'] = False
 
 # dataloader config
 
-FLAGS['num_workers'] = 6
+FLAGS['num_workers'] = 18
+FLAGS['postDataServerWorkerCount'] = 1
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
@@ -97,7 +99,7 @@ FLAGS['lr_warmup_epochs'] = 5
 
 FLAGS['weight_decay'] = 5e-2
 
-FLAGS['resume_epoch'] = 45
+FLAGS['resume_epoch'] = 0
 
 # debugging config
 
@@ -106,6 +108,9 @@ FLAGS['stepsPerPrintout'] = 50
 
 classes = None
 
+
+serverProcessPool = []
+workQueue = multiprocessing.Queue()
 
 def getData():
     startTime = time.time()
@@ -169,9 +174,18 @@ def getData():
 
     print("finished preprocessing, time spent: " + str(time.time() - startTime))
     print(f"got {len(postData)} posts with {len(tagData)} tags") #got 3821384 posts with 423 tags
+    
+    
+    for nthWorkerProcess in range(FLAGS['postDataServerWorkerCount']):
+        currProcess = multiprocessing.Process(target=danbooruDataset.DFServerWorkerProcess, args=(workQueue, postData.copy(deep=True),), daemon = True)
+        currProcess.start()
+        serverProcessPool.append(currProcess)
+        
+        
     # TODO custom normalization values that fit the dataset better
     # TODO investigate ways to return full size images instead of crops
     # this should allow use of full sized images that vary in size, which can then be fed into a model that takes images of arbitrary precision
+    '''
     myDataset = danbooruDataset.DanbooruDataset(FLAGS['imageRoot'], postData, tagData.name, transforms.Compose([
         #transforms.Resize((224,224)),
         danbooruDataset.CutoutPIL(cutout_factor=0.5),
@@ -181,6 +195,18 @@ def getData():
         ]),
         cacheRoot = FLAGS['cacheRoot']
         )
+    '''
+    
+    myDataset = danbooruDataset.DanbooruDatasetWithServer(FLAGS['imageRoot'], workQueue, len(postData), tagData.name, transforms.Compose([
+        #transforms.Resize((224,224)),
+        danbooruDataset.CutoutPIL(cutout_factor=0.5),
+        transforms.RandAugment(),
+        transforms.ToTensor(),
+        #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ]),
+        cacheRoot = FLAGS['cacheRoot']
+        )
+    
     global classes
     classes = {classIndex : className for classIndex, className in enumerate(myDataset.tagList)}
     
@@ -239,7 +265,7 @@ def modelSetup(classes):
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
     #model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
 
-    model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(classes), ignore_mismatched_sizes=True)
+    model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-128S", num_labels=len(classes), ignore_mismatched_sizes=True)
     #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/convnext-tiny-224", num_labels=len(classes), ignore_mismatched_sizes=True)
     
     if (FLAGS['resume_epoch'] > 0):
