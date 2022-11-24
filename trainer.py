@@ -20,7 +20,7 @@ import os
 
 
 import timm
-#import transformers
+import transformers
 
 import timm.models.layers.ml_decoder as ml_decoder
 
@@ -55,7 +55,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/efficientformer_l1-1588-Hill/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/levit-256-1588-Hill/'
 
 
 # post importer config
@@ -88,8 +88,8 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
 # training config
 
-FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 128
+FLAGS['num_epochs'] = 300
+FLAGS['batch_size'] = 256
 FLAGS['gradient_accumulation_iterations'] = 1
 
 FLAGS['learning_rate'] = 3e-4
@@ -97,7 +97,7 @@ FLAGS['lr_warmup_epochs'] = 5
 
 FLAGS['weight_decay'] = 5e-2
 
-FLAGS['resume_epoch'] = 0
+FLAGS['resume_epoch'] = 45
 
 # debugging config
 
@@ -232,14 +232,14 @@ def modelSetup(classes):
     
     #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('efficientformer_l1', pretrained=True, num_classes=len(classes))
+    #model = timm.create_model('efficientformer_l1', pretrained=True, num_classes=len(classes))
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
     #model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
 
-    #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(classes), ignore_mismatched_sizes=True)
+    model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(classes), ignore_mismatched_sizes=True)
     #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/convnext-tiny-224", num_labels=len(classes), ignore_mismatched_sizes=True)
     
     if (FLAGS['resume_epoch'] > 0):
