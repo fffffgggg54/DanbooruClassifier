@@ -414,7 +414,8 @@ class AsymmetricLossAdaptiveWorking(nn.Module):
                 
                 
                 if updateAdaptive == True:
-                    self.gamma_neg = self.gamma_neg - self.gamma_step * (gap - self.gap_target)
+                    #self.gamma_neg = self.gamma_neg - self.gamma_step * (gap - self.gap_target)
+                    self.gamma_neg = self.gamma_neg + self.gamma_step * (gap - self.gap_target)
                     
                 
                 output = None
