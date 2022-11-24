@@ -197,13 +197,13 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
 
     def __init__(self, imageRoot, workQueue, postListLength, tagList, transform=None, cacheRoot = None):
 
-        PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True
-        self.classes = {classIndex : className for classIndex, className in enumerate(tagList)} #property of dataset?
+        #PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True
+        #self.classes = {classIndex : className for classIndex, className in enumerate(tagList)} #property of dataset?
         self.workQueue = workQueue
         self.postListLength = postListLength
         #self.imageRoot = imageRoot  #string
         #self.tagList = tagList
-        #self.tagList = pd.Series(tagList, dtype=pd.StringDtype())
+        self.tagList = pd.Series(tagList, dtype=pd.StringDtype())
         self.transform = transform  #transform, callable?
         self.cacheRoot = cacheRoot  #string
 
