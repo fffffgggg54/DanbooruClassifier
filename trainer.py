@@ -66,7 +66,7 @@ FLAGS['stopReadingAt'] = 5000
 
 # dataset config
 
-FLAGS['workingSetSize'] = 0.1
+FLAGS['workingSetSize'] = 1
 FLAGS['trainSetSize'] = 0.8
 
 # device config
@@ -83,8 +83,8 @@ FLAGS['use_scaler'] = False
 # dataloader config
 
 FLAGS['batch_size'] = 384
-FLAGS['num_workers'] = 20
-FLAGS['postDataServerWorkerCount'] = 6
+FLAGS['num_workers'] = 15
+FLAGS['postDataServerWorkerCount'] = 4
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 #if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
