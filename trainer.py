@@ -78,7 +78,7 @@ FLAGS['use_scaler'] = False
 # dataloader config
 
 FLAGS['batch_size'] = 384
-FLAGS['num_workers'] = 7
+FLAGS['num_workers'] = 0
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
@@ -289,8 +289,11 @@ def trainCycle(image_datasets, model):
             
             loaderIterable = enumerate(dataloaders[phase])
             for i, (images, tags, id) in loaderIterable:
+                imageBatch=images
+                tagBatch=tags
+                print(i)
                 
-
+                '''
                 imageBatch = images.to(device, non_blocking=True)
                 tagBatch = tags.to(device, non_blocking=True)
                 
@@ -385,9 +388,9 @@ def trainCycle(image_datasets, model):
                 
                 #print(device)
                     
-        
+                '''
         #torch.set_printoptions(profile="full")
-        
+        '''
         AvgAccuracy = torch.stack(AccuracyRunning)
         AvgAccuracy = AvgAccuracy.mean(dim=0)
         LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames))
@@ -417,8 +420,9 @@ def trainCycle(image_datasets, model):
         
 
         gc.collect()
-
+        
         print()
+        '''
     #time_elapsed = time.time() - startTime
     #print(f'Training complete in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
 
