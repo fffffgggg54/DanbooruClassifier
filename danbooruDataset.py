@@ -182,7 +182,7 @@ class DanbooruDataset(torch.utils.data.Dataset):
 def DFServerWorkerProcess(workQueue, myDF):
     while(1):
         (index, returnConnection) = workQueue.get()
-        returnConnection.send(myDF.iloc[index].copy())
+        returnConnection.send(myDF.iloc[index].copy(deep=True))
         returnConnection.close()
 
 

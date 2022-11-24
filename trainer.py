@@ -84,7 +84,7 @@ FLAGS['use_scaler'] = False
 
 FLAGS['batch_size'] = 384
 FLAGS['num_workers'] = 20
-FLAGS['postDataServerWorkerCount'] = 4
+FLAGS['postDataServerWorkerCount'] = 6
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 #if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
@@ -169,7 +169,7 @@ def getData():
     
     
     for nthWorkerProcess in range(FLAGS['postDataServerWorkerCount']):
-        currProcess = multiprocessing.Process(target=danbooruDataset.DFServerWorkerProcess, args=(workQueue, postData,), daemon = True)
+        currProcess = multiprocessing.Process(target=danbooruDataset.DFServerWorkerProcess, args=(workQueue, postData.copy(deep=True),), daemon = True)
         currProcess.start()
         serverProcessPool.append(currProcess)
         
@@ -322,8 +322,8 @@ def trainCycle(image_datasets, model):
             cycleTime = time.time()
             loaderIterable = enumerate(dataloaders[phase])
             for i, (images, tags, id) in loaderIterable:
-                imageBatch=images
-                tagBatch=tags
+                #imageBatch=images
+                #tagBatch=tags
                 if(i % 50 == 0):
                     imagesPerSecond = (FLAGS['batch_size']*stepsPerPrintout)/(time.time() - cycleTime)
                     cycleTime = time.time()
