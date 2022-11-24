@@ -25,6 +25,8 @@ import parallelJsonReader
 import danbooruDataset
 import handleMultiLabel as MLCSL
 
+from memory_profiler import profile
+
 
 
 
@@ -62,7 +64,7 @@ FLAGS['stopReadingAt'] = 5000
 
 # dataset config
 
-FLAGS['workingSetSize'] = 1
+FLAGS['workingSetSize'] = 0.1
 FLAGS['trainSetSize'] = 0.8
 
 # device config
@@ -79,13 +81,13 @@ FLAGS['use_scaler'] = False
 # dataloader config
 
 FLAGS['batch_size'] = 384
-FLAGS['num_workers'] = 0
+FLAGS['num_workers'] = 25
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
 # training config
 
-FLAGS['num_epochs'] = 20
+FLAGS['num_epochs'] = 1
 FLAGS['learning_rate'] = 3e-2
 FLAGS['weight_decay'] = 1e-2
 
@@ -287,13 +289,16 @@ def trainCycle(image_datasets, model):
                 with_stack=True
                 ) as prof:
             '''
-            
+            cycleTime = time.time()
             loaderIterable = enumerate(dataloaders[phase])
             for i, (images, tags, id) in loaderIterable:
                 imageBatch=images
                 tagBatch=tags
                 if(i % 50 == 0):
-                    print(i)
+                    imagesPerSecond = (FLAGS['batch_size']*stepsPerPrintout)/(time.time() - cycleTime)
+                    cycleTime = time.time()
+                    
+                    print(f"{i}/{len(dataloaders[phase])},\t{imagesPerSecond} images/second")
                 
                 '''
                 imageBatch = images.to(device, non_blocking=True)
