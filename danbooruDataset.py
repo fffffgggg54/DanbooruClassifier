@@ -182,7 +182,7 @@ class DanbooruDataset(torch.utils.data.Dataset):
 def DFServerWorkerProcess(workQueue, myDF):
     while(1):
         (index, returnConnection) = workQueue.get()
-        returnConnection.send(myDF.iloc[index])
+        returnConnection.send(myDF.iloc[index].copy())
         returnConnection.close()
 
 
@@ -196,9 +196,9 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
         self.classes = {classIndex : className for classIndex, className in enumerate(tagList)} #property of dataset?
         self.workQueue = workQueue
         self.postListLength = postListLength
-        self.imageRoot = imageRoot  #string
-        self.tagList = tagList
-        self.tagList = pd.Series(tagList, dtype=pd.StringDtype())
+        #self.imageRoot = imageRoot  #string
+        #self.tagList = tagList
+        #self.tagList = pd.Series(tagList, dtype=pd.StringDtype())
         self.transform = transform  #transform, callable?
         self.cacheRoot = cacheRoot  #string
 

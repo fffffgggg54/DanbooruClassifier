@@ -83,8 +83,8 @@ FLAGS['use_scaler'] = False
 # dataloader config
 
 FLAGS['batch_size'] = 384
-FLAGS['num_workers'] = 5
-FLAGS['postDataServerWorkerCount'] = 1
+FLAGS['num_workers'] = 20
+FLAGS['postDataServerWorkerCount'] = 4
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 #if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
