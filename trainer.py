@@ -99,12 +99,12 @@ FLAGS['lr_warmup_epochs'] = 5
 
 FLAGS['weight_decay'] = 5e-2
 
-FLAGS['resume_epoch'] = 10
+FLAGS['resume_epoch'] = 14
 
 # debugging config
 
 FLAGS['verbose_debug'] = False
-FLAGS['stepsPerPrintout'] = 14
+FLAGS['stepsPerPrintout'] = 50
 
 classes = None
 myDataset = None
