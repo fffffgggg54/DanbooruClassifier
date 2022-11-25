@@ -197,9 +197,12 @@ def getData():
         )
     '''
     
-    myDataset = danbooruDataset.DanbooruDatasetWithServer(FLAGS['imageRoot'], workQueue, len(postData), tagData.name, ,
-        cacheRoot = FLAGS['cacheRoot']
-        )
+    myDataset = danbooruDataset.DanbooruDatasetWithServer(FLAGS['imageRoot'],
+                                                          workQueue,
+                                                          len(postData),
+                                                          tagData.name,
+                                                          None,
+                                                          cacheRoot = FLAGS['cacheRoot'])
     
     trainTransforms = transforms.Compose([
         #transforms.Resize((224,224)),
@@ -289,7 +292,7 @@ def trainCycle(image_datasets, model):
 
     
     
-    dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=FLAGS['batch_size'], shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = False, prefetch_factor=5, pin_memory = True, drop_last=True, generator=torch.Generator().manual_seed(42)) for x in image_datasets} # set up dataloaders
+    dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=FLAGS['batch_size'], shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=5, pin_memory = True, drop_last=True, generator=torch.Generator().manual_seed(42)) for x in image_datasets} # set up dataloaders
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
     device = FLAGS['device']
     device2 = FLAGS['device2']
