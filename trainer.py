@@ -201,21 +201,15 @@ def getData():
                                                           workQueue,
                                                           len(postData),
                                                           tagData.name,
-                                                          None,
+                                                          transforms.Compose([#transforms.Resize((224,224)),
+                                                                              danbooruDataset.CutoutPIL(cutout_factor=0.5),
+                                                                              transforms.RandAugment(),
+                                                                              transforms.ToTensor(),
+                                                                              #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+                                                                              ]),
                                                           cacheRoot = FLAGS['cacheRoot'])
     
-    trainTransforms = transforms.Compose([
-        #transforms.Resize((224,224)),
-        danbooruDataset.CutoutPIL(cutout_factor=0.5),
-        transforms.RandAugment(),
-        transforms.ToTensor(),
-        #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
-    testTransforms = transforms.Compose([
-        #transforms.Resize((224,224)),
-        transforms.ToTensor(),
-        #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
+
     
     global classes
     classes = {classIndex : className for classIndex, className in enumerate(myDataset.tagList)}
@@ -223,8 +217,8 @@ def getData():
     #classes = {classIndex : className for classIndex, className in enumerate(tagData.name)}
     trimmedSet, _ = torch.utils.data.random_split(myDataset, [int(FLAGS['workingSetSize'] * len(myDataset)), len(myDataset) - int(FLAGS['workingSetSize'] * len(myDataset))], generator=torch.Generator().manual_seed(42)) # discard part of dataset if desired
     trainSet, testSet = torch.utils.data.random_split(trimmedSet, [int(FLAGS['trainSetSize'] * len(trimmedSet)), len(trimmedSet) - int(FLAGS['trainSetSize'] * len(trimmedSet))], generator=torch.Generator().manual_seed(42)) # split dataset
-    trainSet.transform = trainTransforms
-    testSet.transform = testTransforms
+    #trainSet.transform = trainTransforms
+    #testSet.transform = testTransforms
     image_datasets = {'train': trainSet, 'val' : testSet}   # put dataset into a list for easy handling
     return image_datasets
 
