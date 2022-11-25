@@ -210,7 +210,7 @@ def getData():
                                                           cacheRoot = FLAGS['cacheRoot'])
     
     '''
-    myDataset = danbooruDataset.DanbooruDatasetWithServer(FLAGS['imageRoot'],
+    global myDataset = danbooruDataset.DanbooruDatasetWithServer(FLAGS['imageRoot'],
                                                           workQueue,
                                                           len(postData),
                                                           tagData.name,
