@@ -196,7 +196,7 @@ def getData():
         cacheRoot = FLAGS['cacheRoot']
         )
     '''
-    
+    '''
     myDataset = danbooruDataset.DanbooruDatasetWithServer(FLAGS['imageRoot'],
                                                           workQueue,
                                                           len(postData),
@@ -209,8 +209,13 @@ def getData():
                                                                               ]),
                                                           cacheRoot = FLAGS['cacheRoot'])
     
-
-    
+    '''
+    myDataset = danbooruDataset.DanbooruDatasetWithServer(FLAGS['imageRoot'],
+                                                          workQueue,
+                                                          len(postData),
+                                                          tagData.name,
+                                                          None,
+                                                          cacheRoot = FLAGS['cacheRoot'])
     global classes
     classes = {classIndex : className for classIndex, className in enumerate(myDataset.tagList)}
     
@@ -358,6 +363,15 @@ def trainCycle(image_datasets, model):
                 model.train()  # Set model to training mode
                 #if (hasTPU == True): xm.master_print("training set")
                 print("training set")
+                
+                myDataset.transform = transforms.Compose([#transforms.Resize((224,224)),
+                                                          danbooruDataset.CutoutPIL(cutout_factor=0.5),
+                                                          transforms.RandAugment(),
+                                                          transforms.ToTensor(),
+                                                          #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+                                                          ])
+                
+                
             else:
                 
                 
@@ -366,6 +380,11 @@ def trainCycle(image_datasets, model):
                 torch.save(model.state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
                 model.eval()   # Set model to evaluate mode
                 print("validation set")
+                
+                myDataset.transform = transforms.Compose([#transforms.Resize((224,224)),
+                                                          transforms.ToTensor(),
+                                                          #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+                                                          ])
             
             # For each batch in the dataloader
             '''
