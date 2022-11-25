@@ -91,8 +91,8 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['num_epochs'] = 300
-FLAGS['batch_size'] = 256
-FLAGS['gradient_accumulation_iterations'] = 1
+FLAGS['batch_size'] = 512
+FLAGS['gradient_accumulation_iterations'] = 4
 
 FLAGS['learning_rate'] = 3e-5
 FLAGS['lr_warmup_epochs'] = 5
@@ -104,7 +104,7 @@ FLAGS['resume_epoch'] = 10
 # debugging config
 
 FLAGS['verbose_debug'] = False
-FLAGS['stepsPerPrintout'] = 50
+FLAGS['stepsPerPrintout'] = 17
 
 classes = None
 myDataset = None
