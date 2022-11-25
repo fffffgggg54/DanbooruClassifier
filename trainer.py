@@ -107,6 +107,7 @@ FLAGS['verbose_debug'] = False
 FLAGS['stepsPerPrintout'] = 50
 
 classes = None
+myDataset = None
 
 
 serverProcessPool = []
@@ -210,7 +211,8 @@ def getData():
                                                           cacheRoot = FLAGS['cacheRoot'])
     
     '''
-    global myDataset = danbooruDataset.DanbooruDatasetWithServer(FLAGS['imageRoot'],
+    global myDataset
+    myDataset= danbooruDataset.DanbooruDatasetWithServer(FLAGS['imageRoot'],
                                                           workQueue,
                                                           len(postData),
                                                           tagData.name,
