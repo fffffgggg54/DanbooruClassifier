@@ -104,7 +104,7 @@ FLAGS['resume_epoch'] = 10
 # debugging config
 
 FLAGS['verbose_debug'] = False
-FLAGS['stepsPerPrintout'] = 17
+FLAGS['stepsPerPrintout'] = 14
 
 classes = None
 myDataset = None
