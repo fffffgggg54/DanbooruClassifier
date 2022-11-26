@@ -99,7 +99,7 @@ FLAGS['lr_warmup_epochs'] = 5
 
 FLAGS['weight_decay'] = 5e-2
 
-FLAGS['resume_epoch'] = 19
+FLAGS['resume_epoch'] = 22
 
 # debugging config
 
@@ -178,7 +178,13 @@ def getData():
     
     
     for nthWorkerProcess in range(FLAGS['postDataServerWorkerCount']):
-        currProcess = multiprocessing.Process(target=danbooruDataset.DFServerWorkerProcess, args=(workQueue, postData.copy(deep=True),), daemon = True)
+        currProcess = multiprocessing.Process(target=danbooruDataset.DFServerWorkerProcess,
+                                              args=(workQueue,
+                                                    postData.copy(deep=True),
+                                                    pd.Series(tagData.name, dtype=pd.StringDtype()),
+                                                    FLAGS['imageRoot'],
+                                                    FLAGS['cacheRoot'],),
+                                              daemon = True)
         currProcess.start()
         serverProcessPool.append(currProcess)
         
@@ -212,12 +218,9 @@ def getData():
     
     '''
     global myDataset
-    myDataset= danbooruDataset.DanbooruDatasetWithServer(FLAGS['imageRoot'],
-                                                          workQueue,
-                                                          len(postData),
-                                                          tagData.name,
-                                                          None,
-                                                          cacheRoot = FLAGS['cacheRoot'])
+    myDataset= danbooruDataset.DanbooruDatasetWithServer(workQueue,
+                                                         len(postData),
+                                                         None)
     global classes
     classes = {classIndex : className for classIndex, className in enumerate(myDataset.tagList)}
     
