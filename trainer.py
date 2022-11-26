@@ -99,7 +99,7 @@ FLAGS['lr_warmup_epochs'] = 5
 
 FLAGS['weight_decay'] = 5e-2
 
-FLAGS['resume_epoch'] = 22
+FLAGS['resume_epoch'] = 24
 
 # debugging config
 
