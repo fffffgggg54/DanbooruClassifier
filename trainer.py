@@ -94,7 +94,7 @@ FLAGS['num_epochs'] = 300
 FLAGS['batch_size'] = 512
 FLAGS['gradient_accumulation_iterations'] = 1
 
-FLAGS['learning_rate'] = 5e-5
+FLAGS['learning_rate'] = 2e-5
 FLAGS['lr_warmup_epochs'] = 5
 
 FLAGS['weight_decay'] = 5e-2
