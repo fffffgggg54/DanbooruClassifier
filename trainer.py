@@ -448,7 +448,7 @@ def trainCycle(image_datasets, model):
                     #model.zero_grad()
                     # backward + optimize only if in training phase
                     # TODO this is slow, profile and optimize
-                    if phase == 'train' && !(loss.isnan()):
+                    if phase == 'train' and !(loss.isnan()):
                         if (FLAGS['use_scaler'] == True):   # cuda gpu case
                             scaler.scale(loss).backward()   #lotta time spent here
                             if(i % FLAGS['gradient_accumulation_iterations'] == 0):
