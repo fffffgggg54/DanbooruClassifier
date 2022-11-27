@@ -99,7 +99,7 @@ FLAGS['lr_warmup_epochs'] = 5
 
 FLAGS['weight_decay'] = 5e-2
 
-FLAGS['resume_epoch'] = 29
+FLAGS['resume_epoch'] = 31
 
 # debugging config
 
@@ -448,11 +448,13 @@ def trainCycle(image_datasets, model):
                     #model.zero_grad()
                     # backward + optimize only if in training phase
                     # TODO this is slow, profile and optimize
-                    if phase == 'train':
+                    if phase == 'train' && !(loss.isnan()):
                         if (FLAGS['use_scaler'] == True):   # cuda gpu case
                             scaler.scale(loss).backward()   #lotta time spent here
-                            scaler.step(optimizer)
-                            scaler.update()
+                            if(i % FLAGS['gradient_accumulation_iterations'] == 0):
+                                scaler.step(optimizer)
+                                scaler.update()
+                                optimizer.zero_grad()
                         else:                               # apple gpu/cpu case
                             loss.backward()
                             if(i % FLAGS['gradient_accumulation_iterations'] == 0):
