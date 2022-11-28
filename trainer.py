@@ -92,12 +92,12 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
 FLAGS['num_epochs'] = 300
 FLAGS['batch_size'] = 512
-FLAGS['gradient_accumulation_iterations'] = 1
+FLAGS['gradient_accumulation_iterations'] = 4
 
-FLAGS['learning_rate'] = 3e-4
+FLAGS['learning_rate'] = 3e-3
 FLAGS['lr_warmup_epochs'] = 5
 
-FLAGS['weight_decay'] = 5e-2
+FLAGS['weight_decay'] = 1e-2
 
 FLAGS['resume_epoch'] = 1
 
