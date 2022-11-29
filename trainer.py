@@ -257,8 +257,12 @@ def modelSetup(classes):
         layer_norm_eps=1e-12,
         num_labels=len(classes))
     '''
+    
+    # custom cvt
+    
     #model = transformers.CvtForImageClassification(myCvtConfig)
     
+    # pytorch builtin models
     
     #model = models.resnet152(weights=models.ResNet152_Weights.DEFAULT)
     #model = models.resnet152()
@@ -268,20 +272,37 @@ def modelSetup(classes):
     #model = models.resnet34(weights = models.ResNet34_Weights.DEFAULT)
     #model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
     
-    
     #model.fc = nn.Linear(model.fc.in_features, len(classes))
+    
+    # regular timm models
     
     #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('regnetx_002', pretrained=True, num_classes=len(classes))
+    #model = timm.create_model('regnetx_002', pretrained=True, num_classes=len(classes))
     
     #model = ml_decoder.add_ml_decoder_head(model)
+    
+    # cvt
     
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
     #model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
 
+    # regular huggingface models
+
     #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-128S", num_labels=len(classes), ignore_mismatched_sizes=True)
     #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/convnext-tiny-224", num_labels=len(classes), ignore_mismatched_sizes=True)
+    
+    
+    # modified timm models with custom head with hidden layers
+    
+    model = timm.create_model('mixnet_s', pretrained=True, num_classes=-1) # -1 classes for identity head by default
+    
+    model = nn.Sequential(model,
+                          nn.LazyLinear(len(classes)),
+                          nn.ReLU(),
+                          nn.Linear(len(classes), len(classes))
+    
+    
     
     if (FLAGS['resume_epoch'] > 0):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
