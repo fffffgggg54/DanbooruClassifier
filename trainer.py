@@ -56,7 +56,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetx_002-1588-Hill/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/mixnet_s-linHead_NCH-1588-Hill/'
 
 
 # post importer config
