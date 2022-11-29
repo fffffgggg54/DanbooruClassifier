@@ -18,6 +18,8 @@ import glob
 import gc
 import os
 
+import torch_optimizer
+
 import multiprocessing
 
 import timm
@@ -349,9 +351,9 @@ def trainCycle(image_datasets, model):
     #criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0.05, gamma_pos=1, gamma_neg=6, gamma_unann=4, alpha_pos=1, alpha_neg=1, alpha_unann=1)
     #parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    #optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    #optimizer = optim.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    optimizer = torch_optimizer.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
     scheduler.last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch']
     if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
@@ -435,68 +437,68 @@ def trainCycle(image_datasets, model):
                 with torch.set_grad_enabled(phase == 'train'):
                     # TODO switch between using autocast and not using it
                     
-                    #with torch.cuda.amp.autocast():
-                    #outputs = model(imageBatch)
-                    outputs = model(imageBatch).logits
-                    multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
-                    referenceTable = MLCSL.getAccuracy(tagBatch.to(device2), tagBatch.to(device2))
-                    preds = torch.sigmoid(outputs)
-                    outputs = outputs.float()
-                    
-                    if phase == 'val':
-                        #output_ema = torch.sigmoid(ema.module(imageBatch)).cpu()
-                        output_regular = preds.cpu()
-                    #loss = criterion(torch.mul(preds, tagBatch), tagBatch)
-                    #loss = criterion(outputs, tagBatch)
-                    
-
-                    #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                    loss = criterion(outputs.to(device2), tagBatch.to(device2))
-                    #loss, textOutput = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
-                    #loss = criterion(outputs.cpu(), tags.cpu())
-                    
-                    #loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([2,1,2,1]).to(device2)).sum()
-                    #loss = (1 - multiAccuracy[:,4:]).pow(2).sum()
-                    #loss = (1 - multiAccuracy[:,6:7]).pow(2).sum()     # high precision with easy classes
-                    #loss = (multiAccuracy[:,1] + multiAccuracy[:,2]).pow(2).sum()
-                    #loss = criterion(multiAccuracy, referenceTable)
-                    #loss = (multiAccuracy - referenceTable).pow(2).sum()
-                    #loss = (-torch.log(multiAccuracy[0,4:])).sum()
-                    #loss = (1 - multiAccuracy[:,4:]).pow(2).div(MeanStackedAccuracyStored.to(device2)).sum()
-                    #loss = (1 - multiAccuracy[:,4:]).sum()
-                    #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).sum()
-                    #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).pow(2).sum()
-                    #loss = (1 - multiAccuracy[:,8]).pow(2).sum()
-                    #model.zero_grad()
-                    # backward + optimize only if in training phase
-                    # TODO this is slow, profile and optimize
-                    if phase == 'train' and (loss.isnan() == False):
-                        if (FLAGS['use_scaler'] == True):   # cuda gpu case
-                            scaler.scale(loss).backward()   #lotta time spent here
-                            if(i % FLAGS['gradient_accumulation_iterations'] == 0):
-                                scaler.step(optimizer)
-                                scaler.update()
-                                optimizer.zero_grad()
-                        else:                               # apple gpu/cpu case
-                            loss.backward()
-                            if(i % FLAGS['gradient_accumulation_iterations'] == 0):
-                                optimizer.step()
-                                optimizer.zero_grad()
-
-                        #ema.update(model)
-                        prior.update(outputs.to(device2))
-                    
-                    if (phase == 'val'):
+                    with torch.cuda.amp.autocast():
+                        #outputs = model(imageBatch)
+                        outputs = model(imageBatch).logits
+                        multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
+                        referenceTable = MLCSL.getAccuracy(tagBatch.to(device2), tagBatch.to(device2))
+                        preds = torch.sigmoid(outputs)
+                        outputs = outputs.float()
                         
-                        # for mAP calculation
-                        targets = tags.cpu().detach().numpy()
-                        preds_regular = output_regular.cpu().detach().numpy()
-                        #preds_ema = output_ema.cpu().detach().numpy()
-                        accuracy = MLCSL.mAP(targets, preds_regular)
-                        AP_regular.append(accuracy)
+                        if phase == 'val':
+                            #output_ema = torch.sigmoid(ema.module(imageBatch)).cpu()
+                            output_regular = preds.cpu()
+                        #loss = criterion(torch.mul(preds, tagBatch), tagBatch)
+                        #loss = criterion(outputs, tagBatch)
                         
-                        #AP_ema.append(MLCSL.mAP(targets, preds_ema))
-                        AccuracyRunning.append(multiAccuracy)
+
+                        #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
+                        loss = criterion(outputs.to(device2), tagBatch.to(device2))
+                        #loss, textOutput = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
+                        #loss = criterion(outputs.cpu(), tags.cpu())
+                        
+                        #loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([2,1,2,1]).to(device2)).sum()
+                        #loss = (1 - multiAccuracy[:,4:]).pow(2).sum()
+                        #loss = (1 - multiAccuracy[:,6:7]).pow(2).sum()     # high precision with easy classes
+                        #loss = (multiAccuracy[:,1] + multiAccuracy[:,2]).pow(2).sum()
+                        #loss = criterion(multiAccuracy, referenceTable)
+                        #loss = (multiAccuracy - referenceTable).pow(2).sum()
+                        #loss = (-torch.log(multiAccuracy[0,4:])).sum()
+                        #loss = (1 - multiAccuracy[:,4:]).pow(2).div(MeanStackedAccuracyStored.to(device2)).sum()
+                        #loss = (1 - multiAccuracy[:,4:]).sum()
+                        #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).sum()
+                        #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).pow(2).sum()
+                        #loss = (1 - multiAccuracy[:,8]).pow(2).sum()
+                        #model.zero_grad()
+                        # backward + optimize only if in training phase
+                        # TODO this is slow, profile and optimize
+                        if phase == 'train' and (loss.isnan() == False):
+                            if (FLAGS['use_scaler'] == True):   # cuda gpu case
+                                scaler.scale(loss).backward()   #lotta time spent here
+                                if(i % FLAGS['gradient_accumulation_iterations'] == 0):
+                                    scaler.step(optimizer)
+                                    scaler.update()
+                                    optimizer.zero_grad()
+                            else:                               # apple gpu/cpu case
+                                loss.backward()
+                                if(i % FLAGS['gradient_accumulation_iterations'] == 0):
+                                    optimizer.step()
+                                    optimizer.zero_grad()
+
+                            #ema.update(model)
+                            prior.update(outputs.to(device2))
+                        
+                        if (phase == 'val'):
+                            
+                            # for mAP calculation
+                            targets = tags.cpu().detach().numpy()
+                            preds_regular = output_regular.cpu().detach().numpy()
+                            #preds_ema = output_ema.cpu().detach().numpy()
+                            accuracy = MLCSL.mAP(targets, preds_regular)
+                            AP_regular.append(accuracy)
+                            
+                            #AP_ema.append(MLCSL.mAP(targets, preds_ema))
+                            AccuracyRunning.append(multiAccuracy)
                 #print(device)
                 if i % stepsPerPrintout == 0:
                     
