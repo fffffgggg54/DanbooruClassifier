@@ -350,8 +350,8 @@ def trainCycle(image_datasets, model):
     #parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    optimizer = optim.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    #optimizer = optim.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
     scheduler.last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch']
     if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
@@ -585,18 +585,9 @@ def main():
     #gc.set_debug(gc.DEBUG_LEAK)
     # load json files
 
-
-    
     image_datasets = getData()
-    
     model = modelSetup(classes)
-    
-
     trainCycle(image_datasets, model)
-
-    
-
-
 
 
 if __name__ == '__main__':
