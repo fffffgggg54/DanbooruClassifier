@@ -56,7 +56,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/mixnet_s-linHead_NCH-1588-Hill/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/levit-128S-1588-Hill/'
 
 
 # post importer config
@@ -83,21 +83,21 @@ FLAGS['use_scaler'] = False
 
 # dataloader config
 
-FLAGS['num_workers'] = 18
+FLAGS['num_workers'] = 24
 FLAGS['postDataServerWorkerCount'] = 2
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
 # training config
 
-FLAGS['num_epochs'] = 60
-FLAGS['batch_size'] = 128
-FLAGS['gradient_accumulation_iterations'] = 1
+FLAGS['num_epochs'] = 200
+FLAGS['batch_size'] = 512
+FLAGS['gradient_accumulation_iterations'] = 4
 
-FLAGS['learning_rate'] = 3e-4
+FLAGS['learning_rate'] = 3e-3
 FLAGS['lr_warmup_epochs'] = 5
 
-FLAGS['weight_decay'] = 1e-2
+FLAGS['weight_decay'] = 2e-2
 
 FLAGS['resume_epoch'] = 0
 
@@ -289,12 +289,12 @@ def modelSetup(classes):
 
     # regular huggingface models
 
-    #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-128S", num_labels=len(classes), ignore_mismatched_sizes=True)
+    model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-128S", num_labels=len(classes), ignore_mismatched_sizes=True)
     #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/convnext-tiny-224", num_labels=len(classes), ignore_mismatched_sizes=True)
     
     
     # modified timm models with custom head with hidden layers
-    
+    '''
     model = timm.create_model('mixnet_s', pretrained=True, num_classes=-1) # -1 classes for identity head by default
     
     model = nn.Sequential(model,
@@ -302,7 +302,7 @@ def modelSetup(classes):
                           nn.ReLU(),
                           nn.Linear(len(classes), len(classes)))
     
-    
+    '''
     
     if (FLAGS['resume_epoch'] > 0):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
@@ -349,8 +349,9 @@ def trainCycle(image_datasets, model):
     #criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0.05, gamma_pos=1, gamma_neg=6, gamma_unann=4, alpha_pos=1, alpha_neg=1, alpha_unann=1)
     #parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    #optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    optimizer = optim.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
     scheduler.last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch']
     if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
@@ -435,8 +436,8 @@ def trainCycle(image_datasets, model):
                     # TODO switch between using autocast and not using it
                     
                     #with torch.cuda.amp.autocast():
-                    outputs = model(imageBatch)
-                    #outputs = model(imageBatch).logits
+                    #outputs = model(imageBatch)
+                    outputs = model(imageBatch).logits
                     multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
                     referenceTable = MLCSL.getAccuracy(tagBatch.to(device2), tagBatch.to(device2))
                     preds = torch.sigmoid(outputs)
