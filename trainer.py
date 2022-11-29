@@ -300,7 +300,7 @@ def modelSetup(classes):
     model = nn.Sequential(model,
                           nn.LazyLinear(len(classes)),
                           nn.ReLU(),
-                          nn.Linear(len(classes), len(classes))
+                          nn.Linear(len(classes), len(classes)))
     
     
     
