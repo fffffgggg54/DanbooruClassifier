@@ -331,7 +331,7 @@ def trainCycle(image_datasets, model):
         
     
     
-    model = model.to(device)
+    model = model.to(device, memory_format=torch.channels_last)
 
     print("initialized training, time spent: " + str(time.time() - startTime))
     
@@ -441,7 +441,7 @@ def trainCycle(image_datasets, model):
             for i, (images, tags, id) in loaderIterable:
                 
 
-                imageBatch = images.to(device, non_blocking=True)
+                imageBatch = images.to(device, memory_format=torch.channels_last, non_blocking=True)
                 tagBatch = tags.to(device, non_blocking=True)
                 
                 
