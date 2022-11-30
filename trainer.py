@@ -96,12 +96,12 @@ FLAGS['num_epochs'] = 200
 FLAGS['batch_size'] = 512
 FLAGS['gradient_accumulation_iterations'] = 4
 
-FLAGS['learning_rate'] = 3e-3
+FLAGS['learning_rate'] = 1e-3
 FLAGS['lr_warmup_epochs'] = 5
 
 FLAGS['weight_decay'] = 2e-2
 
-FLAGS['resume_epoch'] = 5
+FLAGS['resume_epoch'] = 22
 
 # debugging config
 
