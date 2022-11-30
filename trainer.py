@@ -106,6 +106,7 @@ FLAGS['resume_epoch'] = 1
 # debugging config
 
 FLAGS['verbose_debug'] = False
+FLAGS['skip_test_set'] = True
 FLAGS['stepsPerPrintout'] = 250
 
 classes = None
@@ -407,7 +408,7 @@ def trainCycle(image_datasets, model):
                                                           ])
                 
                 
-            else:
+            if phase == 'val':
                 
                 
 
@@ -415,6 +416,9 @@ def trainCycle(image_datasets, model):
                 torch.save(model.state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
                 model.eval()   # Set model to evaluate mode
                 print("validation set")
+                if(FLAGS['skip_test_set'] == True):
+                    print("skipping...")
+                    break;
                 
                 myDataset.transform = transforms.Compose([#transforms.Resize((224,224)),
                                                           transforms.ToTensor(),
@@ -549,29 +553,29 @@ def trainCycle(image_datasets, model):
                 #print(device)
                 #if(FLAGS['ngpu'] > 0):
                     #torch.cuda.empty_cache()
-        
-        #torch.set_printoptions(profile="full")
-        
-        AvgAccuracy = torch.stack(AccuracyRunning)
-        AvgAccuracy = AvgAccuracy.mean(dim=0)
-        LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames))
-        LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[0][6], reverse=True)
-        MeanStackedAccuracy = AvgAccuracy.mean(dim=0)
-        MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
-        print(*LabelledAccuracySorted, sep="\n")
-        #torch.set_printoptions(profile="default")
-        print(MeanStackedAccuracy)
-        
-        
-        prior.save_prior()
-        prior.get_top_freq_classes()
-        lastPrior = prior.avg_pred_train
-        print(lastPrior[:30])
-        
-        mAP_score_regular = np.mean(AP_regular)
-        #mAP_score_ema = np.mean(AP_ema)
-        print("mAP score regular {:.2f}".format(mAP_score_regular))
-        #top_mAP = max(mAP_score_regular, mAP_score_ema)
+            if ((phase == 'val') and (FLAGS['skip_test_set'] == False)):
+                #torch.set_printoptions(profile="full")
+                
+                AvgAccuracy = torch.stack(AccuracyRunning)
+                AvgAccuracy = AvgAccuracy.mean(dim=0)
+                LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames))
+                LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[0][6], reverse=True)
+                MeanStackedAccuracy = AvgAccuracy.mean(dim=0)
+                MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
+                print(*LabelledAccuracySorted, sep="\n")
+                #torch.set_printoptions(profile="default")
+                print(MeanStackedAccuracy)
+                
+                
+                prior.save_prior()
+                prior.get_top_freq_classes()
+                lastPrior = prior.avg_pred_train
+                print(lastPrior[:30])
+                
+                mAP_score_regular = np.mean(AP_regular)
+                #mAP_score_ema = np.mean(AP_ema)
+                print("mAP score regular {:.2f}".format(mAP_score_regular))
+                #top_mAP = max(mAP_score_regular, mAP_score_ema)
         
         
         
