@@ -316,9 +316,15 @@ def trainCycle(image_datasets, model):
     #print("starting training")
     startTime = time.time()
 
+    mixup_args = dict(mixup_alpha=0.8, cutmix_alpha=0., cutmix_minmax=None, prob=1.0, switch_prob=0.5,
+                     mode='batch', correct_lam=True, label_smoothing=0.1, num_classes=len(classes))
     
+    collate_fn = torch.data.mixup.FastCollateMixup(**mixup_args)
     
     dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=FLAGS['batch_size'], shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = False, prefetch_factor=2, pin_memory = True, drop_last=True, generator=torch.Generator().manual_seed(42)) for x in image_datasets} # set up dataloaders
+    
+    dataloaders['train'].collate_fn = collate_fn
+    
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
     device = FLAGS['device']
     device2 = FLAGS['device2']
@@ -356,6 +362,10 @@ def trainCycle(image_datasets, model):
     optimizer = torch_optimizer.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
     scheduler.last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch']
+    
+    
+    
+    
     if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
     
     # end MLCSL code
@@ -394,8 +404,9 @@ def trainCycle(image_datasets, model):
                 print("training set")
                 
                 myDataset.transform = transforms.Compose([#transforms.Resize((224,224)),
-                                                          danbooruDataset.CutoutPIL(cutout_factor=0.5),
-                                                          transforms.RandAugment(),
+                                                          #transforms.RandAugment(),
+                                                          transforms.TrivialAugmentWide(),
+                                                          danbooruDataset.CutoutPIL(cutout_factor=0.2),
                                                           transforms.ToTensor(),
                                                           #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                                                           ])
