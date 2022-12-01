@@ -281,7 +281,7 @@ def modelSetup(classes):
     
     #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('mixnet-s', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('mixnet_s', pretrained=True, num_classes=len(classes))
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
