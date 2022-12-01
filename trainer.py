@@ -80,7 +80,8 @@ FLAGS['ngpu'] = torch.cuda.is_available()
 FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
 FLAGS['device2'] = FLAGS['device']
 if(torch.has_mps == True): FLAGS['device2'] = "cpu"
-FLAGS['use_scaler'] = True
+FLAGS['use_AMP'] = True
+FLAGS['use_scaler'] = False
 #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
 # dataloader config
@@ -451,11 +452,11 @@ def trainCycle(image_datasets, model):
                 with torch.set_grad_enabled(phase == 'train'):
                     # TODO switch between using autocast and not using it
                     
-                    with torch.cuda.amp.autocast():
+                    with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
                         outputs = model(imageBatch)
                         #outputs = model(imageBatch).logits
                         multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
-                        preds = torch.sigmoid(outputs).cpu()
+                        preds = torch.sigmoid(outputs
                         outputs = outputs.float()
                         
                         if phase == 'val':
