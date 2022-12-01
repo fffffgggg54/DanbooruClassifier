@@ -58,7 +58,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-1588-Hill/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tf_efficientnetv2_b0-1588-Hill/'
 
 
 # post importer config
@@ -86,21 +86,21 @@ FLAGS['use_scaler'] = True
 
 # dataloader config
 
-FLAGS['num_workers'] = 18
+FLAGS['num_workers'] = 20
 FLAGS['postDataServerWorkerCount'] = 2
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
 # training config
 
-FLAGS['num_epochs'] = 20
-FLAGS['batch_size'] = 256
+FLAGS['num_epochs'] = 30
+FLAGS['batch_size'] = 512
 FLAGS['gradient_accumulation_iterations'] = 1
 
 FLAGS['base_learning_rate'] = 3e-4
 FLAGS['base_batch_size'] = 256
 FLAGS['learning_rate'] = (FLAGS['batch_size'] / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
-FLAGS['lr_warmup_epochs'] = 2
+FLAGS['lr_warmup_epochs'] = 3
 
 FLAGS['weight_decay'] = 2e-2
 
@@ -285,7 +285,7 @@ def modelSetup(classes):
     #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('mixnet_s', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('convnext_tiny', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('tf_efficientnetv2_b0', pretrained=True, num_classes=len(classes))
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
