@@ -81,7 +81,7 @@ FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS[
 FLAGS['device2'] = FLAGS['device']
 if(torch.has_mps == True): FLAGS['device2'] = "cpu"
 FLAGS['use_AMP'] = True
-FLAGS['use_scaler'] = False
+FLAGS['use_scaler'] = True
 #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
 # dataloader config
@@ -338,7 +338,7 @@ def trainCycle(image_datasets, model):
     
 
     
-    criterion = nn.BCEWithLogitsLoss()
+    #criterion = nn.BCEWithLogitsLoss()
     #criterion = nn.BCEWithLogitsLoss(pos_weight=tagWeights.to(FLAGS['device']))
     #criterion = nn.CrossEntropyLoss()
     #criterion = nn.MSELoss()
@@ -351,15 +351,15 @@ def trainCycle(image_datasets, model):
     #ema = MLCSL.ModelEma(model, 0.9997)  # 0.9997^641=0.82
     
     
-    #criterion = MLCSL.Hill()
+    criterion = MLCSL.Hill()
     #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=5, gamma_pos=5, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.01)
     #criterion = MLCSL.AsymmetricLossAdaptiveWorking(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.2)
     #criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0.05, gamma_pos=1, gamma_neg=6, gamma_unann=4, alpha_pos=1, alpha_neg=1, alpha_unann=1)
     #parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    #optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = torch_optimizer.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
     scheduler.last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch']
@@ -457,7 +457,7 @@ def trainCycle(image_datasets, model):
                         #outputs = model(imageBatch).logits
                         multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
                         preds = torch.sigmoid(outputs)
-                        #outputs = outputs.float()
+                        outputs = outputs.float()
                         
                         if phase == 'val':
                             #output_ema = torch.sigmoid(ema.module(imageBatch)).cpu()
