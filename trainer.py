@@ -97,14 +97,16 @@ FLAGS['num_epochs'] = 30
 FLAGS['batch_size'] = 512
 FLAGS['gradient_accumulation_iterations'] = 1
 
-FLAGS['base_learning_rate'] = 3e-4
-FLAGS['base_batch_size'] = 256
+FLAGS['base_learning_rate'] = 5e-5
+FLAGS['base_batch_size'] = 512
 FLAGS['learning_rate'] = (FLAGS['batch_size'] / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
-FLAGS['lr_warmup_epochs'] = 3
+FLAGS['lr_warmup_epochs'] = 0
 
-FLAGS['weight_decay'] = 2e-2
+FLAGS['weight_decay'] = 1e-8
 
 FLAGS['resume_epoch'] = 0
+
+FLAGS['finetune'] = True
 
 # debugging config
 
@@ -285,7 +287,7 @@ def modelSetup(classes):
     #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('mixnet_s', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('tf_efficientnetv2_b0', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('convnext_small_in22ft1k', pretrained=True, num_classes=len(classes))
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
@@ -314,7 +316,13 @@ def modelSetup(classes):
     if (FLAGS['resume_epoch'] > 0):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
     #model.train()
-
+    
+    if FLAGS['finetune'] == True:
+        for param in model.parameters():
+            param.requires_grad = False
+        for param in model.head.parameters():
+            param.requires_grad = True
+    
     return model
 
 def trainCycle(image_datasets, model):
