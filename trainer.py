@@ -86,7 +86,7 @@ FLAGS['use_scaler'] = True
 
 # dataloader config
 
-FLAGS['num_workers'] = 22
+FLAGS['num_workers'] = 18
 FLAGS['postDataServerWorkerCount'] = 2
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -98,7 +98,7 @@ FLAGS['batch_size'] = 256
 FLAGS['gradient_accumulation_iterations'] = 1
 
 FLAGS['base_learning_rate'] = 3e-4
-FLAGS['base_batch_size'] = 128
+FLAGS['base_batch_size'] = 256
 FLAGS['learning_rate'] = (FLAGS['batch_size'] / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
 FLAGS['lr_warmup_epochs'] = 2
 
@@ -285,14 +285,14 @@ def modelSetup(classes):
     #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('mixnet_s', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('efficientnetv2_s', pretrained=True, num_classes=len(classes))
+    #model = timm.create_model('efficientnetv2_s', pretrained=True, num_classes=len(classes))
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
     # cvt
     
-    #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
-    #model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
+    model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
+    model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
 
     # regular huggingface models
 
@@ -453,8 +453,8 @@ def trainCycle(image_datasets, model):
                     # TODO switch between using autocast and not using it
                     
                     with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
-                        outputs = model(imageBatch)
-                        #outputs = model(imageBatch).logits
+                        #outputs = model(imageBatch)
+                        outputs = model(imageBatch).logits
                         multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
                         preds = torch.sigmoid(outputs)
                         outputs = outputs.float()
