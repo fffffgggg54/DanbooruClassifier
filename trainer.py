@@ -58,7 +58,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tinynet_a-ml_decoder-1588-Hill/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tinynet_a-1588-Hill/'
 
 
 # post importer config
@@ -85,7 +85,7 @@ FLAGS['use_scaler'] = True
 
 # dataloader config
 
-FLAGS['num_workers'] = 18
+FLAGS['num_workers'] = 20
 FLAGS['postDataServerWorkerCount'] = 2
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -286,7 +286,7 @@ def modelSetup(classes):
     #model = timm.create_model('mixnet_s', pretrained=True, num_classes=len(classes))
     model = timm.create_model('tinynet_a', pretrained=True, num_classes=len(classes))
     
-    model = ml_decoder.add_ml_decoder_head(model)
+    #model = ml_decoder.add_ml_decoder_head(model)
     
     # cvt
     
