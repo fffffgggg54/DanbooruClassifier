@@ -58,7 +58,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_small_in22ft1k-FT-1588-Hill/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/deit3_base_patch16_224-1588-Hill/'
 
 
 # post importer config
@@ -287,7 +287,7 @@ def modelSetup(classes):
     #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('mixnet_s', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('convnext_small_in22ft1k', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('deit3_base_patch16_224', pretrained=True, num_classes=len(classes))
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
@@ -322,6 +322,9 @@ def modelSetup(classes):
             param.requires_grad = False
         for param in model.head.parameters():
             param.requires_grad = True
+        if hasattr(model, "head_dist"):
+            for param in model.head_dist.parameters():
+                param.requires_grad = True
     
     return model
 
