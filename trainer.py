@@ -58,7 +58,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/mixnet-s-1588-Hill/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tinynet_a-ml_decoder-1588-Hill/'
 
 
 # post importer config
@@ -283,9 +283,10 @@ def modelSetup(classes):
     
     #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('mixnet_s', pretrained=True, num_classes=len(classes))
+    #model = timm.create_model('mixnet_s', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('tinynet_a', pretrained=True, num_classes=len(classes))
     
-    #model = ml_decoder.add_ml_decoder_head(model)
+    model = ml_decoder.add_ml_decoder_head(model)
     
     # cvt
     
@@ -388,7 +389,7 @@ def trainCycle(image_datasets, model):
         epochTime = time.time()
         
         
-        print("starting epoch: " + str(epoch))
+        print("starting epoch: " + str(epoch + 1))
         AP_regular = []
         AccuracyRunning = []
         AP_ema = []
