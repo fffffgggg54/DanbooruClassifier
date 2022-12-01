@@ -93,7 +93,7 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
 # training config
 
-FLAGS['num_epochs'] = 50
+FLAGS['num_epochs'] = 20
 FLAGS['batch_size'] = 256
 FLAGS['gradient_accumulation_iterations'] = 1
 
@@ -405,9 +405,9 @@ def trainCycle(image_datasets, model):
                 print("training set")
                 
                 myDataset.transform = transforms.Compose([#transforms.Resize((224,224)),
-                                                          #transforms.RandAugment(),
+                                                          transforms.RandAugment(),
                                                           transforms.TrivialAugmentWide(),
-                                                          #danbooruDataset.CutoutPIL(cutout_factor=0.2),
+                                                          danbooruDataset.CutoutPIL(cutout_factor=0.2),
                                                           transforms.ToTensor(),
                                                           #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                                                           ])
