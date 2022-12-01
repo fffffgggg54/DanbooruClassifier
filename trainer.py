@@ -58,7 +58,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tf_efficientnetv2_b0-1588-Hill/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/efficientnetv2_s-1588-Hill/'
 
 
 # post importer config
@@ -94,7 +94,7 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['num_epochs'] = 50
-FLAGS['batch_size'] = 512
+FLAGS['batch_size'] = 256
 FLAGS['gradient_accumulation_iterations'] = 1
 
 FLAGS['base_learning_rate'] = 3e-4
@@ -285,7 +285,7 @@ def modelSetup(classes):
     #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('mixnet_s', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('tf_efficientnetv2_b0', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('efficientnetv2_s', pretrained=True, num_classes=len(classes))
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
