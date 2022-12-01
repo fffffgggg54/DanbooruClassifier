@@ -58,7 +58,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/efficientnetv2_s-1588-Hill/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-1588-Hill/'
 
 
 # post importer config
@@ -285,14 +285,14 @@ def modelSetup(classes):
     #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('mixnet_s', pretrained=True, num_classes=len(classes))
-    #model = timm.create_model('efficientnetv2_s', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('convnext_tiny', pretrained=True, num_classes=len(classes))
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
     # cvt
     
-    model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
-    model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
+    #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
+    #model.classifier = nn.Linear(model.config.embed_dim[-1], len(classes))
 
     # regular huggingface models
 
@@ -453,8 +453,8 @@ def trainCycle(image_datasets, model):
                     # TODO switch between using autocast and not using it
                     
                     with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
-                        #outputs = model(imageBatch)
-                        outputs = model(imageBatch).logits
+                        outputs = model(imageBatch)
+                        #outputs = model(imageBatch).logits
                         multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
                         preds = torch.sigmoid(outputs)
                         outputs = outputs.float()
