@@ -454,7 +454,7 @@ def trainCycle(image_datasets, model):
                     with torch.cuda.amp.autocast():
                         outputs = model(imageBatch)
                         #outputs = model(imageBatch).logits
-                        #multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
+                        multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
                         preds = torch.sigmoid(outputs).cpu()
                         outputs = outputs.float()
                         
@@ -502,7 +502,6 @@ def trainCycle(image_datasets, model):
                             prior.update(outputs.to(device2))
                         
                         if (phase == 'val'):
-                            multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
                             # for mAP calculation
                             targets = tags.cpu().detach().numpy()
                             preds_regular = output_regular.cpu().detach().numpy()
@@ -516,7 +515,6 @@ def trainCycle(image_datasets, model):
                 if i % stepsPerPrintout == 0:
                     
                     if (phase == 'train'):
-                        multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
                         targets_batch = tags.cpu().detach().numpy()
                         preds_regular_batch = preds.cpu().detach().numpy()
                         accuracy = MLCSL.mAP(targets_batch, preds_regular_batch)
