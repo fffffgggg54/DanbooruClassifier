@@ -86,7 +86,7 @@ FLAGS['use_scaler'] = True
 
 # dataloader config
 
-FLAGS['num_workers'] = 21
+FLAGS['num_workers'] = 22
 FLAGS['postDataServerWorkerCount'] = 3
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -104,7 +104,7 @@ FLAGS['lr_warmup_epochs'] = 2
 
 FLAGS['weight_decay'] = 5e-2
 
-FLAGS['resume_epoch'] = 1
+FLAGS['resume_epoch'] = 3
 
 FLAGS['finetune'] = False
 
