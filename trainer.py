@@ -58,7 +58,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_m-1588-Hill/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_m-1588-SPLC/'
 
 
 # post importer config
@@ -479,7 +479,8 @@ def trainCycle(image_datasets, model):
                         
 
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        loss = criterion(outputs.to(device2), tagBatch.to(device2))
+                        #loss = criterion(outputs.to(device2), tagBatch.to(device2))
+                        loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
                         #loss, textOutput = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
                         #loss = criterion(outputs.cpu(), tags.cpu())
                         
