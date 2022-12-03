@@ -104,7 +104,7 @@ FLAGS['lr_warmup_epochs'] = 2
 
 FLAGS['weight_decay'] = 5e-2
 
-FLAGS['resume_epoch'] = 27
+FLAGS['resume_epoch'] = 28
 
 FLAGS['finetune'] = False
 
