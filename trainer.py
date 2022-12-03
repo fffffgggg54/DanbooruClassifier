@@ -104,14 +104,14 @@ FLAGS['lr_warmup_epochs'] = 2
 
 FLAGS['weight_decay'] = 5e-2
 
-FLAGS['resume_epoch'] = 2
+FLAGS['resume_epoch'] = 27
 
 FLAGS['finetune'] = False
 
 # debugging config
 
 FLAGS['verbose_debug'] = False
-FLAGS['skip_test_set'] = True
+FLAGS['skip_test_set'] = False
 FLAGS['stepsPerPrintout'] = 250
 
 classes = None
@@ -402,7 +402,7 @@ def trainCycle(image_datasets, model):
         epochTime = time.time()
         
         
-        print("starting epoch: " + str(epoch + 1))
+        print("starting epoch: " + str(epoch))
         AP_regular = []
         AccuracyRunning = []
         AP_ema = []
@@ -595,7 +595,7 @@ def trainCycle(image_datasets, model):
                         
         
         time_elapsed = time.time() - epochTime
-        print(f'epoch {epoch + 1} complete in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
+        print(f'epoch {epoch} completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
         #print(best)
         
 
