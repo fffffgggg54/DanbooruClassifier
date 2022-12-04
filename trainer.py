@@ -485,7 +485,7 @@ def trainCycle(image_datasets, model):
                                                                                     pred_probs=preds.numpy(force=True),
                                                                                     multi_label=True)
                                     myDataset.newTags[postIndex,:-1] = np.logical_xor(myDataset.newTags[postIndex,:-1], labelMask)
-                                    
+                                    tagBatch[postIndex] = torch.Tensor(np.logical_xor(tags[postIndex].numpy(force=True), labelMask), device=device)
                                                                                       
                                                                                                         
                                 elif myDataset.newTags[postIndex,-1] == 0: # initial pass
