@@ -247,7 +247,7 @@ def getData():
         modifiedLabelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
         modifiedLabelPath = modifiedLabelDir + 'modified_labels.pkl'
         with open(modifiedLabelPath, 'rb') as modifiedLabelFile:
-            myDataset.newTags = cPickle.load(modifiedLabelFile)
+            myDataset.newTags = np.load(modifiedLabelFile)
     
     #classes = {classIndex : className for classIndex, className in enumerate(tagData.name)}
     trimmedSet, _ = torch.utils.data.random_split(myDataset, [int(FLAGS['workingSetSize'] * len(myDataset)), len(myDataset) - int(FLAGS['workingSetSize'] * len(myDataset))], generator=torch.Generator().manual_seed(42)) # discard part of dataset if desired
@@ -636,7 +636,7 @@ def trainCycle(image_datasets, model):
         print(f'epoch {epoch} completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
         modifiedLabelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
         modifiedLabelPath = modifiedLabelDir + 'modified_labels.pkl'
-        with open(modifiedLabelPath, 'w') as modifiedLabelFile: cPickle.dump(myDataset.newTags, modifiedLabelFile)
+        with open(modifiedLabelPath, 'wb') as modifiedLabelFile: numpy.save(modifiedLabelFile, myDataset.newTags)
         
         #print(best)
         
