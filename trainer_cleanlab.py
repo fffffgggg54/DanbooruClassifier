@@ -342,4 +342,17 @@ def trainCycle(image_datasets, model):
         batch_size=FLAGS['batch_size']
         iterator_train__shuffle=True,
     )
-    cl = cleanlab.classification.CleanLearning(net
+    cl = cleanlab.classification.CleanLearning(net)
+    cl.fit(myDataset)
+    
+def main():
+    #gc.set_debug(gc.DEBUG_LEAK)
+    # load json files
+
+    image_datasets = getData()
+    model = modelSetup(classes)
+    trainCycle(image_datasets, model)
+
+
+if __name__ == '__main__':
+    main()
