@@ -493,7 +493,7 @@ def trainCycle(image_datasets, model):
                                 if myDataset.newTags[imageIndex[postIndex].item(),-1] == 1 and epoch >= FLAGS['cleanlab_start_epoch']:
                                     
                                     labelMask = find_label_issues(labels=onehot2int(tags[postIndex].numpy(force=True)),
-                                                                                    pred_probs=preds.numpy(force=True),
+                                                                                    pred_probs=preds[postIndex].numpy(force=True),
                                                                                     multi_label=True)
                                     '''
                                     labelMask = find_label_issues(labels=tags[postIndex].numpy(force=True),
