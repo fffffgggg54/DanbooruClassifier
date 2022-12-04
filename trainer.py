@@ -356,7 +356,7 @@ def trainCycle(image_datasets, model):
     
 
     
-    criterion = nn.BCEWithLogitsLoss()
+    criterion = nn.BCEWithLogitsLoss(reduction='sum')
     #criterion = nn.BCEWithLogitsLoss(pos_weight=tagWeights.to(FLAGS['device']))
     #criterion = nn.CrossEntropyLoss()
     #criterion = nn.MSELoss()
