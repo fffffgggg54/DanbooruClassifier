@@ -489,7 +489,7 @@ def trainCycle(image_datasets, model):
                         multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
                         preds = torch.sigmoid(outputs)
                         outputs = outputs.float()
-                        '''
+                        
                         if FLAGS['cleanlab'] == True:
                             if runningPreds is None:
                                 runningPreds = preds.numpy(force=True)
@@ -503,10 +503,10 @@ def trainCycle(image_datasets, model):
                                 
 
                             if epoch == 0: # initial pass
-                                for i, postIndex in enumerate(imageIndex.tolist()):
-                                    myDataset.newTags[postIndex,-1] = 1
-                                    myDataset.newTags[postIndex,:-1] = tags[postIndex].numpy(force=True)
-                        '''
+                                for postIndexLocal, postIndexGlobal in enumerate(imageIndex.tolist()):
+                                    myDataset.newTags[postIndexGlobal,-1] = 1
+                                    myDataset.newTags[postIndexGlobal,:-1] = tags[postIndexGlobal].numpy(force=True)
+                        
                         if phase == 'val':
                             #output_ema = torch.sigmoid(ema.module(imageBatch)).cpu()
                             output_regular = preds.cpu()
