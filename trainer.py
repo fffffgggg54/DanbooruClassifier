@@ -506,9 +506,9 @@ def trainCycle(image_datasets, model):
                                                                                       
                                                                                                         
                             if epoch == 0: # initial pass
-                                for postIndex in range(preds.size(dim=0)):
-                                    myDataset.newTags[imageIndex[postIndex].item(),-1] = 1
-                                    myDataset.newTags[imageIndex[postIndex].item(),:-1] = tags[postIndex].numpy(force=True)
+                                for i, postIndex in enumerate(imageIndex.tolist()):
+                                    myDataset.newTags[postIndex,-1] = 1
+                                    myDataset.newTags[postIndex,:-1] = tags[postIndex].numpy(force=True)
                         
                         if phase == 'val':
                             #output_ema = torch.sigmoid(ema.module(imageBatch)).cpu()
