@@ -17,6 +17,7 @@ import time
 import glob
 import gc
 import os
+import cleanlab
 
 import torch_optimizer
 
@@ -228,6 +229,7 @@ def getData():
     global myDataset
     myDataset= danbooruDataset.DanbooruDatasetWithServer(workQueue,
                                                          len(postData),
+                                                         len(tagData.name),
                                                          None)
     global classes
     classes = {classIndex : className for classIndex, className in enumerate(tagData.name)}
@@ -349,7 +351,7 @@ def trainCycle(image_datasets, model):
     
 
     
-    #criterion = nn.BCEWithLogitsLoss()
+    criterion = nn.BCEWithLogitsLoss()
     #criterion = nn.BCEWithLogitsLoss(pos_weight=tagWeights.to(FLAGS['device']))
     #criterion = nn.CrossEntropyLoss()
     #criterion = nn.MSELoss()
@@ -363,7 +365,7 @@ def trainCycle(image_datasets, model):
     
     
     #criterion = MLCSL.Hill()
-    criterion = MLCSL.SPLC()
+    #criterion = MLCSL.SPLC()
     #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=5, gamma_pos=5, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.01)
     #criterion = MLCSL.AsymmetricLossAdaptiveWorking(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.2)
@@ -454,7 +456,7 @@ def trainCycle(image_datasets, model):
             '''
             
             loaderIterable = enumerate(dataloaders[phase])
-            for i, (images, tags) in loaderIterable:
+            for i, (images, tags, imageIndex) in loaderIterable:
                 
 
                 imageBatch = images.to(device, memory_format=torch.channels_last, non_blocking=True)
@@ -479,8 +481,8 @@ def trainCycle(image_datasets, model):
                         
 
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        #loss = criterion(outputs.to(device2), tagBatch.to(device2))
-                        loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
+                        loss = criterion(outputs.to(device2), tagBatch.to(device2))
+                        #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
                         #loss, textOutput = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
                         #loss = criterion(outputs.cpu(), tags.cpu())
                         
