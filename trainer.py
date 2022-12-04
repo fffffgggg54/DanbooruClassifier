@@ -18,6 +18,8 @@ import glob
 import gc
 import os
 import cleanlab
+from cleanlab.filter import find_label_issues
+from cleanlab.internal.multilabel_utils import onehot2int
 
 import torch_optimizer
 
@@ -108,6 +110,9 @@ FLAGS['weight_decay'] = 5e-2
 FLAGS['resume_epoch'] = 0
 
 FLAGS['finetune'] = False
+
+FLAGS['cleanlab'] = True
+FLAGS['cleanlab_start_epoch'] = 1
 
 # debugging config
 
@@ -227,7 +232,7 @@ def getData():
     
     '''
     global myDataset
-    myDataset= danbooruDataset.DanbooruDatasetWithServer(workQueue,
+    myDataset = danbooruDataset.DanbooruDatasetWithServerAndLabelOverwrite(workQueue,
                                                          len(postData),
                                                          len(tagData.name),
                                                          None)
@@ -472,6 +477,20 @@ def trainCycle(image_datasets, model):
                         multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
                         preds = torch.sigmoid(outputs)
                         outputs = outputs.float()
+                        
+                        if FLAGS['cleanlab'] == True:
+                            for postIndex in range(len(preds)):
+                                if myDataset.newTags[postIndex,-1] == 1 and epoch >= FLAGS['cleanlab_start_epoch']:
+                                    labelMask = find_label_issues(labels=onehot2int(tags[postIndex].numpy(force=True)),
+                                                                                    pred_probs=preds.numpy(force=True),
+                                                                                    multi_label=True)
+                                    myDataset.newTags[postIndex,:-1] = np.logical_xor(myDataset.newTags[postIndex,:-1], labelMask)
+                                    
+                                                                                      
+                                                                                                        
+                                else if myDataset.newTags[postIndex,-1] == 0: # initial pass
+                                    myDataset.newTags[postIndex,-1] = 1
+                                    myDataset.newTags[postIndex,:-1] = tags[postIndex].numpy(force=True)
                         
                         if phase == 'val':
                             #output_ema = torch.sigmoid(ema.module(imageBatch)).cpu()
