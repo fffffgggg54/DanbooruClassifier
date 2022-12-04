@@ -424,6 +424,8 @@ def trainCycle(image_datasets, model):
         AP_regular = []
         AccuracyRunning = []
         AP_ema = []
+        runningPreds = None
+        runningIndices = None
         textOutput = None
         #lastPrior = None
         
@@ -489,18 +491,22 @@ def trainCycle(image_datasets, model):
                         outputs = outputs.float()
                         
                         if FLAGS['cleanlab'] == True:
-                            if epoch >= FLAGS['cleanlab_start_epoch']:
-                                labelMask = find_label_issues(labels=onehot2int(tags.numpy(force=True)),
-                                                              pred_probs=preds.numpy(force=True),
-                                                              multi_label=True)
-                            for postIndex in range(len(preds)):
-                                if myDataset.newTags[imageIndex[postIndex].item(),-1] == 1 and epoch >= FLAGS['cleanlab_start_epoch']:
-
-                                    myDataset.newTags[imageIndex[postIndex].item(),-1] = np.logical_xor(myDataset.newTags[postIndex,:-1], labelMask[postIndex])
-                                    tagBatch[postIndex] = torch.Tensor(np.logical_xor(tags[postIndex].numpy(force=True), labelMask[postIndex]), device=device)
+                            if runningPreds is None:
+                                runningPreds = preds.numpy(force=True)
+                            else:
+                                numpy.append(runningPreds, preds.numpy(force=True))
+                                
+                            if runningIndices is None:
+                                runningIndices = imageIndex.numpy(force=True)
+                            else:
+                                numpy.append(runningIndices, imageIndex.numpy(force=True))
+                                
+                            
+                                
                                                                                       
                                                                                                         
-                                elif myDataset.newTags[imageIndex[postIndex].item(),-1] == 0: # initial pass
+                            if epoch == 0: # initial pass
+                                for postIndex in range(preds.size(dim=0)):
                                     myDataset.newTags[imageIndex[postIndex].item(),-1] = 1
                                     myDataset.newTags[imageIndex[postIndex].item(),:-1] = tags[postIndex].numpy(force=True)
                         
@@ -630,10 +636,21 @@ def trainCycle(image_datasets, model):
                         
         
         time_elapsed = time.time() - epochTime
+        if epoch >= FLAGS['cleanlab_start_epoch']:
+            labelMask = find_label_issues(labels=onehot2int(labels=myDataset.newTags,
+                                                            pred_probs=np.take_along_axis(runningPreds, np.argsort(runningIndices), axis=0),
+                                                            multi_label=True)
+            
+            myDataset.newTags = np.logical_xor(myDataset.newTags, labelMask[postIndex])
+            
+                                
+        if FLAGS['cleanlab'] == True:
+            modifiedLabelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
+            modifiedLabelPath = modifiedLabelDir + 'modified_labels.pkl'
+            with open(modifiedLabelPath, 'wb') as modifiedLabelFile: np.save(modifiedLabelFile, myDataset.newTags)
+            
         print(f'epoch {epoch} completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
-        modifiedLabelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
-        modifiedLabelPath = modifiedLabelDir + 'modified_labels.pkl'
-        with open(modifiedLabelPath, 'wb') as modifiedLabelFile: np.save(modifiedLabelFile, myDataset.newTags)
+        
         
         #print(best)
         
