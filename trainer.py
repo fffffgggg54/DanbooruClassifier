@@ -634,7 +634,7 @@ def trainCycle(image_datasets, model):
         
         time_elapsed = time.time() - epochTime
         if epoch >= FLAGS['cleanlab_start_epoch']:
-            labelMask = find_label_issues(labels=onehot2int(labels=myDataset.newTags),
+            labelMask = find_label_issues(labels=onehot2int(myDataset.newTags),
                                                             pred_probs=np.take_along_axis(runningPreds, np.argsort(runningIndices), axis=0),
                                                             multi_label=True)
             
