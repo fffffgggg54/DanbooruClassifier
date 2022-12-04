@@ -636,7 +636,7 @@ def trainCycle(image_datasets, model):
         print(f'epoch {epoch} completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
         modifiedLabelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
         modifiedLabelPath = modifiedLabelDir + 'modified_labels.pkl'
-        with open(modifiedLabelPath, 'wb') as modifiedLabelFile: numpy.save(modifiedLabelFile, myDataset.newTags)
+        with open(modifiedLabelPath, 'wb') as modifiedLabelFile: np.save(modifiedLabelFile, myDataset.newTags)
         
         #print(best)
         
