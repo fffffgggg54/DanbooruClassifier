@@ -491,7 +491,7 @@ def trainCycle(image_datasets, model):
                         if FLAGS['cleanlab'] == True:
                             for postIndex in range(len(preds)):
                                 if myDataset.newTags[postIndex,-1] == 1 and epoch >= FLAGS['cleanlab_start_epoch']:
-                                    '''
+                                    
                                     labelMask = find_label_issues(labels=onehot2int(tags[postIndex].numpy(force=True)),
                                                                                     pred_probs=preds.numpy(force=True),
                                                                                     multi_label=True)
@@ -499,6 +499,7 @@ def trainCycle(image_datasets, model):
                                     labelMask = find_label_issues(labels=tags[postIndex].numpy(force=True),
                                                                   pred_probs=preds.numpy(force=True),
                                                                   multi_label=True)
+                                    '''
                                     myDataset.newTags[postIndex,:-1] = np.logical_xor(myDataset.newTags[postIndex,:-1], labelMask)
                                     tagBatch[postIndex] = torch.Tensor(np.logical_xor(tags[postIndex].numpy(force=True), labelMask), device=device)
                                                                                       
