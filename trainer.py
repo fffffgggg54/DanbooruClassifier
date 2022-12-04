@@ -497,9 +497,9 @@ def trainCycle(image_datasets, model):
                                 np.append(runningPreds, preds.numpy(force=True))
                                 
                             if runningIndices is None:
-                                runningIndices = imageIndex.numpy(force=True)
+                                runningIndices = np.expand_dims(imageIndex.numpy(force=True), axis=1)
                             else:
-                                np.append(runningIndices, imageIndex.numpy(force=True))
+                                np.append(runningIndices, np.expand_dims(imageIndex.numpy(force=True), axis=1))
                                 
 
                             if epoch == 0: # initial pass
@@ -635,7 +635,7 @@ def trainCycle(image_datasets, model):
         time_elapsed = time.time() - epochTime
         if epoch >= FLAGS['cleanlab_start_epoch']:
             labelMask = find_label_issues(labels=onehot2int(myDataset.newTags),
-                                                            pred_probs=np.take_along_axis(runningPreds, np.argsort(runningIndices), axis=1),
+                                                            pred_probs=np.take_along_axis(runningPreds, np.argsort(runningIndices), axis=0),
                                                             multi_label=True)
             
             myDataset.newTags = np.logical_xor(myDataset.newTags, labelMask[postIndex])
