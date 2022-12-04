@@ -239,6 +239,13 @@ def getData():
     global classes
     classes = {classIndex : className for classIndex, className in enumerate(tagData.name)}
     
+    if FLAGS['resume_epoch'] > 0 and FLAGS['cleanlab'] == True:
+        
+        modifiedLabelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
+        modifiedLabelPath = modifiedLabelDir + 'modified_labels.pkl.bz2'
+        modifiedLabelFile = bz2.BZ2File(modifiedLabelPath, 'rb')
+        myDataset.newTags = cPickle.dump(modifiedLabelFile)
+    
     #classes = {classIndex : className for classIndex, className in enumerate(tagData.name)}
     trimmedSet, _ = torch.utils.data.random_split(myDataset, [int(FLAGS['workingSetSize'] * len(myDataset)), len(myDataset) - int(FLAGS['workingSetSize'] * len(myDataset))], generator=torch.Generator().manual_seed(42)) # discard part of dataset if desired
     trainSet, testSet = torch.utils.data.random_split(trimmedSet, [int(FLAGS['trainSetSize'] * len(trimmedSet)), len(trimmedSet) - int(FLAGS['trainSetSize'] * len(trimmedSet))], generator=torch.Generator().manual_seed(42)) # split dataset
@@ -619,6 +626,10 @@ def trainCycle(image_datasets, model):
         
         time_elapsed = time.time() - epochTime
         print(f'epoch {epoch} completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
+        modifiedLabelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
+        modifiedLabelPath = modifiedLabelDir + 'modified_labels.pkl.bz2'
+        with bz2.BZ2File(modifiedLabelPath, 'w') as modifiedLabelFile: cPickle.dump(myDataset.newTags, modifiedLabelFile)
+        
         #print(best)
         
 
