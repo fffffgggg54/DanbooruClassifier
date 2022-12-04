@@ -339,7 +339,7 @@ def trainCycle(image_datasets, model):
         max_epochs=FLAGS['num_epochs'],
         #criterion=MLCSL.Hill(),
         optimizer__lr=FLAGS[learning_rate'],
-        batch_size=FLAGS['batch_size']
+        batch_size=FLAGS['batch_size'],
         iterator_train__shuffle=True,
     )
     cl = cleanlab.classification.CleanLearning(net)
