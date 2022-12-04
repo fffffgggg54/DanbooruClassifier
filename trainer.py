@@ -494,12 +494,12 @@ def trainCycle(image_datasets, model):
                             if runningPreds is None:
                                 runningPreds = preds.numpy(force=True)
                             else:
-                                numpy.append(runningPreds, preds.numpy(force=True))
+                                np.append(runningPreds, preds.numpy(force=True))
                                 
                             if runningIndices is None:
                                 runningIndices = imageIndex.numpy(force=True)
                             else:
-                                numpy.append(runningIndices, imageIndex.numpy(force=True))
+                                np.append(runningIndices, imageIndex.numpy(force=True))
                                 
                             
                                 
