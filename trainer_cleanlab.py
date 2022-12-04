@@ -338,7 +338,7 @@ def trainCycle(image_datasets, model):
         model,
         max_epochs=FLAGS['num_epochs'],
         #criterion=MLCSL.Hill(),
-        optimizer__lr=FLAGS[learning_rate'],
+        optimizer__lr=FLAGS['learning_rate'],
         batch_size=FLAGS['batch_size'],
         iterator_train__shuffle=True,
     )
