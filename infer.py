@@ -230,7 +230,7 @@ def main():
     #model = cvt.get_cls_model(len(tagNames), config=modelConfCust1)
     #model.load_state_dict(torch.load("models/saved_model_epoch_4.pth", map_location=myDevice))
     #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(tagNames), ignore_mismatched_sizes=True)
-    model.load_state_dict(torch.load(rootPath + "models/gernet_m-1588-Hill/saved_model_epoch_26.pth", map_location=myDevice))
+    model.load_state_dict(torch.load(rootPath + "models/gernet_m-1588-SPLC/saved_model_epoch_23.pth", map_location=myDevice))
     model.eval()   # Set model to evaluate mode
     model = model.to(myDevice)
     
