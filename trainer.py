@@ -638,6 +638,8 @@ def trainCycle(image_datasets, model):
             print(np.take_along_axis(runningPreds, np.argsort(runningIndices, axis = 0), axis=0))
             print(len(onehot2int(myDataset.newTags)))
             print(len(np.take_along_axis(runningPreds, np.argsort(runningIndices, axis = 0), axis=0)))
+            print(runningPreds.shape)
+            print(runningIndices.shape)
             labelMask = find_label_issues(labels=onehot2int(myDataset.newTags),
                                           pred_probs=np.take_along_axis(runningPreds, np.argsort(runningIndices, axis = 0), axis=0),
                                           multi_label=True)
