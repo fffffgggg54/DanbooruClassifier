@@ -118,7 +118,7 @@ FLAGS['cleanlab_start_epoch'] = 1
 
 FLAGS['verbose_debug'] = False
 FLAGS['skip_test_set'] = True
-FLAGS['stepsPerPrintout'] = 250
+FLAGS['stepsPerPrintout'] = 50
 
 classes = None
 myDataset = None
