@@ -635,7 +635,7 @@ def trainCycle(image_datasets, model):
         time_elapsed = time.time() - epochTime
         if epoch >= FLAGS['cleanlab_start_epoch']:
             labelMask = find_label_issues(labels=onehot2int(myDataset.newTags),
-                                                            pred_probs=np.take_along_axis(runningPreds, np.argsort(runningIndices), axis=0),
+                                                            pred_probs=np.take_along_axis(runningPreds, np.argsort(runningIndices), axis=1),
                                                             multi_label=True)
             
             myDataset.newTags = np.logical_xor(myDataset.newTags, labelMask[postIndex])
