@@ -489,19 +489,15 @@ def trainCycle(image_datasets, model):
                         outputs = outputs.float()
                         
                         if FLAGS['cleanlab'] == True:
+                            if myDataset.newTags[imageIndex[postIndex].item(),-1] == 1 and epoch >= FLAGS['cleanlab_start_epoch']:
+                                labelMask = find_label_issues(labels=onehot2int(tags.numpy(force=True)),
+                                                              pred_probs=preds.numpy(force=True),
+                                                              multi_label=True)
                             for postIndex in range(len(preds)):
                                 if myDataset.newTags[imageIndex[postIndex].item(),-1] == 1 and epoch >= FLAGS['cleanlab_start_epoch']:
-                                    
-                                    labelMask = find_label_issues(labels=onehot2int(tags[postIndex].numpy(force=True)),
-                                                                                    pred_probs=preds[postIndex].numpy(force=True),
-                                                                                    multi_label=True)
-                                    '''
-                                    labelMask = find_label_issues(labels=tags[postIndex].numpy(force=True),
-                                                                  pred_probs=preds.numpy(force=True),
-                                                                  multi_label=True)
-                                    '''
-                                    myDataset.newTags[imageIndex[postIndex].item(),-1] = np.logical_xor(myDataset.newTags[postIndex,:-1], labelMask)
-                                    tagBatch[postIndex] = torch.Tensor(np.logical_xor(tags[postIndex].numpy(force=True), labelMask), device=device)
+
+                                    myDataset.newTags[imageIndex[postIndex].item(),-1] = np.logical_xor(myDataset.newTags[postIndex,:-1], labelMask[postIndex])
+                                    tagBatch[postIndex] = torch.Tensor(np.logical_xor(tags[postIndex].numpy(force=True), labelMask[postIndex]), device=device)
                                                                                       
                                                                                                         
                                 elif myDataset.newTags[imageIndex[postIndex].item(),-1] == 0: # initial pass
