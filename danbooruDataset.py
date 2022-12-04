@@ -476,7 +476,7 @@ class DanbooruDatasetWithServerAndLabelOverwrite(torch.utils.data.Dataset):
         del postData
         # if(torch.utils.data.get_worker_info().id == 1):objgraph.show_growth() 
         if self.newTags[index,-1] == 1:
-            postTags = self.newTags[index,0:-1]
+            postTags = torch.Tensor(self.newTags[index,0:-1])
 
         return image, postTags, index
 
