@@ -637,11 +637,11 @@ def trainCycle(image_datasets, model):
             print(len(np.take_along_axis(runningPreds, np.argsort(runningIndices, axis = 0), axis=0)))
             print(runningPreds.shape)
             print(runningIndices.shape)
-            labelMask = find_label_issues(labels=onehot2int(myDataset.newTags),
+            labelMask = find_label_issues(labels=onehot2int(myDataset.newTags[runningIndices,:-1]),
                                           pred_probs=np.take_along_axis(runningPreds, np.argsort(runningIndices, axis = 0), axis=0),
                                           multi_label=True)
             
-            myDataset.newTags = np.logical_xor(myDataset.newTags, labelMask[postIndex])
+            myDataset.newTags[runningIndices,:-1] = np.logical_xor(myDataset.newTags[runningIndices,:-1], labelMask[postIndex])
             
                                 
         if FLAGS['cleanlab'] == True:
