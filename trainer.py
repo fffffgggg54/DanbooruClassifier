@@ -454,7 +454,7 @@ def trainCycle(image_datasets, model):
             '''
             
             loaderIterable = enumerate(dataloaders[phase])
-            for i, (images, tags, id) in loaderIterable:
+            for i, (images, tags) in loaderIterable:
                 
 
                 imageBatch = images.to(device, memory_format=torch.channels_last, non_blocking=True)

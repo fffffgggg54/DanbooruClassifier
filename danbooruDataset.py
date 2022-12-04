@@ -182,7 +182,7 @@ class DanbooruDataset(torch.utils.data.Dataset):
         # if(torch.utils.data.get_worker_info().id == 1):objgraph.show_growth() 
             
             
-        return image, postTags, postID
+        return image, postTags
         
         
 
@@ -333,7 +333,7 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
         # if(torch.utils.data.get_worker_info().id == 1):objgraph.show_growth() 
 
 
-        return image, postTags, postID
+        return image, postTags
 
 def filterDanbooruData(tagData, postData, minPostCount = 10000, blockedRatings = [], blockedTags = ['animated', 'flash', 'corrupted_file', 'corrupted_metadata', 'cosplay_photo']):
     
