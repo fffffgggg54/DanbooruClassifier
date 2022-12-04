@@ -488,7 +488,7 @@ def trainCycle(image_datasets, model):
                                     
                                                                                       
                                                                                                         
-                                else if myDataset.newTags[postIndex,-1] == 0: # initial pass
+                                elif myDataset.newTags[postIndex,-1] == 0: # initial pass
                                     myDataset.newTags[postIndex,-1] = 1
                                     myDataset.newTags[postIndex,:-1] = tags[postIndex].numpy(force=True)
                         
