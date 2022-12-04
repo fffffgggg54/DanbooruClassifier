@@ -349,7 +349,7 @@ class DanbooruDatasetWithServerAndLabelOverwrite(torch.utils.data.Dataset):
         #self.tagList = pd.Series(tagList, dtype=pd.StringDtype())
         self.transform = transform  #transform, callable?
         #self.cacheRoot = cacheRoot  #string
-        self.newTags = np.zeros((postListLength, numClasses + 1))
+        self.newTags = np.array(np.zeros((postListLength, numClasses + 1)), dtype=bool)
 
     def __len__(self):
         return self.postListLength
