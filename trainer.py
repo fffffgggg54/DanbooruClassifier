@@ -76,7 +76,7 @@ FLAGS['stopReadingAt'] = 5000
 
 # dataset config
 
-FLAGS['workingSetSize'] = 0.01
+FLAGS['workingSetSize'] = 0.1
 FLAGS['trainSetSize'] = 0.8
 
 # device config
@@ -501,10 +501,7 @@ def trainCycle(image_datasets, model):
                             else:
                                 np.append(runningIndices, imageIndex.numpy(force=True))
                                 
-                            
-                                
-                                                                                      
-                                                                                                        
+
                             if epoch == 0: # initial pass
                                 for i, postIndex in enumerate(imageIndex.tolist()):
                                     myDataset.newTags[postIndex,-1] = 1
