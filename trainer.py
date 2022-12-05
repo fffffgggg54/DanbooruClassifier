@@ -639,6 +639,7 @@ def trainCycle(image_datasets, model):
             print(runningIndices.shape)
             labelMask = find_label_issues(labels=onehot2int(myDataset.newTags[runningIndices,:-1]),
                                           pred_probs=np.take_along_axis(runningPreds, np.argsort(runningIndices, axis = 0), axis=0),
+                                          filter_by="confident_learning",
                                           multi_label=True)
             
             myDataset.newTags[runningIndices,:-1] = np.logical_xor(myDataset.newTags[runningIndices,:-1], labelMask[postIndex])
