@@ -472,7 +472,21 @@ class DanbooruDatasetWithServerAndLabelOverwrite(torch.utils.data.Dataset):
         if self.transform: image = self.transform(image)
 
         if bruh == True: print("asdf")
+        
+        postTagList = set(postData.loc["tag_string"].split()).intersection(set(tagList.to_list()))
 
+        # one-hot encode the tags of a given post
+        # TODO find better way to find matching tags
+        postTags = []
+        for key in list(tagList.to_list()):
+            match = False
+            for tag in postTagList:
+                if tag == key:
+                    match = True
+
+            postTags.append(int(match))
+        
+        
         del postData
         # if(torch.utils.data.get_worker_info().id == 1):objgraph.show_growth() 
         if self.newTags[index,-1] == 1:

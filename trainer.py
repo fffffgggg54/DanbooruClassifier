@@ -200,7 +200,7 @@ def getData():
                                                     postData.copy(deep=True),
                                                     pd.Series(tagData.name, dtype=pd.StringDtype()),
                                                     FLAGS['imageRoot'],
-                                                    None,),
+                                                    FLAGS['cacheRoot'],),
                                               daemon = True)
         currProcess.start()
         serverProcessPool.append(currProcess)
