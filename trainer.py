@@ -76,7 +76,7 @@ FLAGS['stopReadingAt'] = 5000
 
 # dataset config
 
-FLAGS['workingSetSize'] = 0.01
+FLAGS['workingSetSize'] = 0.2
 FLAGS['trainSetSize'] = 0.8
 
 # device config
@@ -133,8 +133,8 @@ workQueue = multiprocessing.Queue()
 def getData():
     startTime = time.time()
 
-    #tagData = pd.read_pickle(FLAGS['tagDFPickle'])
-    #postData = pd.read_pickle(FLAGS['postDFPickle'])
+    tagData = pd.read_pickle(FLAGS['tagDFPickle'])
+    postData = pd.read_pickle(FLAGS['postDFPickle'])
     
     
     
@@ -158,7 +158,7 @@ def getData():
         print("saving pickled post metadata to " + FLAGS['postDFPickle'])
         postData.to_pickle(FLAGS['postDFPickle'])
         
-        
+    '''   
     
     print("got posts, time spent: " + str(time.time() - startTime))
     
@@ -166,13 +166,13 @@ def getData():
     startTime = time.time()
     print("applying filters")
     # TODO this filter process is slow, need to speed it up, currently only single threaded
-    tagData, postData = danbooruDataset.filterDanbooruData(tagData, postData)   # apply various filters to preprocess data
+    tagData, postData = danbooruDataset.filterDanbooruData(tagData, postData, minPostCount=250000)   # apply various filters to preprocess data
     
-    tagData.to_pickle(FLAGS['tagDFPickleFiltered'])
-    postData.to_pickle(FLAGS['postDFPickleFiltered'])
-    '''
-    tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
-    postData = pd.read_pickle(FLAGS['postDFPickleFiltered'])
+    #tagData.to_pickle(FLAGS['tagDFPickleFiltered'])
+    #postData.to_pickle(FLAGS['postDFPickleFiltered'])
+    
+    #tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
+    #postData = pd.read_pickle(FLAGS['postDFPickleFiltered'])
     #print(postData.info())
     
     # get posts that are not banned
