@@ -634,11 +634,16 @@ def trainCycle(image_datasets, model):
         
         time_elapsed = time.time() - epochTime
         if epoch >= FLAGS['cleanlab_start_epoch']:
+            modifiedLabelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
+            modifiedLabelPath = modifiedLabelDir + 'runningPreds.pkl'
+            with open(modifiedLabelPath, 'wb') as modifiedLabelFile: np.save(modifiedLabelFile, runningPreds)
+            modifiedLabelPath = modifiedLabelDir + 'runningIndices.pkl'
+            with open(modifiedLabelPath, 'wb') as modifiedLabelFile: np.save(modifiedLabelFile, runningIndices)
             print(len(np.take_along_axis(runningPreds, np.argsort(runningIndices, axis = 0), axis=0)))
             print(runningPreds.shape)
             print(runningIndices.shape)
             labelMask = np.zeros(runningPreds.shape)
-            for tagIndex in range(runningPreds[0,:]):
+            for tagIndex in range(len(runningPreds[0,:])):
                 labelMask[:,tagIndex] = find_label_issues(labels=onehot2int(myDataset.newTags[runningIndices,tagIndex]),
                                               pred_probs=np.take_along_axis(runningPreds[:,tagIndex], np.argsort(runningIndices, axis = 0), axis=0),
                                               multi_label=True)
