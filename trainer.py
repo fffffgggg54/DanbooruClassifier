@@ -64,7 +64,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_m-1588-BCE-Cleanlab/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_m-113-BCE-Cleanlab/'
 
 
 # post importer config
@@ -200,7 +200,7 @@ def getData():
                                                     postData.copy(deep=True),
                                                     pd.Series(tagData.name, dtype=pd.StringDtype()),
                                                     FLAGS['imageRoot'],
-                                                    FLAGS['cacheRoot'],),
+                                                    None,),
                                               daemon = True)
         currProcess.start()
         serverProcessPool.append(currProcess)
