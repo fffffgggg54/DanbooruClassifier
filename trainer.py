@@ -642,7 +642,7 @@ def trainCycle(image_datasets, model):
                                           filter_by="confident_learning",
                                           multi_label=True)
             
-            myDataset.newTags[runningIndices,:-1] = np.logical_xor(myDataset.newTags[runningIndices,:-1], labelMask[postIndex])
+            myDataset.newTags[runningIndices,:-1] = np.logical_xor(myDataset.newTags[runningIndices,:-1], labelMask)
             
                                 
         if FLAGS['cleanlab'] == True:
