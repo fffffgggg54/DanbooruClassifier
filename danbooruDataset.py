@@ -486,7 +486,7 @@ class DanbooruDatasetWithServerAndLabelOverwrite(torch.utils.data.Dataset):
 
             postTags.append(int(match))
         
-        
+        postTags = torch.Tensor(postTags)
         del postData
         # if(torch.utils.data.get_worker_info().id == 1):objgraph.show_growth() 
         if self.newTags[index,-1] == 1:
