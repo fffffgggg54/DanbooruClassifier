@@ -30,6 +30,7 @@ import timm.models.layers.ml_decoder as ml_decoder
 import parallelJsonReader
 import danbooruDataset
 import handleMultiLabel as MLCSL
+from davit import DaViT as davit
 
 
 
@@ -58,7 +59,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/levit-384-1588-Hill/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/davit-tiny-CustIMPL-1588-Hill/'
 
 
 # post importer config
@@ -86,7 +87,7 @@ FLAGS['use_scaler'] = True
 
 # dataloader config
 
-FLAGS['num_workers'] = 22
+FLAGS['num_workers'] = 14
 FLAGS['postDataServerWorkerCount'] = 3
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -94,8 +95,8 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['num_epochs'] = 200
-FLAGS['batch_size'] = 512
-FLAGS['gradient_accumulation_iterations'] = 4
+FLAGS['batch_size'] = 32
+FLAGS['gradient_accumulation_iterations'] = 64
 
 FLAGS['base_learning_rate'] = 3e-3
 FLAGS['base_batch_size'] = 2048
@@ -298,9 +299,18 @@ def modelSetup(classes):
 
     # regular huggingface models
 
-    model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-384", num_labels=len(classes), ignore_mismatched_sizes=True)
+    #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-384", num_labels=len(classes), ignore_mismatched_sizes=True)
     #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/convnext-tiny-224", num_labels=len(classes), ignore_mismatched_sizes=True)
     
+    
+    # davit
+    
+    model = davit(self, in_chans=3, depths=(1, 1, 3, 1), patch_size=4,
+                 embed_dims=(96, 192, 384, 768), num_heads=(3, 6, 12, 24), window_size=7, mlp_ratio=4.,
+                 qkv_bias=True, drop_path_rate=0.1, norm_layer=nn.LayerNorm, attention_types=('spatial', 'channel'),
+                 ffn=True, overlapped_patch=False, cpe_act=False, weight_init='',
+                 drop_rate=0., attn_drop_rate=0., img_size=224, num_classes=len(classes)
+                 )
     
     # modified timm models with custom head with hidden layers
     '''
