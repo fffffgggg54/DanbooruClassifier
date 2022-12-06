@@ -305,7 +305,7 @@ def modelSetup(classes):
     
     # davit
     
-    model = davit(self, in_chans=3, depths=(1, 1, 3, 1), patch_size=4,
+    model = davit(in_chans=3, depths=(1, 1, 3, 1), patch_size=4,
                  embed_dims=(96, 192, 384, 768), num_heads=(3, 6, 12, 24), window_size=7, mlp_ratio=4.,
                  qkv_bias=True, drop_path_rate=0.1, norm_layer=nn.LayerNorm, attention_types=('spatial', 'channel'),
                  ffn=True, overlapped_patch=False, cpe_act=False, weight_init='',
