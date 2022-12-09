@@ -49,7 +49,7 @@ FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
 #FLAGS['rootPath'] = "/media/fredo/Datasets/danbooru2021/"
 if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
 FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
-FLAGS['imageRoot'] = FLAGS['rootPath'] + "original/"
+FLAGS['imageRoot'] = "/media/fredo/EXOS_16TB/danbooru2021/original/"
 FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
 FLAGS['postListFile'] = FLAGS['postMetaRoot'] + "data_posts.json"
 FLAGS['tagListFile'] = FLAGS['postMetaRoot'] + "data_tags.json"
@@ -58,7 +58,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_s_ols-1588-SPLC/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/maxvit_base_tf_384-1588-SPLC/'
 
 
 # post importer config
@@ -86,16 +86,16 @@ FLAGS['use_scaler'] = True
 
 # dataloader config
 
-FLAGS['num_workers'] = 34
-FLAGS['postDataServerWorkerCount'] = 3
+FLAGS['num_workers'] = 4
+FLAGS['postDataServerWorkerCount'] = 1
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
 # training config
 
 FLAGS['num_epochs'] = 200
-FLAGS['batch_size'] = 512
-FLAGS['gradient_accumulation_iterations'] = 4
+FLAGS['batch_size'] = 16
+FLAGS['gradient_accumulation_iterations'] = 128
 
 FLAGS['base_learning_rate'] = 3e-3
 FLAGS['base_batch_size'] = 2048
@@ -108,7 +108,7 @@ FLAGS['resume_epoch'] = 0
 
 FLAGS['finetune'] = False
 
-FLAGS['channels_last'] = False
+FLAGS['channels_last'] = True
 
 # debugging config
 
@@ -119,10 +119,10 @@ FLAGS['stepsPerPrintout'] = 250
 classes = None
 myDataset = None
 
-
+'''
 serverProcessPool = []
 workQueue = multiprocessing.Queue()
-
+'''
 def getData():
     startTime = time.time()
 
@@ -186,7 +186,7 @@ def getData():
     print("finished preprocessing, time spent: " + str(time.time() - startTime))
     print(f"got {len(postData)} posts with {len(tagData)} tags") #got 3821384 posts with 423 tags
     
-    
+    '''
     for nthWorkerProcess in range(FLAGS['postDataServerWorkerCount']):
         currProcess = multiprocessing.Process(target=danbooruDataset.DFServerWorkerProcess,
                                               args=(workQueue,
@@ -198,7 +198,7 @@ def getData():
         currProcess.start()
         serverProcessPool.append(currProcess)
         
-        
+    '''    
     # TODO custom normalization values that fit the dataset better
     # TODO investigate ways to return full size images instead of crops
     # this should allow use of full sized images that vary in size, which can then be fed into a model that takes images of arbitrary precision
@@ -227,10 +227,25 @@ def getData():
                                                           cacheRoot = FLAGS['cacheRoot'])
     
     '''
+    
+    
+    
+    postData, tagData, postListLength, imageRoot, cacheRoot, size, serverWorkerCount, transform=None):
     global myDataset
-    myDataset= danbooruDataset.DanbooruDatasetWithServer(workQueue,
+    myDataset = danbooruDataset.DanbooruDatasetWithServer(
+        postData,
+        tagData,
+        FLAGS['imageRoot'],
+        FLAGS['cacheRoot'],
+        FLAGS['image_size'],
+        FLAGS['postDataServerWorkerCount'])
+        
+        
+    '''
+    myDataset = danbooruDataset.DanbooruDatasetWithServer(workQueue,
                                                          len(postData),
                                                          None)
+    '''                                                     
     global classes
     classes = {classIndex : className for classIndex, className in enumerate(tagData.name)}
     
@@ -286,7 +301,7 @@ def modelSetup(classes):
     
     # regular timm models
     
-    model = timm.create_model('gernet_s', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('maxvit_base_tf_384.in21k_ft_in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('mixnet_s', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('gernet_m', pretrained=True, num_classes=len(classes))

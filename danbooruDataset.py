@@ -195,17 +195,30 @@ def DFServerWorkerProcess(workQueue, myDF, tagList, imageRoot, cacheRoot):
 class DanbooruDatasetWithServer(torch.utils.data.Dataset):
 
 
-    def __init__(self, workQueue, postListLength, transform=None):
+    def __init__(self, postData, tagData, postListLength, imageRoot, cacheRoot, size, serverWorkerCount, transform=None):
 
         #PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True
         #self.classes = {classIndex : className for classIndex, className in enumerate(tagList)} #property of dataset?
-        self.workQueue = workQueue
-        self.postListLength = postListLength
+        self.postListLength = len(postData)
         #self.imageRoot = imageRoot  #string
         #self.tagList = tagList
         #self.tagList = pd.Series(tagList, dtype=pd.StringDtype())
         self.transform = transform  #transform, callable?
         #self.cacheRoot = cacheRoot  #string
+        self.size = size
+        self.serverWorkerCount = serverWorkerCount
+        self.serverProcessPool = []
+        self.workQueue = multiprocessing.Queue()
+        for nthWorkerProcess in range(self.serverWorkerCount):
+            currProcess = multiprocessing.Process(target=DFServerWorkerProcess,
+                args=(self.workQueue,
+                    postData.copy(deep=True),
+                    pd.Series(tagData.name.copy(deep=True), dtype=pd.StringDtype()),
+                    imageRoot,
+                    cacheRoot + str(size) + '/',),
+                daemon = True)
+            currProcess.start()
+            serverProcessPool.append(currProcess)
 
     def __len__(self):
         return self.postListLength
@@ -311,7 +324,7 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
 
             #image = transforms.functional.pil_to_tensor(image).squeeze()
 
-            image = transforms.functional.resize(image, (224,224))
+            image = transforms.functional.resize(image, (self.size, self.size))
             image = transforms.functional.pil_to_tensor(image)
 
             postTags = torch.Tensor(postTags)
