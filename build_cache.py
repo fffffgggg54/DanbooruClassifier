@@ -88,7 +88,7 @@ FLAGS['use_scaler'] = True
 
 # dataloader config
 
-FLAGS['num_workers'] = 8
+FLAGS['num_workers'] = 14
 FLAGS['postDataServerWorkerCount'] = 3
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -96,8 +96,8 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['num_epochs'] = 200
-FLAGS['batch_size'] = 128
-FLAGS['gradient_accumulation_iterations'] = 16
+FLAGS['batch_size'] = 64
+FLAGS['gradient_accumulation_iterations'] = 32
 
 FLAGS['base_learning_rate'] = 3e-3
 FLAGS['base_batch_size'] = 2048
