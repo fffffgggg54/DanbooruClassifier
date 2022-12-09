@@ -121,6 +121,17 @@ FLAGS['stepsPerPrintout'] = 250
 classes = None
 myDataset = None
 
+
+
+
+# The flag below controls whether to allow TF32 on matmul. This flag defaults to False
+# in PyTorch 1.12 and later.
+torch.backends.cuda.matmul.allow_tf32 = True
+
+# The flag below controls whether to allow TF32 on cuDNN. This flag defaults to True.
+torch.backends.cudnn.allow_tf32 = True
+
+
 '''
 serverProcessPool = []
 workQueue = multiprocessing.Queue()
