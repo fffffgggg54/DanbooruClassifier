@@ -264,7 +264,7 @@ def main():
     # load json files
 
     image_datasets = getData()
-    trainCycle(image_datasets)
+    buildCache(image_datasets)
 
 
 if __name__ == '__main__':
