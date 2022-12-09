@@ -213,8 +213,7 @@ def buildCache(image_datasets):
 
         for phase in ['train', 'val']:
             if phase == 'train':
-                model.train()  # Set model to training mode
-                #if (hasTPU == True): xm.master_print("training set")
+                
                 print("training set")
                 
                 myDataset.transform = transforms.Compose([#transforms.Resize((224,224)),
