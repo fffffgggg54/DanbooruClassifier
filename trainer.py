@@ -70,6 +70,8 @@ FLAGS['stopReadingAt'] = 5000
 
 # dataset config
 
+FLAGS['image_size'] = 384
+
 FLAGS['workingSetSize'] = 1
 FLAGS['trainSetSize'] = 0.8
 
