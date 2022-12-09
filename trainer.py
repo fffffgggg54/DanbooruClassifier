@@ -230,7 +230,6 @@ def getData():
     
     
     
-    postData, tagData, postListLength, imageRoot, cacheRoot, size, serverWorkerCount, transform=None):
     global myDataset
     myDataset = danbooruDataset.DanbooruDatasetWithServer(
         postData,
