@@ -58,7 +58,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tf_efficientnetv2_b0-1588-SPLC/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_atto_ols-1588-SPLC/'
 
 
 # post importer config
@@ -284,7 +284,7 @@ def modelSetup(classes):
     
     # regular timm models
     
-    model = timm.create_model('tf_efficientnetv2_b0', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('convnext_atto_ols', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('mixnet_s', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('gernet_m', pretrained=True, num_classes=len(classes))
