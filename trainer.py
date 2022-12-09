@@ -58,7 +58,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/maxvit_base_tf_384-1588-SPLC/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/maxvit_tiny_tf_224-1588-SPLC/'
 
 
 # post importer config
@@ -70,7 +70,7 @@ FLAGS['stopReadingAt'] = 5000
 
 # dataset config
 
-FLAGS['image_size'] = 384
+FLAGS['image_size'] = 224
 
 FLAGS['workingSetSize'] = 1
 FLAGS['trainSetSize'] = 0.8
@@ -88,16 +88,16 @@ FLAGS['use_scaler'] = True
 
 # dataloader config
 
-FLAGS['num_workers'] = 1
-FLAGS['postDataServerWorkerCount'] = 1
+FLAGS['num_workers'] = 14
+FLAGS['postDataServerWorkerCount'] = 3
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
 # training config
 
 FLAGS['num_epochs'] = 200
-FLAGS['batch_size'] = 8
-FLAGS['gradient_accumulation_iterations'] = 256
+FLAGS['batch_size'] = 64
+FLAGS['gradient_accumulation_iterations'] = 32
 
 FLAGS['base_learning_rate'] = 3e-3
 FLAGS['base_batch_size'] = 2048
@@ -302,7 +302,7 @@ def modelSetup(classes):
     
     # regular timm models
     
-    model = timm.create_model('maxvit_base_tf_384.in21k_ft_in1k', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('mixnet_s', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('gernet_m', pretrained=True, num_classes=len(classes))
