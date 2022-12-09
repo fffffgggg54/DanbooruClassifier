@@ -218,7 +218,7 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
                     cacheRoot + str(size) + '/',),
                 daemon = True)
             currProcess.start()
-            serverProcessPool.append(currProcess)
+            self.serverProcessPool.append(currProcess)
 
     def __len__(self):
         return self.postListLength
