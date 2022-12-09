@@ -58,7 +58,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_atto_ols-1588-SPLC/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_s_ols-1588-SPLC/'
 
 
 # post importer config
@@ -86,7 +86,7 @@ FLAGS['use_scaler'] = True
 
 # dataloader config
 
-FLAGS['num_workers'] = 34
+FLAGS['num_workers'] = 36
 FLAGS['postDataServerWorkerCount'] = 2
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -94,8 +94,8 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['num_epochs'] = 200
-FLAGS['batch_size'] = 512
-FLAGS['gradient_accumulation_iterations'] = 4
+FLAGS['batch_size'] = 1024
+FLAGS['gradient_accumulation_iterations'] = 2
 
 FLAGS['base_learning_rate'] = 3e-3
 FLAGS['base_batch_size'] = 2048
@@ -284,7 +284,7 @@ def modelSetup(classes):
     
     # regular timm models
     
-    model = timm.create_model('convnext_atto_ols', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('gernet_s', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('mixnet_s', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('gernet_m', pretrained=True, num_classes=len(classes))
