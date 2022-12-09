@@ -495,8 +495,8 @@ def trainCycle(image_datasets, model):
                     # TODO switch between using autocast and not using it
                     
                     with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
-                        #outputs = model(imageBatch)
-                        outputs = model(imageBatch).logits
+                        outputs = model(imageBatch)
+                        #outputs = model(imageBatch).logits
                         multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
                         preds = torch.sigmoid(outputs)
                         outputs = outputs.float()
