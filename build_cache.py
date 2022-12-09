@@ -82,7 +82,7 @@ FLAGS['postDataServerWorkerCount'] = 1
 FLAGS['num_epochs'] = 1
 FLAGS['batch_size'] = 512
 
-FLAGS['stepsPerPrintout'] = 250
+FLAGS['stepsPerPrintout'] = 1
 
 classes = None
 myDataset = None
