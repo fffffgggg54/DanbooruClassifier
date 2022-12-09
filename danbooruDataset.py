@@ -195,7 +195,7 @@ def DFServerWorkerProcess(workQueue, myDF, tagList, imageRoot, cacheRoot):
 class DanbooruDatasetWithServer(torch.utils.data.Dataset):
 
 
-    def __init__(self, postData, tagData, postListLength, imageRoot, cacheRoot, size, serverWorkerCount, transform=None):
+    def __init__(self, postData, tagData, imageRoot, cacheRoot, size, serverWorkerCount, transform=None):
 
         #PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True
         #self.classes = {classIndex : className for classIndex, className in enumerate(tagList)} #property of dataset?
