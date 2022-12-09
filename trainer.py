@@ -108,6 +108,8 @@ FLAGS['resume_epoch'] = 0
 
 FLAGS['finetune'] = False
 
+FLAGS['channels_last'] = False
+
 # debugging config
 
 FLAGS['verbose_debug'] = False
@@ -342,8 +344,9 @@ def trainCycle(image_datasets, model):
     device2 = FLAGS['device2']
         
     
+    memory_format = torch.channels_last if FLAGS['channels_last'] else torch.contiguous_format
     
-    model = model.to(device, memory_format=torch.channels_last)
+    model = model.to(device, memory_format=memory_format)
 
     print("initialized training, time spent: " + str(time.time() - startTime))
     
@@ -457,7 +460,7 @@ def trainCycle(image_datasets, model):
             for i, (images, tags) in loaderIterable:
                 
 
-                imageBatch = images.to(device, memory_format=torch.channels_last, non_blocking=True)
+                imageBatch = images.to(device, memory_format=memory_format, non_blocking=True)
                 tagBatch = tags.to(device, non_blocking=True)
                 
                 
