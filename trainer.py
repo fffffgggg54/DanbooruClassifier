@@ -58,7 +58,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/levit-384-1588-Hill/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tf_efficientnetv2_b0-1588-SPLC/'
 
 
 # post importer config
@@ -86,8 +86,8 @@ FLAGS['use_scaler'] = True
 
 # dataloader config
 
-FLAGS['num_workers'] = 22
-FLAGS['postDataServerWorkerCount'] = 3
+FLAGS['num_workers'] = 32
+FLAGS['postDataServerWorkerCount'] = 4
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
@@ -104,7 +104,7 @@ FLAGS['lr_warmup_epochs'] = 5
 
 FLAGS['weight_decay'] = 2e-2
 
-FLAGS['resume_epoch'] = 57
+FLAGS['resume_epoch'] = 0
 
 FLAGS['finetune'] = False
 
@@ -284,7 +284,7 @@ def modelSetup(classes):
     
     # regular timm models
     
-    #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('tf_efficientnetv2_b0', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('mixnet_s', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('gernet_m', pretrained=True, num_classes=len(classes))
@@ -298,7 +298,7 @@ def modelSetup(classes):
 
     # regular huggingface models
 
-    model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-384", num_labels=len(classes), ignore_mismatched_sizes=True)
+    #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-384", num_labels=len(classes), ignore_mismatched_sizes=True)
     #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/convnext-tiny-224", num_labels=len(classes), ignore_mismatched_sizes=True)
     
     
@@ -362,8 +362,8 @@ def trainCycle(image_datasets, model):
     #ema = MLCSL.ModelEma(model, 0.9997)  # 0.9997^641=0.82
     
     
-    criterion = MLCSL.Hill()
-    #criterion = MLCSL.SPLC()
+    #criterion = MLCSL.Hill()
+    criterion = MLCSL.SPLC()
     #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=5, gamma_pos=5, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.01)
     #criterion = MLCSL.AsymmetricLossAdaptiveWorking(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.2)
@@ -465,8 +465,8 @@ def trainCycle(image_datasets, model):
                     # TODO switch between using autocast and not using it
                     
                     with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
-                        #outputs = model(imageBatch)
-                        outputs = model(imageBatch).logits
+                        outputs = model(imageBatch)
+                        #outputs = model(imageBatch).logits
                         multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
                         preds = torch.sigmoid(outputs)
                         outputs = outputs.float()
@@ -479,8 +479,8 @@ def trainCycle(image_datasets, model):
                         
 
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        loss = criterion(outputs.to(device2), tagBatch.to(device2))
-                        #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
+                        #loss = criterion(outputs.to(device2), tagBatch.to(device2))
+                        loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
                         #loss, textOutput = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
                         #loss = criterion(outputs.cpu(), tags.cpu())
                         
