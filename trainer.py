@@ -58,7 +58,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/levit_256-1588-SPLC/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/vit_base_patch8_224-1588-SPLC/'
 
 
 # post importer config
@@ -96,8 +96,8 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['num_epochs'] = 200
-FLAGS['batch_size'] = 512
-FLAGS['gradient_accumulation_iterations'] = 8
+FLAGS['batch_size'] = 128
+FLAGS['gradient_accumulation_iterations'] = 16
 
 FLAGS['base_learning_rate'] = 3e-3
 FLAGS['base_batch_size'] = 2048
@@ -315,7 +315,7 @@ def modelSetup(classes):
     
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('levit_256', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('vit_base_patch8_224.augreg_in21k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('gernet_m', pretrained=True, num_classes=len(classes))
     
     #model = ml_decoder.add_ml_decoder_head(model)
