@@ -49,7 +49,7 @@ FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
 #FLAGS['rootPath'] = "/media/fredo/Datasets/danbooru2021/"
 if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
 FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
-FLAGS['imageRoot'] = "/media/fredo/EXOS_16TB/danbooru2021/original/"
+FLAGS['imageRoot'] = FLAGS['rootPath'] + "original/"
 FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
 FLAGS['postListFile'] = FLAGS['postMetaRoot'] + "data_posts.json"
 FLAGS['tagListFile'] = FLAGS['postMetaRoot'] + "data_tags.json"
@@ -58,7 +58,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_base-1588-SPLC/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_m-384-1588-SPLC/'
 
 
 # post importer config
@@ -70,7 +70,7 @@ FLAGS['stopReadingAt'] = 5000
 
 # dataset config
 
-FLAGS['image_size'] = 224
+FLAGS['image_size'] = 384
 
 FLAGS['workingSetSize'] = 1
 FLAGS['trainSetSize'] = 0.8
@@ -95,7 +95,7 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
 # training config
 
-FLAGS['num_epochs'] = 200
+FLAGS['num_epochs'] = 100
 FLAGS['batch_size'] = 128
 FLAGS['gradient_accumulation_iterations'] = 16
 
@@ -315,8 +315,8 @@ def modelSetup(classes):
     
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
-    #model = timm.create_model('gernet_m', pretrained=True, num_classes=len(classes))
+    #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('gernet_m', pretrained=True, num_classes=len(classes))
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
@@ -363,7 +363,7 @@ def trainCycle(image_datasets, model):
 
     timm.utils.jit.set_jit_fuser("te")
     
-    dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=FLAGS['batch_size'], shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = False, prefetch_factor=3, pin_memory = True, drop_last=True, generator=torch.Generator().manual_seed(40)) for x in image_datasets} # set up dataloaders
+    dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=FLAGS['batch_size'], shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = False, prefetch_factor=2, pin_memory = True, drop_last=True, generator=torch.Generator().manual_seed(40)) for x in image_datasets} # set up dataloaders
     
     
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
