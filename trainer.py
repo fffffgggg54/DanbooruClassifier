@@ -97,7 +97,7 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
 FLAGS['num_epochs'] = 100
 FLAGS['batch_size'] = 48
-FLAGS['gradient_accumulation_iterations'] = 42
+FLAGS['gradient_accumulation_iterations'] = 40
 
 FLAGS['base_learning_rate'] = 3e-3
 FLAGS['base_batch_size'] = 2048
