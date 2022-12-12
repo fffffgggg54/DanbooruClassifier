@@ -27,6 +27,7 @@ import transformers
 
 import timm.models.layers.ml_decoder as ml_decoder
 from timm.loss import LabelSmoothingCrossEntropy
+from timm.data.random_erasing import RandomErasing
 
 import handleMultiLabel as MLCSL
 
@@ -253,7 +254,7 @@ def trainCycle(image_datasets, model):
         image_datasets['train'].transform = transforms.Compose([transforms.Resize((224,224)),
             transforms.RandAugment(),
             transforms.TrivialAugmentWide(),
-            danbooruDataset.CutoutPIL(cutout_factor=0.2),
+            RandomErasing(probability=1, mode='pixel', device='cpu'),
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
