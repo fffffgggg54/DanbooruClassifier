@@ -26,7 +26,7 @@ import timm
 import transformers
 
 import timm.models.layers.ml_decoder as ml_decoder
-
+from timm.loss import LabelSmoothingCrossEntropy
 
 import handleMultiLabel as MLCSL
 
@@ -229,7 +229,7 @@ def trainCycle(image_datasets, model):
     print("initialized training, time spent: " + str(time.time() - startTime))
     
 
-    criterion = timm.loss.LabelSmoothingCrossEntropy(smoothing=0)
+    criterion = LabelSmoothingCrossEntropy(smoothing=0)
 
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
