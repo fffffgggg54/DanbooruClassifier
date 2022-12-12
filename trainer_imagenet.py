@@ -229,7 +229,7 @@ def trainCycle(image_datasets, model):
     print("initialized training, time spent: " + str(time.time() - startTime))
     
 
-    criterion = timm.loss.cross_entropy.LabelSmoothingCrossEntropy(smoothing=0)
+    criterion = timm.loss.LabelSmoothingCrossEntropy(smoothing=0)
 
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
