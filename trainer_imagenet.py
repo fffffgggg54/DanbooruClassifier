@@ -320,12 +320,7 @@ def trainCycle(image_datasets, model):
                                     nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                     optimizer.step()
                                     optimizer.zero_grad()
-
-
-                        
-                        if (phase == 'val'):
-
-                #print(device)
+                                    
                 if i % stepsPerPrintout == 0:
                     accuracy = 100 * (correct/samples)
 
