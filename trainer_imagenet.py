@@ -222,7 +222,7 @@ def trainCycle(image_datasets, model):
     dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=FLAGS['batch_size'], shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = False, prefetch_factor=2, pin_memory = True, drop_last=False, generator=torch.Generator().manual_seed(41)) for x in image_datasets} # set up dataloaders
     
     
-    mixup_collate = FastCollateMixup(mixup_alpha = 0.1, cutmix_alpha = 1.0)
+    mixup_collate = FastCollateMixup(mixup_alpha = 0.1, cutmix_alpha = 0)
     dataloaders['train'].collate_fn = mixup_collate
     
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
