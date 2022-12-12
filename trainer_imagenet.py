@@ -346,7 +346,7 @@ def trainCycle(image_datasets, model):
 
                 if phase == 'train':
                     scheduler.step()
-            print(f'top-1: {100*(correct/samples)}%')
+            print(f'top-1: {100 * (correct/(samples+1e-8))}%')
         
         time_elapsed = time.time() - epochTime
         print(f'epoch {epoch} completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
