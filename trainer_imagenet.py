@@ -310,11 +310,11 @@ def trainCycle(image_datasets, model):
                         
                         outputs = model(imageBatch)
                         #outputs = model(imageBatch).logits
-                        
-                        preds = torch.argmax(outputs, dim=1)
-                        
-                        samples += len(images)
-                        correct += sum(preds == tagBatch)
+                        if phase == 'val':
+                            preds = torch.argmax(outputs, dim=1)
+                            
+                            samples += len(images)
+                            correct += sum(preds == tagBatch)
                         
                         loss = criterion(outputs.to(device2), tagBatch.to(device2))
 
