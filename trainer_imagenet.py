@@ -223,7 +223,7 @@ def trainCycle(image_datasets, model):
     
     
     mixup_collate = FastCollateMixup(mixup_alpha = 0.1, cutmix_alpha = 1.0)
-    dataloaders['train'] = mixup_collate
+    dataloaders['train'].collate_fn = mixup_collate
     
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
     device = FLAGS['device']
