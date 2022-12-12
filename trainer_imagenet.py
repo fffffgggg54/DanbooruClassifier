@@ -52,7 +52,7 @@ FLAGS = {}
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/imagenet/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'data/'
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_s/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/resnet_50/'
 
 
 
@@ -95,7 +95,7 @@ FLAGS['channels_last'] = True
 
 FLAGS['verbose_debug'] = False
 FLAGS['skip_test_set'] = False
-FLAGS['stepsPerPrintout'] = 250
+FLAGS['stepsPerPrintout'] = 50
 
 classes = None
 
@@ -172,7 +172,7 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_rate = 0.05, drop_path_rate = 0.1)
+    model = timm.create_model('resnet_50', pretrained=False, num_classes=len(classes), drop_rate = 0.05, drop_path_rate = 0.0)
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
