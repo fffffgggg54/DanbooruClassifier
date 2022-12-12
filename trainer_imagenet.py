@@ -267,7 +267,7 @@ def trainCycle(image_datasets, model):
             RandomResizedCropAndInterpolation(size=224),
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-            transforms.toPILImage()
+            transforms.ToPILImage()
         ])
         
         image_datasets['val'].transform = transforms.Compose([transforms.Resize((256,256)),
