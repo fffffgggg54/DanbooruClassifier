@@ -90,7 +90,7 @@ FLAGS['channels_last'] = True
 # debugging config
 
 FLAGS['verbose_debug'] = False
-FLAGS['skip_test_set'] = True
+FLAGS['skip_test_set'] = False
 FLAGS['stepsPerPrintout'] = 250
 
 classes = None
@@ -168,7 +168,7 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('gernet_m', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('gernet_m', pretrained=False, num_classes=len(classes))
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
