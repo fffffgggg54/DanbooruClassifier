@@ -335,7 +335,7 @@ def trainCycle(image_datasets, model):
                                     optimizer.zero_grad()
                                     
                 if i % stepsPerPrintout == 0:
-                    accuracy = 100 * (correct/samples)
+                    accuracy = 100 * (correct/(samples+1e-8))
 
                     imagesPerSecond = (FLAGS['batch_size']*stepsPerPrintout)/(time.time() - cycleTime)
                     cycleTime = time.time()
