@@ -30,7 +30,7 @@ from timm.loss import LabelSmoothingCrossEntropy
 from timm.data.random_erasing import RandomErasing
 from timm.data.auto_augment import rand_augment_transform
 from timm.data.transforms import RandomResizedCropAndInterpolation
-from timm.data.mixup import FastCollateMixup
+from timm.data.mixup import FastCollateMixup, Mixup
 
 import handleMultiLabel as MLCSL
 import danbooruDataset
@@ -222,8 +222,8 @@ def trainCycle(image_datasets, model):
     dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=FLAGS['batch_size'], shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = False, prefetch_factor=2, pin_memory = True, drop_last=False, generator=torch.Generator().manual_seed(41)) for x in image_datasets} # set up dataloaders
     
     
-    mixup_collate = FastCollateMixup(mixup_alpha = 0.1, cutmix_alpha = 0)
-    dataloaders['train'].collate_fn = mixup_collate
+    mixup = Mixup(mixup_alpha = 0.1, cutmix_alpha = 0)
+    #dataloaders['train'].collate_fn = mixup_collate
     
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
     device = FLAGS['device']
@@ -237,7 +237,7 @@ def trainCycle(image_datasets, model):
     print("initialized training, time spent: " + str(time.time() - startTime))
     
 
-    criterion = LabelSmoothingCrossEntropy(smoothing=0.1)
+    criterion = SoftTargetCrossEntropy()
 
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
@@ -305,7 +305,9 @@ def trainCycle(image_datasets, model):
                 with torch.set_grad_enabled(phase == 'train'):
                     
                     with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
-                    
+                        if phase == 'train':
+                            imageBatch, tagBatch = mixup(imageBatch, tagBatch)
+                        
                         outputs = model(imageBatch)
                         #outputs = model(imageBatch).logits
                         
