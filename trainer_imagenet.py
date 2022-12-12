@@ -316,7 +316,7 @@ def trainCycle(image_datasets, model):
                             
                             samples += len(images)
                             correct += sum(preds == tagBatch)
-                            tagBatch = torch.eye(len(classes))[tagBatch]
+                            tagBatch = torch.eye(len(classes), device=device)[tagBatch]
                         
                         loss = criterion(outputs.to(device2), tagBatch.to(device2))
 
