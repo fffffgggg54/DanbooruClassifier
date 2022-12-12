@@ -219,7 +219,7 @@ def trainCycle(image_datasets, model):
 
     timm.utils.jit.set_jit_fuser("te")
     
-    dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=FLAGS['batch_size'], shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = False, prefetch_factor=2, pin_memory = True, drop_last=False, generator=torch.Generator().manual_seed(41)) for x in image_datasets} # set up dataloaders
+    dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=FLAGS['batch_size'], shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = False, prefetch_factor=2, pin_memory = True, drop_last=True, generator=torch.Generator().manual_seed(41)) for x in image_datasets} # set up dataloaders
     
     
     mixup = Mixup(mixup_alpha = 0.1, cutmix_alpha = 0)
