@@ -28,8 +28,12 @@ import transformers
 import timm.models.layers.ml_decoder as ml_decoder
 from timm.loss import LabelSmoothingCrossEntropy
 from timm.data.random_erasing import RandomErasing
+from timm.data.auto_augment import rand_augment_transform
+from timm.data.transforms import RandomResizedCropAndInterpolation
+from timm.data.mixup import FastCollateMixup
 
 import handleMultiLabel as MLCSL
+import danbooruDataset
 
 
 
@@ -48,7 +52,7 @@ FLAGS = {}
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/imagenet/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'data/'
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_m/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_s/'
 
 
 
@@ -71,10 +75,10 @@ FLAGS['num_workers'] = 32
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 512
-FLAGS['gradient_accumulation_iterations'] = 4
+FLAGS['batch_size'] = 1024
+FLAGS['gradient_accumulation_iterations'] = 2
 
-FLAGS['base_learning_rate'] = 3e-3
+FLAGS['base_learning_rate'] = 8e-3
 FLAGS['base_batch_size'] = 2048
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
 FLAGS['lr_warmup_epochs'] = 5
@@ -168,7 +172,7 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('gernet_m', pretrained=False, num_classes=len(classes))
+    model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_rate = 0.05, drop_path_rate = 0.1)
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
@@ -218,6 +222,9 @@ def trainCycle(image_datasets, model):
     dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=FLAGS['batch_size'], shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = False, prefetch_factor=2, pin_memory = True, drop_last=False, generator=torch.Generator().manual_seed(41)) for x in image_datasets} # set up dataloaders
     
     
+    mixup_collate = FastCollateMixup(mixup_alpha = 0.1, cutmix_alpha = 1.0)
+    dataloaders['train'] = mixup_collate
+    
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
     device = FLAGS['device']
     device2 = FLAGS['device2']
@@ -230,12 +237,12 @@ def trainCycle(image_datasets, model):
     print("initialized training, time spent: " + str(time.time() - startTime))
     
 
-    criterion = LabelSmoothingCrossEntropy(smoothing=0)
+    criterion = LabelSmoothingCrossEntropy(smoothing=0.1)
 
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    #optimizer = torch_optimizer.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    optimizer = torch_optimizer.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
     scheduler.last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch']
     if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
@@ -251,15 +258,16 @@ def trainCycle(image_datasets, model):
         epochTime = time.time()
         print("starting epoch: " + str(epoch))
 
-        image_datasets['train'].transform = transforms.Compose([transforms.Resize((224,224)),
+        image_datasets['train'].transform = transforms.Compose([transforms.Resize((256,256)),
             transforms.RandAugment(),
             transforms.TrivialAugmentWide(),
             transforms.ToTensor(),
             RandomErasing(probability=1, mode='pixel', device='cpu'),
+            RandomResizedCropAndInterpolation(size=224),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
         
-        image_datasets['val'].transform = transforms.Compose([transforms.Resize((224,224)),
+        image_datasets['val'].transform = transforms.Compose([transforms.Resize((256,256)),
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
@@ -311,7 +319,7 @@ def trainCycle(image_datasets, model):
                             if (FLAGS['use_scaler'] == True):   # cuda gpu case
                                 scaler.scale(loss).backward()   #lotta time spent here
                                 if(i % FLAGS['gradient_accumulation_iterations'] == 0):
-                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                    #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                     scaler.step(optimizer)
                                     scaler.update()
                                     optimizer.zero_grad()
