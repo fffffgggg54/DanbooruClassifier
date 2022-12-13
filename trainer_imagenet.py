@@ -172,7 +172,7 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_rate = 0.05, drop_path_rate = 0.0)
+    model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
@@ -222,7 +222,7 @@ def trainCycle(image_datasets, model):
     dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=FLAGS['batch_size'], shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = False, prefetch_factor=2, pin_memory = True, drop_last=True, generator=torch.Generator().manual_seed(41)) for x in image_datasets} # set up dataloaders
     
     
-    mixup = Mixup(mixup_alpha = 0.1, cutmix_alpha = 0)
+    mixup = Mixup(mixup_alpha = 0.1, cutmix_alpha = 0, label_smoothing=0)
     #dataloaders['train'].collate_fn = mixup_collate
     
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
@@ -258,7 +258,7 @@ def trainCycle(image_datasets, model):
         epochTime = time.time()
         print("starting epoch: " + str(epoch))
 
-        image_datasets['train'].transform = transforms.Compose([transforms.Resize((256,256)),
+        image_datasets['train'].transform = transforms.Compose([transforms.Resize((160,160)),
             transforms.RandomHorizontalFlip(),
             RandomResizedCropAndInterpolation(size=160),
             rand_augment_transform(
