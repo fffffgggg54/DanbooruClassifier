@@ -215,10 +215,18 @@ class SPLCModified(nn.Module):
             self.tau_per_class = self.tau_per_class * (1 - alpha * targets.sum(dim=0)) + alpha * (pred * targets).sum(dim=0)
         
         # SPLC missing label correction
+        '''
         if epoch >= self.change_epoch:
             targets = torch.where(
                 pred > self.tau_per_class,
                 torch.tensor(1).cuda(), targets)
+        '''
+        
+        if epoch >= self.change_epoch:
+            targets = torch.where(
+                (targets*preds+(1-targets)*(1-preds)) > self.tau_per_class,
+                targets, 1-targets)
+        
         
         '''
 
