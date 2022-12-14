@@ -172,7 +172,66 @@ class SPLC(nn.Module):
         else:
             return loss
 
+class SPLCModified(nn.Module):
 
+    def __init__(self,
+                 tau: float = 0.6,
+                 change_epoch: int = 1,
+                 margin: float = 1.0,
+                 gamma: float = 2.0,
+                 reduction: str = 'sum') -> None:
+        super(SPLC, self).__init__()
+        self.tau = tau
+        self.tau_per_class = None
+        self.change_epoch = change_epoch
+        self.margin = margin
+        self.gamma = gamma
+        self.reduction = reduction
+
+    def forward(self, logits: torch.Tensor, targets: torch.LongTensor,
+                epoch) -> torch.Tensor:
+        
+        
+        if self.tau_per_class == None:
+            classCount = logits.size(dim=1)
+            currDevice = logits.device
+            self.tau_per_class = torch.ones(classCount, device=currDevice) * self.tau
+        
+        
+        
+        # Subtract margin for positive logits
+        logits = torch.where(targets == 1, logits-self.margin, logits)
+        
+        pred = torch.sigmoid(logits)
+        
+        alpha = 1e-4 if logits.requires_grad else 0
+        self.tau_per_class = self.tau_per_class * (1 - alpha * targets.sum(dim=1)) + alpha * (preds * targets).sum(dim=1)
+        print(self.tau_per_class.mean())
+        
+        # SPLC missing label correction
+        if epoch >= self.change_epoch:
+            targets = torch.where(
+                pred > self.tau_per_class,
+                torch.tensor(1).cuda(), targets)
+        
+        
+
+        # Focal margin for postive loss
+        pt = (1 - pred) * targets + pred * (1 - targets)
+        focal_weight = pt**self.gamma
+
+        los_pos = targets * F.logsigmoid(logits)
+        los_neg = (1 - targets) * F.logsigmoid(-logits)
+
+        loss = -(los_pos + los_neg)
+        loss *= focal_weight
+
+        if self.reduction == 'mean':
+            return loss.mean()
+        elif self.reduction == 'sum':
+            return loss.sum()
+        else:
+            return loss
 
 
 class AsymmetricLoss(nn.Module):
