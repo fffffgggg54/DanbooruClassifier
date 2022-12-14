@@ -224,7 +224,7 @@ class SPLCModified(nn.Module):
         
         if epoch >= self.change_epoch:
             targets = torch.where(
-                (targets*preds+(1-targets)*(1-preds)) > self.tau_per_class,
+                (targets*pred+(1-targets)*(1-pred)) > self.tau_per_class,
                 targets, 1-targets)
         
         
