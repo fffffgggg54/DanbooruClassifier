@@ -233,7 +233,7 @@ class SPLCModified(nn.Module):
         loss *= focal_weight
         '''
         
-        self.loss_fn(logits, targets)
+        loss = self.loss_fn(logits, targets)
         
         '''
         if self.reduction == 'mean':
