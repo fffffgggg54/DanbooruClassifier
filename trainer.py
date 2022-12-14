@@ -116,7 +116,7 @@ FLAGS['channels_last'] = True
 
 FLAGS['verbose_debug'] = False
 FLAGS['skip_test_set'] = False
-FLAGS['stepsPerPrintout'] = 250
+FLAGS['stepsPerPrintout'] = 50
 
 classes = None
 myDataset = None
