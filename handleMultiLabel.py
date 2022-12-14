@@ -180,7 +180,7 @@ class SPLCModified(nn.Module):
                  margin: float = 1.0,
                  gamma: float = 2.0,
                  reduction: str = 'sum') -> None:
-        super(SPLC, self).__init__()
+        super().__init__()
         self.tau = tau
         self.tau_per_class = None
         self.change_epoch = change_epoch
