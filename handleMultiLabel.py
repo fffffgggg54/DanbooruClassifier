@@ -179,6 +179,7 @@ class SPLCModified(nn.Module):
                  change_epoch: int = 1,
                  margin: float = 1.0,
                  gamma: float = 2.0,
+                 alpha: float = 1e-3
                  reduction: str = 'sum') -> None:
         super().__init__()
         self.tau = tau
@@ -186,7 +187,9 @@ class SPLCModified(nn.Module):
         self.change_epoch = change_epoch
         self.margin = margin
         self.gamma = gamma
+        self.alpha = alpha
         self.reduction = reduction
+
 
     def forward(self, logits: torch.Tensor, targets: torch.LongTensor,
                 epoch) -> torch.Tensor:
@@ -203,10 +206,10 @@ class SPLCModified(nn.Module):
         logits = torch.where(targets == 1, logits-self.margin, logits)
         
         pred = torch.sigmoid(logits)
-        
-        alpha = 1e-3 if logits.requires_grad else 0
-        self.tau_per_class = self.tau_per_class * (1 - alpha * targets.sum(dim=0)) + alpha * (pred * targets).sum(dim=0)
-        #print(self.tau_per_class.mean())
+        with torch.no_grad():
+            alpha = self.alpha if logits.requires_grad else 0
+            self.tau_per_class = self.tau_per_class * (1 - alpha * targets.sum(dim=0)) + alpha * (pred * targets).sum(dim=0)
+            print(self.tau_per_class.mean())
         
         # SPLC missing label correction
         if epoch >= self.change_epoch:
