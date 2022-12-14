@@ -195,7 +195,7 @@ class SPLCModified(nn.Module):
         if self.tau_per_class == None:
             classCount = logits.size(dim=1)
             currDevice = logits.device
-            self.tau_per_class = torch.ones(classCount, device=currDevice) * self.tau
+            self.tau_per_class = torch.ones(classCount, device=currDevice, requires_grad=False) * self.tau
         
         
         
@@ -204,7 +204,7 @@ class SPLCModified(nn.Module):
         
         pred = torch.sigmoid(logits)
         
-        alpha = 1e-4 if logits.requires_grad else 0
+        alpha = 1e-3 if logits.requires_grad else 0
         self.tau_per_class = self.tau_per_class * (1 - alpha * targets.sum(dim=0)) + alpha * (pred * targets).sum(dim=0)
         print(self.tau_per_class.mean())
         
