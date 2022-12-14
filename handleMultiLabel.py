@@ -195,7 +195,7 @@ class SPLCModified(nn.Module):
         if self.tau_per_class == None:
             classCount = logits.size(dim=1)
             currDevice = logits.device
-            self.tau_per_class = torch.ones(classCount, device=currDevice, requires_grad=False) * self.tau
+            self.tau_per_class = torch.ones(classCount, device=currDevice) * self.tau
         
         
         
