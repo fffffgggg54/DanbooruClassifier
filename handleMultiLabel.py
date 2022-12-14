@@ -180,7 +180,7 @@ class SPLCModified(nn.Module):
                  margin: float = 1.0,
                  gamma: float = 2.0,
                  alpha: float = 1e-4,
-                 reduction: str = 'sum'
+                 reduction: str = 'sum',
                  loss_fn: nn.Module = Hill()) -> None:
         super().__init__()
         self.tau = tau
