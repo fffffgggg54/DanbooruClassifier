@@ -179,8 +179,9 @@ class SPLCModified(nn.Module):
                  change_epoch: int = 1,
                  margin: float = 1.0,
                  gamma: float = 2.0,
-                 alpha: float = 1e-3,
-                 reduction: str = 'sum') -> None:
+                 alpha: float = 1e-4,
+                 reduction: str = 'sum'
+                 loss_fn: nn.Module = Hill()) -> None:
         super().__init__()
         self.tau = tau
         self.tau_per_class = None
@@ -189,6 +190,9 @@ class SPLCModified(nn.Module):
         self.gamma = gamma
         self.alpha = alpha
         self.reduction = reduction
+        self.loss_fn = loss_fn
+        if hasattr(self.loss_fn, 'reduction'):
+            self.loss_fn.reduction = self.reduction
 
 
     def forward(self, logits: torch.Tensor, targets: torch.LongTensor,
@@ -216,7 +220,7 @@ class SPLCModified(nn.Module):
                 pred > self.tau_per_class,
                 torch.tensor(1).cuda(), targets)
         
-        
+        '''
 
         # Focal margin for postive loss
         pt = (1 - pred) * targets + pred * (1 - targets)
@@ -227,13 +231,20 @@ class SPLCModified(nn.Module):
 
         loss = -(los_pos + los_neg)
         loss *= focal_weight
-
+        '''
+        
+        self.loss_fn(logits, targets)
+        
+        '''
         if self.reduction == 'mean':
             return loss.mean()
         elif self.reduction == 'sum':
             return loss.sum()
         else:
             return loss
+        '''
+        
+        return loss
 
 
 class AsymmetricLoss(nn.Module):
