@@ -209,7 +209,6 @@ class SPLCModified(nn.Module):
         with torch.no_grad():
             alpha = self.alpha if logits.requires_grad else 0
             self.tau_per_class = self.tau_per_class * (1 - alpha * targets.sum(dim=0)) + alpha * (pred * targets).sum(dim=0)
-            print(self.tau_per_class.mean())
         
         # SPLC missing label correction
         if epoch >= self.change_epoch:
