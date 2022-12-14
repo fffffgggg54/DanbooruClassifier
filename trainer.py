@@ -625,6 +625,8 @@ def trainCycle(image_datasets, model):
                 #mAP_score_ema = np.mean(AP_ema)
                 print("mAP score regular {:.2f}".format(mAP_score_regular))
                 #top_mAP = max(mAP_score_regular, mAP_score_ema)
+                if hasattr(criterion, 'tau_per_class'):
+                    print(criterion.tau_per_class)
         
         
         
