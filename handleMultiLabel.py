@@ -179,7 +179,7 @@ class SPLCModified(nn.Module):
                  change_epoch: int = 1,
                  margin: float = 1.0,
                  gamma: float = 2.0,
-                 alpha: float = 1e-3
+                 alpha: float = 1e-3,
                  reduction: str = 'sum') -> None:
         super().__init__()
         self.tau = tau
