@@ -393,8 +393,8 @@ def trainCycle(image_datasets, model):
     
     
     #criterion = MLCSL.Hill()
-    #criterion = MLCSL.SPLC(gamma=2.0)
-    criterion = MLCSL.SPLCModified(gamma=2.0)
+    criterion = MLCSL.SPLC(gamma=2.0)
+    #criterion = MLCSL.SPLCModified(gamma=2.0)
     #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=5, gamma_pos=5, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.01)
     #criterion = MLCSL.AsymmetricLossAdaptiveWorking(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.2)
@@ -447,7 +447,7 @@ def trainCycle(image_datasets, model):
                 #if (hasTPU == True): xm.master_print("training set")
                 print("training set")
                 
-                myDataset.transform = transforms.Compose([#transforms.Resize((224,224)),
+                myDataset.transform = transforms.Compose([transforms.Resize(int(128 + epoch * (224-128)/FLAGS['num_epochs'])),
                                                           transforms.RandAugment(),
                                                           transforms.TrivialAugmentWide(),
                                                           danbooruDataset.CutoutPIL(cutout_factor=0.2),
