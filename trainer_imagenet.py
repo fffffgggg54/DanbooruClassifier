@@ -74,20 +74,20 @@ FLAGS['num_workers'] = 35
 
 # training config
 
-FLAGS['num_epochs'] = 10
+FLAGS['num_epochs'] = 100
 FLAGS['batch_size'] = 512
 FLAGS['gradient_accumulation_iterations'] = 4
 
-FLAGS['base_learning_rate'] = 1e-2
+FLAGS['base_learning_rate'] = 3e-3
 FLAGS['base_batch_size'] = 2048
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
-FLAGS['lr_warmup_epochs'] = 0
+FLAGS['lr_warmup_epochs'] = 6
 
 FLAGS['weight_decay'] = 2e-2
 
 FLAGS['resume_epoch'] = 1
 
-FLAGS['finetune'] = True
+FLAGS['finetune'] = False
 FLAGS['channels_last'] = True
 
 # debugging config
