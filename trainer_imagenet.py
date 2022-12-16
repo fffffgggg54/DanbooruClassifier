@@ -52,7 +52,7 @@ FLAGS = {}
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/imagenet/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + 'data/'
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/resnet50/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tf_efficientnetv2_b3/'
 
 
 
@@ -69,26 +69,25 @@ FLAGS['use_scaler'] = True
 
 # dataloader config
 
-FLAGS['num_workers'] = 32
+FLAGS['num_workers'] = 35
 
 
 # training config
 
-FLAGS['num_epochs'] = 100
+FLAGS['num_epochs'] = 10
 FLAGS['batch_size'] = 512
 FLAGS['gradient_accumulation_iterations'] = 4
 
-FLAGS['base_learning_rate'] = 8e-3
+FLAGS['base_learning_rate'] = 1e-4
 FLAGS['base_batch_size'] = 2048
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
 FLAGS['lr_warmup_epochs'] = 5
 
 FLAGS['weight_decay'] = 2e-2
 
-FLAGS['resume_epoch'] = 0
+FLAGS['resume_epoch'] = 1
 
-FLAGS['finetune'] = False
-
+FLAGS['finetune'] = True
 FLAGS['channels_last'] = True
 
 # debugging config
@@ -172,7 +171,7 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
+    model = timm.create_model('tf_efficientnetv2_b3', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
@@ -259,9 +258,9 @@ def trainCycle(image_datasets, model):
         epochTime = time.time()
         print("starting epoch: " + str(epoch))
 
-        image_datasets['train'].transform = transforms.Compose([transforms.Resize((160,160)),
+        image_datasets['train'].transform = transforms.Compose([transforms.Resize((256)),
             transforms.RandomHorizontalFlip(),
-            RandomResizedCropAndInterpolation(size=160),
+            RandomResizedCropAndInterpolation(size=256),
             rand_augment_transform(
                 config_str='rand-m6-mstd0.5', 
                 hparams={'translate_const': 117, 'img_mean': (124, 116, 104)}
