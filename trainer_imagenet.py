@@ -205,8 +205,12 @@ def modelSetup(classes):
     if FLAGS['finetune'] == True:
         for param in model.parameters():
             param.requires_grad = False
-        for param in model.head.parameters():
-            param.requires_grad = True
+        if hasattr(model, "head"):
+            for param in model.head.parameters():
+                param.requires_grad = True
+        if hasattr(model, "classifier"):
+            for param in model.classifier.parameters():
+                param.requires_grad = True
         if hasattr(model, "head_dist"):
             for param in model.head_dist.parameters():
                 param.requires_grad = True
