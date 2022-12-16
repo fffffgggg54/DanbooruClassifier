@@ -78,7 +78,7 @@ FLAGS['num_epochs'] = 10
 FLAGS['batch_size'] = 512
 FLAGS['gradient_accumulation_iterations'] = 4
 
-FLAGS['base_learning_rate'] = 1e-4
+FLAGS['base_learning_rate'] = 1e-2
 FLAGS['base_batch_size'] = 2048
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
 FLAGS['lr_warmup_epochs'] = 0
@@ -226,7 +226,7 @@ def trainCycle(image_datasets, model):
     dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=FLAGS['batch_size'], shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = False, prefetch_factor=2, pin_memory = True, drop_last=True, generator=torch.Generator().manual_seed(41)) for x in image_datasets} # set up dataloaders
     
     
-    mixup = Mixup(mixup_alpha = 0.1, cutmix_alpha = 0, label_smoothing=0)
+    #mixup = Mixup(mixup_alpha = 0.1, cutmix_alpha = 0, label_smoothing=0)
     #dataloaders['train'].collate_fn = mixup_collate
     
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
@@ -315,17 +315,17 @@ def trainCycle(image_datasets, model):
                 with torch.set_grad_enabled(phase == 'train'):
                     
                     with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
-                        if phase == 'train':
-                            imageBatch, tagBatch = mixup(imageBatch, tagBatch)
+                        #if phase == 'train':
+                            #imageBatch, tagBatch = mixup(imageBatch, tagBatch)
                         
                         outputs = model(imageBatch)
                         #outputs = model(imageBatch).logits
-                        if phase == 'val':
-                            preds = torch.argmax(outputs, dim=1)
-                            
-                            samples += len(images)
-                            correct += sum(preds == tagBatch)
-                            tagBatch = torch.eye(len(classes), device=device)[tagBatch]
+                        #if phase == 'val':
+                        preds = torch.argmax(outputs, dim=1)
+                        
+                        samples += len(images)
+                        correct += sum(preds == tagBatch)
+                        tagBatch = torch.eye(len(classes), device=device)[tagBatch]
                         
                         loss = criterion(outputs.to(device2), tagBatch.to(device2))
 
