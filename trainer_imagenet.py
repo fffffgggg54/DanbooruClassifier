@@ -273,7 +273,7 @@ def trainCycle(image_datasets, model):
             transforms.TrivialAugmentWide(),
             transforms.ToTensor(),
             RandomErasing(probability=0.5, mode='pixel', device='cpu'),
-            transforms.GaussianBlur(kernel_size=(7, 7), sigma=(0, 10)),
+            transforms.GaussianBlur(kernel_size=(7, 7), sigma=(2, 10)),
             #transforms.ToPILImage(),
             #transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
