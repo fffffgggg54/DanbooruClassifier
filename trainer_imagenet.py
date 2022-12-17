@@ -265,16 +265,17 @@ def trainCycle(image_datasets, model):
 
         image_datasets['train'].transform = transforms.Compose([transforms.Resize((256)),
             transforms.RandomHorizontalFlip(),
-            RandomResizedCropAndInterpolation(size=256),
+            RandomResizedCropAndInterpolation(size=224),
             rand_augment_transform(
-                config_str='rand-m6-mstd0.5', 
+                config_str='rand-m9-mstd0.5', 
                 hparams={'translate_const': 117, 'img_mean': (124, 116, 104)}
             ),
-            #transforms.TrivialAugmentWide(),
-            #transforms.ToTensor(),
-            #RandomErasing(probability=1, mode='pixel', device='cpu'),
-            #transforms.ToPILImage(),
+            transforms.TrivialAugmentWide(),
             transforms.ToTensor(),
+            RandomErasing(probability=0.5, mode='pixel', device='cpu'),
+            transforms.GaussianBlur()
+            #transforms.ToPILImage(),
+            #transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
         ])
         
