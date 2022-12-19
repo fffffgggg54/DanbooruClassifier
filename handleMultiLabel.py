@@ -254,6 +254,24 @@ class SPLCModified(nn.Module):
         
         return loss
 
+class getDecisionBoundary(nn.Module):
+    def __init__(self, threshold = 0.5, alpha = 1e-4):
+        super().__init__()
+        self.threshold = threshold
+        self.thresholdPerClass = None
+        self.alpha = alpha
+        
+    def forward(self, preds, targs):
+        if self.thresholdPerClass == None:
+            classCount = preds.size(dim=1)
+            currDevice = preds.device
+            self.thresholdPerClass = torch.ones(classCount, device=currDevice) * self.threshold
+        
+        with torch.no_grad():
+            alpha = self.alpha if preds.requires_grad else 0
+            self.thresholdPerClass = self.thresholdPerClass * (1 - alpha * targs.sum(dim=0)) + alpha * (preds * targs).sum(dim=0)
+            
+        return self.thresholdPerClass
 
 class AsymmetricLoss(nn.Module):
     def __init__(self, gamma_neg=4, gamma_pos=1, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True):
@@ -874,7 +892,7 @@ def mAP_partial(targs, preds):
 
 def getAccuracy(preds, targs):
     epsilon = 1e-12
-    preds = torch.sigmoid(preds)
+    #preds = torch.sigmoid(preds)
     targs_inv = 1 - targs
     batchSize = targs.size(dim=0)
     P = targs * preds

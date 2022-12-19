@@ -58,7 +58,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tf_efficientnetv2_b3-1588-SPLC/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_m-1588-SPLC/'
 
 
 # post importer config
@@ -95,11 +95,11 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
 # training config
 
-FLAGS['num_epochs'] = 25
-FLAGS['batch_size'] = 256
-FLAGS['gradient_accumulation_iterations'] = 8
+FLAGS['num_epochs'] = 30
+FLAGS['batch_size'] = 512
+FLAGS['gradient_accumulation_iterations'] = 4
 
-FLAGS['base_learning_rate'] = 8e-3
+FLAGS['base_learning_rate'] = 3e-3
 FLAGS['base_batch_size'] = 2048
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
 FLAGS['lr_warmup_epochs'] = 2
@@ -316,7 +316,7 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('tf_efficientnetv2_b3', pretrained=False, num_classes=len(classes))
+    model = timm.create_model('gernet_m', pretrained=False, num_classes=len(classes))
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
@@ -408,7 +408,7 @@ def trainCycle(image_datasets, model):
     scheduler.last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch']
     
     
-    
+    boundaryCalculator = MLCSL.getDecisionBoundary()
     
     if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
     
@@ -447,9 +447,10 @@ def trainCycle(image_datasets, model):
                 #if (hasTPU == True): xm.master_print("training set")
                 print("training set")
                 
-                myDataset.transform = transforms.Compose([transforms.Resize(int(128 + epoch * (224-128)/FLAGS['num_epochs'])),
-                                                          transforms.RandAugment(magnitude = epoch, num_magnitude_bins = FLAGS['num_epochs'] * 2),
-                                                          #transforms.TrivialAugmentWide(),
+                myDataset.transform = transforms.Compose([#transforms.Resize(int(128 + epoch * (224-128)/FLAGS['num_epochs'])),
+                                                          #transforms.RandAugment(magnitude = epoch, num_magnitude_bins = FLAGS['num_epochs'] * 2),
+                                                          transforms.RandAugment()
+                                                          transforms.TrivialAugmentWide(),
                                                           danbooruDataset.CutoutPIL(cutout_factor=0.2),
                                                           transforms.ToTensor(),
                                                           #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
@@ -498,16 +499,19 @@ def trainCycle(image_datasets, model):
                     with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
                         outputs = model(imageBatch)
                         #outputs = model(imageBatch).logits
-                        multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), tagBatch.to(device2))
                         preds = torch.sigmoid(outputs)
-                        outputs = outputs.float()
+                        boundary = boundaryCalculator(preds.to(device2), tagBatch.to(device2))
+                        preds = (preds > boundary).float()
+                        multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), preds.to(device2))
                         
+                        outputs = outputs.float()
+                        '''
                         if phase == 'val':
                             #output_ema = torch.sigmoid(ema.module(imageBatch)).cpu()
                             output_regular = preds.cpu()
                         #loss = criterion(torch.mul(preds, tagBatch), tagBatch)
                         #loss = criterion(outputs, tagBatch)
-                        
+                        '''
 
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2))
@@ -550,8 +554,8 @@ def trainCycle(image_datasets, model):
                         
                         if (phase == 'val'):
                             # for mAP calculation
-                            targets = tags.cpu().detach().numpy()
-                            preds_regular = output_regular.cpu().detach().numpy()
+                            targets = tags.numpy(force=True)
+                            preds_regular = preds.numpy(force=True)
                             #preds_ema = output_ema.cpu().detach().numpy()
                             accuracy = MLCSL.mAP(targets, preds_regular)
                             AP_regular.append(accuracy)
