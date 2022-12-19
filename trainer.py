@@ -449,7 +449,7 @@ def trainCycle(image_datasets, model):
                 
                 myDataset.transform = transforms.Compose([#transforms.Resize(int(128 + epoch * (224-128)/FLAGS['num_epochs'])),
                                                           #transforms.RandAugment(magnitude = epoch, num_magnitude_bins = FLAGS['num_epochs'] * 2),
-                                                          transforms.RandAugment()
+                                                          transforms.RandAugment(),
                                                           transforms.TrivialAugmentWide(),
                                                           danbooruDataset.CutoutPIL(cutout_factor=0.2),
                                                           transforms.ToTensor(),
