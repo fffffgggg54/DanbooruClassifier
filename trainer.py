@@ -502,7 +502,7 @@ def trainCycle(image_datasets, model):
                         preds = torch.sigmoid(outputs)
                         boundary = boundaryCalculator(preds.to(device2), tagBatch.to(device2))
                         preds = (preds > boundary).float()
-                        multiAccuracy = MLCSL.getAccuracy(outputs.to(device2), preds.to(device2))
+                        multiAccuracy = MLCSL.getAccuracy(preds.to(device2), tagBatch.to(device2))
                         
                         outputs = outputs.float()
                         '''
@@ -631,7 +631,7 @@ def trainCycle(image_datasets, model):
                 #top_mAP = max(mAP_score_regular, mAP_score_ema)
                 if hasattr(criterion, 'tau_per_class'):
                     print(criterion.tau_per_class)
-        
+                print(boundaryCalculator.thresholdPerClass)
         
         
                         
