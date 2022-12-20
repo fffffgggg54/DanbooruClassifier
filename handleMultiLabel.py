@@ -275,8 +275,8 @@ class getDecisionBoundary(nn.Module):
         
         
         with torch.no_grad():
-            threshold_min = torch.ones(len(self.thresholdPerClass, device=self.thresholdPerClass.device)) * self.threshold_min
-            threshold_max = torch.ones(len(self.thresholdPerClass, device=self.thresholdPerClass.device)) * self.threshold_max
+            threshold_min = torch.ones(len(self.thresholdPerClass), device=self.thresholdPerClass.device) * self.threshold_min
+            threshold_max = torch.ones(len(self.thresholdPerClass), device=self.thresholdPerClass.device) * self.threshold_max
             
             recall = torch.ones(len(self.thresholdPerClass, device=self.thresholdPerClass.device)) * 0.0
             precision = torch.ones(len(self.thresholdPerClass, device=self.thresholdPerClass.device)) * 1.0
