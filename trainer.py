@@ -501,9 +501,9 @@ def trainCycle(image_datasets, model):
                         #outputs = model(imageBatch).logits
                         preds = torch.sigmoid(outputs)
                         boundary = boundaryCalculator(preds.to(device2), tagBatch.to(device2))
-                        preds = (preds > boundary).float()
+                        predsModified = (preds > boundary).float()
                         #print(preds)
-                        multiAccuracy = MLCSL.getAccuracy(preds.to(device2), tagBatch.to(device2))
+                        multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
                         
                         outputs = outputs.float()
                         '''
@@ -613,7 +613,7 @@ def trainCycle(image_datasets, model):
                 
                 AvgAccuracy = torch.stack(AccuracyRunning)
                 AvgAccuracy = AvgAccuracy.mean(dim=0)
-                LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames))
+                LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames, boundaryCalculator.thresholdPerClass))
                 LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[0][6], reverse=True)
                 MeanStackedAccuracy = AvgAccuracy.mean(dim=0)
                 MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
@@ -633,7 +633,7 @@ def trainCycle(image_datasets, model):
                 #top_mAP = max(mAP_score_regular, mAP_score_ema)
                 if hasattr(criterion, 'tau_per_class'):
                     print(criterion.tau_per_class)
-                print(boundaryCalculator.thresholdPerClass)
+                #print(boundaryCalculator.thresholdPerClass)
         
         
                         
