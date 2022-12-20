@@ -909,7 +909,7 @@ def getAccuracy(preds, targs):
     Pprecision = TP / (TP + FP + epsilon)
     Nprecision = TN / (TN + FN + epsilon)
     
-    P4 = (4 * TP * TN) / ((4 * TN * TP) + (TN + TP) * (FP + FN))
+    P4 = (4 * TP * TN) / ((4 * TN * TP) + (TN + TP) * (FP + FN) + epsilon)
     
     return torch.column_stack([TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision, P4])
 
