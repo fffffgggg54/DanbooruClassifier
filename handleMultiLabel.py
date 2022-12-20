@@ -295,7 +295,7 @@ class getDecisionBoundary(nn.Module):
                 
                 mask = (precision > recall).float()
                 threshold_max = mask * threshold + (1 - mask) * threshold_max
-                threshold_min = (1 - mask) * threshold + mask * threshold_max
+                threshold_min = (1 - mask) * threshold + mask * threshold_min
         
         
             alpha = self.alpha if preds.requires_grad else 0
