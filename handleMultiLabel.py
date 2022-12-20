@@ -254,22 +254,48 @@ class SPLCModified(nn.Module):
         
         return loss
 
+
+
+# derived from SW-CV-ModelZoo/tools/analyze_metrics.py
+
 class getDecisionBoundary(nn.Module):
-    def __init__(self, threshold = 0.5, alpha = 1e-4):
+    def __init__(self, initial_threshold = 0.5, alpha = 1e-4, threshold_min = 0.01, threshold_max = 0.95):
         super().__init__()
-        self.threshold = threshold
+        self.initial_threshold = initial_threshold
         self.thresholdPerClass = None
         self.alpha = alpha
+        self.threshold_min = threshold_min
+        self.threshold_max = threshold_max
         
     def forward(self, preds, targs):
         if self.thresholdPerClass == None:
             classCount = preds.size(dim=1)
             currDevice = preds.device
-            self.thresholdPerClass = torch.ones(classCount, device=currDevice) * self.threshold
+            self.thresholdPerClass = torch.ones(classCount, device=currDevice) * self.initial_threshold
+        
         
         with torch.no_grad():
+            threshold_min = torch.ones(len(self.thresholdPerClass, device=self.thresholdPerClass.device)) * self.threshold_min
+            threshold_max = torch.ones(len(self.thresholdPerClass, device=self.thresholdPerClass.device)) * self.threshold_max
+            
+            recall = torch.ones(len(self.thresholdPerClass, device=self.thresholdPerClass.device)) * 0.0
+            precision = torch.ones(len(self.thresholdPerClass, device=self.thresholdPerClass.device)) * 1.0
+            
+            while torch.isclose(recall, precision).sum() > 0:
+                threshold = (threshold_max + threshold_min) / 2
+                predsModified = (preds > threshold).float()
+                metrics = getAccuracy(preds, targs)
+                precision = metrics[:,4]
+                recall = metrics[:,6]
+                
+                mask = precision > recall
+                threshold_max = mask * threshold + (1 - mask) * threshold_max
+                threshold_min = (1 - mask) * threshold + mask * threshold_max
+        
+        
             alpha = self.alpha if preds.requires_grad else 0
-            self.thresholdPerClass = self.thresholdPerClass * (1 - alpha * targs.sum(dim=0)) + alpha * (preds * targs).sum(dim=0)
+            #self.thresholdPerClass = self.thresholdPerClass * (1 - alpha * targs.sum(dim=0)) + alpha * (preds * targs).sum(dim=0)
+            self.thresholdPerClass = self.thresholdPerClass * (1 - alpha * targs.sum(dim=0)) + alpha * threshold * targs.sum(dim=0)
             
         return self.thresholdPerClass
 
