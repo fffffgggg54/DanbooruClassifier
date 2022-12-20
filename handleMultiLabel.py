@@ -282,6 +282,8 @@ class getDecisionBoundary(nn.Module):
             precision = torch.ones(len(self.thresholdPerClass), device=self.thresholdPerClass.device) * 1.0
             
             adjustmentStopMask = torch.isclose(recall, precision).float()
+            lastAdjustmentStopMask = adjustmentStopMask
+            lastChange = 0
             
             while (1 - adjustmentStopMask).sum() > 0:
                 #print(adjustmentStopMask.sum())
@@ -291,6 +293,13 @@ class getDecisionBoundary(nn.Module):
                 recall = metrics[:,6]
                 
                 adjustmentStopMask = torch.isclose(recall, precision).float()
+                if not torch.equal(adjustmentStopMask, lastAdjustmentStopMask):
+                    lastAdjustmentStopMask = adjustmentStopMask
+                    lastChange = 0
+                
+                if lastChange > 10:
+                    break
+                
                 threshold = adjustmentStopMask * threshold + (1 - adjustmentStopMask) * (threshold_max + threshold_min) / 2
                 mask = (precision > recall).float()
                 threshold_max = mask * threshold + (1 - mask) * threshold_max
