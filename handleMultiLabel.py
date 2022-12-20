@@ -281,6 +281,8 @@ class getDecisionBoundary(nn.Module):
             recall = torch.ones(len(self.thresholdPerClass), device=self.thresholdPerClass.device) * 0.0
             precision = torch.ones(len(self.thresholdPerClass), device=self.thresholdPerClass.device) * 1.0
             
+            threshold = None
+            
             while torch.isclose(recall, precision).sum() > 0:
                 threshold = (threshold_max + threshold_min) / 2
                 predsModified = (preds > threshold).float()
