@@ -288,7 +288,7 @@ class getDecisionBoundary(nn.Module):
                 precision = metrics[:,4]
                 recall = metrics[:,6]
                 
-                mask = precision > recall
+                mask = (precision > recall).float()
                 threshold_max = mask * threshold + (1 - mask) * threshold_max
                 threshold_min = (1 - mask) * threshold + mask * threshold_max
         
