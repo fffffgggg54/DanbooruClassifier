@@ -58,7 +58,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_m-1588-SPLC/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_m-1588-Hill-Scratchpad/'
 
 
 # post importer config
@@ -106,7 +106,7 @@ FLAGS['lr_warmup_epochs'] = 2
 
 FLAGS['weight_decay'] = 2e-2
 
-FLAGS['resume_epoch'] = 7
+FLAGS['resume_epoch'] = 21
 
 FLAGS['finetune'] = False
 
@@ -392,8 +392,8 @@ def trainCycle(image_datasets, model):
     #ema = MLCSL.ModelEma(model, 0.9997)  # 0.9997^641=0.82
     
     
-    #criterion = MLCSL.Hill()
-    criterion = MLCSL.SPLC(gamma=2.0)
+    criterion = MLCSL.Hill()
+    #criterion = MLCSL.SPLC(gamma=2.0)
     #criterion = MLCSL.SPLCModified(gamma=2.0)
     #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=5, gamma_pos=5, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.01)
