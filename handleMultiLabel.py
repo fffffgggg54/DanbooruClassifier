@@ -277,20 +277,20 @@ class getDecisionBoundary(nn.Module):
         with torch.no_grad():
             threshold_min = torch.ones(len(self.thresholdPerClass), device=self.thresholdPerClass.device) * self.threshold_min
             threshold_max = torch.ones(len(self.thresholdPerClass), device=self.thresholdPerClass.device) * self.threshold_max
-            
+            threshold = (threshold_max + threshold_min) / 2
             recall = torch.ones(len(self.thresholdPerClass), device=self.thresholdPerClass.device) * 0.0
             precision = torch.ones(len(self.thresholdPerClass), device=self.thresholdPerClass.device) * 1.0
             
-            adjustmentStopMask = torch.isclose(recall, precision)
+            adjustmentStopMask = torch.isclose(recall, precision).float()
             
             while not adjustmentStopMask.sum() > 0:
-                threshold = (threshold_max + threshold_min) / 2
+                threshold = adjustmentStopMask * threshold + (1 - adjustmentStopMask) * (threshold_max + threshold_min) / 2
                 predsModified = (preds > threshold).float()
                 metrics = getAccuracy(preds, targs)
                 precision = metrics[:,4]
                 recall = metrics[:,6]
                 
-                adjustmentStopMask = torch.isclose(recall, precision)
+                adjustmentStopMask = torch.isclose(recall, precision).float()
                 
                 mask = (precision > recall).float()
                 threshold_max = mask * threshold + (1 - mask) * threshold_max
