@@ -285,6 +285,7 @@ class getDecisionBoundary(nn.Module):
             
             while not adjustmentStopMask.sum() > 0:
                 threshold = adjustmentStopMask * threshold + (1 - adjustmentStopMask) * (threshold_max + threshold_min) / 2
+                print(adjustmentStopMask.sum())
                 predsModified = (preds > threshold).float()
                 metrics = getAccuracy(preds, targs)
                 precision = metrics[:,4]
