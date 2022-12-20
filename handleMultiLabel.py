@@ -284,7 +284,6 @@ class getDecisionBoundary(nn.Module):
             adjustmentStopMask = torch.isclose(recall, precision).float()
             
             while not adjustmentStopMask.sum() > 0:
-                threshold = adjustmentStopMask * threshold + (1 - adjustmentStopMask) * (threshold_max + threshold_min) / 2
                 #print(adjustmentStopMask.sum())
                 predsModified = (preds > threshold).float()
                 metrics = getAccuracy(predsModified, targs)
@@ -292,7 +291,7 @@ class getDecisionBoundary(nn.Module):
                 recall = metrics[:,6]
                 
                 adjustmentStopMask = torch.isclose(recall, precision).float()
-                
+                threshold = adjustmentStopMask * threshold + (1 - adjustmentStopMask) * (threshold_max + threshold_min) / 2
                 mask = (precision > recall).float()
                 threshold_max = mask * threshold + (1 - mask) * threshold_max
                 threshold_min = (1 - mask) * threshold + mask * threshold_min
