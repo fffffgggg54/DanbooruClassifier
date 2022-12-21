@@ -58,7 +58,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_s-1588-SPLC/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_s-384-1588-SPLC/'
 
 
 # post importer config
@@ -70,7 +70,7 @@ FLAGS['stopReadingAt'] = 5000
 
 # dataset config
 
-FLAGS['image_size'] = 224
+FLAGS['image_size'] = 384
 
 FLAGS['workingSetSize'] = 1
 FLAGS['trainSetSize'] = 0.8
