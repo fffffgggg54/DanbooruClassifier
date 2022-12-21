@@ -58,7 +58,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_m-1588-Hill-Scratchpad/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_s-384-1588-SPLC/'
 
 
 # post importer config
@@ -70,7 +70,7 @@ FLAGS['stopReadingAt'] = 5000
 
 # dataset config
 
-FLAGS['image_size'] = 224
+FLAGS['image_size'] = 384
 
 FLAGS['workingSetSize'] = 1
 FLAGS['trainSetSize'] = 0.8
@@ -106,7 +106,7 @@ FLAGS['lr_warmup_epochs'] = 2
 
 FLAGS['weight_decay'] = 2e-2
 
-FLAGS['resume_epoch'] = 21
+FLAGS['resume_epoch'] = 0
 
 FLAGS['finetune'] = False
 
@@ -316,7 +316,7 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('gernet_m', pretrained=False, num_classes=len(classes))
+    model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes))
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
@@ -392,8 +392,8 @@ def trainCycle(image_datasets, model):
     #ema = MLCSL.ModelEma(model, 0.9997)  # 0.9997^641=0.82
     
     
-    criterion = MLCSL.Hill()
-    #criterion = MLCSL.SPLC(gamma=2.0)
+    #criterion = MLCSL.Hill()
+    criterion = MLCSL.SPLC(gamma=2.0)
     #criterion = MLCSL.SPLCModified(gamma=2.0)
     #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=5, gamma_pos=5, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.01)
@@ -515,8 +515,8 @@ def trainCycle(image_datasets, model):
                         '''
 
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        loss = criterion(outputs.to(device2), tagBatch.to(device2))
-                        #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
+                        #loss = criterion(outputs.to(device2), tagBatch.to(device2))
+                        loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
                         #loss, textOutput = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
                         #loss = criterion(outputs.cpu(), tags.cpu())
                         

@@ -285,25 +285,27 @@ class getDecisionBoundary(nn.Module):
             lastAdjustmentStopMask = adjustmentStopMask
             lastChange = 0
             
-            while (1 - adjustmentStopMask).sum() > 0:
-                #print((1 - adjustmentStopMask).sum())
-                predsModified = (preds > threshold).float()
-                metrics = getAccuracy(predsModified, targs)
-                precision = metrics[:,4]
-                recall = metrics[:,6]
+            if preds.requires_grad:
                 
-                adjustmentStopMask = torch.isclose(recall, precision).float()
-                if not torch.equal(adjustmentStopMask, lastAdjustmentStopMask):
-                    lastAdjustmentStopMask = adjustmentStopMask
-                    lastChange = 0
-                lastChange += 1
-                if lastChange > 2:
-                    break
-                
-                threshold = adjustmentStopMask * threshold + (1 - adjustmentStopMask) * (threshold_max + threshold_min) / 2
-                mask = (precision > recall).float()
-                threshold_max = mask * threshold + (1 - mask) * threshold_max
-                threshold_min = (1 - mask) * threshold + mask * threshold_min
+                while (1 - adjustmentStopMask).sum() > 0:
+                    #print((1 - adjustmentStopMask).sum())
+                    predsModified = (preds > threshold).float()
+                    metrics = getAccuracy(predsModified, targs)
+                    precision = metrics[:,4]
+                    recall = metrics[:,6]
+                    
+                    adjustmentStopMask = torch.isclose(recall, precision).float()
+                    if not torch.equal(adjustmentStopMask, lastAdjustmentStopMask):
+                        lastAdjustmentStopMask = adjustmentStopMask
+                        lastChange = 0
+                    lastChange += 1
+                    if lastChange > 2:
+                        break
+                    
+                    threshold = adjustmentStopMask * threshold + (1 - adjustmentStopMask) * (threshold_max + threshold_min) / 2
+                    mask = (precision > recall).float()
+                    threshold_max = mask * threshold + (1 - mask) * threshold_max
+                    threshold_min = (1 - mask) * threshold + mask * threshold_min
         
         
             alpha = self.alpha if preds.requires_grad else 0
