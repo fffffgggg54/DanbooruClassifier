@@ -286,7 +286,7 @@ class getDecisionBoundary(nn.Module):
             lastChange = 0
             
             while (1 - adjustmentStopMask).sum() > 0:
-                print((1 - adjustmentStopMask).sum())
+                #print((1 - adjustmentStopMask).sum())
                 predsModified = (preds > threshold).float()
                 metrics = getAccuracy(predsModified, targs)
                 precision = metrics[:,4]
@@ -297,7 +297,7 @@ class getDecisionBoundary(nn.Module):
                     lastAdjustmentStopMask = adjustmentStopMask
                     lastChange = 0
                 lastChange += 1
-                if lastChange > 10:
+                if lastChange > 2:
                     break
                 
                 threshold = adjustmentStopMask * threshold + (1 - adjustmentStopMask) * (threshold_max + threshold_min) / 2
