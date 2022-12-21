@@ -296,7 +296,7 @@ class getDecisionBoundary(nn.Module):
                 if not torch.equal(adjustmentStopMask, lastAdjustmentStopMask):
                     lastAdjustmentStopMask = adjustmentStopMask
                     lastChange = 0
-                
+                lastChange += 1
                 if lastChange > 10:
                     break
                 
