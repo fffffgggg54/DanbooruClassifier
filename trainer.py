@@ -318,7 +318,7 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('gernet_m', pretrained=False, num_classes=len(classes))
+    model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes))
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
