@@ -26,6 +26,7 @@ import timm
 import transformers
 
 import timm.models.layers.ml_decoder as ml_decoder
+from timm.data.mixup import FastCollateMixup, Mixup
 
 import parallelJsonReader
 import danbooruDataset
@@ -58,7 +59,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL-BCE/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tf_efficientnetv2_s-ASL-BCE/'
 
 
 # post importer config
@@ -70,9 +71,9 @@ FLAGS['stopReadingAt'] = 5000
 
 # dataset config
 
-FLAGS['image_size'] = 448
-#FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
-FLAGS['cacheRoot'] = None
+FLAGS['image_size'] = 384
+FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
+#FLAGS['cacheRoot'] = None
 
 FLAGS['workingSetSize'] = 1
 FLAGS['trainSetSize'] = 0.8
@@ -318,7 +319,7 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes))
+    model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
@@ -410,6 +411,7 @@ def trainCycle(image_datasets, model):
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
     scheduler.last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch']
     
+    mixup = Mixup(mixup_alpha = 0.2, cutmix_alpha = 0)
     
     boundaryCalculator = MLCSL.getDecisionBoundary()
     
@@ -450,11 +452,11 @@ def trainCycle(image_datasets, model):
                 #if (hasTPU == True): xm.master_print("training set")
                 print("training set")
                 
-                myDataset.transform = transforms.Compose([#transforms.Resize(int(128 + epoch * (224-128)/FLAGS['num_epochs'])),
-                                                          #transforms.RandAugment(magnitude = epoch, num_magnitude_bins = FLAGS['num_epochs'] * 2),
-                                                          transforms.RandAugment(),
+                myDataset.transform = transforms.Compose([transforms.Resize(int(FLAGS['image_size']/2 + epoch * (FLAGS['image_size']-FLAGS['image_size']/2)/FLAGS['num_epochs'])),
+                                                          transforms.RandAugment(magnitude = epoch, num_magnitude_bins = FLAGS['num_epochs'] * 3),
+                                                          #transforms.RandAugment(),
                                                           #transforms.TrivialAugmentWide(),
-                                                          danbooruDataset.CutoutPIL(cutout_factor=0.2),
+                                                          #danbooruDataset.CutoutPIL(cutout_factor=0.2),
                                                           transforms.ToTensor(),
                                                           #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                                                           ])
@@ -500,6 +502,11 @@ def trainCycle(image_datasets, model):
                     # TODO switch between using autocast and not using it
                     
                     with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
+                    
+                    
+                        if phase == 'train':
+                            imageBatch, tagBatch = mixup(imageBatch, tagBatch)
+                        
                         outputs = model(imageBatch)
                         #outputs = model(imageBatch).logits
                         preds = torch.sigmoid(outputs)
