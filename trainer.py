@@ -411,7 +411,7 @@ def trainCycle(image_datasets, model):
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
     scheduler.last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch']
     
-    mixup = Mixup(mixup_alpha = 0.2, cutmix_alpha = 0)
+    mixup = Mixup(mixup_alpha = 0.2, cutmix_alpha = 0, num_classes = len(classes))
     
     boundaryCalculator = MLCSL.getDecisionBoundary()
     
