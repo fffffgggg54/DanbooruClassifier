@@ -506,6 +506,7 @@ def trainCycle(image_datasets, model):
                     
                         if phase == 'train':
                             imageBatch, tagBatch = mixup(imageBatch, tagBatch)
+                            tagBatch = tagBatch.view(len(classes), -1)
                         
                         outputs = model(imageBatch)
                         #outputs = model(imageBatch).logits
