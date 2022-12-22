@@ -209,13 +209,15 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
         self.serverWorkerCount = serverWorkerCount
         self.serverProcessPool = []
         self.workQueue = multiprocessing.Queue()
+        if cacheRoot is not None:
+            cacheRoot = cacheRoot + str(size) + '/'
         for nthWorkerProcess in range(self.serverWorkerCount):
             currProcess = multiprocessing.Process(target=DFServerWorkerProcess,
                 args=(self.workQueue,
                     postData.copy(deep=True),
                     pd.Series(tagData.name.copy(deep=True), dtype=pd.StringDtype()),
                     imageRoot,
-                    cacheRoot + str(size) + '/',),
+                    cacheRoot,),
                 daemon = True)
             currProcess.start()
             self.serverProcessPool.append(currProcess)
