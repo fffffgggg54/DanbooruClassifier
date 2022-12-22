@@ -512,10 +512,11 @@ def trainCycle(image_datasets, model):
                         
                         #outputs = model(imageBatch).logits
                         preds = torch.sigmoid(outputs)
+                        print(preds.shape)
+                        print(tagBatch.shape)
                         boundary = boundaryCalculator(preds.to(device2), tagBatch.to(device2))
                         predsModified = (preds > boundary).float()
                         #print(preds)
-                        print(predsModified.shape)
                         multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
                         
                         outputs = outputs.float()
