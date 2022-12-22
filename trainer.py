@@ -502,21 +502,12 @@ def trainCycle(image_datasets, model):
                     # TODO switch between using autocast and not using it
                     
                     with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
-                    
-                    
-                        if phase == 'train':
-                            imageBatch, tagBatch = mixup(imageBatch, tagBatch)
-                            #tagBatch = tagBatch.view(len(classes), -1)
                         
                         outputs = model(imageBatch)
-                        
                         #outputs = model(imageBatch).logits
                         preds = torch.sigmoid(outputs)
-                        print(preds.shape)
-                        print(tagBatch.shape)
                         boundary = boundaryCalculator(preds.to(device2), tagBatch.to(device2))
                         predsModified = (preds > boundary).float()
-                        #print(preds)
                         multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
                         
                         outputs = outputs.float()
