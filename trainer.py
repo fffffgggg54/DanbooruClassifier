@@ -506,9 +506,10 @@ def trainCycle(image_datasets, model):
                     
                         if phase == 'train':
                             imageBatch, tagBatch = mixup(imageBatch, tagBatch)
-                            tagBatch = tagBatch.view(len(classes), -1)
+                            #tagBatch = tagBatch.view(len(classes), -1)
                         
                         outputs = model(imageBatch)
+                        print(outputs.dims())
                         #outputs = model(imageBatch).logits
                         preds = torch.sigmoid(outputs)
                         boundary = boundaryCalculator(preds.to(device2), tagBatch.to(device2))
