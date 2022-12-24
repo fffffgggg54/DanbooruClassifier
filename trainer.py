@@ -109,7 +109,7 @@ FLAGS['lr_warmup_epochs'] = 5
 
 FLAGS['weight_decay'] = 2e-2
 
-FLAGS['resume_epoch'] = 1
+FLAGS['resume_epoch'] = 16
 
 FLAGS['finetune'] = False
 
@@ -452,7 +452,11 @@ def trainCycle(image_datasets, model):
                 #if (hasTPU == True): xm.master_print("training set")
                 print("training set")
                 
-                myDataset.transform = transforms.Compose([transforms.Resize(int(FLAGS['image_size']/2 + epoch * (FLAGS['image_size']-FLAGS['image_size']/2)/FLAGS['num_epochs'])),
+                dynamicResizeDim = int(FLAGS['image_size']/2 + epoch * (FLAGS['image_size']-FLAGS['image_size']/2)/FLAGS['num_epochs'])
+                
+                print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
+                
+                myDataset.transform = transforms.Compose([transforms.Resize(dynamicResizeDim),
                                                           transforms.RandAugment(magnitude = epoch, num_magnitude_bins = FLAGS['num_epochs'] * 3),
                                                           #transforms.RandAugment(),
                                                           #transforms.TrivialAugmentWide(),
