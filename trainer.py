@@ -266,6 +266,9 @@ def getData():
     
     #classes = {classIndex : className for classIndex, className in enumerate(tagData.name)}
     trimmedSet, _ = torch.utils.data.random_split(myDataset, [int(FLAGS['workingSetSize'] * len(myDataset)), len(myDataset) - int(FLAGS['workingSetSize'] * len(myDataset))], generator=torch.Generator().manual_seed(42)) # discard part of dataset if desired
+    
+    # TODO implement modulo-based subsets for splits to standardize train/test sets and potentially a future val set for thresholding or wtv
+    
     trainSet, testSet = torch.utils.data.random_split(trimmedSet, [int(FLAGS['trainSetSize'] * len(trimmedSet)), len(trimmedSet) - int(FLAGS['trainSetSize'] * len(trimmedSet))], generator=torch.Generator().manual_seed(42)) # split dataset
 
     image_datasets = {'train': trainSet, 'val' : testSet}   # put dataset into a list for easy handling
@@ -359,6 +362,9 @@ def modelSetup(classes):
                 param.requires_grad = True
     
     return model
+    
+def getDataLoader(dataset, batch_size):
+    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = False, prefetch_factor=2, pin_memory = True, drop_last=True, generator=torch.Generator().manual_seed(41)
 
 def trainCycle(image_datasets, model):
     #print("starting training")
@@ -366,7 +372,7 @@ def trainCycle(image_datasets, model):
 
     timm.utils.jit.set_jit_fuser("te")
     
-    dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=FLAGS['batch_size'], shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = False, prefetch_factor=2, pin_memory = True, drop_last=True, generator=torch.Generator().manual_seed(41)) for x in image_datasets} # set up dataloaders
+    dataloaders = {x: getDataLoader(image_datasets[x], FLAGS['batch_size']) for x in image_datasets} # set up dataloaders
     
     
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
@@ -651,7 +657,7 @@ def trainCycle(image_datasets, model):
             except:
                 
                 
-                dataloaders[phase].batch_size = dataloaders[phase].batch_size / 2
+                dataloaders[phase] = getDataLoader(image_datasets[phase], dataloaders[phase].batch_size / 2)
                 
                 if phase == 'train':
                     FLAGS['gradient_accumulation_iterations'] = FLAGS['gradient_accumulation_iterations'] * 2
