@@ -657,7 +657,7 @@ def trainCycle(image_datasets, model):
             FLAGS['batch_size'] = FLAGS['batch_size'] / 2
             FLAGS['gradient_accumulation_iterations'] = FLAGS['gradient_accumulation_iterations'] * 2
             
-            for dataloader in dataloaders:
+            for _, dataloader in dataloaders:
                 dataloader.batch_size = FLAGS['batch_size']
         
         
