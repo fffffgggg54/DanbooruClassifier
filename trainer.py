@@ -660,7 +660,8 @@ def trainCycle(image_datasets, model):
                         print(criterion.tau_per_class)
                     #print(boundaryCalculator.thresholdPerClass)
                 currPhase += 1
-            except:
+            except Exception as e:
+                print(e)
                 
                 
                 dataloaders[phase] = getDataLoader(image_datasets[phase], int(dataloaders[phase].batch_size / 2))
