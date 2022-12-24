@@ -447,8 +447,9 @@ def trainCycle(image_datasets, model):
         AP_ema = []
         textOutput = None
         #lastPrior = None
-        try:
-            for phase in ['train', 'val']:
+        
+        for phase in ['train', 'val']:
+            try:
                 if phase == 'train':
                     model.train()  # Set model to training mode
                     #if (hasTPU == True): xm.master_print("training set")
@@ -585,7 +586,7 @@ def trainCycle(image_datasets, model):
                             
                         
 
-                        imagesPerSecond = (FLAGS['batch_size']*stepsPerPrintout)/(time.time() - cycleTime)
+                        imagesPerSecond = (dataloaders[phase].batch_size*stepsPerPrintout)/(time.time() - cycleTime)
                         cycleTime = time.time()
 
                         #currPostTags = []
@@ -647,19 +648,20 @@ def trainCycle(image_datasets, model):
                     if hasattr(criterion, 'tau_per_class'):
                         print(criterion.tau_per_class)
                     #print(boundaryCalculator.thresholdPerClass)
+            except:
+                
+                
+                dataloaders[phase].batch_size = dataloaders[phase].batch_size / 2
+                
+                if phase == 'train':
+                    FLAGS['gradient_accumulation_iterations'] = FLAGS['gradient_accumulation_iterations'] * 2
+
             
-            
-                            
-            
-            
-            
-        except:
-            FLAGS['batch_size'] = FLAGS['batch_size'] / 2
-            FLAGS['gradient_accumulation_iterations'] = FLAGS['gradient_accumulation_iterations'] * 2
-            
-            for _, dataloader in dataloaders:
-                dataloader.batch_size = FLAGS['batch_size']
+                        
         
+        
+        
+    
         
         time_elapsed = time.time() - epochTime
         print(f'epoch {epoch} completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
