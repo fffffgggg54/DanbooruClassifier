@@ -657,7 +657,7 @@ def trainCycle(image_datasets, model):
             except:
                 
                 
-                dataloaders[phase] = getDataLoader(image_datasets[phase], dataloaders[phase].batch_size / 2)
+                dataloaders[phase] = getDataLoader(image_datasets[phase], int(dataloaders[phase].batch_size / 2))
                 
                 if phase == 'train':
                     FLAGS['gradient_accumulation_iterations'] = FLAGS['gradient_accumulation_iterations'] * 2
