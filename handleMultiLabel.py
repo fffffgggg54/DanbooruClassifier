@@ -275,6 +275,7 @@ class getDecisionBoundary(nn.Module):
         
         
         with torch.no_grad():
+            # TODO update with logic to include current thresholds in calculation of per-batch threshold
             threshold_min = torch.ones(len(self.thresholdPerClass), device=self.thresholdPerClass.device) * self.threshold_min
             threshold_max = torch.ones(len(self.thresholdPerClass), device=self.thresholdPerClass.device) * self.threshold_max
             threshold = (threshold_max + threshold_min) / 2
@@ -293,15 +294,19 @@ class getDecisionBoundary(nn.Module):
                     metrics = getAccuracy(predsModified, targs)
 
                     
-                    # stopping criterion
+                    # per-class stopping criterion
                     adjustmentStopMask = torch.isclose(metrics[:,4], metrics[:,6]).float() # recall_P, precision_P
                     
                     
+                    # overall exit criterion
                     
+                    # if there is any change, reset the no-change counter and update the change reference to new mask
                     if not torch.equal(adjustmentStopMask, lastAdjustmentStopMask):
                         lastAdjustmentStopMask = adjustmentStopMask
                         lastChange = 0
+                    # increment the no-change counter
                     lastChange += 1
+                    # exit if there hasn't been changes to the stopping mask for a while
                     if lastChange > 2:
                         break
                     
@@ -313,7 +318,10 @@ class getDecisionBoundary(nn.Module):
         
             alpha = self.alpha if preds.requires_grad else 0
             #self.thresholdPerClass = self.thresholdPerClass * (1 - alpha * targs.sum(dim=0)) + alpha * (preds * targs).sum(dim=0)
-            self.thresholdPerClass = self.thresholdPerClass * (1 - alpha * targs.sum(dim=0)) + alpha * threshold * targs.sum(dim=0)
+            # weighting mask of each threshold shift
+            deltaPerClass = alpha * targs.sum(dim=0) * adjustmentStopMask
+            # EMA of per-class thresholds
+            self.thresholdPerClass = self.thresholdPerClass * (1 - deltaPerClass) + threshold * deltaPerClass
             
         return self.thresholdPerClass
 
