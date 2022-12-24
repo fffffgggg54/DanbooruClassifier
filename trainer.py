@@ -454,7 +454,12 @@ def trainCycle(image_datasets, model):
         textOutput = None
         #lastPrior = None
         
-        for phase in ['train', 'val']:
+        phases = ['train', 'val']
+        currPhase = 0
+        
+        while currPhase < len(phases):
+            phase = phases[currPhase]
+
             try:
                 if phase == 'train':
                     model.train()  # Set model to training mode
@@ -654,6 +659,7 @@ def trainCycle(image_datasets, model):
                     if hasattr(criterion, 'tau_per_class'):
                         print(criterion.tau_per_class)
                     #print(boundaryCalculator.thresholdPerClass)
+                currPhase += 1
             except:
                 
                 
@@ -661,7 +667,6 @@ def trainCycle(image_datasets, model):
                 
                 if phase == 'train':
                     FLAGS['gradient_accumulation_iterations'] = FLAGS['gradient_accumulation_iterations'] * 2
-
             
                         
         
