@@ -663,8 +663,10 @@ def trainCycle(image_datasets, model):
             except Exception as e:
                 print(e)
                 
+                batch_size = int(dataloaders[phase].batch_size / 2)
+                print(f'setting batch size of {phase} dataloader to {batch_size}')
                 
-                dataloaders[phase] = getDataLoader(image_datasets[phase], int(dataloaders[phase].batch_size / 2))
+                dataloaders[phase] = getDataLoader(image_datasets[phase], batch_size)
                 
                 if phase == 'train':
                     FLAGS['gradient_accumulation_iterations'] = FLAGS['gradient_accumulation_iterations'] * 2
