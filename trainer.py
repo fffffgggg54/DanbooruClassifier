@@ -486,6 +486,7 @@ def trainCycle(image_datasets, model):
 
                     modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
                     torch.save(model.state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
+                    torch.save(boundaryCalculator.thresholdPerClass, modelDir + 'thresholds.pth')
                     model.eval()   # Set model to evaluate mode
                     print("validation set")
                     if(FLAGS['skip_test_set'] == True):
