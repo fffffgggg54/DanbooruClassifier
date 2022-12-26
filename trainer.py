@@ -25,7 +25,7 @@ import multiprocessing
 import timm
 import transformers
 
-import timm.models.layers.ml_decoder as ml_decoder
+import timm.layers.ml_decoder as ml_decoder
 from timm.data.mixup import FastCollateMixup, Mixup
 
 import parallelJsonReader
