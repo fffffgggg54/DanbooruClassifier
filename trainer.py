@@ -59,7 +59,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/davit_tiny-ASL-BCE/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/davit_base-ASL-BCE/'
 
 
 # post importer config
@@ -323,7 +323,7 @@ def modelSetup(classes):
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
+    model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     
     #model = ml_decoder.add_ml_decoder_head(model)
     
