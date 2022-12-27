@@ -505,7 +505,7 @@ def trainCycle(image_datasets, model):
                         print("skipping...")
                         break;
                     
-                    myDataset.resize_fn = torch.nn.Identity()
+                    myDataset.resize_fn = nn.Identity()
                     myDataset.size = FLAGS['image_size']
                     
                     myDataset.transform = transforms.Compose([#transforms.Resize((224,224)),
