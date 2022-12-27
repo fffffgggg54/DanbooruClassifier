@@ -186,10 +186,10 @@ class DanbooruDataset(torch.utils.data.Dataset):
         
         
 
-def DFServerWorkerProcess(workQueue, myDF, tagList, imageRoot, cacheRoot):
+def DFServerWorkerProcess(workQueue, myDF, tagList, imageRoot):
     while(1):
         (index, returnConnection) = workQueue.get()
-        returnConnection.send((myDF.iloc[index].copy(deep=True), tagList, imageRoot, cacheRoot))
+        returnConnection.send((myDF.iloc[index].copy(deep=True), tagList, imageRoot))
         returnConnection.close()
 
 class DanbooruDatasetWithServer(torch.utils.data.Dataset):
@@ -209,15 +209,14 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
         self.serverWorkerCount = serverWorkerCount
         self.serverProcessPool = []
         self.workQueue = multiprocessing.Queue()
-        if cacheRoot is not None:
-            cacheRoot = cacheRoot + str(size) + '/'
+        
+        self.cacheRoot = cacheRoot
         for nthWorkerProcess in range(self.serverWorkerCount):
             currProcess = multiprocessing.Process(target=DFServerWorkerProcess,
                 args=(self.workQueue,
                     postData.copy(deep=True),
                     pd.Series(tagData.name.copy(deep=True), dtype=pd.StringDtype()),
-                    imageRoot,
-                    cacheRoot,),
+                    imageRoot,),
                 daemon = True)
             currProcess.start()
             self.serverProcessPool.append(currProcess)
@@ -238,7 +237,9 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
 
         self.workQueue.put((index, sendConn))
 
-        (postData, tagList, imageRoot, cacheRoot) = recvConn.recv()
+        (postData, tagList, imageRoot) = recvConn.recv()
+        if cacheRoot is not None:
+            cacheRoot = self.cacheRoot + str(self.size) + '/'
 
         postID = int(postData.loc["id"])
         image = torch.Tensor()

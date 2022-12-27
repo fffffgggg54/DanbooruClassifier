@@ -473,8 +473,17 @@ def trainCycle(image_datasets, model):
                     
                     print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
                     
-                    myDataset.transform = transforms.Compose([transforms.Resize(dynamicResizeDim),
-                                                              transforms.RandAugment(magnitude = epoch, num_magnitude_bins = FLAGS['num_epochs'] * 3),
+                    resize_fn = transforms.Resize(dynamicResizeDim)
+                    
+                    size_bins = (224, 384)
+                    
+                    size_bin_index = 0
+                    while dynamicResizeDim > size_bins[size_bin_index]:
+                        size_bin_index += 1
+                    
+                    myDataset.size = size_bins[size_bin_index]
+                    
+                    myDataset.transform = transforms.Compose([transforms.RandAugment(magnitude = epoch, num_magnitude_bins = FLAGS['num_epochs'] * 3),
                                                               #transforms.RandAugment(),
                                                               #transforms.TrivialAugmentWide(),
                                                               #danbooruDataset.CutoutPIL(cutout_factor=0.2),
@@ -496,6 +505,9 @@ def trainCycle(image_datasets, model):
                         print("skipping...")
                         break;
                     
+                    resize_fn = nn.Identity()
+                    myDataset.size = FLAGS['image_size']
+                    
                     myDataset.transform = transforms.Compose([#transforms.Resize((224,224)),
                                                               transforms.ToTensor(),
                                                               #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
@@ -515,9 +527,11 @@ def trainCycle(image_datasets, model):
                 loaderIterable = enumerate(dataloaders[phase])
                 for i, (images, tags) in loaderIterable:
                     
+                    images = resize_fn(images)
 
                     imageBatch = images.to(device, memory_format=memory_format, non_blocking=True)
                     tagBatch = tags.to(device, non_blocking=True)
+                    
                     
                     
                     with torch.set_grad_enabled(phase == 'train'):
