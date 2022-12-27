@@ -109,7 +109,7 @@ FLAGS['lr_warmup_epochs'] = 2
 
 FLAGS['weight_decay'] = 2e-2
 
-FLAGS['resume_epoch'] = 0
+FLAGS['resume_epoch'] = 1
 
 FLAGS['finetune'] = False
 
@@ -373,7 +373,9 @@ def trainCycle(image_datasets, model):
 
     timm.utils.jit.set_jit_fuser("te")
     
-    dataloaders = {x: getDataLoader(image_datasets[x], FLAGS['batch_size']) for x in image_datasets} # set up dataloaders
+    starting_batch_sizes = {'train':FLAGS['batch_size'], 'val':FLAGS['batch_size']/2}
+    
+    dataloaders = {x: getDataLoader(image_datasets[x], starting_batch_sizes[x]) for x in image_datasets} # set up dataloaders
     
     
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
