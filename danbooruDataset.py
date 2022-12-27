@@ -239,7 +239,7 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
         self.workQueue.put((index, sendConn))
 
         (postData, tagList, imageRoot) = recvConn.recv()
-        if cacheRoot is not None:
+        if self.cacheRoot is not None:
             cacheRoot = self.cacheRoot + str(self.size) + '/'
 
         postID = int(postData.loc["id"])
