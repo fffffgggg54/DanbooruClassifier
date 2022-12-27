@@ -206,6 +206,7 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
         self.transform = transform  #transform, callable?
         #self.cacheRoot = cacheRoot  #string
         self.size = size
+        self.resize_fn = nn.Identity()
         self.serverWorkerCount = serverWorkerCount
         self.serverProcessPool = []
         self.workQueue = multiprocessing.Queue()
@@ -338,9 +339,11 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
                 cacheDir = create_dir(cacheRoot + str(postID % 1000).zfill(4))
                 cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
                 with bz2.BZ2File(cachePath, 'w') as cachedSample: cPickle.dump((image, postTags, postID), cachedSample)
-
+        
+        
+        
         image = transforms.functional.to_pil_image(image)
-
+        image = self.resize_fn(image)
         if self.transform: image = self.transform(image)
 
         if bruh == True: print("asdf")

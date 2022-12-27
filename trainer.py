@@ -473,7 +473,7 @@ def trainCycle(image_datasets, model):
                     
                     print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
                     
-                    resize_fn = transforms.Resize(dynamicResizeDim)
+                    myDataset.resize_fn = transforms.Resize(dynamicResizeDim)
                     
                     size_bins = (224, 384)
                     
@@ -505,7 +505,7 @@ def trainCycle(image_datasets, model):
                         print("skipping...")
                         break;
                     
-                    resize_fn = nn.Identity()
+                    myDataset.resize_fn = nn.Identity()
                     myDataset.size = FLAGS['image_size']
                     
                     myDataset.transform = transforms.Compose([#transforms.Resize((224,224)),
@@ -527,7 +527,6 @@ def trainCycle(image_datasets, model):
                 loaderIterable = enumerate(dataloaders[phase])
                 for i, (images, tags) in loaderIterable:
                     
-                    images = resize_fn(images)
 
                     imageBatch = images.to(device, memory_format=memory_format, non_blocking=True)
                     tagBatch = tags.to(device, non_blocking=True)
