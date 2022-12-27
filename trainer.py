@@ -375,7 +375,7 @@ def trainCycle(image_datasets, model):
     
     starting_batch_sizes = {'train':FLAGS['batch_size'], 'val':FLAGS['batch_size']/2}
     
-    dataloaders = {x: getDataLoader(image_datasets[x], starting_batch_sizes[x]) for x in image_datasets} # set up dataloaders
+    dataloaders = {x: getDataLoader(image_datasets[x], int(starting_batch_sizes[x])) for x in image_datasets} # set up dataloaders
     
     
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
