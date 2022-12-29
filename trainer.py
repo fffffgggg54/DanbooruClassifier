@@ -697,7 +697,8 @@ def trainCycle(image_datasets, model):
                 imageBatch = None
                 tagBatch = None
                 model = model.to('cpu')
-                torch.cuda.empty_cache()
+                with torch.no_grad():
+                    torch.cuda.empty_cache()
                 gc.collect()
                 model = model.to(device, memory_format=memory_format)
                 
