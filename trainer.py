@@ -492,7 +492,7 @@ def trainCycle(image_datasets, model):
                 model.zero_grad()
                 model = model.to('cpu')
                 #optimizer_cpy = optimizer.to('cpu')
-                #boundaryCal_cpy = boundaryCalculator.to('cpu')
+                boundaryCal_cpy = boundaryCalculator.to('cpu')
                 #del model
                 del imageBatch
                 del tagBatch
@@ -519,7 +519,7 @@ def trainCycle(image_datasets, model):
                 '''
                 model = model.to(device, memory_format=memory_format)
                 #optimizer = optimizer_cpy.to(device, memory_format=memory_format)
-                #boundaryCalculator = boundaryCal_cpy.to(device, memory_format=memory_format)
+                boundaryCalculator = boundaryCal_cpy.to(device, memory_format=memory_format)
                 
 
                 oom = False
