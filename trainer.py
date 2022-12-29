@@ -718,10 +718,10 @@ def trainCycle(image_datasets, model):
                 all_variables = dir()
                 import sys
                 for name in all_variables:
-                    if not name.startswith('__'):
+                    if not name.startswith('__'):
                         print(sys.getrefcount(name))
-                        myvalue = eval(name)
-                        print(name, "is", type(myvalue), "and is equal to ", myvalue)
+                        myvalue = eval(name)
+                        print(name, "is", type(myvalue), "and is equal to ", myvalue)
                 oom = True
                 
 
