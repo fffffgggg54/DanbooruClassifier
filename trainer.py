@@ -684,6 +684,7 @@ def trainCycle(image_datasets, model):
             except Exception as e:
                 print(e)
                 print(torch.cuda.memory_summary())
+                print(torch.cuda.memory_stats())
                 oom = True
                 
             if oom:
