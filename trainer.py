@@ -742,8 +742,10 @@ def trainCycle(image_datasets, model):
                 print(e)
                 print(torch.cuda.memory_summary())
                 print(torch.cuda.memory_stats())
-
-                oom = True
+                if 'out of memory' in str(e):
+                    oom = True
+                else:
+                    raise e
                 
 
                 
