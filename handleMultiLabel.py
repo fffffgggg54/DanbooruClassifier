@@ -275,9 +275,8 @@ class getDecisionBoundary(nn.Module):
             self.device = preds.device
             self.thresholdPerClass = torch.ones(classCount) * self.initial_threshold
         
-        
+        self.thresholdPerClass.to(preds.device)
         with torch.no_grad():
-            self.thresholdPerClass.to(preds.device)
             # TODO update with logic to include current thresholds in calculation of per-batch threshold
             threshold_min = torch.ones(len(self.thresholdPerClass), device=self.thresholdPerClass.device) * self.threshold_min
             threshold_max = torch.ones(len(self.thresholdPerClass), device=self.thresholdPerClass.device) * self.threshold_max
