@@ -490,10 +490,10 @@ def trainCycle(image_datasets, model):
                 loss = None
                 boundary = None
                 model.zero_grad()
-                model_cpy = model.to('cpu')
+                model = model.to('cpu')
                 #optimizer_cpy = optimizer.to('cpu')
                 boundaryCal_cpy = boundaryCalculator.to('cpu')
-                del model
+                #del model
                 del imageBatch
                 del tagBatch
                 del images
@@ -517,7 +517,7 @@ def trainCycle(image_datasets, model):
                         myvalue = eval(name)
                         print(name, "is", type(myvalue), "and is equal to ", myvalue)
                 
-                model = model_cpy.to(device, memory_format=memory_format)
+                model = model.to(device, memory_format=memory_format)
                 #optimizer = optimizer_cpy.to(device, memory_format=memory_format)
                 boundaryCalculator = boundaryCal_cpy.to(device, memory_format=memory_format)
                 
