@@ -292,8 +292,7 @@ class getDecisionBoundary(nn.Module):
                 
                 while (1 - adjustmentStopMask).sum() > 0:
                     #print((1 - adjustmentStopMask).sum())
-                    if(preds.device != self.thresholdPerClass.device):
-                        self.thresholdPerClass.to(preds.device)
+                    self.thresholdPerClass.to(preds.device)
                     predsModified = (preds > threshold).float()
                     metrics = getAccuracy(predsModified, targs)
 
