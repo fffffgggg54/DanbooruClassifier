@@ -518,7 +518,7 @@ def trainCycle(image_datasets, model):
                         print(name, "is", type(myvalue), "and is equal to ", myvalue)
                 '''
                 print(boundaryCalculator.thresholdPerClass.device)
-                print(boundaryCalculator.threshold_min.device)
+                #print(boundaryCalculator.threshold_min.device)
                 model = model.to(device, memory_format=memory_format)
                 #optimizer = optimizer_cpy.to(device, memory_format=memory_format)
                 boundaryCalculator = boundaryCal_cpy.to(device, memory_format=memory_format)
