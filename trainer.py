@@ -692,14 +692,15 @@ def trainCycle(image_datasets, model):
                 if phase == 'train':
                     FLAGS['gradient_accumulation_iterations'] = FLAGS['gradient_accumulation_iterations'] * 2
                     print(f"setting training gradient accumulation epochs to {FLAGS['gradient_accumulation_iterations']}")
-                torch.cuda.empty_cache()
-                gc.collect()
+                
                 
                 imageBatch = None
                 tagBatch = None
                 model = model.to('cpu')
+                torch.cuda.empty_cache()
+                gc.collect()
                 model = model.to(device, memory_format=memory_format)
-                        
+                
         
         
         
