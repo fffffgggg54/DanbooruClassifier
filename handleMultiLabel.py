@@ -266,23 +266,21 @@ class getDecisionBoundary(nn.Module):
         self.alpha = alpha
         self.threshold_min = threshold_min
         self.threshold_max = threshold_max
-        self.device = 'cpu'
-    
-
+        
     def forward(self, preds, targs):
         if self.thresholdPerClass == None:
             classCount = preds.size(dim=1)
-            self.device = preds.device
+            currDevice = preds.device
             self.thresholdPerClass = torch.ones(classCount, device=currDevice) * self.initial_threshold
         
         
         with torch.no_grad():
             # TODO update with logic to include current thresholds in calculation of per-batch threshold
-            threshold_min = torch.ones(len(self.thresholdPerClass), device=self.device) * self.threshold_min
-            threshold_max = torch.ones(len(self.thresholdPerClass), device=self.device) * self.threshold_max
+            threshold_min = torch.ones(len(self.thresholdPerClass), device=self.thresholdPerClass.device) * self.threshold_min
+            threshold_max = torch.ones(len(self.thresholdPerClass), device=self.thresholdPerClass.device) * self.threshold_max
             threshold = (threshold_max + threshold_min) / 2
-            recall = torch.ones(len(self.thresholdPerClass), device=self.device) * 0.0
-            precision = torch.ones(len(self.thresholdPerClass), device=self.device) * 1.0
+            recall = torch.ones(len(self.thresholdPerClass), device=self.thresholdPerClass.device) * 0.0
+            precision = torch.ones(len(self.thresholdPerClass), device=self.thresholdPerClass.device) * 1.0
             
             adjustmentStopMask = torch.isclose(recall, precision).float()
             lastAdjustmentStopMask = adjustmentStopMask
