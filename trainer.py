@@ -716,7 +716,6 @@ def trainCycle(image_datasets, model):
                 print(torch.cuda.memory_summary())
                 print(torch.cuda.memory_stats())
                 all_variables = dir()
-  
                 # Iterate over the whole list where dir( )
                 # is stored.
                 import sys
