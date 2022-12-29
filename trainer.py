@@ -697,6 +697,8 @@ def trainCycle(image_datasets, model):
                 
                 imageBatch = None
                 tagBatch = None
+                model = model.to('cpu')
+                model = model.to(device, memory_format=memory_format)
                         
         
         
