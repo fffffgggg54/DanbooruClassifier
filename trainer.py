@@ -466,6 +466,32 @@ def trainCycle(image_datasets, model):
         
         while currPhase < len(phases):
             phase = phases[currPhase]
+            if oom:
+                batch_size = int(dataloaders[phase].batch_size / 2)
+                print(f'setting batch size of {phase} dataloader to {batch_size}')
+                
+                dataloaders[phase] = getDataLoader(image_datasets[phase], batch_size)
+                
+                
+                
+                if phase == 'train':
+                    FLAGS['gradient_accumulation_iterations'] = FLAGS['gradient_accumulation_iterations'] * 2
+                    print(f"setting training gradient accumulation epochs to {FLAGS['gradient_accumulation_iterations']}")
+                
+                
+                imageBatch = None
+                tagBatch = None
+                model.zero_grad()
+                model_cpy = model.to('cpu')
+                del model
+                del imageBatch
+                del tagBatch
+                gc.collect()
+                with torch.no_grad():
+                    torch.cuda.empty_cache()
+                
+                model = model_cpy.to(device, memory_format=memory_format)
+                oom = False
 
             try:
                 if phase == 'train':
@@ -687,32 +713,7 @@ def trainCycle(image_datasets, model):
                 print(torch.cuda.memory_stats())
                 oom = True
                 
-            if oom:
-                batch_size = int(dataloaders[phase].batch_size / 2)
-                print(f'setting batch size of {phase} dataloader to {batch_size}')
-                
-                dataloaders[phase] = getDataLoader(image_datasets[phase], batch_size)
-                
-                
-                
-                if phase == 'train':
-                    FLAGS['gradient_accumulation_iterations'] = FLAGS['gradient_accumulation_iterations'] * 2
-                    print(f"setting training gradient accumulation epochs to {FLAGS['gradient_accumulation_iterations']}")
-                
-                
-                imageBatch = None
-                tagBatch = None
-                model.zero_grad()
-                model_cpy = model.to('cpu')
-                del model
-                del imageBatch
-                del tagBatch
-                gc.collect()
-                with torch.no_grad():
-                    torch.cuda.empty_cache()
-                
-                model = model_cpy.to(device, memory_format=memory_format)
-                oom = False
+
                 
         
         
