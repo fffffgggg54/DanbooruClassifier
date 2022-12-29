@@ -681,6 +681,7 @@ def trainCycle(image_datasets, model):
                 currPhase += 1
             except Exception as e:
                 print(e)
+                print(torch.cuda.memory_summary())
                 
                 batch_size = int(dataloaders[phase].batch_size / 2)
                 print(f'setting batch size of {phase} dataloader to {batch_size}')
