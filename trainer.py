@@ -504,7 +504,6 @@ def trainCycle(image_datasets, model):
                 del predsModified
                 del loss
                 del boundary
-                time.sleep(10)
                 gc.collect()
                 with torch.no_grad():
                     torch.cuda.empty_cache()
