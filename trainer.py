@@ -508,7 +508,7 @@ def trainCycle(image_datasets, model):
                 with torch.no_grad():
                     torch.cuda.empty_cache()
                     
-                                
+                '''
                 all_variables = dir()
                 import sys
                 for name in all_variables:
@@ -516,7 +516,7 @@ def trainCycle(image_datasets, model):
                         print(sys.getrefcount(name))
                         myvalue = eval(name)
                         print(name, "is", type(myvalue), "and is equal to ", myvalue)
-                
+                '''
                 model = model.to(device, memory_format=memory_format)
                 #optimizer = optimizer_cpy.to(device, memory_format=memory_format)
                 boundaryCalculator = boundaryCal_cpy.to(device, memory_format=memory_format)
