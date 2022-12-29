@@ -715,6 +715,18 @@ def trainCycle(image_datasets, model):
                 print(e)
                 print(torch.cuda.memory_summary())
                 print(torch.cuda.memory_stats())
+                all_variables = dir()
+  
+                # Iterate over the whole list where dir( )
+                # is stored.
+                import sys
+                for name in all_variables:
+                    
+                    # Print the item if it doesn't start with '__'
+                    if not name.startswith('__'):
+                        print(sys.getrefcount(name))
+                        myvalue = eval(name)
+                        print(name, "is", type(myvalue), "and is equal to ", myvalue)
                 oom = True
                 
 
