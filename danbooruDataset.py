@@ -196,7 +196,7 @@ def DFServerWorkerProcess(workQueue, myDF, tagList, imageRoot):
 class DanbooruDatasetWithServer(torch.utils.data.Dataset):
 
 
-    def __init__(self, postData, tagData, imageRoot, cacheRoot, size, serverWorkerCount, transform=None):
+    def __init__(self, postData, tagData, imageRoot, cacheRoot, size, serverWorkerCount, override_tags = False transform=None):
 
         #PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True
         #self.classes = {classIndex : className for classIndex, className in enumerate(tagList)} #property of dataset?
@@ -211,6 +211,7 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
         self.serverWorkerCount = serverWorkerCount
         self.serverProcessPool = []
         self.workQueue = multiprocessing.Queue()
+        self.override_tags = override_tags
         
         self.cacheRoot = cacheRoot
         for nthWorkerProcess in range(self.serverWorkerCount):
@@ -256,6 +257,22 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
             cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
             cachedSample = bz2.BZ2File(cachePath, 'rb')
             image, postTags,_ = cPickle.load(cachedSample)
+            
+            if self.override_tags:
+                postTagList = set(postData.loc["tag_string"].split()).intersection(set(tagList.to_list()))
+
+                # one-hot encode the tags of a given post
+                # TODO find better way to find matching tags
+                postTags = []
+                for key in list(tagList.to_list()):
+                    match = False
+                    for tag in postTagList:
+                        if tag == key:
+                            match = True
+
+                    postTags.append(int(match))
+            
+            postTags = torch.Tensor(postTags)
             #print(f"got pickle from {cachePath}")
         except:
 
