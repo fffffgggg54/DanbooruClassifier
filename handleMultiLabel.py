@@ -273,7 +273,7 @@ class getDecisionBoundary(nn.Module):
         if self.thresholdPerClass == None:
             classCount = preds.size(dim=1)
             self.device = preds.device
-            self.thresholdPerClass = torch.ones(classCount, device=self.currDevice) * self.initial_threshold
+            self.thresholdPerClass = torch.ones(classCount, device=self.device) * self.initial_threshold
         
         
         with torch.no_grad():
