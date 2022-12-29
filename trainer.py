@@ -491,7 +491,7 @@ def trainCycle(image_datasets, model):
                 boundary = None
                 model.zero_grad()
                 model_cpy = model.to('cpu')
-                optimizer_cpy = optimizer.to('cpu')
+                #optimizer_cpy = optimizer.to('cpu')
                 boundaryCal_cpy = boundaryCalculator.to('cpu')
                 del model
                 del imageBatch
@@ -509,7 +509,7 @@ def trainCycle(image_datasets, model):
                     torch.cuda.empty_cache()
                 
                 model = model_cpy.to(device, memory_format=memory_format)
-                optimizer = optimizer_cpy.to(device, memory_format=memory_format)
+                #optimizer = optimizer_cpy.to(device, memory_format=memory_format)
                 boundaryCalculator = boundaryCal_cpy.to(device, memory_format=memory_format)
                 
                 
