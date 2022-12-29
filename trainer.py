@@ -109,7 +109,7 @@ FLAGS['lr_warmup_epochs'] = 2
 
 FLAGS['weight_decay'] = 2e-2
 
-FLAGS['resume_epoch'] = 1
+FLAGS['resume_epoch'] = 34
 
 FLAGS['finetune'] = False
 
@@ -687,11 +687,16 @@ def trainCycle(image_datasets, model):
                 
                 dataloaders[phase] = getDataLoader(image_datasets[phase], batch_size)
                 
+                
+                
                 if phase == 'train':
                     FLAGS['gradient_accumulation_iterations'] = FLAGS['gradient_accumulation_iterations'] * 2
                     print(f"setting training gradient accumulation epochs to {FLAGS['gradient_accumulation_iterations']}")
                 torch.cuda.empty_cache()
                 gc.collect()
+                
+                imageBatch = None
+                tagBatch = None
                         
         
         
