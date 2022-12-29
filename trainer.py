@@ -719,7 +719,7 @@ def trainCycle(image_datasets, model):
                 # Iterate over the whole list where dir( )
                 # is stored.
                 import sys
-                for name in all_variables: 
+                for name in all_variables:
                     # Print the item if it doesn't start with '__'
                     if not name.startswith('__'):
                         print(sys.getrefcount(name))
