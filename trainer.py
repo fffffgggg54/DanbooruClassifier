@@ -495,6 +495,15 @@ def trainCycle(image_datasets, model):
                     torch.cuda.empty_cache()
                 
                 model = model_cpy.to(device, memory_format=memory_format)
+                
+                
+                all_variables = dir()
+                import sys
+                for name in all_variables:
+                    if not name.startswith('__'):
+                        print(sys.getrefcount(name))
+                        myvalue = eval(name)
+                        print(name, "is", type(myvalue), "and is equal to ", myvalue)
                 oom = False
 
             try:
@@ -715,13 +724,7 @@ def trainCycle(image_datasets, model):
                 print(e)
                 print(torch.cuda.memory_summary())
                 print(torch.cuda.memory_stats())
-                all_variables = dir()
-                import sys
-                for name in all_variables:
-                    if not name.startswith('__'):
-                        print(sys.getrefcount(name))
-                        myvalue = eval(name)
-                        print(name, "is", type(myvalue), "and is equal to ", myvalue)
+
                 oom = True
                 
 
