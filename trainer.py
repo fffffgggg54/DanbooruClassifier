@@ -481,11 +481,15 @@ def trainCycle(image_datasets, model):
                 
                 imageBatch = None
                 tagBatch = None
+                images = None
+                tags = None
                 model.zero_grad()
                 model_cpy = model.to('cpu')
                 del model
                 del imageBatch
                 del tagBatch
+                del images
+                del tags
                 gc.collect()
                 with torch.no_grad():
                     torch.cuda.empty_cache()
