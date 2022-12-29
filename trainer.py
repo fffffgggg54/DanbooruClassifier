@@ -483,18 +483,34 @@ def trainCycle(image_datasets, model):
                 tagBatch = None
                 images = None
                 tags = None
+                multiAccuracy = None
+                outputs = None
+                preds = None
+                predsModified = None
+                loss = None
+                boundary = None
                 model.zero_grad()
                 model_cpy = model.to('cpu')
+                optimizer_cpy = optimizer.to('cpu')
+                boundaryCal_cpy = boundaryCalculator.to('cpu')
                 del model
                 del imageBatch
                 del tagBatch
                 del images
                 del tags
+                del multiAccuracy
+                del outputs
+                del preds
+                del predsModified
+                del loss
+                del boundary
                 gc.collect()
                 with torch.no_grad():
                     torch.cuda.empty_cache()
                 
                 model = model_cpy.to(device, memory_format=memory_format)
+                optimizer = optimizer_cpy.to(device, memory_format=memory_format)
+                boundaryCalculator = boundaryCal_cpy.to(device, memory_format=memory_format)
                 
                 
                 all_variables = dir()
