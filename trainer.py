@@ -447,6 +447,8 @@ def trainCycle(image_datasets, model):
     
     epoch = FLAGS['resume_epoch']
     
+    oom = False
+    
     while (epoch < FLAGS['num_epochs']):
         prior = MLCSL.ComputePrior(classes, device2)
         epochTime = time.time()
@@ -682,7 +684,9 @@ def trainCycle(image_datasets, model):
             except Exception as e:
                 print(e)
                 print(torch.cuda.memory_summary())
+                oom = True
                 
+            if oom:
                 batch_size = int(dataloaders[phase].batch_size / 2)
                 print(f'setting batch size of {phase} dataloader to {batch_size}')
                 
@@ -697,14 +701,15 @@ def trainCycle(image_datasets, model):
                 
                 imageBatch = None
                 tagBatch = None
-                model.zero_grad()
-                model_cpy = model.to('cpu')
-                del model
+                #model.zero_grad()
+                #model_cpy = model.to('cpu')
+                #del model
                 gc.collect()
                 with torch.no_grad():
                     torch.cuda.empty_cache()
                 
-                model = model_cpy.to(device, memory_format=memory_format)
+                #model = model_cpy.to(device, memory_format=memory_format)
+                oom = False
                 
         
         
