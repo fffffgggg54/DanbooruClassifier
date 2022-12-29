@@ -273,11 +273,10 @@ class getDecisionBoundary(nn.Module):
         if self.thresholdPerClass == None:
             classCount = preds.size(dim=1)
             self.device = preds.device
-            self.thresholdPerClass = torch.ones(classCount) * self.initial_threshold
+            self.thresholdPerClass = torch.ones(classCount, device=self.currDevice) * self.initial_threshold
         
         
         with torch.no_grad():
-            self.thresholdPerClass.to(preds.device)
             # TODO update with logic to include current thresholds in calculation of per-batch threshold
             threshold_min = torch.ones(len(self.thresholdPerClass), device=self.thresholdPerClass.device) * self.threshold_min
             threshold_max = torch.ones(len(self.thresholdPerClass), device=self.thresholdPerClass.device) * self.threshold_max
@@ -293,7 +292,7 @@ class getDecisionBoundary(nn.Module):
                 
                 while (1 - adjustmentStopMask).sum() > 0:
                     #print((1 - adjustmentStopMask).sum())
-                    
+                    self.thresholdPerClass.to(preds.device)
                     predsModified = (preds > threshold).float()
                     metrics = getAccuracy(predsModified, targs)
 
