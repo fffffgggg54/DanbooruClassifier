@@ -99,8 +99,8 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 256
-FLAGS['gradient_accumulation_iterations'] = 8
+FLAGS['batch_size'] = 128
+FLAGS['gradient_accumulation_iterations'] = 16
 
 FLAGS['base_learning_rate'] = 3e-3
 FLAGS['base_batch_size'] = 2048
@@ -109,7 +109,7 @@ FLAGS['lr_warmup_epochs'] = 2
 
 FLAGS['weight_decay'] = 2e-2
 
-FLAGS['resume_epoch'] = 34
+FLAGS['resume_epoch'] = 75
 
 FLAGS['finetune'] = False
 
