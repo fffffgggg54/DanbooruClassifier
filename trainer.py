@@ -644,7 +644,7 @@ def trainCycle(image_datasets, model):
                     AvgAccuracy = torch.stack(AccuracyRunning)
                     AvgAccuracy = AvgAccuracy.mean(dim=0)
                     LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames, boundaryCalculator.thresholdPerClass))
-                    LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[0][6], reverse=True)
+                    LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[0][8], reverse=True)
                     MeanStackedAccuracy = AvgAccuracy.mean(dim=0)
                     MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
                     print(*LabelledAccuracySorted, sep="\n")
