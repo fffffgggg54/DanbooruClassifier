@@ -87,7 +87,7 @@ FLAGS['device2'] = FLAGS['device']
 if(torch.has_mps == True): FLAGS['device2'] = "cpu"
 FLAGS['use_AMP'] = True
 FLAGS['use_scaler'] = True
-#if(FLAGS['device'].type == 'cuda'): FLAGS['use_scaler'] = True
+#if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
 # dataloader config
 
@@ -99,17 +99,17 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 128
-FLAGS['gradient_accumulation_iterations'] = 16
+FLAGS['batch_size'] = 256
+FLAGS['gradient_accumulation_iterations'] = 8
 
 FLAGS['base_learning_rate'] = 3e-3
 FLAGS['base_batch_size'] = 2048
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
-FLAGS['lr_warmup_epochs'] = 2
+FLAGS['lr_warmup_epochs'] = 5
 
 FLAGS['weight_decay'] = 2e-2
 
-FLAGS['resume_epoch'] = 75
+FLAGS['resume_epoch'] = 0
 
 FLAGS['finetune'] = False
 
@@ -373,9 +373,7 @@ def trainCycle(image_datasets, model):
 
     timm.utils.jit.set_jit_fuser("te")
     
-    starting_batch_sizes = {'train':FLAGS['batch_size'], 'val':FLAGS['batch_size']/2}
-    
-    dataloaders = {x: getDataLoader(image_datasets[x], int(starting_batch_sizes[x])) for x in image_datasets} # set up dataloaders
+    dataloaders = {x: getDataLoader(image_datasets[x], FLAGS['batch_size']) for x in image_datasets} # set up dataloaders
     
     
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
@@ -447,8 +445,6 @@ def trainCycle(image_datasets, model):
     
     epoch = FLAGS['resume_epoch']
     
-    oom = False
-    
     while (epoch < FLAGS['num_epochs']):
         prior = MLCSL.ComputePrior(classes, device2)
         epochTime = time.time()
@@ -466,65 +462,6 @@ def trainCycle(image_datasets, model):
         
         while currPhase < len(phases):
             phase = phases[currPhase]
-            if oom:
-                batch_size = int(dataloaders[phase].batch_size / 2)
-                print(f'setting batch size of {phase} dataloader to {batch_size}')
-                
-                dataloaders[phase] = getDataLoader(image_datasets[phase], batch_size)
-                
-                
-                
-                if phase == 'train':
-                    FLAGS['gradient_accumulation_iterations'] = FLAGS['gradient_accumulation_iterations'] * 2
-                    print(f"setting training gradient accumulation epochs to {FLAGS['gradient_accumulation_iterations']}")
-                
-                
-                imageBatch = None
-                tagBatch = None
-                images = None
-                tags = None
-                multiAccuracy = None
-                outputs = None
-                preds = None
-                predsModified = None
-                loss = None
-                boundary = None
-                model.zero_grad()
-                model = model.to('cpu')
-                #optimizer_cpy = optimizer.to('cpu')
-                boundaryCal_cpy = boundaryCalculator.to('cpu')
-                #del model
-                del imageBatch
-                del tagBatch
-                del images
-                del tags
-                del multiAccuracy
-                del outputs
-                del preds
-                del predsModified
-                del loss
-                del boundary
-                gc.collect()
-                with torch.no_grad():
-                    torch.cuda.empty_cache()
-                    
-                '''
-                all_variables = dir()
-                import sys
-                for name in all_variables:
-                    if not name.startswith('__'):
-                        print(sys.getrefcount(name))
-                        myvalue = eval(name)
-                        print(name, "is", type(myvalue), "and is equal to ", myvalue)
-                '''
-                print(boundaryCalculator.thresholdPerClass.device)
-                #print(boundaryCalculator.threshold_min.device)
-                model = model.to(device, memory_format=memory_format)
-                #optimizer = optimizer_cpy.to(device, memory_format=memory_format)
-                boundaryCalculator = boundaryCal_cpy.to(device, memory_format=memory_format)
-                
-
-                oom = False
 
             try:
                 if phase == 'train':
@@ -536,17 +473,8 @@ def trainCycle(image_datasets, model):
                     
                     print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
                     
-                    myDataset.resize_fn = transforms.Resize(dynamicResizeDim)
-                    
-                    size_bins = (224, 384)
-                    
-                    size_bin_index = 0
-                    while dynamicResizeDim > size_bins[size_bin_index]:
-                        size_bin_index += 1
-                    
-                    myDataset.size = size_bins[size_bin_index]
-                    
-                    myDataset.transform = transforms.Compose([transforms.RandAugment(magnitude = epoch, num_magnitude_bins = FLAGS['num_epochs'] * 3),
+                    myDataset.transform = transforms.Compose([transforms.Resize(dynamicResizeDim),
+                                                              transforms.RandAugment(magnitude = epoch, num_magnitude_bins = FLAGS['num_epochs'] * 3),
                                                               #transforms.RandAugment(),
                                                               #transforms.TrivialAugmentWide(),
                                                               #danbooruDataset.CutoutPIL(cutout_factor=0.2),
@@ -567,9 +495,6 @@ def trainCycle(image_datasets, model):
                     if(FLAGS['skip_test_set'] == True):
                         print("skipping...")
                         break;
-                    
-                    myDataset.resize_fn = nn.Identity()
-                    myDataset.size = FLAGS['image_size']
                     
                     myDataset.transform = transforms.Compose([#transforms.Resize((224,224)),
                                                               transforms.ToTensor(),
@@ -593,7 +518,6 @@ def trainCycle(image_datasets, model):
 
                     imageBatch = images.to(device, memory_format=memory_format, non_blocking=True)
                     tagBatch = tags.to(device, non_blocking=True)
-                    
                     
                     
                     with torch.set_grad_enabled(phase == 'train'):
@@ -742,15 +666,17 @@ def trainCycle(image_datasets, model):
                 currPhase += 1
             except Exception as e:
                 print(e)
-                print(torch.cuda.memory_summary())
-                print(torch.cuda.memory_stats())
-                if 'out of memory' in str(e):
-                    oom = True
-                else:
-                    raise e
                 
-
+                batch_size = int(dataloaders[phase].batch_size / 2)
+                print(f'setting batch size of {phase} dataloader to {batch_size}')
                 
+                dataloaders[phase] = getDataLoader(image_datasets[phase], batch_size)
+                
+                if phase == 'train':
+                    FLAGS['gradient_accumulation_iterations'] = FLAGS['gradient_accumulation_iterations'] * 2
+                    print(f"setting training gradient accumulation epochs to {FLAGS['gradient_accumulation_iterations']}")
+            
+                        
         
         
         

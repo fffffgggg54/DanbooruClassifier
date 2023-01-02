@@ -1,6 +1,5 @@
 import os
 import torch
-import torch.nn as nn
 import torch.utils.data
 import pandas as pd
 import time
@@ -187,16 +186,16 @@ class DanbooruDataset(torch.utils.data.Dataset):
         
         
 
-def DFServerWorkerProcess(workQueue, myDF, tagList, imageRoot):
+def DFServerWorkerProcess(workQueue, myDF, tagList, imageRoot, cacheRoot):
     while(1):
         (index, returnConnection) = workQueue.get()
-        returnConnection.send((myDF.iloc[index].copy(deep=True), tagList, imageRoot))
+        returnConnection.send((myDF.iloc[index].copy(deep=True), tagList, imageRoot, cacheRoot))
         returnConnection.close()
 
 class DanbooruDatasetWithServer(torch.utils.data.Dataset):
 
 
-    def __init__(self, postData, tagData, imageRoot, cacheRoot, size, serverWorkerCount, override_tags = False, transform=None):
+    def __init__(self, postData, tagData, imageRoot, cacheRoot, size, serverWorkerCount, transform=None):
 
         #PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True
         #self.classes = {classIndex : className for classIndex, className in enumerate(tagList)} #property of dataset?
@@ -207,19 +206,18 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
         self.transform = transform  #transform, callable?
         #self.cacheRoot = cacheRoot  #string
         self.size = size
-        self.resize_fn = nn.Identity()
         self.serverWorkerCount = serverWorkerCount
         self.serverProcessPool = []
         self.workQueue = multiprocessing.Queue()
-        self.override_tags = override_tags
-        
-        self.cacheRoot = cacheRoot
+        if cacheRoot is not None:
+            cacheRoot = cacheRoot + str(size) + '/'
         for nthWorkerProcess in range(self.serverWorkerCount):
             currProcess = multiprocessing.Process(target=DFServerWorkerProcess,
                 args=(self.workQueue,
                     postData.copy(deep=True),
                     pd.Series(tagData.name.copy(deep=True), dtype=pd.StringDtype()),
-                    imageRoot,),
+                    imageRoot,
+                    cacheRoot,),
                 daemon = True)
             currProcess.start()
             self.serverProcessPool.append(currProcess)
@@ -240,9 +238,7 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
 
         self.workQueue.put((index, sendConn))
 
-        (postData, tagList, imageRoot) = recvConn.recv()
-        if self.cacheRoot is not None:
-            cacheRoot = self.cacheRoot + str(self.size) + '/'
+        (postData, tagList, imageRoot, cacheRoot) = recvConn.recv()
 
         postID = int(postData.loc["id"])
         image = torch.Tensor()
@@ -257,22 +253,6 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
             cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
             cachedSample = bz2.BZ2File(cachePath, 'rb')
             image, postTags,_ = cPickle.load(cachedSample)
-            
-            if self.override_tags:
-                postTagList = set(postData.loc["tag_string"].split()).intersection(set(tagList.to_list()))
-
-                # one-hot encode the tags of a given post
-                # TODO find better way to find matching tags
-                postTags = []
-                for key in list(tagList.to_list()):
-                    match = False
-                    for tag in postTagList:
-                        if tag == key:
-                            match = True
-
-                    postTags.append(int(match))
-            
-            postTags = torch.Tensor(postTags)
             #print(f"got pickle from {cachePath}")
         except:
 
@@ -357,11 +337,9 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
                 cacheDir = create_dir(cacheRoot + str(postID % 1000).zfill(4))
                 cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
                 with bz2.BZ2File(cachePath, 'w') as cachedSample: cPickle.dump((image, postTags, postID), cachedSample)
-        
-        
-        
+
         image = transforms.functional.to_pil_image(image)
-        image = self.resize_fn(image)
+
         if self.transform: image = self.transform(image)
 
         if bruh == True: print("asdf")
