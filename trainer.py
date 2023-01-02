@@ -59,7 +59,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/davit_tiny-Hill/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_s-Hill/'
 
 
 # post importer config
@@ -85,8 +85,8 @@ FLAGS['ngpu'] = torch.cuda.is_available()
 FLAGS['device'] = torch.device("cuda:1" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
 FLAGS['device2'] = FLAGS['device']
 if(torch.has_mps == True): FLAGS['device2'] = "cpu"
-#FLAGS['use_AMP'] = True if FLAGS['device'] == 'cuda:0' else False
-FLAGS['use_AMP'] = True
+FLAGS['use_AMP'] = True if FLAGS['device'] == 'cuda:0' else False
+#FLAGS['use_AMP'] = True
 FLAGS['use_scaler'] = FLAGS['use_AMP']
 #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
@@ -100,7 +100,7 @@ if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 128
+FLAGS['batch_size'] = 256
 FLAGS['gradient_accumulation_iterations'] = 8
 
 FLAGS['base_learning_rate'] = 3e-3
