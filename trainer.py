@@ -423,7 +423,7 @@ def trainCycle(image_datasets, model):
     
     boundaryCalculator = MLCSL.getDecisionBoundary()
     if (FLAGS['resume_epoch'] > 0):
-        boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth')
+        boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth').to(device)
     
     if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
     
