@@ -325,7 +325,7 @@ def modelSetup(classes):
     model = timm.create_model('lcnet_100', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     
-    model = ml_decoder.add_ml_decoder_head(model)
+    #model = ml_decoder.add_ml_decoder_head(model)
     
     # cvt
     
