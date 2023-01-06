@@ -465,207 +465,208 @@ def trainCycle(image_datasets, model):
         while currPhase < len(phases):
             phase = phases[currPhase]
 
-            try:
+            #try:
+            if phase == 'train':
+                model.train()  # Set model to training mode
+                #if (hasTPU == True): xm.master_print("training set")
+                print("training set")
+                
+                dynamicResizeDim = int(FLAGS['image_size']/2 + epoch * (FLAGS['image_size']-FLAGS['image_size']/2)/FLAGS['num_epochs'])
+                
+                print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
+                
+                myDataset.transform = transforms.Compose([transforms.Resize(dynamicResizeDim),
+                                                          transforms.RandAugment(magnitude = epoch, num_magnitude_bins = FLAGS['num_epochs'] * 3),
+                                                          #transforms.RandAugment(),
+                                                          #transforms.TrivialAugmentWide(),
+                                                          #danbooruDataset.CutoutPIL(cutout_factor=0.2),
+                                                          transforms.ToTensor(),
+                                                          #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+                                                          ])
+                
+                
+            if phase == 'val':
+                
+                
+
+                modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
+                torch.save(model.state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
+                torch.save(boundaryCalculator.thresholdPerClass, modelDir + 'thresholds.pth')
+                model.eval()   # Set model to evaluate mode
+                print("validation set")
+                if(FLAGS['skip_test_set'] == True):
+                    print("skipping...")
+                    break;
+                
+                myDataset.transform = transforms.Compose([#transforms.Resize((224,224)),
+                                                          transforms.ToTensor(),
+                                                          #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+                                                          ])
+            
+            # For each batch in the dataloader
+            '''
+            with torch.profiler.profile(
+                schedule=torch.profiler.schedule(wait=1, warmup=1, active=3, repeat=2),
+                on_trace_ready=torch.profiler.tensorboard_trace_handler('./log/latestRun'),
+                record_shapes=True,
+                profile_memory=True,
+                with_stack=True
+                ) as prof:
+            '''
+            
+            loaderIterable = enumerate(dataloaders[phase])
+            for i, (images, tags) in loaderIterable:
+                
+
+                imageBatch = images.to(device, memory_format=memory_format, non_blocking=True)
+                tagBatch = tags.to(device, non_blocking=True)
+                
+                
+                with torch.set_grad_enabled(phase == 'train'):
+                    # TODO switch between using autocast and not using it
+                    
+                    with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
+                        
+                        outputs = model(imageBatch)
+                        #outputs = model(imageBatch).logits
+                        preds = torch.sigmoid(outputs)
+                        boundary = boundaryCalculator(preds.to(device2), tagBatch.to(device2))
+                        predsModified = (preds > boundary).float()
+                        multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
+                        
+                        outputs = outputs.float()
+                        '''
+                        if phase == 'val':
+                            #output_ema = torch.sigmoid(ema.module(imageBatch)).cpu()
+                            output_regular = preds.cpu()
+                        #loss = criterion(torch.mul(preds, tagBatch), tagBatch)
+                        #loss = criterion(outputs, tagBatch)
+                        '''
+
+                        #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
+                        loss = criterion(outputs.to(device2), tagBatch.to(device2))
+                        #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
+                        #loss, textOutput = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
+                        #loss = criterion(outputs.cpu(), tags.cpu())
+                        
+                        #loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([2,1,2,1]).to(device2)).sum()
+                        #loss = (1 - multiAccuracy[:,4:]).pow(2).sum()
+                        #loss = (1 - multiAccuracy[:,6:7]).pow(2).sum()     # high precision with easy classes
+                        #loss = (multiAccuracy[:,1] + multiAccuracy[:,2]).pow(2).sum()
+                        #loss = criterion(multiAccuracy, referenceTable)
+                        #loss = (multiAccuracy - referenceTable).pow(2).sum()
+                        #loss = (-torch.log(multiAccuracy[0,4:])).sum()
+                        #loss = (1 - multiAccuracy[:,4:]).pow(2).div(MeanStackedAccuracyStored.to(device2)).sum()
+                        #loss = (1 - multiAccuracy[:,4:]).sum()
+                        #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).sum()
+                        #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).pow(2).sum()
+                        #loss = (1 - multiAccuracy[:,8]).pow(2).sum()
+                        #model.zero_grad()
+                        # backward + optimize only if in training phase
+                        # TODO this is slow, profile and optimize
+                        if phase == 'train' and (loss.isnan() == False):
+                            if (FLAGS['use_scaler'] == True):   # cuda gpu case
+                                scaler.scale(loss).backward()   #lotta time spent here
+                                if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
+                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                    scaler.step(optimizer)
+                                    scaler.update()
+                                    optimizer.zero_grad()
+                            else:                               # apple gpu/cpu case
+                                loss.backward()
+                                if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
+                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                    optimizer.step()
+                                    optimizer.zero_grad()
+
+                            #ema.update(model)
+                            prior.update(outputs.to(device2))
+                        
+                        if (phase == 'val'):
+                            # for mAP calculation
+                            targets = tags.numpy(force=True)
+                            preds_regular = preds.numpy(force=True)
+                            #preds_ema = output_ema.cpu().detach().numpy()
+                            accuracy = MLCSL.mAP(targets, preds_regular)
+                            AP_regular.append(accuracy)
+                            
+                            #AP_ema.append(MLCSL.mAP(targets, preds_ema))
+                            AccuracyRunning.append(multiAccuracy)
+                
+                #print(device)
+                if i % stepsPerPrintout == 0:
+                    
+                    if (phase == 'train'):
+                        targets_batch = tags.numpy(force=True)
+                        preds_regular_batch = preds.numpy(force=True)
+                        accuracy = MLCSL.mAP(targets_batch, preds_regular_batch)
+                        
+                    
+
+                    imagesPerSecond = (dataloaders[phase].batch_size*stepsPerPrintout)/(time.time() - cycleTime)
+                    cycleTime = time.time()
+
+                    #currPostTags = []
+                    #batchTagAccuracy = list(zip(tagNames, perTagAccuracy.tolist()))
+                    
+                    # TODO find better way to generate this output that doesn't involve iterating, zip()?
+                    #for tagIndex, tagVal in enumerate(torch.mul(preds, tagBatch)[0]):
+                    #    if tagVal.item() != 0:
+                    #        currPostTags.append((tagNames[tagIndex], tagVal.item()))
+                    
+                   
+                    #print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f\tAccuracy: %.2f\tP4: %.2f\t%s' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), loss, imagesPerSecond, accuracy, multiAccuracy.mean(dim=0) * 100, textOutput))
+                    torch.set_printoptions(linewidth = 200, sci_mode = False)
+                    print(f"[{epoch}/{FLAGS['num_epochs']}][{i}/{len(dataloaders[phase])}]\tLoss: {loss:.4f}\tImages/Second: {imagesPerSecond:.4f}\tAccuracy: {accuracy:.2f}\t {[f'{num:.4f}' for num in (multiAccuracy.mean(dim=0) * 100).tolist()]}\t{textOutput}")
+                    torch.set_printoptions(profile='default')
+                    #print(id[0])
+                    #print(currPostTags)
+                    #print(sorted(batchTagAccuracy, key = lambda x: x[1], reverse=True))
+                    
+                    torch.cuda.empty_cache()
+                #losses.append(loss)
+                
+                if (phase == 'val'):
+                    if best is None:
+                        best = (float(loss), epoch, i, accuracy.item())
+                    elif best[0] > float(loss):
+                        best = (float(loss), epoch, i, accuracy.item())
+                        print(f"NEW BEST: {best}!")
+                
                 if phase == 'train':
-                    model.train()  # Set model to training mode
-                    #if (hasTPU == True): xm.master_print("training set")
-                    print("training set")
-                    
-                    dynamicResizeDim = int(FLAGS['image_size']/2 + epoch * (FLAGS['image_size']-FLAGS['image_size']/2)/FLAGS['num_epochs'])
-                    
-                    print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
-                    
-                    myDataset.transform = transforms.Compose([transforms.Resize(dynamicResizeDim),
-                                                              transforms.RandAugment(magnitude = epoch, num_magnitude_bins = FLAGS['num_epochs'] * 3),
-                                                              #transforms.RandAugment(),
-                                                              #transforms.TrivialAugmentWide(),
-                                                              #danbooruDataset.CutoutPIL(cutout_factor=0.2),
-                                                              transforms.ToTensor(),
-                                                              #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-                                                              ])
-                    
-                    
-                if phase == 'val':
-                    
-                    
-
-                    modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
-                    torch.save(model.state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
-                    torch.save(boundaryCalculator.thresholdPerClass, modelDir + 'thresholds.pth')
-                    model.eval()   # Set model to evaluate mode
-                    print("validation set")
-                    if(FLAGS['skip_test_set'] == True):
-                        print("skipping...")
-                        break;
-                    
-                    myDataset.transform = transforms.Compose([#transforms.Resize((224,224)),
-                                                              transforms.ToTensor(),
-                                                              #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-                                                              ])
+                    scheduler.step()
                 
-                # For each batch in the dataloader
-                '''
-                with torch.profiler.profile(
-                    schedule=torch.profiler.schedule(wait=1, warmup=1, active=3, repeat=2),
-                    on_trace_ready=torch.profiler.tensorboard_trace_handler('./log/latestRun'),
-                    record_shapes=True,
-                    profile_memory=True,
-                    with_stack=True
-                    ) as prof:
-                '''
+                #print(device)
+                #if(FLAGS['ngpu'] > 0):
+                    #torch.cuda.empty_cache()
+            if ((phase == 'val') and (FLAGS['skip_test_set'] == False)):
+                #torch.set_printoptions(profile="full")
                 
-                loaderIterable = enumerate(dataloaders[phase])
-                for i, (images, tags) in loaderIterable:
-                    
-
-                    imageBatch = images.to(device, memory_format=memory_format, non_blocking=True)
-                    tagBatch = tags.to(device, non_blocking=True)
-                    
-                    
-                    with torch.set_grad_enabled(phase == 'train'):
-                        # TODO switch between using autocast and not using it
-                        
-                        with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
-                            
-                            outputs = model(imageBatch)
-                            #outputs = model(imageBatch).logits
-                            preds = torch.sigmoid(outputs)
-                            boundary = boundaryCalculator(preds.to(device2), tagBatch.to(device2))
-                            predsModified = (preds > boundary).float()
-                            multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
-                            
-                            outputs = outputs.float()
-                            '''
-                            if phase == 'val':
-                                #output_ema = torch.sigmoid(ema.module(imageBatch)).cpu()
-                                output_regular = preds.cpu()
-                            #loss = criterion(torch.mul(preds, tagBatch), tagBatch)
-                            #loss = criterion(outputs, tagBatch)
-                            '''
-
-                            #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                            loss = criterion(outputs.to(device2), tagBatch.to(device2))
-                            #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
-                            #loss, textOutput = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
-                            #loss = criterion(outputs.cpu(), tags.cpu())
-                            
-                            #loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([2,1,2,1]).to(device2)).sum()
-                            #loss = (1 - multiAccuracy[:,4:]).pow(2).sum()
-                            #loss = (1 - multiAccuracy[:,6:7]).pow(2).sum()     # high precision with easy classes
-                            #loss = (multiAccuracy[:,1] + multiAccuracy[:,2]).pow(2).sum()
-                            #loss = criterion(multiAccuracy, referenceTable)
-                            #loss = (multiAccuracy - referenceTable).pow(2).sum()
-                            #loss = (-torch.log(multiAccuracy[0,4:])).sum()
-                            #loss = (1 - multiAccuracy[:,4:]).pow(2).div(MeanStackedAccuracyStored.to(device2)).sum()
-                            #loss = (1 - multiAccuracy[:,4:]).sum()
-                            #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).sum()
-                            #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).pow(2).sum()
-                            #loss = (1 - multiAccuracy[:,8]).pow(2).sum()
-                            #model.zero_grad()
-                            # backward + optimize only if in training phase
-                            # TODO this is slow, profile and optimize
-                            if phase == 'train' and (loss.isnan() == False):
-                                if (FLAGS['use_scaler'] == True):   # cuda gpu case
-                                    scaler.scale(loss).backward()   #lotta time spent here
-                                    if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                        nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
-                                        scaler.step(optimizer)
-                                        scaler.update()
-                                        optimizer.zero_grad()
-                                else:                               # apple gpu/cpu case
-                                    loss.backward()
-                                    if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                        nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
-                                        optimizer.step()
-                                        optimizer.zero_grad()
-
-                                #ema.update(model)
-                                prior.update(outputs.to(device2))
-                            
-                            if (phase == 'val'):
-                                # for mAP calculation
-                                targets = tags.numpy(force=True)
-                                preds_regular = preds.numpy(force=True)
-                                #preds_ema = output_ema.cpu().detach().numpy()
-                                accuracy = MLCSL.mAP(targets, preds_regular)
-                                AP_regular.append(accuracy)
-                                
-                                #AP_ema.append(MLCSL.mAP(targets, preds_ema))
-                                AccuracyRunning.append(multiAccuracy)
-                    
-                    #print(device)
-                    if i % stepsPerPrintout == 0:
-                        
-                        if (phase == 'train'):
-                            targets_batch = tags.numpy(force=True)
-                            preds_regular_batch = preds.numpy(force=True)
-                            accuracy = MLCSL.mAP(targets_batch, preds_regular_batch)
-                            
-                        
-
-                        imagesPerSecond = (dataloaders[phase].batch_size*stepsPerPrintout)/(time.time() - cycleTime)
-                        cycleTime = time.time()
-
-                        #currPostTags = []
-                        #batchTagAccuracy = list(zip(tagNames, perTagAccuracy.tolist()))
-                        
-                        # TODO find better way to generate this output that doesn't involve iterating, zip()?
-                        #for tagIndex, tagVal in enumerate(torch.mul(preds, tagBatch)[0]):
-                        #    if tagVal.item() != 0:
-                        #        currPostTags.append((tagNames[tagIndex], tagVal.item()))
-                        
-                       
-                        #print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f\tAccuracy: %.2f\tP4: %.2f\t%s' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), loss, imagesPerSecond, accuracy, multiAccuracy.mean(dim=0) * 100, textOutput))
-                        torch.set_printoptions(linewidth = 200, sci_mode = False)
-                        print(f"[{epoch}/{FLAGS['num_epochs']}][{i}/{len(dataloaders[phase])}]\tLoss: {loss:.4f}\tImages/Second: {imagesPerSecond:.4f}\tAccuracy: {accuracy:.2f}\t {[f'{num:.4f}' for num in (multiAccuracy.mean(dim=0) * 100).tolist()]}\t{textOutput}")
-                        torch.set_printoptions(profile='default')
-                        #print(id[0])
-                        #print(currPostTags)
-                        #print(sorted(batchTagAccuracy, key = lambda x: x[1], reverse=True))
-                        
-                        torch.cuda.empty_cache()
-                    #losses.append(loss)
-                    
-                    if (phase == 'val'):
-                        if best is None:
-                            best = (float(loss), epoch, i, accuracy.item())
-                        elif best[0] > float(loss):
-                            best = (float(loss), epoch, i, accuracy.item())
-                            print(f"NEW BEST: {best}!")
-                    
-                    if phase == 'train':
-                        scheduler.step()
-                    
-                    #print(device)
-                    #if(FLAGS['ngpu'] > 0):
-                        #torch.cuda.empty_cache()
-                if ((phase == 'val') and (FLAGS['skip_test_set'] == False)):
-                    #torch.set_printoptions(profile="full")
-                    
-                    AvgAccuracy = torch.stack(AccuracyRunning)
-                    AvgAccuracy = AvgAccuracy.mean(dim=0)
-                    LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames, boundaryCalculator.thresholdPerClass))
-                    LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[0][8], reverse=True)
-                    MeanStackedAccuracy = AvgAccuracy.mean(dim=0)
-                    MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
-                    print(*LabelledAccuracySorted, sep="\n")
-                    #torch.set_printoptions(profile="default")
-                    print(MeanStackedAccuracy)
-                    
-                    
-                    prior.save_prior()
-                    prior.get_top_freq_classes()
-                    lastPrior = prior.avg_pred_train
-                    print(lastPrior[:30])
-                    
-                    mAP_score_regular = np.mean(AP_regular)
-                    #mAP_score_ema = np.mean(AP_ema)
-                    print("mAP score regular {:.2f}".format(mAP_score_regular))
-                    #top_mAP = max(mAP_score_regular, mAP_score_ema)
-                    if hasattr(criterion, 'tau_per_class'):
-                        print(criterion.tau_per_class)
-                    #print(boundaryCalculator.thresholdPerClass)
-                currPhase += 1
+                AvgAccuracy = torch.stack(AccuracyRunning)
+                AvgAccuracy = AvgAccuracy.mean(dim=0)
+                LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames, boundaryCalculator.thresholdPerClass))
+                LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[0][8], reverse=True)
+                MeanStackedAccuracy = AvgAccuracy.mean(dim=0)
+                MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
+                print(*LabelledAccuracySorted, sep="\n")
+                #torch.set_printoptions(profile="default")
+                print(MeanStackedAccuracy)
+                
+                
+                prior.save_prior()
+                prior.get_top_freq_classes()
+                lastPrior = prior.avg_pred_train
+                print(lastPrior[:30])
+                
+                mAP_score_regular = np.mean(AP_regular)
+                #mAP_score_ema = np.mean(AP_ema)
+                print("mAP score regular {:.2f}".format(mAP_score_regular))
+                #top_mAP = max(mAP_score_regular, mAP_score_ema)
+                if hasattr(criterion, 'tau_per_class'):
+                    print(criterion.tau_per_class)
+                #print(boundaryCalculator.thresholdPerClass)
+            currPhase += 1
+            '''
             except Exception as e:
                 print(e)
                 
@@ -677,7 +678,7 @@ def trainCycle(image_datasets, model):
                 if phase == 'train':
                     FLAGS['gradient_accumulation_iterations'] = FLAGS['gradient_accumulation_iterations'] * 2
                     print(f"setting training gradient accumulation epochs to {FLAGS['gradient_accumulation_iterations']}")
-            
+            '''
                         
         
         
