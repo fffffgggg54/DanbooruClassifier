@@ -623,7 +623,7 @@ def trainCycle(image_datasets, model):
                     #print(currPostTags)
                     #print(sorted(batchTagAccuracy, key = lambda x: x[1], reverse=True))
                     
-                    torch.cuda.empty_cache()
+                    #torch.cuda.empty_cache()
                 #losses.append(loss)
                 
                 if (phase == 'val'):
