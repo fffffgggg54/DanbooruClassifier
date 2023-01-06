@@ -639,6 +639,7 @@ def trainCycle(image_datasets, model):
                     #print(device)
                     #if(FLAGS['ngpu'] > 0):
                         #torch.cuda.empty_cache()
+                    prof.step()
             if ((phase == 'val') and (FLAGS['skip_test_set'] == False)):
                 #torch.set_printoptions(profile="full")
                 
