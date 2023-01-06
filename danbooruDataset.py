@@ -254,6 +254,20 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
             cachedSample = bz2.BZ2File(cachePath, 'rb')
             image, postTags,_ = cPickle.load(cachedSample)
             #print(f"got pickle from {cachePath}")
+            if len(postTags) != len(tagList):
+                postTagList = set(postData.loc["tag_string"].split()).intersection(set(tagList.to_list()))
+
+                # one-hot encode the tags of a given post
+                # TODO find better way to find matching tags
+                postTags = []
+                for key in list(tagList.to_list()):
+                    match = False
+                    for tag in postTagList:
+                        if tag == key:
+                            match = True
+
+                    postTags.append(int(match))
+                postTags = torch.Tensor(postTags)
         except:
 
             postTagList = set(postData.loc["tag_string"].split()).intersection(set(tagList.to_list()))
