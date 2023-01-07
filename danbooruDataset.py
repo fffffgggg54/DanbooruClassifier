@@ -307,8 +307,8 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
 
                 #print("Image saved to " + path)
             # TODO implement switchable cache use
-            '''
-            '''old caching and crawling
+            
+            old caching and crawling
             except FileNotFoundError:
                 
                 try:
@@ -325,7 +325,7 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
                     image = image.convert("RGB")
                     image.save(path)
                     print("Image saved to " + path)
-            ''''''
+            
             #image = ImageOps.exif_transpose(image)
             #imageLoadTime = time.time() - startTime
             #startTime = time.time()
@@ -358,7 +358,6 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
 
         if self.transform: image = self.transform(image)
 
-        if bruh == True: print("asdf")
 
         del postData
         # if(torch.utils.data.get_worker_info().id == 1):objgraph.show_growth() 
