@@ -247,27 +247,28 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
 
 
 
-        try:
-            assert cacheRoot is not None
-            cacheDir = create_dir(cacheRoot + str(postID % 1000).zfill(4))
-            cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
-            cachedSample = bz2.BZ2File(cachePath, 'rb')
-            image, postTags,_ = cPickle.load(cachedSample)
-            #print(f"got pickle from {cachePath}")
-            if len(postTags) != len(tagList):
-                postTagList = set(postData.loc["tag_string"].split()).intersection(set(tagList.to_list()))
+        #try:
+        assert cacheRoot is not None
+        cacheDir = create_dir(cacheRoot + str(postID % 1000).zfill(4))
+        cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
+        cachedSample = bz2.BZ2File(cachePath, 'rb')
+        image, postTags,_ = cPickle.load(cachedSample)
+        #print(f"got pickle from {cachePath}")
+        if len(postTags) != len(tagList):
+            postTagList = set(postData.loc["tag_string"].split()).intersection(set(tagList.to_list()))
 
-                # one-hot encode the tags of a given post
-                # TODO find better way to find matching tags
-                postTags = []
-                for key in list(tagList.to_list()):
-                    match = False
-                    for tag in postTagList:
-                        if tag == key:
-                            match = True
+            # one-hot encode the tags of a given post
+            # TODO find better way to find matching tags
+            postTags = []
+            for key in list(tagList.to_list()):
+                match = False
+                for tag in postTagList:
+                    if tag == key:
+                        match = True
 
-                    postTags.append(int(match))
-                postTags = torch.Tensor(postTags)
+                postTags.append(int(match))
+            postTags = torch.Tensor(postTags)
+        '''
         except:
 
             postTagList = set(postData.loc["tag_string"].split()).intersection(set(tagList.to_list()))
@@ -306,7 +307,8 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
 
                 #print("Image saved to " + path)
             # TODO implement switchable cache use
-            ''' old caching and crawling
+            '''
+            '''old caching and crawling
             except FileNotFoundError:
                 
                 try:
@@ -323,7 +325,7 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
                     image = image.convert("RGB")
                     image.save(path)
                     print("Image saved to " + path)
-            '''
+            ''''''
             #image = ImageOps.exif_transpose(image)
             #imageLoadTime = time.time() - startTime
             #startTime = time.time()
@@ -351,7 +353,7 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
                 cacheDir = create_dir(cacheRoot + str(postID % 1000).zfill(4))
                 cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
                 with bz2.BZ2File(cachePath, 'w') as cachedSample: cPickle.dump((image, postTags, postID), cachedSample)
-
+        '''
         image = transforms.functional.to_pil_image(image)
 
         if self.transform: image = self.transform(image)
