@@ -518,15 +518,15 @@ def trainCycle(image_datasets, model):
             for i, (images, tags) in loaderIterable:
                 
 
-                
+                imageBatch = images.to(device, memory_format=memory_format, non_blocking=True)
+                tagBatch = tags.to(device, non_blocking=True)
                 
                 
                 with torch.set_grad_enabled(phase == 'train'):
                     # TODO switch between using autocast and not using it
                     
                     with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
-                        imageBatch = images.to(device, memory_format=memory_format, non_blocking=True)
-                        tagBatch = tags.to(device, non_blocking=True)
+                        
                         
                         outputs = model(imageBatch)
                         #outputs = model(imageBatch).logits
