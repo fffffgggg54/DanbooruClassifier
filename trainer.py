@@ -114,7 +114,7 @@ FLAGS['resume_epoch'] = 0
 
 FLAGS['finetune'] = False
 
-FLAGS['channels_last'] = True
+FLAGS['channels_last'] = FLAGS['use_AMP']
 
 # debugging config
 
