@@ -59,7 +59,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_s-5500-ASL-BCE/'
+FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tf_efficientnetv2_s-ASL-BCE/'
 
 
 # post importer config
@@ -92,7 +92,7 @@ FLAGS['use_scaler'] = FLAGS['use_AMP']
 
 # dataloader config
 
-FLAGS['num_workers'] = 24
+FLAGS['num_workers'] = 14
 FLAGS['postDataServerWorkerCount'] = 3
 if(torch.has_mps == True): FLAGS['num_workers'] = 2
 if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -110,7 +110,7 @@ FLAGS['lr_warmup_epochs'] = 5
 
 FLAGS['weight_decay'] = 2e-2
 
-FLAGS['resume_epoch'] = 0
+FLAGS['resume_epoch'] = 82
 
 FLAGS['finetune'] = False
 
@@ -181,8 +181,8 @@ def getData():
     tagData.to_pickle(FLAGS['tagDFPickleFiltered'])
     postData.to_pickle(FLAGS['postDFPickleFiltered'])
     '''
-    #tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
-    tagData = pd.read_csv(FLAGS['rootPath'] + 'selected_tags.csv')
+    tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
+    #tagData = pd.read_csv(FLAGS['rootPath'] + 'selected_tags.csv')
     postData = pd.read_pickle(FLAGS['postDFPickleFiltered'])
     #print(postData.info())
     
@@ -324,7 +324,7 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
+    model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     
     #model = ml_decoder.add_ml_decoder_head(model)
