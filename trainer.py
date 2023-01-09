@@ -128,7 +128,7 @@ if currGPU == '3090':
     FLAGS['skip_test_set'] = False
     FLAGS['stepsPerPrintout'] = 50
 
-elif currGPU == 'm40':
+elif currGPU = 'm40':
     FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
     #FLAGS['rootPath'] = "/media/fredo/Datasets/danbooru2021/"
     if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
@@ -142,7 +142,7 @@ elif currGPU == 'm40':
     FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
     FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/levit_cust-ASL-BCE/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_s_ml-decoder-ASL-BCE/'
 
 
     # post importer config
@@ -183,8 +183,8 @@ elif currGPU == 'm40':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 64
-    FLAGS['gradient_accumulation_iterations'] = 32
+    FLAGS['batch_size'] = 128
+    FLAGS['gradient_accumulation_iterations'] = 16
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -264,8 +264,8 @@ def getData():
     tagData.to_pickle(FLAGS['tagDFPickleFiltered'])
     postData.to_pickle(FLAGS['postDFPickleFiltered'])
     '''
-    #tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
-    tagData = pd.read_csv(FLAGS['rootPath'] + 'selected_tags.csv')
+    tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
+    #tagData = pd.read_csv(FLAGS['rootPath'] + 'selected_tags.csv')
     postData = pd.read_pickle(FLAGS['postDFPickleFiltered'])
     #print(postData.info())
     
@@ -405,33 +405,12 @@ def modelSetup(classes):
     # regular timm models
     
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
-    #model = timm.create_model('lcnet_100', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
+    #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
-    #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
+    model = timm.create_model('gcvit_xxtiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     
-    from timm.models.levit import Levit
-    
-    model = Levit(img_size = FLAGS['image_size'],
-            patch_size=16,
-            in_chans=3,
-            num_classes=len(classes),
-            embed_dim=(192, 384, 768),
-            key_dim=32,
-            depth=(4, 4, 4),
-            num_heads=(3, 6, 12),
-            attn_ratio=2,
-            mlp_ratio=2,
-            hybrid_backbone=None,
-            down_ops=None,
-            act_layer='hard_swish',
-            attn_act_layer='hard_swish',
-            use_conv=False,
-            global_pool='avg',
-            drop_rate=0.,
-            drop_path_rate=0.1)
-    
-    #model = ml_decoder.add_ml_decoder_head(model)
+    model = ml_decoder.add_ml_decoder_head(model)
     
     # cvt
     
@@ -537,8 +516,7 @@ def trainCycle(image_datasets, model):
     losses = []
     best = None
     tagNames = list(classes.values())
-    modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
-    pd.DataFrame(tagNames).to_pickle(modelDir + "tags.pkl")
+    pd.DataFrame(tagNames).to_pickle(FLAGS['modelDir'] + "tags.pkl")
     
     
     MeanStackedAccuracyStored = torch.Tensor([2,1,2,1])
@@ -577,7 +555,9 @@ def trainCycle(image_datasets, model):
                 print("training set")
                 
                 #dynamicResizeDim = int(FLAGS['image_size']/2 + epoch * (FLAGS['image_size']-FLAGS['image_size']/2)/FLAGS['num_epochs'])
+                
                 dynamicResizeDim = FLAGS['image_size']
+                
                 
                 print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
                 
@@ -675,14 +655,14 @@ def trainCycle(image_datasets, model):
                             if (FLAGS['use_scaler'] == True):   # cuda gpu case
                                 scaler.scale(loss).backward()   #lotta time spent here
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                    #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                     scaler.step(optimizer)
                                     scaler.update()
                                     optimizer.zero_grad()
                             else:                               # apple gpu/cpu case
                                 loss.backward()
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                    #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                     optimizer.step()
                                     optimizer.zero_grad()
 
