@@ -128,7 +128,7 @@ if currGPU == '3090':
     FLAGS['skip_test_set'] = False
     FLAGS['stepsPerPrintout'] = 50
 
-elif currGPU = 'm40':
+elif currGPU == 'm40':
     FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
     #FLAGS['rootPath'] = "/media/fredo/Datasets/danbooru2021/"
     if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
@@ -264,8 +264,8 @@ def getData():
     tagData.to_pickle(FLAGS['tagDFPickleFiltered'])
     postData.to_pickle(FLAGS['postDFPickleFiltered'])
     '''
-    tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
-    #tagData = pd.read_csv(FLAGS['rootPath'] + 'selected_tags.csv')
+    #tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
+    tagData = pd.read_csv(FLAGS['rootPath'] + 'selected_tags.csv')
     postData = pd.read_pickle(FLAGS['postDFPickleFiltered'])
     #print(postData.info())
     
@@ -359,6 +359,64 @@ def getData():
     image_datasets = {'train': trainSet, 'val' : testSet}   # put dataset into a list for easy handling
     return image_datasets
 
+import timm.layers.ml_decoder as ml_decoder
+MLDecoder = ml_decoder.MLDecoder
+
+def add_ml_decoder_head(model):
+
+    # TODO levit, ViT
+
+    if hasattr(model, 'global_pool') and hasattr(model, 'fc'):  # most CNN models, like Resnet50
+        model.global_pool = nn.Identity()
+        del model.fc
+        num_classes = model.num_classes
+        num_features = model.num_features
+        model.fc = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
+    #this is kinda ugly, can make general case?
+    elif 'RegNet' in model._get_name() or 'TResNet' in model._get_name():
+        del model.head
+        num_classes = model.num_classes
+        num_features = model.num_features
+        model.head = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
+
+    elif hasattr(model, 'head'):    # ClassifierHead and ConvNext
+        if hasattr(model.head, 'flatten'):  # ConvNext case
+            model.head.flatten = nn.Identity()
+        model.head.global_pool = nn.Identity()
+        del model.head.fc
+        num_classes = model.num_classes
+        num_features = model.num_features
+        model.head.fc = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
+    
+    elif 'MobileNetV3' in model._get_name(): # mobilenetv3 - conflict with efficientnet
+        
+        model.flatten = nn.Identity()
+        del model.classifier
+        num_classes = model.num_classes
+        num_features = model.num_features
+        model.classifier = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
+
+    elif hasattr(model, 'global_pool') and hasattr(model, 'classifier'):  # EfficientNet
+        model.global_pool = nn.Identity()
+        del model.classifier
+        num_classes = model.num_classes
+        num_features = model.num_features
+        model.classifier = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
+
+    
+
+    
+    
+
+    else:
+        print("Model code-writing is not aligned currently with ml-decoder")
+        exit(-1)
+    if hasattr(model, 'drop_rate'):  # Ml-Decoder has inner dropout
+        model.drop_rate = 0
+    return model
+
+
+
 def modelSetup(classes):
     
     '''
@@ -407,10 +465,10 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('gcvit_xxtiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
+    model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     
-    model = ml_decoder.add_ml_decoder_head(model)
+    model = add_ml_decoder_head(model)
     
     # cvt
     
@@ -554,9 +612,9 @@ def trainCycle(image_datasets, model):
                 #if (hasTPU == True): xm.master_print("training set")
                 print("training set")
                 
-                #dynamicResizeDim = int(FLAGS['image_size']/2 + epoch * (FLAGS['image_size']-FLAGS['image_size']/2)/FLAGS['num_epochs'])
+                dynamicResizeDim = int(FLAGS['image_size']/2 + epoch * (FLAGS['image_size']-FLAGS['image_size']/2)/FLAGS['num_epochs'])
                 
-                dynamicResizeDim = FLAGS['image_size']
+                #dynamicResizeDim = FLAGS['image_size']
                 
                 
                 print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
@@ -655,14 +713,14 @@ def trainCycle(image_datasets, model):
                             if (FLAGS['use_scaler'] == True):   # cuda gpu case
                                 scaler.scale(loss).backward()   #lotta time spent here
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                    #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                     scaler.step(optimizer)
                                     scaler.update()
                                     optimizer.zero_grad()
                             else:                               # apple gpu/cpu case
                                 loss.backward()
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                    #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                     optimizer.step()
                                     optimizer.zero_grad()
 
