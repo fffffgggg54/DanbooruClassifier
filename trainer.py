@@ -142,7 +142,7 @@ elif currGPU == 'm40':
     FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
     FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/lcnet_100-ml_decoder-ASL-BCE/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/levit_cust-ASL-BCE/'
 
 
     # post importer config
@@ -405,12 +405,33 @@ def modelSetup(classes):
     # regular timm models
     
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('lcnet_100', pretrained=True, num_classes=len(classes))
+    #model = timm.create_model('lcnet_100', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     
-    model = ml_decoder.add_ml_decoder_head(model)
+    from timm.models.levit import Levit
+    
+    model = Levit(img_size = FLAGS['image_size'],
+            patch_size=8,
+            in_chans=3,
+            num_classes=len(classes),
+            embed_dim=(192, 384, 768),
+            key_dim=64,
+            depth=(4, 4, 4),
+            num_heads=(3, 6, 12),
+            attn_ratio=4,
+            mlp_ratio=4,
+            hybrid_backbone=None,
+            down_ops=None,
+            act_layer='hard_swish',
+            attn_act_layer='hard_swish',
+            use_conv=False,
+            global_pool='avg',
+            drop_rate=0.,
+            drop_path_rate=0.1)
+    
+    #model = ml_decoder.add_ml_decoder_head(model)
     
     # cvt
     
@@ -653,14 +674,14 @@ def trainCycle(image_datasets, model):
                             if (FLAGS['use_scaler'] == True):   # cuda gpu case
                                 scaler.scale(loss).backward()   #lotta time spent here
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                    #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                     scaler.step(optimizer)
                                     scaler.update()
                                     optimizer.zero_grad()
                             else:                               # apple gpu/cpu case
                                 loss.backward()
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                    #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                     optimizer.step()
                                     optimizer.zero_grad()
 
