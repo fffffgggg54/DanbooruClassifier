@@ -420,7 +420,7 @@ def modelSetup(classes):
             key_dim=64,
             depth=(4, 4, 4),
             num_heads=(3, 6, 12),
-            attn_ratio=4,
+            attn_ratio=2,
             mlp_ratio=4,
             hybrid_backbone=None,
             down_ops=None,
