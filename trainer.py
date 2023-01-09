@@ -574,7 +574,7 @@ def trainCycle(image_datasets, model):
     losses = []
     best = None
     tagNames = list(classes.values())
-    pd.DataFrame(tagNames).to_pickle(FLAGS['modelDir'] + "tags.pkl")
+    
     
     
     MeanStackedAccuracyStored = torch.Tensor([2,1,2,1])
@@ -636,6 +636,7 @@ def trainCycle(image_datasets, model):
                 modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
                 torch.save(model.state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
                 torch.save(boundaryCalculator.thresholdPerClass, modelDir + 'thresholds.pth')
+                pd.DataFrame(tagNames).to_pickle(modelDir + "tags.pkl")
                 model.eval()   # Set model to evaluate mode
                 print("validation set")
                 if(FLAGS['skip_test_set'] == True):
