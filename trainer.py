@@ -128,7 +128,7 @@ if currGPU == '3090':
     FLAGS['skip_test_set'] = False
     FLAGS['stepsPerPrintout'] = 50
 
-elif currGPU = 'm40':
+elif currGPU == 'm40':
     FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
     #FLAGS['rootPath'] = "/media/fredo/Datasets/danbooru2021/"
     if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
