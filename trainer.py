@@ -516,7 +516,8 @@ def trainCycle(image_datasets, model):
     losses = []
     best = None
     tagNames = list(classes.values())
-    pd.DataFrame(tagNames).to_pickle(FLAGS['modelDir'] + "tags.pkl")
+    modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
+    pd.DataFrame(tagNames).to_pickle(modelDir + "tags.pkl")
     
     
     MeanStackedAccuracyStored = torch.Tensor([2,1,2,1])
