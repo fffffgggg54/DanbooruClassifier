@@ -39,6 +39,10 @@ import handleMultiLabel as MLCSL
 #           CONFIGURATION OPTIONS
 # ================================================
 
+#currGPU = '3090'
+currGPU = 'm40'
+
+
 # TODO use a configuration file or command line arguments instead of having a bunch of variables
 
 FLAGS = {}
@@ -46,81 +50,160 @@ FLAGS = {}
 # path config for various directories and files
 # TODO replace string appending with os.path.join()
 
-FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
-#FLAGS['rootPath'] = "/media/fredo/Datasets/danbooru2021/"
-if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
-FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
-FLAGS['imageRoot'] = FLAGS['rootPath'] + "original/"
+if currGPU == '3090':
 
-FLAGS['postListFile'] = FLAGS['postMetaRoot'] + "data_posts.json"
-FLAGS['tagListFile'] = FLAGS['postMetaRoot'] + "data_tags.json"
-FLAGS['postDFPickle'] = FLAGS['postMetaRoot'] + "postData.pkl"
-FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
-FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
-FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
+    FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
+    #FLAGS['rootPath'] = "/media/fredo/Datasets/danbooru2021/"
+    if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
+    FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
+    FLAGS['imageRoot'] = FLAGS['rootPath'] + "original/"
 
-FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tf_efficientnetv2_s-ASL-BCE/'
+    FLAGS['postListFile'] = FLAGS['postMetaRoot'] + "data_posts.json"
+    FLAGS['tagListFile'] = FLAGS['postMetaRoot'] + "data_tags.json"
+    FLAGS['postDFPickle'] = FLAGS['postMetaRoot'] + "postData.pkl"
+    FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
+    FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
+    FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-
-# post importer config
-
-FLAGS['chunkSize'] = 1000
-FLAGS['importerProcessCount'] = 10
-if(torch.has_mps == True): FLAGS['importerProcessCount'] = 7
-FLAGS['stopReadingAt'] = 5000
-
-# dataset config
-
-FLAGS['image_size'] = 384
-FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
-#FLAGS['cacheRoot'] = None
-
-FLAGS['workingSetSize'] = 1
-FLAGS['trainSetSize'] = 0.8
-
-# device config
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tf_efficientnetv2_s-ASL-BCE/'
 
 
-FLAGS['ngpu'] = torch.cuda.is_available()
-FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
-FLAGS['device2'] = FLAGS['device']
-if(torch.has_mps == True): FLAGS['device2'] = "cpu"
-#FLAGS['use_AMP'] = True if FLAGS['device'] == 'cuda:0' else False
-FLAGS['use_AMP'] = True
-FLAGS['use_scaler'] = FLAGS['use_AMP']
-#if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
+    # post importer config
 
-# dataloader config
+    FLAGS['chunkSize'] = 1000
+    FLAGS['importerProcessCount'] = 10
+    if(torch.has_mps == True): FLAGS['importerProcessCount'] = 7
+    FLAGS['stopReadingAt'] = 5000
 
-FLAGS['num_workers'] = 14
-FLAGS['postDataServerWorkerCount'] = 3
-if(torch.has_mps == True): FLAGS['num_workers'] = 2
-if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
+    # dataset config
 
-# training config
+    FLAGS['image_size'] = 384
+    FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
+    #FLAGS['cacheRoot'] = None
 
-FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 64
-FLAGS['gradient_accumulation_iterations'] = 32
+    FLAGS['workingSetSize'] = 1
+    FLAGS['trainSetSize'] = 0.8
 
-FLAGS['base_learning_rate'] = 3e-3
-FLAGS['base_batch_size'] = 2048
-FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
-FLAGS['lr_warmup_epochs'] = 5
+    # device config
 
-FLAGS['weight_decay'] = 2e-2
 
-FLAGS['resume_epoch'] = 84
+    FLAGS['ngpu'] = torch.cuda.is_available()
+    FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
+    FLAGS['device2'] = FLAGS['device']
+    if(torch.has_mps == True): FLAGS['device2'] = "cpu"
+    #FLAGS['use_AMP'] = True if FLAGS['device'] == 'cuda:0' else False
+    FLAGS['use_AMP'] = True
+    FLAGS['use_scaler'] = FLAGS['use_AMP']
+    #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
-FLAGS['finetune'] = False
+    # dataloader config
 
-FLAGS['channels_last'] = FLAGS['use_AMP']
+    FLAGS['num_workers'] = 14
+    FLAGS['postDataServerWorkerCount'] = 3
+    if(torch.has_mps == True): FLAGS['num_workers'] = 2
+    if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
-# debugging config
+    # training config
 
-FLAGS['verbose_debug'] = False
-FLAGS['skip_test_set'] = False
-FLAGS['stepsPerPrintout'] = 50
+    FLAGS['num_epochs'] = 100
+    FLAGS['batch_size'] = 64
+    FLAGS['gradient_accumulation_iterations'] = 32
+
+    FLAGS['base_learning_rate'] = 3e-3
+    FLAGS['base_batch_size'] = 2048
+    FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
+    FLAGS['lr_warmup_epochs'] = 5
+
+    FLAGS['weight_decay'] = 2e-2
+
+    FLAGS['resume_epoch'] = 84
+
+    FLAGS['finetune'] = False
+
+    FLAGS['channels_last'] = FLAGS['use_AMP']
+
+    # debugging config
+
+    FLAGS['verbose_debug'] = False
+    FLAGS['skip_test_set'] = False
+    FLAGS['stepsPerPrintout'] = 50
+
+elif currGPU = 'm40':
+    FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
+    #FLAGS['rootPath'] = "/media/fredo/Datasets/danbooru2021/"
+    if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
+    FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
+    FLAGS['imageRoot'] = FLAGS['rootPath'] + "original/"
+
+    FLAGS['postListFile'] = FLAGS['postMetaRoot'] + "data_posts.json"
+    FLAGS['tagListFile'] = FLAGS['postMetaRoot'] + "data_tags.json"
+    FLAGS['postDFPickle'] = FLAGS['postMetaRoot'] + "postData.pkl"
+    FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
+    FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
+    FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
+
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/poolformer_s24-ASL-BCE/'
+
+
+    # post importer config
+
+    FLAGS['chunkSize'] = 1000
+    FLAGS['importerProcessCount'] = 10
+    if(torch.has_mps == True): FLAGS['importerProcessCount'] = 7
+    FLAGS['stopReadingAt'] = 5000
+
+    # dataset config
+
+    FLAGS['image_size'] = 384
+    FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
+    #FLAGS['cacheRoot'] = None
+
+    FLAGS['workingSetSize'] = 1
+    FLAGS['trainSetSize'] = 0.8
+
+    # device config
+
+
+    FLAGS['ngpu'] = torch.cuda.is_available()
+    FLAGS['device'] = torch.device("cuda:1" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
+    FLAGS['device2'] = FLAGS['device']
+    if(torch.has_mps == True): FLAGS['device2'] = "cpu"
+    #FLAGS['use_AMP'] = True if FLAGS['device'] == 'cuda:0' else False
+    FLAGS['use_AMP'] = False
+    FLAGS['use_scaler'] = FLAGS['use_AMP']
+    #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
+
+    # dataloader config
+
+    FLAGS['num_workers'] = 18
+    FLAGS['postDataServerWorkerCount'] = 3
+    if(torch.has_mps == True): FLAGS['num_workers'] = 2
+    if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
+
+    # training config
+
+    FLAGS['num_epochs'] = 100
+    FLAGS['batch_size'] = 128
+    FLAGS['gradient_accumulation_iterations'] = 16
+
+    FLAGS['base_learning_rate'] = 3e-3
+    FLAGS['base_batch_size'] = 2048
+    FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
+    FLAGS['lr_warmup_epochs'] = 5
+
+    FLAGS['weight_decay'] = 2e-2
+
+    FLAGS['resume_epoch'] = 0
+
+    FLAGS['finetune'] = False
+
+    FLAGS['channels_last'] = FLAGS['use_AMP']
+
+    # debugging config
+
+    FLAGS['verbose_debug'] = False
+    FLAGS['skip_test_set'] = False
+    FLAGS['stepsPerPrintout'] = 50
 
 classes = None
 myDataset = None
@@ -181,8 +264,8 @@ def getData():
     tagData.to_pickle(FLAGS['tagDFPickleFiltered'])
     postData.to_pickle(FLAGS['postDFPickleFiltered'])
     '''
-    tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
-    #tagData = pd.read_csv(FLAGS['rootPath'] + 'selected_tags.csv')
+    #tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
+    tagData = pd.read_csv(FLAGS['rootPath'] + 'selected_tags.csv')
     postData = pd.read_pickle(FLAGS['postDFPickleFiltered'])
     #print(postData.info())
     
@@ -324,7 +407,7 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
+    model = timm.create_model('poolformer_s24', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     
     #model = ml_decoder.add_ml_decoder_head(model)
