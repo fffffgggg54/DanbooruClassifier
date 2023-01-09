@@ -576,7 +576,8 @@ def trainCycle(image_datasets, model):
                 #if (hasTPU == True): xm.master_print("training set")
                 print("training set")
                 
-                dynamicResizeDim = int(FLAGS['image_size']/2 + epoch * (FLAGS['image_size']-FLAGS['image_size']/2)/FLAGS['num_epochs'])
+                #dynamicResizeDim = int(FLAGS['image_size']/2 + epoch * (FLAGS['image_size']-FLAGS['image_size']/2)/FLAGS['num_epochs'])
+                dynamicResizeDim = FLAGS['image_size']
                 
                 print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
                 
