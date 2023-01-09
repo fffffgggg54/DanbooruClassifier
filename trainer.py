@@ -142,7 +142,7 @@ elif currGPU == 'm40':
     FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
     FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/davit_tiny-ASL-BCE/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/lcnet_100-ml_decoder-ASL-BCE/'
 
 
     # post importer config
@@ -183,8 +183,8 @@ elif currGPU == 'm40':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 64
-    FLAGS['gradient_accumulation_iterations'] = 32
+    FLAGS['batch_size'] = 128
+    FLAGS['gradient_accumulation_iterations'] = 16
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -405,12 +405,12 @@ def modelSetup(classes):
     # regular timm models
     
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
-    #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('lcnet_100', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
+    #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     
-    #model = ml_decoder.add_ml_decoder_head(model)
+    model = ml_decoder.add_ml_decoder_head(model)
     
     # cvt
     
