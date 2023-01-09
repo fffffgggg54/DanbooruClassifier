@@ -413,7 +413,7 @@ def modelSetup(classes):
     from timm.models.levit import Levit
     
     model = Levit(img_size = FLAGS['image_size'],
-            patch_size=8,
+            patch_size=16,
             in_chans=3,
             num_classes=len(classes),
             embed_dim=(192, 384, 768),
