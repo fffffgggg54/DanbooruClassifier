@@ -39,8 +39,8 @@ import handleMultiLabel as MLCSL
 #           CONFIGURATION OPTIONS
 # ================================================
 
-currGPU = '3090'
-#currGPU = 'm40'
+#currGPU = '3090'
+currGPU = 'm40'
 
 
 # TODO use a configuration file or command line arguments instead of having a bunch of variables
