@@ -39,8 +39,8 @@ import handleMultiLabel as MLCSL
 #           CONFIGURATION OPTIONS
 # ================================================
 
-#currGPU = '3090'
-currGPU = 'm40'
+currGPU = '3090'
+#currGPU = 'm40'
 
 
 # TODO use a configuration file or command line arguments instead of having a bunch of variables
@@ -65,7 +65,7 @@ if currGPU == '3090':
     FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
     FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tf_efficientnetv2_s-ASL-BCE/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/edgenext_small_ml-decoder-ASL-BCE/'
 
 
     # post importer config
@@ -98,7 +98,7 @@ if currGPU == '3090':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 14
+    FLAGS['num_workers'] = 20
     FLAGS['postDataServerWorkerCount'] = 3
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -106,8 +106,8 @@ if currGPU == '3090':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 64
-    FLAGS['gradient_accumulation_iterations'] = 32
+    FLAGS['batch_size'] = 256
+    FLAGS['gradient_accumulation_iterations'] = 8
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -116,7 +116,7 @@ if currGPU == '3090':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 84
+    FLAGS['resume_epoch'] = 0
 
     FLAGS['finetune'] = False
 
@@ -465,7 +465,8 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
+    #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
+    model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     
     model = add_ml_decoder_head(model)
@@ -714,14 +715,14 @@ def trainCycle(image_datasets, model):
                             if (FLAGS['use_scaler'] == True):   # cuda gpu case
                                 scaler.scale(loss).backward()   #lotta time spent here
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                    #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                     scaler.step(optimizer)
                                     scaler.update()
                                     optimizer.zero_grad()
                             else:                               # apple gpu/cpu case
                                 loss.backward()
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                    #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                     optimizer.step()
                                     optimizer.zero_grad()
 
