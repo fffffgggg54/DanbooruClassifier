@@ -142,7 +142,7 @@ elif currGPU == 'm40':
     FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
     FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_s_ml-decoder-ASL-BCE/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/edgenext_base-ASL-BCE/'
 
 
     # post importer config
@@ -175,8 +175,8 @@ elif currGPU == 'm40':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 6
-    FLAGS['postDataServerWorkerCount'] = 1
+    FLAGS['num_workers'] = 14
+    FLAGS['postDataServerWorkerCount'] = 2
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
@@ -193,7 +193,7 @@ elif currGPU == 'm40':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 12
+    FLAGS['resume_epoch'] = 0
 
     FLAGS['finetune'] = False
 
@@ -264,8 +264,8 @@ def getData():
     tagData.to_pickle(FLAGS['tagDFPickleFiltered'])
     postData.to_pickle(FLAGS['postDFPickleFiltered'])
     '''
-    #tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
-    tagData = pd.read_csv(FLAGS['rootPath'] + 'selected_tags.csv')
+    tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
+    #tagData = pd.read_csv(FLAGS['rootPath'] + 'selected_tags.csv')
     postData = pd.read_pickle(FLAGS['postDFPickleFiltered'])
     #print(postData.info())
     
@@ -466,10 +466,10 @@ def modelSetup(classes):
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    #model = timm.create_model('edgenext_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
+    model = timm.create_model('edgenext_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
+    #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     
-    model = add_ml_decoder_head(model)
+    #model = add_ml_decoder_head(model)
     
     # cvt
     
