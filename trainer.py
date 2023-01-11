@@ -65,7 +65,7 @@ if currGPU == '3090':
     FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
     FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/edgenext_small_ml-decoder-ASL-BCE/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/edgenext_small-ASL-BCE/'
 
 
     # post importer config
@@ -175,8 +175,8 @@ elif currGPU == 'm40':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 18
-    FLAGS['postDataServerWorkerCount'] = 3
+    FLAGS['num_workers'] = 6
+    FLAGS['postDataServerWorkerCount'] = 1
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
@@ -193,7 +193,7 @@ elif currGPU == 'm40':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 0
+    FLAGS['resume_epoch'] = 12
 
     FLAGS['finetune'] = False
 
@@ -469,7 +469,7 @@ def modelSetup(classes):
     model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     
-    model = add_ml_decoder_head(model)
+    #model = add_ml_decoder_head(model)
     
     # cvt
     
