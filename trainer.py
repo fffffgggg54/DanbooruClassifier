@@ -266,8 +266,8 @@ def getData():
     tagData.to_pickle(FLAGS['tagDFPickleFiltered'])
     postData.to_pickle(FLAGS['postDFPickleFiltered'])
     '''
-    #tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
-    tagData = pd.read_csv(FLAGS['rootPath'] + 'selected_tags.csv')
+    tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
+    #tagData = pd.read_csv(FLAGS['rootPath'] + 'selected_tags.csv')
     postData = pd.read_pickle(FLAGS['postDFPickleFiltered'])
     #print(postData.info())
     
