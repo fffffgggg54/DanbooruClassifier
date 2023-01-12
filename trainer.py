@@ -477,7 +477,7 @@ def modelSetup(classes):
     # really only using the avgpool for now, so basically S/16 with gap
     
     model = timm.models.VisionTransformer(
-        image_size = FLAGS['image_size'], 
+        input_size = FLAGS['image_size'], 
         patch_size = 16, 
         num_classes = len(classes), 
         embed_dim=384, 
