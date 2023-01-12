@@ -478,7 +478,7 @@ def modelSetup(classes):
     
     model = timm.models.VisionTransformer(
         img_size = FLAGS['image_size'], 
-        patch_size = 16, 
+        patch_size = 32, 
         num_classes = len(classes), 
         embed_dim=384, 
         depth=12, 
