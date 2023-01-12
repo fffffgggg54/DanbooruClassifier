@@ -39,8 +39,8 @@ import handleMultiLabel as MLCSL
 #           CONFIGURATION OPTIONS
 # ================================================
 
-currGPU = '3090'
-#currGPU = 'm40'
+#currGPU = '3090'
+currGPU = 'm40'
 
 
 # TODO use a configuration file or command line arguments instead of having a bunch of variables
@@ -78,6 +78,7 @@ if currGPU == '3090':
     # dataset config
 
     FLAGS['image_size'] = 384
+    FLAGS['progressiveImageSize'] = True
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
     #FLAGS['cacheRoot'] = None
 
@@ -142,7 +143,7 @@ elif currGPU == 'm40':
     FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
     FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/edgenext_base-ASL-BCE/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/ViT-better-S-P16-224-ASL-BCE/'
 
 
     # post importer config
@@ -154,7 +155,8 @@ elif currGPU == 'm40':
 
     # dataset config
 
-    FLAGS['image_size'] = 384
+    FLAGS['image_size'] = 224
+    FLAGS['progressiveImageSize'] = False
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
     #FLAGS['cacheRoot'] = None
 
@@ -175,7 +177,7 @@ elif currGPU == 'm40':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 14
+    FLAGS['num_workers'] = 16
     FLAGS['postDataServerWorkerCount'] = 2
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -184,7 +186,7 @@ elif currGPU == 'm40':
 
     FLAGS['num_epochs'] = 100
     FLAGS['batch_size'] = 128
-    FLAGS['gradient_accumulation_iterations'] = 16
+    FLAGS['gradient_accumulation_iterations'] = 8
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -467,9 +469,23 @@ def modelSetup(classes):
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
+    #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     
-    model = add_ml_decoder_head(model)
+    
+    
+    # ViT-better similar to https://arxiv.org/abs/2205.01580
+    # really only using the avgpool for now, so basically S/16 with gap
+    
+    model = timm.models.VisionTransformer(
+        image_size = FLAGS['image_size'], 
+        patch_size = 16, 
+        num_classes = len(classes), 
+        embed_dim=384, 
+        depth=12, 
+        num_heads=6, 
+        global_pool='avg', 
+        class_token = False, 
+        fc_norm=False)
     
     # cvt
     
@@ -492,6 +508,8 @@ def modelSetup(classes):
                           nn.Linear(len(classes), len(classes)))
     
     '''
+    
+    #model = add_ml_decoder_head(model)
     
     if (FLAGS['resume_epoch'] > 0):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
@@ -613,9 +631,12 @@ def trainCycle(image_datasets, model):
                 #if (hasTPU == True): xm.master_print("training set")
                 print("training set")
                 
-                dynamicResizeDim = int(FLAGS['image_size']/2 + epoch * (FLAGS['image_size']-FLAGS['image_size']/2)/FLAGS['num_epochs'])
-                
-                #dynamicResizeDim = FLAGS['image_size']
+                if FLAGS['progressiveImageSize'] == True:
+                    
+                    
+                    dynamicResizeDim = int(FLAGS['image_size']/2 + epoch * (FLAGS['image_size']-FLAGS['image_size']/2)/FLAGS['num_epochs'])
+                else:
+                    dynamicResizeDim = FLAGS['image_size']
                 
                 
                 print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
