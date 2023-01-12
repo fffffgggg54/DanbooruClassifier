@@ -1,6 +1,7 @@
 import os
 import torch
 import torch.utils.data
+import torchvision
 import pandas as pd
 import time
 import shutil
@@ -247,30 +248,30 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
 
 
 
-        #try:
-        assert cacheRoot is not None
-        cacheDir = create_dir(cacheRoot + str(postID % 1000).zfill(4))
-        cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
-        cachedSample = bz2.BZ2File(cachePath, 'rb')
-        image, postTags,_ = cPickle.load(cachedSample)
-        #print(f"got pickle from {cachePath}")
-        if len(postTags) != len(tagList):
-            postTagList = set(postData.loc["tag_string"].split()).intersection(set(tagList.to_list()))
+        try:
+            assert cacheRoot is not None
+            cacheDir = create_dir(cacheRoot + str(postID % 1000).zfill(4))
+            cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
+            cachedSample = bz2.BZ2File(cachePath, 'rb')
+            image, postTags,_ = cPickle.load(cachedSample)
+            #print(f"got pickle from {cachePath}")
+            if len(postTags) != len(tagList):
+                postTagList = set(postData.loc["tag_string"].split()).intersection(set(tagList.to_list()))
 
-            # one-hot encode the tags of a given post
-            # TODO find better way to find matching tags
-            postTags = []
-            for key in list(tagList.to_list()):
-                match = False
-                for tag in postTagList:
-                    if tag == key:
-                        match = True
+                # one-hot encode the tags of a given post
+                # TODO find better way to find matching tags
+                postTags = []
+                for key in list(tagList.to_list()):
+                    match = False
+                    for tag in postTagList:
+                        if tag == key:
+                            match = True
 
-                postTags.append(int(match))
-            postTags = torch.Tensor(postTags)
-        '''
+                    postTags.append(int(match))
+                postTags = torch.Tensor(postTags)
+        
         except:
-
+            print("cached file not found")
             postTagList = set(postData.loc["tag_string"].split()).intersection(set(tagList.to_list()))
 
             # one-hot encode the tags of a given post
@@ -294,6 +295,14 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
             try: 
                 #path = cachedImagePath
                 path = imagePath
+                '''
+                # TODO mess with gpu decoding, needs rewrite for how stuff is handled later on
+                if postData.loc["file_ext"] == 'jpg' and torch.cuda.is_available():
+                    image = torchvision.io.read_file(path)
+                    image = torchvision.io.decode_jpeg(image, device='cuda:0')
+                    image = torchvision.transforms.functional.to_pil_image(image)
+                else:
+                '''
                 image = Image.open(path)    #check if file exists
                 image.load()    # check if file valid
             except:     #if file doesn't exist or isn't valid, download it and save/overwrite
@@ -307,7 +316,7 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
 
                 #print("Image saved to " + path)
             # TODO implement switchable cache use
-            
+            '''
             old caching and crawling
             except FileNotFoundError:
                 
@@ -325,7 +334,7 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
                     image = image.convert("RGB")
                     image.save(path)
                     print("Image saved to " + path)
-            
+            '''
             #image = ImageOps.exif_transpose(image)
             #imageLoadTime = time.time() - startTime
             #startTime = time.time()
@@ -353,7 +362,7 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
                 cacheDir = create_dir(cacheRoot + str(postID % 1000).zfill(4))
                 cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
                 with bz2.BZ2File(cachePath, 'w') as cachedSample: cPickle.dump((image, postTags, postID), cachedSample)
-        '''
+        
         image = transforms.functional.to_pil_image(image)
 
         if self.transform: image = self.transform(image)
