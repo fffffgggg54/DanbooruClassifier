@@ -263,7 +263,7 @@ elif currGPU == 'none':
 
     # training config
 
-    FLAGS['num_epochs'] = 101
+    FLAGS['num_epochs'] = 1
     FLAGS['batch_size'] = 64
     FLAGS['gradient_accumulation_iterations'] = 2
 
@@ -285,6 +285,7 @@ elif currGPU == 'none':
     FLAGS['verbose_debug'] = False
     FLAGS['skip_test_set'] = False
     FLAGS['stepsPerPrintout'] = 50
+    FLAGS['val'] = True
 
 classes = None
 myDataset = None
