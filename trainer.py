@@ -263,7 +263,7 @@ elif currGPU == 'none':
 
     # training config
 
-    FLAGS['num_epochs'] = 1
+    FLAGS['num_epochs'] = 101
     FLAGS['batch_size'] = 64
     FLAGS['gradient_accumulation_iterations'] = 2
 
@@ -685,7 +685,7 @@ def trainCycle(image_datasets, model):
     stepsPerPrintout = FLAGS['stepsPerPrintout']
     torch.backends.cudnn.benchmark = True
     
-    epoch = FLAGS['resume_epoch'] if FLAGS['val'] == False else 0
+    epoch = FLAGS['resume_epoch']
     
     while (epoch < FLAGS['num_epochs']):
         prior = MLCSL.ComputePrior(classes, device2)
