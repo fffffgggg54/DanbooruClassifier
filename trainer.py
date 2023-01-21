@@ -264,7 +264,7 @@ elif currGPU == 'none':
     # training config
 
     FLAGS['num_epochs'] = 101
-    FLAGS['batch_size'] = 64
+    FLAGS['batch_size'] = 512
     FLAGS['gradient_accumulation_iterations'] = 2
 
     FLAGS['base_learning_rate'] = 3e-3
