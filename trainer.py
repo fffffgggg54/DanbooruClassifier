@@ -40,7 +40,8 @@ import handleMultiLabel as MLCSL
 # ================================================
 
 #currGPU = '3090'
-currGPU = 'm40'
+#currGPU = 'm40'
+currGPU = 'none'
 
 
 # TODO use a configuration file or command line arguments instead of having a bunch of variables
@@ -196,6 +197,84 @@ elif currGPU == 'm40':
     FLAGS['weight_decay'] = 2e-2
 
     FLAGS['resume_epoch'] = 0
+
+    FLAGS['finetune'] = False
+
+    FLAGS['channels_last'] = FLAGS['use_AMP']
+
+    # debugging config
+
+    FLAGS['verbose_debug'] = False
+    FLAGS['skip_test_set'] = False
+    FLAGS['stepsPerPrintout'] = 50
+
+elif currGPU == 'none':
+    FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
+    #FLAGS['rootPath'] = "/media/fredo/Datasets/danbooru2021/"
+    if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
+    FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
+    FLAGS['imageRoot'] = FLAGS['rootPath'] + "original/"
+
+    FLAGS['postListFile'] = FLAGS['postMetaRoot'] + "data_posts.json"
+    FLAGS['tagListFile'] = FLAGS['postMetaRoot'] + "data_tags.json"
+    FLAGS['postDFPickle'] = FLAGS['postMetaRoot'] + "postData.pkl"
+    FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
+    FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
+    FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
+
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tf_efficientnetv2_s-ASL-BCE/'
+
+
+    # post importer config
+
+    FLAGS['chunkSize'] = 1000
+    FLAGS['importerProcessCount'] = 10
+    if(torch.has_mps == True): FLAGS['importerProcessCount'] = 7
+    FLAGS['stopReadingAt'] = 5000
+
+    # dataset config
+
+    FLAGS['image_size'] = 384
+    FLAGS['progressiveImageSize'] = False
+    FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
+    #FLAGS['cacheRoot'] = None
+
+    FLAGS['workingSetSize'] = 1
+    FLAGS['trainSetSize'] = 0.8
+
+    # device config
+
+
+    FLAGS['ngpu'] = torch.cuda.is_available()
+    FLAGS['device'] = torch.device("cpu")
+    FLAGS['device2'] = FLAGS['device']
+    if(torch.has_mps == True): FLAGS['device2'] = "cpu"
+    #FLAGS['use_AMP'] = True if FLAGS['device'] == 'cuda:0' else False
+    FLAGS['use_AMP'] = False
+    FLAGS['use_scaler'] = FLAGS['use_AMP']
+    #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
+
+    # dataloader config
+
+    FLAGS['num_workers'] = 1
+    FLAGS['postDataServerWorkerCount'] = 1
+    if(torch.has_mps == True): FLAGS['num_workers'] = 2
+    if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
+
+    # training config
+
+    FLAGS['num_epochs'] = 101
+    FLAGS['batch_size'] = 64
+    FLAGS['gradient_accumulation_iterations'] = 2
+
+    FLAGS['base_learning_rate'] = 3e-3
+    FLAGS['base_batch_size'] = 2048
+    FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
+    FLAGS['lr_warmup_epochs'] = 5
+
+    FLAGS['weight_decay'] = 2e-2
+
+    FLAGS['resume_epoch'] = 99
 
     FLAGS['finetune'] = False
 
@@ -465,7 +544,7 @@ def modelSetup(classes):
     # regular timm models
     
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
-    #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
@@ -475,7 +554,7 @@ def modelSetup(classes):
     
     # ViT-better similar to https://arxiv.org/abs/2205.01580
     # really only using the avgpool for now, so basically S/16 with gap
-    
+    '''
     model = timm.models.VisionTransformer(
         img_size = FLAGS['image_size'], 
         patch_size = 32, 
@@ -486,7 +565,7 @@ def modelSetup(classes):
         global_pool='avg', 
         class_token = False, 
         fc_norm=False)
-    
+    '''
     # cvt
     
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
@@ -605,7 +684,7 @@ def trainCycle(image_datasets, model):
     stepsPerPrintout = FLAGS['stepsPerPrintout']
     torch.backends.cudnn.benchmark = True
     
-    epoch = FLAGS['resume_epoch']
+    epoch = FLAGS['resume_epoch'] if FLAGS['val'] == False else 0
     
     while (epoch < FLAGS['num_epochs']):
         prior = MLCSL.ComputePrior(classes, device2)
@@ -619,7 +698,7 @@ def trainCycle(image_datasets, model):
         textOutput = None
         #lastPrior = None
         
-        phases = ['train', 'val']
+        phases = ['train', 'val'] if FLAGS['val'] == False else ['val']
         currPhase = 0
         
         while currPhase < len(phases):
@@ -654,11 +733,11 @@ def trainCycle(image_datasets, model):
             if phase == 'val':
                 
                 
-
-                modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
-                torch.save(model.state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
-                torch.save(boundaryCalculator.thresholdPerClass, modelDir + 'thresholds.pth')
-                pd.DataFrame(tagNames).to_pickle(modelDir + "tags.pkl")
+                if FLAGS['val'] == False:
+                    modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
+                    torch.save(model.state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
+                    torch.save(boundaryCalculator.thresholdPerClass, modelDir + 'thresholds.pth')
+                    pd.DataFrame(tagNames).to_pickle(modelDir + "tags.pkl")
                 model.eval()   # Set model to evaluate mode
                 print("validation set")
                 if(FLAGS['skip_test_set'] == True):
