@@ -40,8 +40,8 @@ import handleMultiLabel as MLCSL
 # ================================================
 
 #currGPU = '3090'
-#currGPU = 'm40'
-currGPU = 'none'
+currGPU = 'm40'
+#currGPU = 'none'
 
 
 # TODO use a configuration file or command line arguments instead of having a bunch of variables
@@ -192,7 +192,7 @@ elif currGPU == 'm40':
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
     FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
-    FLAGS['lr_warmup_epochs'] = 5
+    FLAGS['lr_warmup_epochs'] = 2
 
     FLAGS['weight_decay'] = 2e-2
 
@@ -545,7 +545,7 @@ def modelSetup(classes):
     # regular timm models
     
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
+    #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
@@ -554,8 +554,8 @@ def modelSetup(classes):
     
     
     # ViT-better similar to https://arxiv.org/abs/2205.01580
-    # really only using the avgpool for now, so basically S/16 with gap
-    '''
+    # really only using the avgpool for now, so basically S/32 with gap
+    
     model = timm.models.VisionTransformer(
         img_size = FLAGS['image_size'], 
         patch_size = 32, 
@@ -565,8 +565,8 @@ def modelSetup(classes):
         num_heads=6, 
         global_pool='avg', 
         class_token = False, 
-        fc_norm=False)
-    '''
+        fc_norm=True)
+    
     # cvt
     
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
@@ -722,10 +722,11 @@ def trainCycle(image_datasets, model):
                 print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
                 
                 myDataset.transform = transforms.Compose([transforms.Resize(dynamicResizeDim),
-                                                          transforms.RandAugment(magnitude = epoch, num_magnitude_bins = FLAGS['num_epochs'] * 3),
+                                                          transforms.RandAugment(magnitude = epoch, num_magnitude_bins = FLAGS['num_epochs'] * 1.3),
                                                           #transforms.RandAugment(),
-                                                          #transforms.TrivialAugmentWide(),
-                                                          #danbooruDataset.CutoutPIL(cutout_factor=0.2),
+                                                          transforms.RandomHorizontalFlip(),
+                                                          transforms.TrivialAugmentWide(),
+                                                          danbooruDataset.CutoutPIL(cutout_factor=0.2),
                                                           transforms.ToTensor(),
                                                           #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                                                           ])
