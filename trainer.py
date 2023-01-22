@@ -77,7 +77,7 @@ if currGPU == '3090':
     FLAGS['stopReadingAt'] = 5000
 
     # dataset config
-
+    FLAGS['tagCount'] == 1588
     FLAGS['image_size'] = 384
     FLAGS['progressiveImageSize'] = True
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
@@ -155,7 +155,7 @@ elif currGPU == 'm40':
     FLAGS['stopReadingAt'] = 5000
 
     # dataset config
-
+    FLAGS['tagCount'] = 5500
     FLAGS['image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
@@ -347,8 +347,10 @@ def getData():
     tagData.to_pickle(FLAGS['tagDFPickleFiltered'])
     postData.to_pickle(FLAGS['postDFPickleFiltered'])
     '''
-    tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
-    #tagData = pd.read_csv(FLAGS['rootPath'] + 'selected_tags.csv')
+    if FLAGS['tagCount'] == 1588:
+        tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
+    elif FLAGS['tagCount'] == 5500:
+        tagData = pd.read_csv(FLAGS['rootPath'] + 'selected_tags.csv')
     postData = pd.read_pickle(FLAGS['postDFPickleFiltered'])
     #print(postData.info())
     
