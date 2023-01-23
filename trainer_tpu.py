@@ -353,7 +353,7 @@ def trainCycle(image_datasets, model):
     #mixup = Mixup(mixup_alpha = 0.1, cutmix_alpha = 0, label_smoothing=0)
     #dataloaders['train'].collate_fn = mixup_collate
     
-    dataset_sizes = {x: int((image_datasets[x].info.splits[x].num_examples / FLAGS['batch_size'])/8) for x in image_datasets}
+    #dataset_sizes = {x: int((image_datasets[x].info.splits[x].num_examples / FLAGS['batch_size'])/8) for x in image_datasets}
     
     device = accelerator.device
 
