@@ -212,7 +212,6 @@ def getData():
     train_ds = myDataset['train'] \
         .with_format("torch") \
         .filter(lambda x: (x['__index_level_0__'] % 10) < moduloBound) \
-        #.map(transformsCallable(tagList, trainTransforms)) \
         .shuffle(buffer_size=1000, seed=42)
 
     val_ds = myDataset['train'] \
