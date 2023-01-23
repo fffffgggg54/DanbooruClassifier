@@ -195,7 +195,7 @@ class transformsCallable():
 
         postTagList = set(examples['tag_string'].split()).intersection(set(tagList.to_list()))
 
-        postTags = lb.transform([postTagList])
+        postTags = self.lb.transform([postTagList])
         examples['labels'] = torch.Tensor(postTags)
 
         return examples
