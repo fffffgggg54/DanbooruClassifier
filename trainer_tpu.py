@@ -377,8 +377,8 @@ def trainCycle(image_datasets, model):
     
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=FLAGS['num_epochs'], epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
     scheduler.last_epoch = FLAGS['resume_epoch']
-    if backend == 'accelerate':
-        model, optimizer, scheduler = accelerator.prepare(model, optimizer, scheduler)
+    
+    model, optimizer, scheduler = accelerator.prepare(model, optimizer, scheduler)
     
     print("starting training")
     
