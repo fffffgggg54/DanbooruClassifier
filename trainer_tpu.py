@@ -375,11 +375,8 @@ def trainCycle(image_datasets, model):
     optimizer = optim.SGD(params_to_update, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     
-    if backend == 'lightning':
-        model, optimizer = fabric.setup(model, optimizer)
-    
-    scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=dataset_sizes['train'], epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
-    scheduler.last_epoch = dataset_sizes['train']*FLAGS['resume_epoch']
+    scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=FLAGS['num_epochs'], epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
+    scheduler.last_epoch = FLAGS['resume_epoch']
     if backend == 'accelerate':
         model, optimizer, scheduler = accelerator.prepare(model, optimizer, scheduler)
     
@@ -431,7 +428,8 @@ def trainCycle(image_datasets, model):
 
             loaderIterable = enumerate(dataloaders[phase])
             for i, data in loaderIterable:
-                (images, tags) = data.values()
+                imageBatch = data['Image']
+                tagBatch = data['labels']
                 optimizer.zero_grad()
                 
                 with torch.set_grad_enabled(phase == 'train'):
@@ -440,29 +438,12 @@ def trainCycle(image_datasets, model):
                         #imageBatch, tagBatch = mixup(imageBatch, tagBatch)
                     
                     outputs = model(images)
-                    #print("forward")
-                    #outputs = model(imageBatch).logits
-                    #if phase == 'val':
-                    preds = torch.argmax(outputs, dim=1)
-                    #print("preds")
-                    
-                    samples += len(images)
-                    correct += sum(preds == tags)
-                    
-                    #print("stat update")
-                    
-                    tagBatch = torch.eye(len(classes), device=device)[tags]
-                    #print("onehot")
-                    
                     loss = criterion(outputs, tagBatch)
                     #print("loss")
 
                     # backward + optimize only if in training phase
                     if phase == 'train' and (loss.isnan() == False):
-                        if backend == 'accelerate':
-                            accelerator.backward(loss)
-                        elif backend == 'lightning':
-                            fabric.backward(loss)
+                        accalerate.backward(loss)
                         #print("backward")
                         #if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                         #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
@@ -471,19 +452,15 @@ def trainCycle(image_datasets, model):
                             
                                     
                 if i % stepsPerPrintout == 0:
-                    accuracy = 100 * (correct/(samples+1e-8))
                     #print("accuracy")
 
                     imagesPerSecond = (FLAGS['batch_size']*stepsPerPrintout)/(time.time() - cycleTime)
                     cycleTime = time.time()
 
-                    print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f\ttop-1: %.2f' % (epoch, FLAGS['num_epochs'], i, dataset_sizes[phase], loss, imagesPerSecond, accuracy))
+                    print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f\t' % (epoch, FLAGS['num_epochs'], i, dataset_sizes[phase], loss, imagesPerSecond))
 
-                if phase == 'train':
-                    scheduler.step()
-            if phase == 'validation':
-                print(f'top-1: {100 * (correct/samples)}%')
-        
+            if phase == 'train':
+                scheduler.step()
         time_elapsed = time.time() - epochTime
         print(f'epoch {epoch} completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
         #print(best)
