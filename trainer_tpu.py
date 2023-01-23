@@ -152,7 +152,7 @@ def add_ml_decoder_head(model):
     return model
 
 
-trainTransforms = transforms.Compose([transforms.Resize((FLAGS['image_size'],FLAGS['image_size'])),
+trainTransforms = transforms.Compose([transforms.Resize((FLAGS['imageSize'],FLAGS['imageSize'])),
     transforms.RandAugment(),
     transforms.TrivialAugmentWide(),
     transforms.RandomHorizontalFlip(),
@@ -163,7 +163,7 @@ trainTransforms = transforms.Compose([transforms.Resize((FLAGS['image_size'],FLA
 
 valTransforms = transforms.Compose([
     transforms.Resize((FLAGS['image_size_initial'],FLAGS['image_size_initial']), interpolation = FLAGS['interpolation']),
-    transforms.CenterCrop((int(FLAGS['image_size']),int(FLAGS['image_size']))),
+    transforms.CenterCrop((int(FLAGS['imageSize']),int(FLAGS['imageSize']))),
     transforms.ToTensor(),
     #transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
 ])
