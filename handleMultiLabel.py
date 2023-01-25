@@ -995,7 +995,7 @@ class MetricTracker():
             Nprecision = TN / (TN + FN + self.epsilon)
             
             P4 = (4 * TP * TN) / ((4 * TN * TP) + (TN + TP) * (FP + FN) + self.epsilon)
-            return torch.column_stack([TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision, P4])
+            return torch.stack([TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision, P4])
     
     def update(self, preds, targs):
         self.sampleCount += targs.size(dim=0)
