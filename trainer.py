@@ -66,7 +66,7 @@ if currGPU == '3090':
     FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
     FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/davit_tiny_ml-decoder-ASL-BCE/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/davit_base_ml-decoder-ASL-BCE/'
 
 
     # post importer config
@@ -100,7 +100,7 @@ if currGPU == '3090':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 26
+    FLAGS['num_workers'] = 14
     FLAGS['postDataServerWorkerCount'] = 3
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -118,7 +118,7 @@ if currGPU == '3090':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 0
+    FLAGS['resume_epoch'] = 10
 
     FLAGS['finetune'] = False
 
