@@ -210,7 +210,8 @@ def getData():
     moduloVal = 10
     moduloBound = 9
     train_ds = myDataset['train'] \
-        .with_format("torch")
+        .with_format("torch") \
+        .shuffle(buffer_size=1000, seed=42)
     '''
     .filter(lambda x: (x['__index_level_0__'] % 10) < moduloBound) \
     .shuffle(buffer_size=1000, seed=42)
