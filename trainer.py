@@ -129,6 +129,7 @@ if currGPU == '3090':
     FLAGS['verbose_debug'] = False
     FLAGS['skip_test_set'] = False
     FLAGS['stepsPerPrintout'] = 50
+    FLAGS['val'] = False
 
 elif currGPU == 'm40':
     FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
