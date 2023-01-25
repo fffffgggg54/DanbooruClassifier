@@ -708,6 +708,8 @@ def trainCycle(image_datasets, model):
         
         while currPhase < len(phases):
             phase = phases[currPhase]
+            
+            cm_tracker = MLCSL.MetricTracker()
 
             #try:
             if phase == 'train':
@@ -785,7 +787,8 @@ def trainCycle(image_datasets, model):
                         preds = torch.sigmoid(outputs)
                         boundary = boundaryCalculator(preds, tagBatch)
                         predsModified = (preds > boundary).float()
-                        multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
+                        #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
+                        multiAccuracy = cm_tracker.update(predsModified.to(device2), tagBatch.to(device2))
                         
                         outputs = outputs.float()
                         '''
@@ -844,7 +847,7 @@ def trainCycle(image_datasets, model):
                             AP_regular.append(accuracy)
                             
                             #AP_ema.append(MLCSL.mAP(targets, preds_ema))
-                            AccuracyRunning.append(multiAccuracy)
+                            #AccuracyRunning.append(multiAccuracy)
                 
                 #print(device)
                 if i % stepsPerPrintout == 0:
@@ -870,7 +873,7 @@ def trainCycle(image_datasets, model):
                    
                     #print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f\tAccuracy: %.2f\tP4: %.2f\t%s' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), loss, imagesPerSecond, accuracy, multiAccuracy.mean(dim=0) * 100, textOutput))
                     torch.set_printoptions(linewidth = 200, sci_mode = False)
-                    print(f"[{epoch}/{FLAGS['num_epochs']}][{i}/{len(dataloaders[phase])}]\tLoss: {loss:.4f}\tImages/Second: {imagesPerSecond:.4f}\tAccuracy: {accuracy:.2f}\t {[f'{num:.4f}' for num in (multiAccuracy.mean(dim=0) * 100).tolist()]}\t{textOutput}")
+                    print(f"[{epoch}/{FLAGS['num_epochs']}][{i}/{len(dataloaders[phase])}]\tLoss: {loss:.4f}\tImages/Second: {imagesPerSecond:.4f}\tAccuracy: {accuracy:.2f}\t {[f'{num:.4f}' for num in (multiAccuracy * 100).tolist()]}\t{textOutput}")
                     torch.set_printoptions(profile='default')
                     #print(id[0])
                     #print(currPostTags)
@@ -895,11 +898,12 @@ def trainCycle(image_datasets, model):
             if ((phase == 'val') and (FLAGS['skip_test_set'] == False)):
                 #torch.set_printoptions(profile="full")
                 
-                AvgAccuracy = torch.stack(AccuracyRunning)
-                AvgAccuracy = AvgAccuracy.mean(dim=0)
+                #AvgAccuracy = torch.stack(AccuracyRunning)
+                #AvgAccuracy = AvgAccuracy.mean(dim=0)
+                AvgAccuracy = cm_tracker.get_full_metrics()
                 LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames, boundaryCalculator.thresholdPerClass))
                 LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[0][8], reverse=True)
-                MeanStackedAccuracy = AvgAccuracy.mean(dim=0)
+                MeanStackedAccuracy = cm_tracker.get_aggregate_metrics()
                 MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
                 print(*LabelledAccuracySorted, sep="\n")
                 #torch.set_printoptions(profile="default")
