@@ -39,8 +39,8 @@ import handleMultiLabel as MLCSL
 #           CONFIGURATION OPTIONS
 # ================================================
 
-#currGPU = '3090'
-currGPU = 'm40'
+currGPU = '3090'
+#currGPU = 'm40'
 #currGPU = 'none'
 
 
@@ -66,7 +66,7 @@ if currGPU == '3090':
     FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
     FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/davit_base_ml-decoder-ASL-BCE/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/davit_tiny_ml-decoder-ASL-BCE/'
 
 
     # post importer config
@@ -77,7 +77,7 @@ if currGPU == '3090':
     FLAGS['stopReadingAt'] = 5000
 
     # dataset config
-    FLAGS['tagCount'] == 1588
+    FLAGS['tagCount'] == 5500
     FLAGS['image_size'] = 384
     FLAGS['progressiveImageSize'] = True
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
@@ -108,8 +108,8 @@ if currGPU == '3090':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 128
-    FLAGS['gradient_accumulation_iterations'] = 16
+    FLAGS['batch_size'] = 256
+    FLAGS['gradient_accumulation_iterations'] = 8
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -155,7 +155,7 @@ elif currGPU == 'm40':
     FLAGS['stopReadingAt'] = 5000
 
     # dataset config
-    FLAGS['tagCount'] = 5500
+    FLAGS['tagCount'] = 1588
     FLAGS['image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
@@ -552,13 +552,13 @@ def modelSetup(classes):
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
+    model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     
     
     
     # ViT-better similar to https://arxiv.org/abs/2205.01580
     # really only using the avgpool for now, so basically S/32 with gap
-    
+    '''
     model = timm.models.VisionTransformer(
         img_size = FLAGS['image_size'], 
         patch_size = 32, 
@@ -569,7 +569,7 @@ def modelSetup(classes):
         global_pool='avg', 
         class_token = False, 
         fc_norm=True)
-    
+    '''
     # cvt
     
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
@@ -592,7 +592,7 @@ def modelSetup(classes):
     
     '''
     
-    #model = add_ml_decoder_head(model)
+    model = add_ml_decoder_head(model)
     
     if (FLAGS['resume_epoch'] > 0):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
