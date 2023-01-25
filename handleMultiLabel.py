@@ -964,7 +964,62 @@ def getAccuracy(preds, targs):
     P4 = (4 * TP * TN) / ((4 * TN * TP) + (TN + TP) * (FP + FN) + epsilon)
     
     return torch.column_stack([TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision, P4])
-
+    
+# tracking for performance metrics that can be computed from confusion matrix
+class MetricTracker():
+    def __init__(self):
+        self.running_confusion_matrix = None
+        self.epsilon = 1e-12
+        self.sampleCount = 0
+        
+    def get_full_metrics(self):
+        with torch.no_grad():
+            TP, FN, FP, TN = self.running_confusion_matrix / self.sampleCount
+            
+            Precall = TP / (TP + FN + self.epsilon)
+            Nrecall = TN / (TN + FP + self.epsilon)
+            Pprecision = TP / (TP + FP + self.epsilon)
+            Nprecision = TN / (TN + FN + self.epsilon)
+            
+            P4 = (4 * TP * TN) / ((4 * TN * TP) + (TN + TP) * (FP + FN) + self.epsilon)
+        
+            return torch.column_stack([TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision, P4])
+        
+    def get_aggregate_metrics(self):
+        with torch.no_grad():
+            TP, FN, FP, TN = (self.running_confusion_matrix / self.sampleCount).mean(dim=1)
+            
+            Precall = TP / (TP + FN + self.epsilon)
+            Nrecall = TN / (TN + FP + self.epsilon)
+            Pprecision = TP / (TP + FP + self.epsilon)
+            Nprecision = TN / (TN + FN + self.epsilon)
+            
+            P4 = (4 * TP * TN) / ((4 * TN * TP) + (TN + TP) * (FP + FN) + self.epsilon)
+            return torch.column_stack([TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision, P4])
+    
+    def update(self, preds, targs):
+        self.sampleCount += targs.size(dim=0)
+        
+        targs_inv = 1 - targs
+        P = targs * preds
+        N = targs_inv * preds
+        
+        
+        TP = P.sum(dim=0)
+        FN = (targs - P).sum(dim=0)
+        FP = N.sum(dim=0)
+        TN = (targs_inv - N).sum(dim=0)
+        
+        output = torch.stack([TP, FN, FP, TN])
+        if self.running_confusion_matrix is None:
+            self.running_confusion_matrix = output
+        
+        else:
+            self.running_confusion_matrix += output
+            
+        return self.get_aggregate_metrics()
+        
+    
 class AverageMeter(object):
     def __init__(self):
         self.val = None
