@@ -907,7 +907,7 @@ def trainCycle(image_datasets, model):
                 MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
                 print(*LabelledAccuracySorted, sep="\n")
                 #torch.set_printoptions(profile="default")
-                print(MeanStackedAccuracy)
+                print((MeanStackedAccuracy*100).tolist())
                 
                 
                 prior.save_prior()
