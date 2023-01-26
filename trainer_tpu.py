@@ -444,7 +444,7 @@ def trainCycle(image_datasets, model):
                     #if phase == 'train':
                         #imageBatch, tagBatch = mixup(imageBatch, tagBatch)
                     
-                    outputs = model(images)
+                    outputs = model(imageBatch)
                     loss = criterion(outputs, tagBatch)
                     #print("loss")
 
