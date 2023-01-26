@@ -196,7 +196,7 @@ class transformsCallable():
         #print(image)
         if self.transform is not None:
             examples["Image"] = self.transform(examples["Image"])
-        print(examples['Image'])
+        #print(examples['Image'])
         postTagList = set(examples['tag_string'].split()).intersection(set(self.lb.classes_))
 
         postTags = self.lb.transform([postTagList])
