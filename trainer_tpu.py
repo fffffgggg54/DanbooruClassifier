@@ -193,14 +193,15 @@ class transformsCallable():
         background.paste(image, mask=image.split()[3])
         image = background
         examples["Image"] = image
+        print(image)
         if self.transform is not None:
             examples["Image"] = self.transform(examples["Image"])
-
+        print(examples('Image'])
         postTagList = set(examples['tag_string'].split()).intersection(set(self.lb.classes_))
 
         postTags = self.lb.transform([postTagList])
         examples['labels'] = torch.Tensor(postTags)
-
+        print(examples['labels'])
         return examples
         
         
@@ -447,6 +448,7 @@ def trainCycle(image_datasets, model):
                     outputs = model(imageBatch)
                     loss = criterion(outputs, tagBatch)
                     #print("loss")
+                    print(loss)
 
                     # backward + optimize only if in training phase
                     if phase == 'train' and (loss.isnan() == False):
