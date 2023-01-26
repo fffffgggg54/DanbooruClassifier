@@ -219,11 +219,11 @@ def getData():
     '''
     val_ds = myDataset['train'] \
         .with_format("torch")
-        '''
-        .filter(lambda x: (x['__index_level_0__'] % 10) >= moduloBound) \
-        .map(transformsCallable(tagList, valTransforms)) \
-        .shuffle(buffer_size=1000, seed=42)
-        '''
+    '''
+    .filter(lambda x: (x['__index_level_0__'] % 10) >= moduloBound) \
+    .map(transformsCallable(tagList, valTransforms)) \
+    .shuffle(buffer_size=1000, seed=42)
+    '''
         
     global classes
     #classes = {classIndex : className for classIndex, className in enumerate(trainSet.classes)}
