@@ -193,7 +193,7 @@ class transformsCallable():
         background.paste(image, mask=image.split()[3])
         image = background
         examples["Image"] = image
-        print(image)
+        #print(image)
         if self.transform is not None:
             examples["Image"] = self.transform(examples["Image"])
         print(examples['Image'])
@@ -201,7 +201,7 @@ class transformsCallable():
 
         postTags = self.lb.transform([postTagList])
         examples['labels'] = torch.Tensor(postTags)
-        print(examples['labels'])
+        #print(examples['labels'])
         return examples
         
         
@@ -448,7 +448,7 @@ def trainCycle(image_datasets, model):
                     outputs = model(imageBatch)
                     loss = criterion(outputs, tagBatch)
                     #print("loss")
-                    print(loss)
+                    #print(loss)
 
                     # backward + optimize only if in training phase
                     if phase == 'train' and (loss.isnan() == False):
@@ -466,7 +466,7 @@ def trainCycle(image_datasets, model):
                     imagesPerSecond = (FLAGS['batch_size']*stepsPerPrintout)/(time.time() - cycleTime)
                     cycleTime = time.time()
 
-                    print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f\t' % (epoch, FLAGS['num_epochs'], i, dataset_sizes[phase], loss, imagesPerSecond))
+                    print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f\t' % (epoch, FLAGS['num_epochs'], i, 0, loss, imagesPerSecond))
 
             if phase == 'train':
                 scheduler.step()
