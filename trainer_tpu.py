@@ -84,7 +84,7 @@ FLAGS['weight_decay'] = 2e-2
 
 FLAGS['resume_epoch'] = 0
 
-FLAGS['finetune'] = True
+FLAGS['finetune'] = False
 
 # debugging config
 
@@ -287,9 +287,9 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes))
-    #model = timm.create_model('edgenext_xx_small', pretrained=False, num_classes=len(classes))
+    model = timm.create_model('edgenext_xx_small', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('tf_efficientnetv2_b3', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
-    model = timm.create_model('vit_base_patch16_384', pretrained=True, num_classes=len(classes))
+    #model = timm.create_model('vit_base_patch16_384', pretrained=True, num_classes=len(classes))
 
     
     #model = add_ml_decoder_head(model)
@@ -373,14 +373,14 @@ def trainCycle(image_datasets, model):
     #criterion = nn.BCEWithLogitsLoss()
     #criterion = nn.CrossEntropyLoss()
     criterion = AsymmetricLossMultiLabel(gamma_pos=0, gamma_neg=0, clip=0)
-    
+    '''
     params_to_update = []
     for name, param in model.named_parameters():
         if param.requires_grad == True:
             params_to_update.append(param)
-    
+    '''
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    optimizer = optim.SGD(params_to_update, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=FLAGS['num_epochs'], epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
