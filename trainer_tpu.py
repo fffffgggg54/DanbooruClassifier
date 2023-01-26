@@ -72,10 +72,10 @@ FLAGS['image_size_initial'] = int(FLAGS['imageSize'] // FLAGS['crop'])
 # training config
 
 FLAGS['num_epochs'] = 100
-FLAGS['batch_size'] = 64
+FLAGS['batch_size'] = 16
 FLAGS['gradient_accumulation_iterations'] = 1
 
-FLAGS['base_learning_rate'] = 3e-3
+FLAGS['base_learning_rate'] = 3e-3 * 8
 FLAGS['base_batch_size'] = 2048
 FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
 FLAGS['lr_warmup_epochs'] = 5
@@ -90,7 +90,7 @@ FLAGS['finetune'] = False
 
 FLAGS['verbose_debug'] = False
 FLAGS['skip_test_set'] = False
-FLAGS['stepsPerPrintout'] = 1
+FLAGS['stepsPerPrintout'] = 50
 
 classes = None
 
@@ -286,10 +286,10 @@ def modelSetup(classes):
     
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes))
+    #model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('edgenext_xx_small', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('tf_efficientnetv2_b3', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
-    #model = timm.create_model('vit_base_patch16_384', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('vit_base_patch16_384', pretrained=True, num_classes=len(classes))
 
     
     #model = add_ml_decoder_head(model)
@@ -438,8 +438,8 @@ def trainCycle(image_datasets, model):
             for i, data in loaderIterable:
                 imageBatch = data['Image']
                 tagBatch = data['labels']
-                print(imageBatch.shape)
-                print(tagBatch.shape)
+                #print(imageBatch.shape)
+                #print(tagBatch.shape)
                 optimizer.zero_grad()
                 
                 with torch.set_grad_enabled(phase == 'train'):
