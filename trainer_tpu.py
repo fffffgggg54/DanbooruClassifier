@@ -209,25 +209,21 @@ def getData():
     startTime = time.time()
     tags = pd.read_csv(FLAGS['tagsPath'])
     tagList = tags['name']
-    myDataset = datasets.load_dataset('fffffgggg54/danbooru2021', streaming=True)
 
     moduloVal = 10
     moduloBound = 9
-    train_ds = myDataset['train'] \
+    train_ds = datasets.load_dataset('fffffgggg54/danbooru2021', streaming=True) \
         .with_format("torch") \
         .map(transformsCallable(tagList, trainTransforms))
-    '''
-    .shuffle(buffer_size=1000, seed=42)
-    .filter(lambda x: (x['__index_level_0__'] % 10) < moduloBound) \
-    .shuffle(buffer_size=1000, seed=42)
-    '''
+        .filter(lambda x: (x['__index_level_0__'] % 10) < moduloBound) \
+        .shuffle(buffer_size=10000, seed=42)
+
     val_ds = myDataset['train'] \
-        .with_format("torch")
-    '''
-    .filter(lambda x: (x['__index_level_0__'] % 10) >= moduloBound) \
-    .map(transformsCallable(tagList, valTransforms)) \
-    .shuffle(buffer_size=1000, seed=42)
-    '''
+        .with_format("torch") \
+        .filter(lambda x: (x['__index_level_0__'] % 10) >= moduloBound) \
+        .map(transformsCallable(tagList, valTransforms)) \
+        .shuffle(buffer_size=10000, seed=42)
+    
         
     global classes
     #classes = {classIndex : className for classIndex, className in enumerate(trainSet.classes)}
@@ -287,9 +283,9 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('ghostnet_050', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes))
-    model = timm.create_model('edgenext_xx_small', pretrained=False, num_classes=len(classes))
+    #model = timm.create_model('edgenext_xx_small', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('tf_efficientnetv2_b3', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
-    #model = timm.create_model('vit_base_patch16_384', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('vit_base_patch16_384', pretrained=True, num_classes=len(classes))
 
     
     #model = add_ml_decoder_head(model)
@@ -350,8 +346,8 @@ def trainCycle(image_datasets, model):
         torch.utils.data.DataLoader(
             image_datasets[x], 
             batch_size=FLAGS['batch_size'], 
-            #num_workers=FLAGS['num_workers'], 
-            #persistent_workers = True, 
+            num_workers=FLAGS['num_workers'], 
+            persistent_workers = True, 
             prefetch_factor=2,
             pin_memory = True, 
             drop_last=True, 
