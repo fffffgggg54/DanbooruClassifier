@@ -193,10 +193,10 @@ class transformsCallable():
         if self.transform is not None:
             examples["Image"] = self.transform(examples["Image"])
 
-        #postTagList = set(examples['tag_string'].split()).intersection(set(tagList.to_list()))
+        postTagList = set(examples['tag_string'].split()).intersection(set(tagList.to_list()))
 
-        #postTags = self.lb.transform([postTagList])
-        #examples['labels'] = torch.Tensor(postTags)
+        postTags = self.lb.transform([postTagList])
+        examples['labels'] = torch.Tensor(postTags)
 
         return examples
         
@@ -210,17 +210,20 @@ def getData():
     moduloVal = 10
     moduloBound = 9
     train_ds = myDataset['train'] \
-        .with_format("torch") \
-        .shuffle(buffer_size=1000, seed=42)
+        .with_format("torch")
+        
     '''
+    .shuffle(buffer_size=1000, seed=42)
     .filter(lambda x: (x['__index_level_0__'] % 10) < moduloBound) \
     .shuffle(buffer_size=1000, seed=42)
     '''
     val_ds = myDataset['train'] \
-        .with_format("torch") \
+        .with_format("torch")
+        '''
         .filter(lambda x: (x['__index_level_0__'] % 10) >= moduloBound) \
         .map(transformsCallable(tagList, valTransforms)) \
         .shuffle(buffer_size=1000, seed=42)
+        '''
         
     global classes
     #classes = {classIndex : className for classIndex, className in enumerate(trainSet.classes)}
@@ -418,7 +421,7 @@ def trainCycle(image_datasets, model):
                 print("training set")
                 
                 
-            if phase == 'val':
+            if phase == 'validation':
                 modelDir = create_dir(FLAGS['modelDir'])
                 torch.save(model.state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
                 model.eval()   # Set model to evaluate mode
