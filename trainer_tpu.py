@@ -63,7 +63,7 @@ FLAGS['tagsPath'] = './selected_tags.csv'
 # dataloader config
 
 FLAGS['num_workers'] = 5
-FLAGS['imageSize'] = 448
+FLAGS['imageSize'] = 384
 
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
 FLAGS['crop'] = 0.900
