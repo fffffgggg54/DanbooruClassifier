@@ -450,7 +450,7 @@ def trainCycle(image_datasets, model):
 
                     # backward + optimize only if in training phase
                     if phase == 'train' and (loss.isnan() == False):
-                        accelerate.backward(loss)
+                        accelerator.backward(loss)
                         #print("backward")
                         #if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                         #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
