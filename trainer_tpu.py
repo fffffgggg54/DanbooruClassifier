@@ -19,6 +19,9 @@ import os
 import torchvision
 from sklearn import preprocessing
 
+from io import BytesIO
+from PIL import Image, ImageOps, ImageDraw
+
 import multiprocessing
 
 import timm
