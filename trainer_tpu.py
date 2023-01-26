@@ -212,13 +212,13 @@ def getData():
 
     moduloVal = 10
     moduloBound = 9
-    train_ds = datasets.load_dataset('fffffgggg54/danbooru2021', streaming=True) \
+    train_ds = datasets.load_dataset('fffffgggg54/danbooru2021', streaming=True)['train'] \
         .with_format("torch") \
         .map(transformsCallable(tagList, trainTransforms))
         .filter(lambda x: (x['__index_level_0__'] % 10) < moduloBound) \
         .shuffle(buffer_size=10000, seed=42)
 
-    val_ds = myDataset['train'] \
+    val_ds = datasets.load_dataset('fffffgggg54/danbooru2021', streaming=True)['train'] \
         .with_format("torch") \
         .filter(lambda x: (x['__index_level_0__'] % 10) >= moduloBound) \
         .map(transformsCallable(tagList, valTransforms)) \
