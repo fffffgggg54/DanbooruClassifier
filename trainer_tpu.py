@@ -193,10 +193,10 @@ class transformsCallable():
         if self.transform is not None:
             examples["Image"] = self.transform(examples["Image"])
 
-        postTagList = set(examples['tag_string'].split()).intersection(set(tagList.to_list()))
+        #postTagList = set(examples['tag_string'].split()).intersection(set(tagList.to_list()))
 
-        postTags = self.lb.transform([postTagList])
-        examples['labels'] = torch.Tensor(postTags)
+        #postTags = self.lb.transform([postTagList])
+        #examples['labels'] = torch.Tensor(postTags)
 
         return examples
         
