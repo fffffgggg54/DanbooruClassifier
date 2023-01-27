@@ -63,7 +63,7 @@ FLAGS['tagsPath'] = './selected_tags.csv'
 # dataloader config
 
 FLAGS['num_workers'] = 5
-FLAGS['imageSize'] = 384
+FLAGS['imageSize'] = 224
 
 FLAGS['interpolation'] = torchvision.transforms.InterpolationMode.BICUBIC
 FLAGS['crop'] = 0.900
@@ -289,7 +289,7 @@ def modelSetup(classes):
     #model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('edgenext_xx_small', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('tf_efficientnetv2_b3', pretrained=False, num_classes=len(classes), drop_rate = 0.00, drop_path_rate = 0.0)
-    model = timm.create_model('vit_base_patch16_384', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('convnext_tiny', pretrained=True, num_classes=len(classes))
 
     
     #model = add_ml_decoder_head(model)
