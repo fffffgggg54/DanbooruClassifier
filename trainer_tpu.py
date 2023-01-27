@@ -350,7 +350,7 @@ def trainCycle(image_datasets, model):
         torch.utils.data.DataLoader(
             image_datasets[x], 
             batch_size=FLAGS['batch_size'], 
-            #num_workers=FLAGS['num_workers'], 
+            num_workers=FLAGS['num_workers'], 
             #persistent_workers = True, 
             prefetch_factor=2,
             pin_memory = True, 
