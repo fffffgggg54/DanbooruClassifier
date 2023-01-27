@@ -178,9 +178,9 @@ valTransforms = transforms.Compose([
 class transformsCallable():
     def __init__(self, tagList, transform=None):
         self.transform = transform
-        
-        self.lb = preprocessing.MultiLabelBinarizer()
-        self.lb.fit([tagList.to_list()])
+        self.tagList = tagList
+        #self.lb = preprocessing.MultiLabelBinarizer()
+        #self.lb.fit([tagList.to_list()])
 
     def __call__(self, examples):
         image = Image.open(BytesIO(examples['Image']['bytes']))
@@ -197,10 +197,20 @@ class transformsCallable():
         if self.transform is not None:
             examples["Image"] = self.transform(examples["Image"])
         #print(examples['Image'])
-        postTagList = set(examples['tag_string'].split()).intersection(set(self.lb.classes_))
+        
+        postTagList = set(examples['tag_string'].split()).intersection(set(self.tagList))
 
-        postTags = self.lb.transform([postTagList])
-        examples['labels'] = torch.Tensor(postTags)
+        #postTags = self.lb.transform([postTagList])
+        postTags = []
+        for key in list(tagList.to_list()):
+            match = False
+            for tag in postTagList:
+                if tag == key:
+                    match = True
+
+            postTags.append(int(match))
+        postTags = torch.Tensor(postTags)
+        examples['labels'] = postTags
         #print(examples['labels'])
         return examples
         
@@ -214,7 +224,8 @@ def getData():
     moduloVal = 10
     moduloBound = 9
     train_ds = myDataset['train'] \
-        .with_format("torch")
+        .with_format("torch") \
+        .set_transform(transformsCallable(tagList, trainTransforms))
         
     '''
     .map(transformsCallable(tagList, trainTransforms))
