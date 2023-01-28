@@ -361,6 +361,7 @@ def getData():
     blockedIDs = [5190773, 5142098, 5210705, 5344403, 5237708, 5344394, 5190771, 5237705, 5174387, 5344400, 5344397, 5174384]
     for postID in blockedIDs: postData.query("id != @postID", inplace = True)
     print("banned post query time: " + str(time.time()-queryStartTime))
+    postData.to_pickle(FLAGS['postDFPickleFiltered'])
     
 
     
