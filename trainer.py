@@ -50,24 +50,25 @@ FLAGS = {}
 
 # path config for various directories and files
 # TODO replace string appending with os.path.join()
+FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
+#FLAGS['rootPath'] = "/media/fredo/Datasets/danbooru2021/"
+if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
+FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
+FLAGS['imageRoot'] = FLAGS['rootPath'] + "original/"
 
+FLAGS['postListFile'] = FLAGS['postMetaRoot'] + "data_posts.json"
+FLAGS['tagListFile'] = FLAGS['postMetaRoot'] + "data_tags.json"
+FLAGS['postDFPickle'] = FLAGS['postMetaRoot'] + "postData.pkl"
+FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
+FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
+FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
+FLAGS['postDFPickleFilteredTrimmed'] = FLAGS['postMetaRoot'] + "tagDataFilteredTrimmed.pkl"
 if currGPU == '3090':
 
-    FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
-    #FLAGS['rootPath'] = "/media/fredo/Datasets/danbooru2021/"
-    if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
-    FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
-    FLAGS['imageRoot'] = FLAGS['rootPath'] + "original/"
 
-    FLAGS['postListFile'] = FLAGS['postMetaRoot'] + "data_posts.json"
-    FLAGS['tagListFile'] = FLAGS['postMetaRoot'] + "data_tags.json"
-    FLAGS['postDFPickle'] = FLAGS['postMetaRoot'] + "postData.pkl"
-    FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
-    FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
-    FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-    #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/davit_base_ml-decoder-ASL-BCE/'
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-ASL-BCE/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/davit_base_ml-decoder-ASL-BCE/'
+
 
     # post importer config
 
@@ -79,7 +80,7 @@ if currGPU == '3090':
     # dataset config
     FLAGS['tagCount'] = 5500
     FLAGS['image_size'] = 384
-    FLAGS['progressiveImageSize'] = False
+    FLAGS['progressiveImageSize'] = True
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
     #FLAGS['cacheRoot'] = None
 
@@ -100,15 +101,15 @@ if currGPU == '3090':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 28
+    FLAGS['num_workers'] = 14
     FLAGS['postDataServerWorkerCount'] = 3
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
     # training config
 
-    FLAGS['num_epochs'] = 30
-    FLAGS['batch_size'] = 256
+    FLAGS['num_epochs'] = 100
+    FLAGS['batch_size'] = 128
     FLAGS['gradient_accumulation_iterations'] = 8
 
     FLAGS['base_learning_rate'] = 3e-3
@@ -116,10 +117,9 @@ if currGPU == '3090':
     FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
     FLAGS['lr_warmup_epochs'] = 5
 
-    #FLAGS['weight_decay'] = 2e-2
-    FLAGS['weight_decay'] = 1e-8
+    FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 0
+    FLAGS['resume_epoch'] = 15
 
     FLAGS['finetune'] = False
 
@@ -133,18 +133,7 @@ if currGPU == '3090':
     FLAGS['val'] = False
 
 elif currGPU == 'm40':
-    FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
-    #FLAGS['rootPath'] = "/media/fredo/Datasets/danbooru2021/"
-    if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
-    FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
-    FLAGS['imageRoot'] = FLAGS['rootPath'] + "original/"
 
-    FLAGS['postListFile'] = FLAGS['postMetaRoot'] + "data_posts.json"
-    FLAGS['tagListFile'] = FLAGS['postMetaRoot'] + "data_tags.json"
-    FLAGS['postDFPickle'] = FLAGS['postMetaRoot'] + "postData.pkl"
-    FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
-    FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
-    FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
     FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/ViT-better-S-P16-224-ASL-BCE/'
 
@@ -212,18 +201,7 @@ elif currGPU == 'm40':
     FLAGS['val'] = False
 
 elif currGPU == 'none':
-    FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
-    #FLAGS['rootPath'] = "/media/fredo/Datasets/danbooru2021/"
-    if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
-    FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
-    FLAGS['imageRoot'] = FLAGS['rootPath'] + "original/"
 
-    FLAGS['postListFile'] = FLAGS['postMetaRoot'] + "data_posts.json"
-    FLAGS['tagListFile'] = FLAGS['postMetaRoot'] + "data_tags.json"
-    FLAGS['postDFPickle'] = FLAGS['postMetaRoot'] + "postData.pkl"
-    FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
-    FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
-    FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
     FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tf_efficientnetv2_s-ASL-BCE/'
 
@@ -362,7 +340,6 @@ def getData():
     #blockedIDs = [5190773, 5142098, 5210705, 5344403, 5237708, 5344394, 5190771, 5237705, 5174387, 5344400, 5344397, 5174384]
     #for postID in blockedIDs: postData.query("id != @postID", inplace = True)
     #print("banned post query time: " + str(time.time()-queryStartTime))
-    #postData.to_pickle(FLAGS['postDFPickleFiltered'])
     
 
     
@@ -370,6 +347,8 @@ def getData():
     #postData = postData[['id', 'tag_string']]
     postData = postData.convert_dtypes()
     print(postData.info())
+    postData.to_pickle(FLAGS['postDFPickleFilteredTrimmed'])
+    
     
 
     print("finished preprocessing, time spent: " + str(time.time() - startTime))
@@ -555,7 +534,7 @@ def modelSetup(classes):
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('convnext_small.in12k_ft_in1k_384', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
     
     
     
@@ -595,7 +574,7 @@ def modelSetup(classes):
     
     '''
     
-    #model = add_ml_decoder_head(model)
+    model = add_ml_decoder_head(model)
     
     if (FLAGS['resume_epoch'] > 0):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
