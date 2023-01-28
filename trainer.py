@@ -553,7 +553,7 @@ def modelSetup(classes):
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
+    model = timm.create_model('gernet_l', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
     
     
     
@@ -593,7 +593,7 @@ def modelSetup(classes):
     
     '''
     
-    model = add_ml_decoder_head(model)
+    #model = add_ml_decoder_head(model)
     
     if (FLAGS['resume_epoch'] > 0):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
