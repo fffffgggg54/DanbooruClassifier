@@ -67,7 +67,7 @@ if currGPU == '3090':
     FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/davit_base_ml-decoder-ASL-BCE/'
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_l-ASL-BCE/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-ASL-BCE/'
 
     # post importer config
 
@@ -79,7 +79,7 @@ if currGPU == '3090':
     # dataset config
     FLAGS['tagCount'] = 5500
     FLAGS['image_size'] = 384
-    FLAGS['progressiveImageSize'] = True
+    FLAGS['progressiveImageSize'] = False
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
     #FLAGS['cacheRoot'] = None
 
@@ -116,7 +116,8 @@ if currGPU == '3090':
     FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
     FLAGS['lr_warmup_epochs'] = 5
 
-    FLAGS['weight_decay'] = 2e-2
+    #FLAGS['weight_decay'] = 2e-2
+    FLAGS['weight_decay'] = 1e-8
 
     FLAGS['resume_epoch'] = 0
 
@@ -356,12 +357,12 @@ def getData():
     #print(postData.info())
     
     # get posts that are not banned
-    queryStartTime = time.time()
-    postData.query("is_banned == False", inplace = True)
-    blockedIDs = [5190773, 5142098, 5210705, 5344403, 5237708, 5344394, 5190771, 5237705, 5174387, 5344400, 5344397, 5174384]
-    for postID in blockedIDs: postData.query("id != @postID", inplace = True)
-    print("banned post query time: " + str(time.time()-queryStartTime))
-    postData.to_pickle(FLAGS['postDFPickleFiltered'])
+    #queryStartTime = time.time()
+    #postData.query("is_banned == False", inplace = True)
+    #blockedIDs = [5190773, 5142098, 5210705, 5344403, 5237708, 5344394, 5190771, 5237705, 5174387, 5344400, 5344397, 5174384]
+    #for postID in blockedIDs: postData.query("id != @postID", inplace = True)
+    #print("banned post query time: " + str(time.time()-queryStartTime))
+    #postData.to_pickle(FLAGS['postDFPickleFiltered'])
     
 
     
@@ -554,7 +555,7 @@ def modelSetup(classes):
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('gernet_l', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
+    model = timm.create_model('convnext_small.in12k_ft_in1k_384', pretrained=True, num_classes=len(classes))
     
     
     
