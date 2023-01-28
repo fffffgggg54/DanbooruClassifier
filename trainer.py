@@ -66,8 +66,8 @@ if currGPU == '3090':
     FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
     FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/davit_base_ml-decoder-ASL-BCE/'
-
+    #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/davit_base_ml-decoder-ASL-BCE/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_l-ASL-BCE/'
 
     # post importer config
 
@@ -108,7 +108,7 @@ if currGPU == '3090':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 128
+    FLAGS['batch_size'] = 256
     FLAGS['gradient_accumulation_iterations'] = 8
 
     FLAGS['base_learning_rate'] = 3e-3
