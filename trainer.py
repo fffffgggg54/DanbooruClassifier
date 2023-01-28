@@ -107,7 +107,7 @@ if currGPU == '3090':
 
     # training config
 
-    FLAGS['num_epochs'] = 100
+    FLAGS['num_epochs'] = 30
     FLAGS['batch_size'] = 256
     FLAGS['gradient_accumulation_iterations'] = 8
 
@@ -118,7 +118,7 @@ if currGPU == '3090':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 6
+    FLAGS['resume_epoch'] = 0
 
     FLAGS['finetune'] = False
 
