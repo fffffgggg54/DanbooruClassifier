@@ -178,7 +178,7 @@ elif currGPU == 'm40':
 
     FLAGS['num_epochs'] = 100
     FLAGS['batch_size'] = 512
-    FLAGS['gradient_accumulation_iterations'] = 2
+    FLAGS['gradient_accumulation_iterations'] = 4
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -533,13 +533,13 @@ def modelSetup(classes):
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
+    #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
     
     
     
     # ViT-better similar to https://arxiv.org/abs/2205.01580
     # really only using the avgpool for now, so basically S/32 with gap
-    '''
+    
     model = timm.models.VisionTransformer(
         img_size = FLAGS['image_size'], 
         patch_size = 32, 
@@ -550,7 +550,7 @@ def modelSetup(classes):
         global_pool='avg', 
         class_token = False, 
         fc_norm=True)
-    '''
+    
     # cvt
     
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
