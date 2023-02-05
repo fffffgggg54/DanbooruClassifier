@@ -109,8 +109,8 @@ if currGPU == '3090':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 256
-    FLAGS['gradient_accumulation_iterations'] = 4
+    FLAGS['batch_size'] = 64
+    FLAGS['gradient_accumulation_iterations'] = 16
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -587,9 +587,7 @@ def modelSetup(classes):
         if hasattr(model, "head_dist"):
             for param in model.head_dist.parameters():
                 param.requires_grad = True
-    
-    model.set_grad_checkpointing()
-    
+        
     return model
     
 def getDataLoader(dataset, batch_size):
