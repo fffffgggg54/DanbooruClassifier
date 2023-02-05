@@ -135,7 +135,7 @@ if currGPU == '3090':
 elif currGPU == 'm40':
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/ViT-better-S-P16-224-ASL-BCE/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/levit_128s-Hill/'
 
 
     # post importer config
@@ -169,7 +169,7 @@ elif currGPU == 'm40':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 16
+    FLAGS['num_workers'] = 24
     FLAGS['postDataServerWorkerCount'] = 2
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -185,7 +185,7 @@ elif currGPU == 'm40':
     FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
     FLAGS['lr_warmup_epochs'] = 2
 
-    FLAGS['weight_decay'] = 2e-2
+    FLAGS['weight_decay'] = 5e-2
 
     FLAGS['resume_epoch'] = 0
 
@@ -534,12 +534,12 @@ def modelSetup(classes):
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
-    
+    model = timm.create_model('levit_128s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     
     
     # ViT-better similar to https://arxiv.org/abs/2205.01580
     # really only using the avgpool for now, so basically S/32 with gap
-    
+    '''
     model = timm.models.VisionTransformer(
         img_size = FLAGS['image_size'], 
         patch_size = 32, 
@@ -550,7 +550,7 @@ def modelSetup(classes):
         global_pool='avg', 
         class_token = False, 
         fc_norm=True)
-    
+    '''
     # cvt
     
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
@@ -628,10 +628,10 @@ def trainCycle(image_datasets, model):
     #ema = MLCSL.ModelEma(model, 0.9997)  # 0.9997^641=0.82
     
     
-    #criterion = MLCSL.Hill()
+    criterion = MLCSL.Hill()
     #criterion = MLCSL.SPLC(gamma=2.0)
     #criterion = MLCSL.SPLCModified(gamma=2.0)
-    criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
+    #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=5, gamma_pos=5, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.01)
     #criterion = MLCSL.AsymmetricLossAdaptiveWorking(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.2)
