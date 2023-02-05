@@ -39,8 +39,8 @@ import handleMultiLabel as MLCSL
 #           CONFIGURATION OPTIONS
 # ================================================
 
-#currGPU = '3090'
-currGPU = 'm40'
+currGPU = '3090'
+#currGPU = 'm40'
 #currGPU = 'none'
 
 
@@ -119,7 +119,7 @@ if currGPU == '3090':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 15
+    FLAGS['resume_epoch'] = 44
 
     FLAGS['finetune'] = False
 
