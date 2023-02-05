@@ -587,8 +587,6 @@ def modelSetup(classes):
         if hasattr(model, "head_dist"):
             for param in model.head_dist.parameters():
                 param.requires_grad = True
-                
-    model = torch.jit.script(model)
         
     return model
     
