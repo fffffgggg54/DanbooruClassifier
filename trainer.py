@@ -135,7 +135,7 @@ if currGPU == '3090':
 elif currGPU == 'm40':
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/levit_128s-Hill/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/lcnet_100-Hill/'
 
 
     # post importer config
@@ -147,8 +147,8 @@ elif currGPU == 'm40':
 
     # dataset config
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 224
-    FLAGS['progressiveImageSize'] = False
+    FLAGS['image_size'] = 384
+    FLAGS['progressiveImageSize'] = True
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
     #FLAGS['cacheRoot'] = None
 
@@ -169,7 +169,7 @@ elif currGPU == 'm40':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 14
+    FLAGS['num_workers'] = 20
     FLAGS['postDataServerWorkerCount'] = 2
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -533,8 +533,8 @@ def modelSetup(classes):
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
-    #model = timm.create_model('levit_128s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
+    #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
+    model = timm.create_model('lcnet_100', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     
     
     # ViT-better similar to https://arxiv.org/abs/2205.01580
@@ -573,7 +573,7 @@ def modelSetup(classes):
     
     '''
     
-    model = add_ml_decoder_head(model)
+    #model = add_ml_decoder_head(model)
     
     if (FLAGS['resume_epoch'] > 0):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
