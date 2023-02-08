@@ -135,7 +135,7 @@ if currGPU == '3090':
 elif currGPU == 'm40':
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/lcnet_100-Hill/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/resnet50-ASL_BCE/'
 
 
     # post importer config
@@ -169,7 +169,7 @@ elif currGPU == 'm40':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 20
+    FLAGS['num_workers'] = 14
     FLAGS['postDataServerWorkerCount'] = 2
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -534,7 +534,7 @@ def modelSetup(classes):
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
-    model = timm.create_model('lcnet_100', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
+    model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     
     
     # ViT-better similar to https://arxiv.org/abs/2205.01580
