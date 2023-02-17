@@ -189,7 +189,7 @@ elif currGPU == 'm40':
 
     FLAGS['weight_decay'] = 3e-3
 
-    FLAGS['resume_epoch'] = 0
+    FLAGS['resume_epoch'] = 2
 
     FLAGS['finetune'] = False
 
@@ -198,7 +198,7 @@ elif currGPU == 'm40':
     # debugging config
 
     FLAGS['verbose_debug'] = False
-    FLAGS['skip_test_set'] = False
+    FLAGS['skip_test_set'] = True
     FLAGS['stepsPerPrintout'] = 50
     FLAGS['val'] = False
 
