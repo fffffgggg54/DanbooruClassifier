@@ -321,7 +321,8 @@ class getDecisionBoundary(nn.Module):
             # weighting mask of each threshold shift
             deltaPerClass = alpha * targs.sum(dim=0) * adjustmentStopMask
             # EMA of per-class thresholds
-            self.thresholdPerClass = self.thresholdPerClass * (1 - deltaPerClass) + threshold * deltaPerClass
+            toUpdate = deltaPerClass * adjustmentStopMask
+            self.thresholdPerClass = self.thresholdPerClass * (1 - toUpdate)  + threshold * toUpdate
             
         return self.thresholdPerClass
 
