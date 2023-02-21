@@ -179,7 +179,7 @@ elif currGPU == 'm40':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 512
+    FLAGS['batch_size'] = 256
     FLAGS['gradient_accumulation_iterations'] = 4
 
     FLAGS['base_learning_rate'] = 3e-3
@@ -189,7 +189,7 @@ elif currGPU == 'm40':
 
     FLAGS['weight_decay'] = 3e-3
 
-    FLAGS['resume_epoch'] = 2
+    FLAGS['resume_epoch'] = 39
 
     FLAGS['finetune'] = False
 
@@ -198,7 +198,7 @@ elif currGPU == 'm40':
     # debugging config
 
     FLAGS['verbose_debug'] = False
-    FLAGS['skip_test_set'] = True
+    FLAGS['skip_test_set'] = False
     FLAGS['stepsPerPrintout'] = 50
     FLAGS['val'] = False
 
