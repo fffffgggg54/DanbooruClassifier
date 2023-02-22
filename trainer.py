@@ -649,7 +649,7 @@ def trainCycle(image_datasets, model):
     
     #mixup = Mixup(mixup_alpha = 0.2, cutmix_alpha = 0, num_classes = len(classes))
     
-    boundaryCalculator = MLCSL.getDecisionBoundary()
+    boundaryCalculator = MLCSL.getDecisionBoundary(initial_threshold = 0.5, alpha = 3e-4, threshold_min = 0.01, threshold_max = 0.99)
     if (FLAGS['resume_epoch'] > 0):
         boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth').to(device)
     
