@@ -65,6 +65,8 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 FLAGS['postDFPickleFilteredTrimmed'] = FLAGS['postMetaRoot'] + "tagDataFilteredTrimmed.pkl"
+
+'''
 if currGPU == '3090':
 
 
@@ -133,7 +135,75 @@ if currGPU == '3090':
     FLAGS['skip_test_set'] = False
     FLAGS['stepsPerPrintout'] = 50
     FLAGS['val'] = False
+'''
+if currGPU == '3090':
 
+
+
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-ASL-BCE/'
+
+
+    # post importer config
+
+    FLAGS['chunkSize'] = 1000
+    FLAGS['importerProcessCount'] = 10
+    if(torch.has_mps == True): FLAGS['importerProcessCount'] = 7
+    FLAGS['stopReadingAt'] = 5000
+
+    # dataset config
+    FLAGS['tagCount'] = 5500
+    FLAGS['image_size'] = 448
+    FLAGS['progressiveImageSize'] = True
+    #FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
+    FLAGS['cacheRoot'] = None
+
+    FLAGS['workingSetSize'] = 1
+    FLAGS['trainSetSize'] = 0.8
+
+    # device config
+
+
+    FLAGS['ngpu'] = torch.cuda.is_available()
+    FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
+    FLAGS['device2'] = FLAGS['device']
+    if(torch.has_mps == True): FLAGS['device2'] = "cpu"
+    #FLAGS['use_AMP'] = True if FLAGS['device'] == 'cuda:0' else False
+    FLAGS['use_AMP'] = True
+    FLAGS['use_scaler'] = FLAGS['use_AMP']
+    #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
+
+    # dataloader config
+
+    FLAGS['num_workers'] = 20
+    FLAGS['postDataServerWorkerCount'] = 3
+    if(torch.has_mps == True): FLAGS['num_workers'] = 2
+    if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
+
+    # training config
+
+    FLAGS['num_epochs'] = 100
+    FLAGS['batch_size'] = 256
+    FLAGS['gradient_accumulation_iterations'] = 8
+
+    FLAGS['base_learning_rate'] = 3e-3
+    FLAGS['base_batch_size'] = 2048
+    FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
+    FLAGS['lr_warmup_epochs'] = 5
+
+    FLAGS['weight_decay'] = 2e-2
+
+    FLAGS['resume_epoch'] = 0
+
+    FLAGS['finetune'] = False
+
+    FLAGS['channels_last'] = FLAGS['use_AMP']
+
+    # debugging config
+
+    FLAGS['verbose_debug'] = False
+    FLAGS['skip_test_set'] = False
+    FLAGS['stepsPerPrintout'] = 50
+    FLAGS['val'] = False
 elif currGPU == 'm40':
 
 
@@ -533,10 +603,11 @@ def modelSetup(classes):
     #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.)
+    #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
+    model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15)
     
     
     # ViT-better similar to https://arxiv.org/abs/2205.01580
@@ -630,10 +701,10 @@ def trainCycle(image_datasets, model):
     #ema = MLCSL.ModelEma(model, 0.9997)  # 0.9997^641=0.82
     
     
-    criterion = MLCSL.Hill()
+    #criterion = MLCSL.Hill()
     #criterion = MLCSL.SPLC(gamma=2.0)
     #criterion = MLCSL.SPLCModified(gamma=2.0)
-    #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
+    criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=5, gamma_pos=5, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.01)
     #criterion = MLCSL.AsymmetricLossAdaptiveWorking(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.2)
@@ -649,7 +720,7 @@ def trainCycle(image_datasets, model):
     
     #mixup = Mixup(mixup_alpha = 0.2, cutmix_alpha = 0, num_classes = len(classes))
     
-    boundaryCalculator = MLCSL.getDecisionBoundary(initial_threshold = 0.5, alpha = 3e-4, threshold_min = 0.01, threshold_max = 0.99)
+    boundaryCalculator = MLCSL.getDecisionBoundary(initial_threshold = 0.5, lr = 3e-4, threshold_min = 0.01, threshold_max = 0.99)
     if (FLAGS['resume_epoch'] > 0):
         boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth').to(device)
     
