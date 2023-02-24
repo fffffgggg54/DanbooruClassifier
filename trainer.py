@@ -41,8 +41,8 @@ import timm.optim
 #           CONFIGURATION OPTIONS
 # ================================================
 
-#currGPU = '3090'
-currGPU = 'm40'
+currGPU = '3090'
+#currGPU = 'm40'
 #currGPU = 'none'
 
 
