@@ -339,7 +339,7 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
             #imageLoadTime = time.time() - startTime
             #startTime = time.time()
             #process our image
-
+            image = transforms.functional.resize(image, (self.size, self.size))
             image = image.convert("RGBA")
 
             color = (255,255,255)
@@ -351,7 +351,7 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
 
             #image = transforms.functional.pil_to_tensor(image).squeeze()
 
-            image = transforms.functional.resize(image, (self.size, self.size))
+            
             image = transforms.functional.pil_to_tensor(image)
 
             postTags = torch.Tensor(postTags)

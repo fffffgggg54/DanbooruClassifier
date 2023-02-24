@@ -174,7 +174,7 @@ if currGPU == '3090':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 20
+    FLAGS['num_workers'] = 34
     FLAGS['postDataServerWorkerCount'] = 3
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
