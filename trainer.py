@@ -151,7 +151,8 @@ if currGPU == '3090':
     FLAGS['stopReadingAt'] = 5000
 
     # dataset config
-    FLAGS['tagCount'] = 5500
+    #FLAGS['tagCount'] = 5500
+    FLAGS['tagCount'] = 1588
     FLAGS['image_size'] = 224
     FLAGS['progressiveImageSize'] = True
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
