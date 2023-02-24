@@ -255,10 +255,63 @@ class SPLCModified(nn.Module):
         return loss
 
 
+def stepAtThreshold(x, threshold, k=10, base=1000):
+    return 1 / (1 + torch.pow(base, (0 - k) * (x - threshold)))
+
+def zero_grad(p, set_to_none=False):
+    if p.grad is not None:
+        if set_to_none:
+            p.grad = None
+        else:
+            if p.grad.grad_fn is not None:
+                p.grad.detach_()
+            else:
+                p.grad.requires_grad_(False)
+            p.grad.zero_()
+    return p
+
+# gradient based boundary calculation
+class getDecisionBoundary(nn.Module):
+    def __init__(self, initial_threshold = 0.5, lr = 1e-3, threshold_min = 0.2, threshold_max = 0.8):
+        super().__init__()
+        self.initial_threshold = initial_threshold
+        self.thresholdPerClass = None
+        self.lr = lr
+        self.threshold_min = threshold_min
+        self.threshold_max = threshold_max
+        
+    def forward(self, preds, targs):
+        if self.thresholdPerClass == None:
+            classCount = preds.size(dim=1)
+            currDevice = preds.device
+            self.thresholdPerClass = torch.ones(classCount, device=currDevice, requires_grad=True).to(torch.float64) * self.initial_threshold
+        
+        # need fp64
+        self.thresholdPerClass.retain_grad().to(torch.float64)
+        self.thresholdPerClass = self.thresholdPerClass
+        if preds.requires_grad:
+            preds = preds.detach()
+            
+            predsModified = stepAtThreshold(preds, self.thresholdPerClass)
+            metrics = getAccuracy(predsModified, targs)
+
+            numToMax = metrics[:,8].sum()
+
+            # TODO clean up this optimization phase
+            numToMax.backward()
+            with torch.no_grad():
+                new_threshold = self.lr * self.thresholdPerClass.grad
+                self.thresholdPerClass.add_(new_threshold)
+            
+            self.thresholdPerClass = zero_grad(self.thresholdPerClass)
+            self.thresholdPerClass = self.thresholdPerClass.detach()
+            self.thresholdPerClass.requires_grad=True
+        return self.thresholdPerClass.detach()
+
 
 # derived from SW-CV-ModelZoo/tools/analyze_metrics.py
 
-class getDecisionBoundary(nn.Module):
+class getDecisionBoundaryOld(nn.Module):
     def __init__(self, initial_threshold = 0.5, alpha = 1e-4, threshold_min = 0.01, threshold_max = 0.95):
         super().__init__()
         self.initial_threshold = initial_threshold
