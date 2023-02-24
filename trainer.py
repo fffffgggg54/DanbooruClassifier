@@ -140,7 +140,7 @@ if currGPU == '3090':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-ASL-BCE/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/davit_tiny-ASL-BCE/'
 
 
     # post importer config
@@ -152,10 +152,10 @@ if currGPU == '3090':
 
     # dataset config
     FLAGS['tagCount'] = 5500
-    FLAGS['image_size'] = 448
+    FLAGS['image_size'] = 224
     FLAGS['progressiveImageSize'] = True
-    #FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
-    FLAGS['cacheRoot'] = None
+    FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
+    #FLAGS['cacheRoot'] = None
 
     FLAGS['workingSetSize'] = 1
     FLAGS['trainSetSize'] = 0.8
@@ -174,7 +174,7 @@ if currGPU == '3090':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 34
+    FLAGS['num_workers'] = 20
     FLAGS['postDataServerWorkerCount'] = 3
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -182,8 +182,8 @@ if currGPU == '3090':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 256
-    FLAGS['gradient_accumulation_iterations'] = 8
+    FLAGS['batch_size'] = 512
+    FLAGS['gradient_accumulation_iterations'] = 4
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -607,8 +607,8 @@ def modelSetup(classes):
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15)
-    
+    #model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15)
+    model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     
     # ViT-better similar to https://arxiv.org/abs/2205.01580
     # really only using the avgpool for now, so basically S/32 with gap
