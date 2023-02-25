@@ -140,7 +140,7 @@ if currGPU == '3090':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-ASL-BCE/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_l-ASL-BCE/'
 
 
     # post importer config
@@ -183,8 +183,8 @@ if currGPU == '3090':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 256
-    FLAGS['gradient_accumulation_iterations'] = 8
+    FLAGS['batch_size'] = 512
+    FLAGS['gradient_accumulation_iterations'] = 4
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -608,7 +608,7 @@ def modelSetup(classes):
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
+    model = timm.create_model('gernet_l', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     
     # ViT-better similar to https://arxiv.org/abs/2205.01580
@@ -786,8 +786,8 @@ def trainCycle(image_datasets, model):
                                                           transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * 2.0)),
                                                           #transforms.RandAugment(),
                                                           transforms.RandomHorizontalFlip(),
-                                                          #transforms.TrivialAugmentWide(),
-                                                          #danbooruDataset.CutoutPIL(cutout_factor=0.2),
+                                                          transforms.TrivialAugmentWide(),
+                                                          danbooruDataset.CutoutPIL(cutout_factor=0.2),
                                                           transforms.ToTensor(),
                                                           #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                                                           ])
