@@ -155,6 +155,8 @@ if currGPU == '3090':
     FLAGS['tagCount'] = 1588
     FLAGS['image_size'] = 384
     FLAGS['progressiveImageSize'] = True
+    FLAGS['progressiveSizeStart'] = 0.7
+    FLAGS['progressiveAugRatio'] = 1.8
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
     #FLAGS['cacheRoot'] = None
 
@@ -183,8 +185,8 @@ if currGPU == '3090':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 512
-    FLAGS['gradient_accumulation_iterations'] = 4
+    FLAGS['batch_size'] = 256
+    FLAGS['gradient_accumulation_iterations'] = 8
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -222,6 +224,8 @@ elif currGPU == 'm40':
     FLAGS['tagCount'] = 1588
     FLAGS['image_size'] = 384
     FLAGS['progressiveImageSize'] = True
+    FLAGS['progressiveSizeStart'] = 0.5
+    FLAGS['progressiveAugRatio'] = 3.0
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
     #FLAGS['cacheRoot'] = None
 
@@ -290,6 +294,8 @@ elif currGPU == 'none':
 
     FLAGS['image_size'] = 384
     FLAGS['progressiveImageSize'] = False
+    FLAGS['progressiveSizeStart'] = 0.5
+    FLAGS['progressiveAugRatio'] = 3.0
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
     #FLAGS['cacheRoot'] = None
 
@@ -775,7 +781,7 @@ def trainCycle(image_datasets, model):
                 if FLAGS['progressiveImageSize'] == True:
                     
                     
-                    dynamicResizeDim = int(FLAGS['image_size']/2 + epoch * (FLAGS['image_size']-FLAGS['image_size']/2)/FLAGS['num_epochs'])
+                    dynamicResizeDim = int(FLAGS['image_size']*FLAGS['progressiveSizeStart'] + epoch * (FLAGS['image_size']-FLAGS['image_size']*FLAGS['progressiveSizeStart'])/FLAGS['num_epochs'])
                 else:
                     dynamicResizeDim = FLAGS['image_size']
                 
@@ -783,7 +789,7 @@ def trainCycle(image_datasets, model):
                 print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
                 
                 myDataset.transform = transforms.Compose([transforms.Resize(dynamicResizeDim),
-                                                          transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * 2.0)),
+                                                          transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * FLAGS['progressiveAugRatio'])),
                                                           #transforms.RandAugment(),
                                                           transforms.RandomHorizontalFlip(),
                                                           transforms.TrivialAugmentWide(),
