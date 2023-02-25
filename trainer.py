@@ -783,7 +783,7 @@ def trainCycle(image_datasets, model):
                 print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
                 
                 myDataset.transform = transforms.Compose([transforms.Resize(dynamicResizeDim),
-                                                          transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * 1.6)),
+                                                          transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * 2.0)),
                                                           #transforms.RandAugment(),
                                                           transforms.RandomHorizontalFlip(),
                                                           transforms.TrivialAugmentWide(),
