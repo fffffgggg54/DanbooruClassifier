@@ -154,7 +154,7 @@ if currGPU == '3090':
     #FLAGS['tagCount'] = 5500
     FLAGS['tagCount'] = 1588
     FLAGS['image_size'] = 384
-    FLAGS['progressiveImageSize'] = True
+    FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.7
     FLAGS['progressiveAugRatio'] = 1.8
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
@@ -185,8 +185,8 @@ if currGPU == '3090':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 512
-    FLAGS['gradient_accumulation_iterations'] = 4
+    FLAGS['batch_size'] = 256
+    FLAGS['gradient_accumulation_iterations'] = 8
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
