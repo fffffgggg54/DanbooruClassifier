@@ -885,14 +885,14 @@ def trainCycle(image_datasets, model):
                             if (FLAGS['use_scaler'] == True):   # cuda gpu case
                                 scaler.scale(loss).backward()   #lotta time spent here
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                    #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                     scaler.step(optimizer)
                                     scaler.update()
                                     optimizer.zero_grad()
                             else:                               # apple gpu/cpu case
                                 loss.backward()
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                    #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                     optimizer.step()
                                     optimizer.zero_grad()
 
