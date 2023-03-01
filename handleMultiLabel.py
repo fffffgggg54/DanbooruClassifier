@@ -302,7 +302,7 @@ class getDecisionBoundary(nn.Module):
             with torch.no_grad():
                 new_threshold = self.lr * self.thresholdPerClass.grad
                 self.thresholdPerClass.add_(new_threshold)
-                self.thresholdPerClass.clamp(min=self.threshold_min, max=self.threshold_max)
+                #self.thresholdPerClass = self.thresholdPerClass.clamp(min=self.threshold_min, max=self.threshold_max)
             
             self.thresholdPerClass = zero_grad(self.thresholdPerClass)
             self.thresholdPerClass = self.thresholdPerClass.detach()
