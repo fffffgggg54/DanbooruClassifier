@@ -66,78 +66,6 @@ FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 FLAGS['postDFPickleFilteredTrimmed'] = FLAGS['postMetaRoot'] + "tagDataFilteredTrimmed.pkl"
 
-
-if currGPU == '3090':
-
-
-
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/davit_base_ml-decoder-ASL-BCE/'
-
-
-    # post importer config
-
-    FLAGS['chunkSize'] = 1000
-    FLAGS['importerProcessCount'] = 10
-    if(torch.has_mps == True): FLAGS['importerProcessCount'] = 7
-    FLAGS['stopReadingAt'] = 5000
-
-    # dataset config
-    FLAGS['tagCount'] = 5500
-    FLAGS['image_size'] = 384
-    FLAGS['progressiveImageSize'] = True
-    FLAGS['progressiveSizeStart'] = 0.5
-    FLAGS['progressiveAugRatio'] = 1.6
-    FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
-    #FLAGS['cacheRoot'] = None
-
-    FLAGS['workingSetSize'] = 1
-    FLAGS['trainSetSize'] = 0.8
-
-    # device config
-
-
-    FLAGS['ngpu'] = torch.cuda.is_available()
-    FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
-    FLAGS['device2'] = FLAGS['device']
-    if(torch.has_mps == True): FLAGS['device2'] = "cpu"
-    #FLAGS['use_AMP'] = True if FLAGS['device'] == 'cuda:0' else False
-    FLAGS['use_AMP'] = True
-    FLAGS['use_scaler'] = FLAGS['use_AMP']
-    #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
-
-    # dataloader config
-
-    FLAGS['num_workers'] = 14
-    FLAGS['postDataServerWorkerCount'] = 3
-    if(torch.has_mps == True): FLAGS['num_workers'] = 2
-    if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
-
-    # training config
-
-    FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 64
-    FLAGS['gradient_accumulation_iterations'] = 16
-
-    FLAGS['base_learning_rate'] = 3e-3
-    FLAGS['base_batch_size'] = 2048
-    FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
-    FLAGS['lr_warmup_epochs'] = 5
-
-    FLAGS['weight_decay'] = 2e-2
-
-    FLAGS['resume_epoch'] = 76
-
-    FLAGS['finetune'] = False
-
-    FLAGS['channels_last'] = FLAGS['use_AMP']
-
-    # debugging config
-
-    FLAGS['verbose_debug'] = False
-    FLAGS['skip_test_set'] = False
-    FLAGS['stepsPerPrintout'] = 50
-    FLAGS['val'] = False
-    
 '''
 if currGPU == '3090':
 
@@ -212,6 +140,78 @@ if currGPU == '3090':
     FLAGS['val'] = False
 
 '''
+
+if currGPU == '3090':
+
+
+
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/davit_base_ml-decoder-ASL-BCE/'
+
+
+    # post importer config
+
+    FLAGS['chunkSize'] = 1000
+    FLAGS['importerProcessCount'] = 10
+    if(torch.has_mps == True): FLAGS['importerProcessCount'] = 7
+    FLAGS['stopReadingAt'] = 5000
+
+    # dataset config
+    FLAGS['tagCount'] = 5500
+    FLAGS['image_size'] = 384
+    FLAGS['progressiveImageSize'] = True
+    FLAGS['progressiveSizeStart'] = 0.5
+    FLAGS['progressiveAugRatio'] = 1.6
+    FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
+    #FLAGS['cacheRoot'] = None
+
+    FLAGS['workingSetSize'] = 1
+    FLAGS['trainSetSize'] = 0.8
+
+    # device config
+
+
+    FLAGS['ngpu'] = torch.cuda.is_available()
+    FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
+    FLAGS['device2'] = FLAGS['device']
+    if(torch.has_mps == True): FLAGS['device2'] = "cpu"
+    #FLAGS['use_AMP'] = True if FLAGS['device'] == 'cuda:0' else False
+    FLAGS['use_AMP'] = True
+    FLAGS['use_scaler'] = FLAGS['use_AMP']
+    #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
+
+    # dataloader config
+
+    FLAGS['num_workers'] = 14
+    FLAGS['postDataServerWorkerCount'] = 3
+    if(torch.has_mps == True): FLAGS['num_workers'] = 2
+    if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
+
+    # training config
+
+    FLAGS['num_epochs'] = 100
+    FLAGS['batch_size'] = 64
+    FLAGS['gradient_accumulation_iterations'] = 16
+
+    FLAGS['base_learning_rate'] = 3e-3
+    FLAGS['base_batch_size'] = 2048
+    FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
+    FLAGS['lr_warmup_epochs'] = 5
+
+    FLAGS['weight_decay'] = 2e-2
+
+    FLAGS['resume_epoch'] = 76
+
+    FLAGS['finetune'] = False
+
+    FLAGS['channels_last'] = FLAGS['use_AMP']
+
+    # debugging config
+
+    FLAGS['verbose_debug'] = False
+    FLAGS['skip_test_set'] = False
+    FLAGS['stepsPerPrintout'] = 50
+    FLAGS['val'] = False
+    
 elif currGPU == 'm40':
 
 
