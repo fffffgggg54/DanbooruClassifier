@@ -276,15 +276,17 @@ class getDecisionBoundary(nn.Module):
         super().__init__()
         self.initial_threshold = initial_threshold
         self.thresholdPerClass = None
+        self.needs_init = True
         self.lr = lr
         self.threshold_min = threshold_min
         self.threshold_max = threshold_max
         
     def forward(self, preds, targs):
-        if self.thresholdPerClass == None:
+        if self.thresholdPerClass == None or self.needs_init:
             classCount = preds.size(dim=1)
             currDevice = preds.device
             self.thresholdPerClass = torch.ones(classCount, device=currDevice, requires_grad=True).to(torch.float64) * self.initial_threshold
+            self.needs_init = False
         
         # need fp64
         self.thresholdPerClass.retain_grad()
