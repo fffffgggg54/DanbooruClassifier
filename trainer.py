@@ -199,7 +199,7 @@ if currGPU == '3090':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 76
+    FLAGS['resume_epoch'] = 78
 
     FLAGS['finetune'] = False
 
@@ -732,9 +732,11 @@ def trainCycle(image_datasets, model):
     
     #mixup = Mixup(mixup_alpha = 0.2, cutmix_alpha = 0, num_classes = len(classes))
     
-    boundaryCalculator = MLCSL.getDecisionBoundary(initial_threshold = 0.5, lr = 3e-5, threshold_min = 0.01, threshold_max = 0.99)
+    boundaryCalculator = MLCSL.getDecisionBoundary(initial_threshold = 0.5, lr = 3e-4, threshold_min = 0.01, threshold_max = 0.99)
     if (FLAGS['resume_epoch'] > 0):
         boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth').to(device)
+        #optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth'))
+        
     
     if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
     
@@ -811,6 +813,7 @@ def trainCycle(image_datasets, model):
                     modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
                     torch.save(model.state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
                     torch.save(boundaryCalculator.thresholdPerClass, modelDir + 'thresholds.pth')
+                    torch.save(optimizer.state_dict(), modelDir + 'optimizer' + '.pth')
                     pd.DataFrame(tagNames).to_pickle(modelDir + "tags.pkl")
                 model.eval()   # Set model to evaluate mode
                 print("validation set")
