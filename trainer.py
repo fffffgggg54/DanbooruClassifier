@@ -199,7 +199,7 @@ if currGPU == '3090':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 78
+    FLAGS['resume_epoch'] = 81
 
     FLAGS['finetune'] = False
 
@@ -735,7 +735,7 @@ def trainCycle(image_datasets, model):
     boundaryCalculator = MLCSL.getDecisionBoundary(initial_threshold = 0.5, lr = 3e-4, threshold_min = 0.01, threshold_max = 0.99)
     if (FLAGS['resume_epoch'] > 0):
         boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth').to(device)
-        #optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth'))
+        optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth'))
         
     
     if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()

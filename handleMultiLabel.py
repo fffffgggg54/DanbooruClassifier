@@ -282,10 +282,13 @@ class getDecisionBoundary(nn.Module):
         self.threshold_max = threshold_max
         
     def forward(self, preds, targs):
-        if self.thresholdPerClass == None or self.needs_init:
+        if self.needs_init:
             classCount = preds.size(dim=1)
             currDevice = preds.device
-            self.thresholdPerClass = torch.ones(classCount, device=currDevice, requires_grad=True).to(torch.float64) * self.initial_threshold
+            if self.thresholdPerClass == None:
+                self.thresholdPerClass = torch.ones(classCount, device=currDevice, requires_grad=True).to(torch.float64) * self.initial_threshold
+            else:
+                self.thresholdPerClass = torch.ones(classCount, device=currDevice, requires_grad=True).to(torch.float64) * self.initial_threshold
             self.needs_init = False
         
         # need fp64
@@ -1022,6 +1025,27 @@ def getAccuracy(preds, targs):
     
     return torch.column_stack([TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision, P4])
     
+# recall
+def Precall(TP, FN, FP, TN, epsilon):
+    return TP / (TP + FN + epsilon)
+    
+# specificity
+def Nrecall(TP, FN, FP, TN, epsilon):
+    return TN / (TN + FP + epsilon)
+
+# precision
+def Pprecision(TP, FN, FP, TN, epsilon):
+    return TP / (TP + FP + epsilon)
+
+# negative predictive value (NPV)
+def Nprecision(TP, FN, FP, TN, epsilon):
+    return TN / (TN + FN + epsilon)
+
+def P4(TP, FN, FP, TN, epsilon):
+    return (4 * TP * TN) / ((4 * TN * TP) + (TN + TP) * (FP + FN) + epsilon)
+    
+
+
 # tracking for performance metrics that can be computed from confusion matrix
 class MetricTracker():
     def __init__(self):
@@ -1044,6 +1068,7 @@ class MetricTracker():
         
     def get_aggregate_metrics(self):
         with torch.no_grad():
+        '''
             TP, FN, FP, TN = (self.running_confusion_matrix / self.sampleCount).mean(dim=1)
             
             Precall = TP / (TP + FN + self.epsilon)
@@ -1053,6 +1078,8 @@ class MetricTracker():
             
             P4 = (4 * TP * TN) / ((4 * TN * TP) + (TN + TP) * (FP + FN) + self.epsilon)
             return torch.stack([TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision, P4])
+        '''
+        return self.get_full_metrics().mean(dim=1)
     
     def update(self, preds, targs):
         self.sampleCount += targs.size(dim=0)
