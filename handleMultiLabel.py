@@ -1067,8 +1067,9 @@ class MetricTracker():
             return torch.column_stack([TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision, P4])
         
     def get_aggregate_metrics(self):
-        with torch.no_grad():
         '''
+        with torch.no_grad():
+        
             TP, FN, FP, TN = (self.running_confusion_matrix / self.sampleCount).mean(dim=1)
             
             Precall = TP / (TP + FN + self.epsilon)
