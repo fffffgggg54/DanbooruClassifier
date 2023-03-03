@@ -734,7 +734,9 @@ def trainCycle(image_datasets, model):
     
     boundaryCalculator = MLCSL.getDecisionBoundary(initial_threshold = 0.5, lr = 3e-4, threshold_min = 0.01, threshold_max = 0.99)
     if (FLAGS['resume_epoch'] > 0):
+        print(boundaryCalculator.thresholdPerClass)
         boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth').to(device)
+        print(boundaryCalculator.thresholdPerClass)
         optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth'))
         
     
@@ -854,7 +856,9 @@ def trainCycle(image_datasets, model):
                         outputs = model(imageBatch)
                         #outputs = model(imageBatch).logits
                         preds = torch.sigmoid(outputs)
+                        print(boundaryCalculator.thresholdPerClass)
                         boundary = boundaryCalculator(preds, tagBatch)
+                        print(boundaryCalculator.thresholdPerClass)
                         predsModified = (preds > boundary).float()
                         #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
                         multiAccuracy = cm_tracker.update(predsModified.to(device2), tagBatch.to(device2))
