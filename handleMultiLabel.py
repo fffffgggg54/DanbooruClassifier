@@ -1080,7 +1080,7 @@ class MetricTracker():
             P4 = (4 * TP * TN) / ((4 * TN * TP) + (TN + TP) * (FP + FN) + self.epsilon)
             return torch.stack([TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision, P4])
         '''
-        return self.get_full_metrics().mean(dim=1)
+        return self.get_full_metrics().mean(dim=0)
     
     def update(self, preds, targs):
         self.sampleCount += targs.size(dim=0)
