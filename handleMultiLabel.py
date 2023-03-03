@@ -288,7 +288,7 @@ class getDecisionBoundary(nn.Module):
             if self.thresholdPerClass == None:
                 self.thresholdPerClass = torch.ones(classCount, device=currDevice, requires_grad=True).to(torch.float64) * self.initial_threshold
             else:
-                self.thresholdPerClass = torch.ones(classCount, device=currDevice, requires_grad=True).to(torch.float64) * self.initial_threshold
+                self.thresholdPerClass = torch.ones(classCount, device=currDevice, requires_grad=True).to(torch.float64) * self.thresholdPerClass
             self.needs_init = False
         
         # need fp64
