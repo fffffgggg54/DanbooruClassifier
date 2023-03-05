@@ -160,10 +160,16 @@ def main():
     #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(tagNames), ignore_mismatched_sizes=True)
     model.load_state_dict(torch.load(modelPath + "saved_model_epoch_82.pth", map_location=myDevice))
     model.eval()   # Set model to evaluate mode
+    model = torch.jit.script(model)
+    model = torch.jit.optimize_for_inference(model)
     model = model.to(myDevice)
     
     while(True):
-        postID = int(input("Danbooru Post ID:"))
+        try:
+            postID = int(input("Danbooru Post ID:"))
+        except:
+            print("invalid post ID, exiting...")
+            exit()
         
         image, postData = getPost(postID)
         
