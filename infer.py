@@ -198,11 +198,11 @@ def main():
     currPostTags = list(zip(tagNames, outputs.tolist()[0]))
     currPostTags.sort(key=lambda y: y[1])
     
-    print(currPostTags)
+    print(*currPostTags, sep="\n")
     
     if haveThresholds:
         tagsThresholded = [x for i, x in enumerate(currPostTags) if x[1] > thresholds[i]]
-        print(tagsThresholded)
+        print(*tagsThresholded, sep="\n")
     else:
         print("not using thresholds")
 
