@@ -135,7 +135,7 @@ def getPost(postID):
 def main():
     #gc.set_debug(gc.DEBUG_LEAK)
     # load json files
-    startTime = time.time()
+    
     modelPath = rootPath + "models/davit_base_ml-decoder-ASL-BCE/"
     tagPicklePath = modelPath + "tags.pkl"
     tagNames = pd.read_pickle(tagPicklePath)
@@ -173,7 +173,7 @@ def main():
         
         image, postData = getPost(postID)
         
-        
+        startTime = time.time()
         #path = "testImage.jpg"
         #image = Image.open(path)    #check if file exists
         image.load()    # check if file valid
@@ -192,12 +192,14 @@ def main():
             #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
             ])
         image = transform(image)
+        processingTime = time.time() - startTime
         
-        
-        
+        startTime = time.time()
         #outputs = model(image.unsqueeze(0)).logits.sigmoid()
         outputs = model(image.unsqueeze(0)).sigmoid()
+        predTime = time.time() - startTime
         
+        print(f"preprocessing time: {processingTime} infer time: {predTime}")
         
         currPostTags = []
         #print(outputs.tolist())
