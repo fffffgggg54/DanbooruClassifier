@@ -130,7 +130,7 @@ def getPost(postID):
     
     print("Getting image from " + imageURL)
     response = requests.get(imageURL, headers=headers)
-    return Image.open(BytesIO(response.content))
+    return Image.open(BytesIO(response.content)), postData
 
 def main():
     #gc.set_debug(gc.DEBUG_LEAK)
@@ -165,7 +165,7 @@ def main():
     
     postID = int(input("Danbooru Post ID:"))
 
-    image = getPost(postID)
+    image, postData = getPost(postID)
     
     
     #path = "testImage.jpg"
@@ -201,8 +201,15 @@ def main():
     print(*currPostTags, sep="\n")
     
     if haveThresholds:
-        tagsThresholded = [x for i, x in enumerate(currPostTags) if x[1] > thresholds[i]]
+        tagsThresholded = [(*x, thresholds[0]) for i, x in enumerate(currPostTags) if x[1] > thresholds[i]]
+        print("\n Tags filtered using threshold:\n")
         print(*tagsThresholded, sep="\n")
+        predTags = set(tagsThresholded[:, 0])
+        trueTags = set(postData['tag_string'].split(" "))
+        missingTags = trueTags.difference(predTags)
+        newTags = predTags.difference(trueTags)
+        
+        
     else:
         print("not using thresholds")
 
