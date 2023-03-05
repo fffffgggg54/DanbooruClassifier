@@ -35,6 +35,9 @@ import parallelJsonReader
 import danbooruDataset
 import handleMultiLabel as MLCSL
 
+import timm.layers.ml_decoder as ml_decoder
+MLDecoder = ml_decoder.MLDecoder
+
 #           CONFIGURATION OPTIONS
 # ================================================
 
