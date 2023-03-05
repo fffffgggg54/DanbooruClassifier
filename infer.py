@@ -162,57 +162,57 @@ def main():
     model.eval()   # Set model to evaluate mode
     model = model.to(myDevice)
     
-    
-    postID = int(input("Danbooru Post ID:"))
-
-    image, postData = getPost(postID)
-    
-    
-    #path = "testImage.jpg"
-    #image = Image.open(path)    #check if file exists
-    image.load()    # check if file valid
-    image = image.convert("RGBA")
+    while(true):
+        postID = int(input("Danbooru Post ID:"))
         
-    color = (255,255,255)
-    
-    background = Image.new('RGB', image.size, color)
-    background.paste(image, mask=image.split()[3])
-    image = background
-    
-
-    transform = transforms.Compose([
-        transforms.Resize((384, 384)),
-        transforms.ToTensor(),
-        #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
-    image = transform(image)
-    
-    
-    
-    #outputs = model(image.unsqueeze(0)).logits.sigmoid()
-    outputs = model(image.unsqueeze(0)).sigmoid()
-    
-    
-    currPostTags = []
-    #print(outputs.tolist())
-    currPostTags = list(zip(tagNames, outputs.tolist()[0]))
-    currPostTags.sort(key=lambda y: y[1])
-    
-    print(*currPostTags, sep="\n")
-    
-    if haveThresholds:
-        tagsThresholded = [(*x, thresholds[0]) for i, x in enumerate(currPostTags) if x[1] > thresholds[i]]
-        print("\nTags filtered using threshold:\n")
-        print(*tagsThresholded, sep="\n")
-        predTags = {tag[0] for tag in tagsThresholded}
-        trueTags = set(postData['tag_string'].split(" "))
-        missingTags = trueTags.difference(predTags)
-        newTags = predTags.difference(trueTags)
-        print(f"missing tags: {missingTags}")
-        print(f"newly detected tags: {newTags}")
+        image, postData = getPost(postID)
         
-    else:
-        print("not using thresholds")
+        
+        #path = "testImage.jpg"
+        #image = Image.open(path)    #check if file exists
+        image.load()    # check if file valid
+        image = image.convert("RGBA")
+            
+        color = (255,255,255)
+        
+        background = Image.new('RGB', image.size, color)
+        background.paste(image, mask=image.split()[3])
+        image = background
+        
+
+        transform = transforms.Compose([
+            transforms.Resize((384, 384)),
+            transforms.ToTensor(),
+            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ])
+        image = transform(image)
+        
+        
+        
+        #outputs = model(image.unsqueeze(0)).logits.sigmoid()
+        outputs = model(image.unsqueeze(0)).sigmoid()
+        
+        
+        currPostTags = []
+        #print(outputs.tolist())
+        currPostTags = list(zip(tagNames, outputs.tolist()[0]))
+        currPostTags.sort(key=lambda y: y[1])
+        
+        #print(*currPostTags, sep="\n")
+        
+        if haveThresholds:
+            tagsThresholded = [(*x, thresholds[0]) for i, x in enumerate(currPostTags) if x[1] > thresholds[i]]
+            print("\nTags filtered using threshold:\n")
+            print(*tagsThresholded, sep="\n")
+            predTags = {tag[0] for tag in tagsThresholded}
+            trueTags = set(postData['tag_string'].split(" "))
+            missingTags = trueTags.difference(predTags)
+            newTags = predTags.difference(trueTags)
+            print(f"missing tags: {missingTags}")
+            print(f"newly detected tags: {newTags}")
+            
+        else:
+            print("not using thresholds")
 
 
 
