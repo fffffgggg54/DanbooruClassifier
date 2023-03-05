@@ -162,7 +162,7 @@ def main():
     model.eval()   # Set model to evaluate mode
     model = model.to(myDevice)
     
-    while(true):
+    while(True):
         postID = int(input("Danbooru Post ID:"))
         
         image, postData = getPost(postID)
