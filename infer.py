@@ -204,7 +204,7 @@ def main():
         tagsThresholded = [(*x, thresholds[0]) for i, x in enumerate(currPostTags) if x[1] > thresholds[i]]
         print("\nTags filtered using threshold:\n")
         print(*tagsThresholded, sep="\n")
-        predTags = set(tagsThresholded[:][0])
+        predTags = {tag[0] for tag in tagsThresholded}
         trueTags = set(postData['tag_string'].split(" "))
         missingTags = trueTags.difference(predTags)
         newTags = predTags.difference(trueTags)
