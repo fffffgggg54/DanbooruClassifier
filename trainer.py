@@ -199,7 +199,7 @@ if currGPU == '3090':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 81
+    FLAGS['resume_epoch'] = 85
 
     FLAGS['finetune'] = False
 
