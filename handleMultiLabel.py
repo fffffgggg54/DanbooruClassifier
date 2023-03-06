@@ -1022,7 +1022,7 @@ def getAccuracy(preds, targs):
     Nprecision = TN / (TN + FN + epsilon)
     
     P4 = (4 * TP * TN) / ((4 * TN * TP) + (TN + TP) * (FP + FN) + epsilon)
-    F1 = (2 * TP) / (2 * TP + FP + FN)
+    F1 = (2 * TP) / (2 * TP + FP + FN + epsilon)
     
     return torch.column_stack([TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision, P4, F1])
     
@@ -1048,7 +1048,7 @@ def P4(TP, FN, FP, TN, epsilon):
     
 # F1 metric
 def F1(TP, FN, FP, TN, epsilon):
-    return (2 * TP) / (2 * TP + FP + FN)
+    return (2 * TP) / (2 * TP + FP + FN + epsilon)
 
 # tracking for performance metrics that can be computed from confusion matrix
 class MetricTracker():
