@@ -300,7 +300,7 @@ class getDecisionBoundary(nn.Module):
             predsModified = stepAtThreshold(preds, self.thresholdPerClass)
             metrics = getAccuracy(predsModified, targs)
 
-            numToMax = metrics[:,8].sum()
+            numToMax = metrics[:,9].sum()
 
             # TODO clean up this optimization phase
             numToMax.backward()
@@ -1041,10 +1041,13 @@ def Pprecision(TP, FN, FP, TN, epsilon):
 def Nprecision(TP, FN, FP, TN, epsilon):
     return TN / (TN + FN + epsilon)
 
+# P4 metric
 def P4(TP, FN, FP, TN, epsilon):
     return (4 * TP * TN) / ((4 * TN * TP) + (TN + TP) * (FP + FN) + epsilon)
     
-
+# F1 metric
+def F1(TP, FN, FP, TN, epsilon):
+    return (2 * TP) / (2 * TP + FP + FN)
 
 # tracking for performance metrics that can be computed from confusion matrix
 class MetricTracker():
@@ -1052,19 +1055,22 @@ class MetricTracker():
         self.running_confusion_matrix = None
         self.epsilon = 1e-12
         self.sampleCount = 0
+        self.metrics = [Precall, Nrecall, Pprecision, Nprecision, P4, F1]
         
     def get_full_metrics(self):
         with torch.no_grad():
             TP, FN, FP, TN = self.running_confusion_matrix / self.sampleCount
             
-            Precall = TP / (TP + FN + self.epsilon)
-            Nrecall = TN / (TN + FP + self.epsilon)
-            Pprecision = TP / (TP + FP + self.epsilon)
-            Nprecision = TN / (TN + FN + self.epsilon)
+            #Precall = TP / (TP + FN + self.epsilon)
+            #Nrecall = TN / (TN + FP + self.epsilon)
+            #Pprecision = TP / (TP + FP + self.epsilon)
+            #Nprecision = TN / (TN + FN + self.epsilon)
             
-            P4 = (4 * TP * TN) / ((4 * TN * TP) + (TN + TP) * (FP + FN) + self.epsilon)
+            #P4 = (4 * TP * TN) / ((4 * TN * TP) + (TN + TP) * (FP + FN) + self.epsilon)
+            
+            metrics = [metric(TP, FN, FP, TN, self.epsilon) for metric in self.metrics]
         
-            return torch.column_stack([TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision, P4])
+            return torch.column_stack([TP, FN, FP, TN, *metrics])
         
     def get_aggregate_metrics(self):
         '''
