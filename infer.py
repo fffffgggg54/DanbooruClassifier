@@ -209,7 +209,7 @@ def main():
         #print(*currPostTags, sep="\n")
         
         if haveThresholds:
-            tagsThresholded = [(*x, thresholds[0]) for i, x in enumerate(currPostTags) if x[1] > thresholds[i]]
+            tagsThresholded = [(*x, thresholds[i]) for i, x in enumerate(currPostTags) if x[1] > thresholds[i]]
             print("\nTags filtered using threshold:\n")
             print(*tagsThresholded, sep="\n")
             predTags = {tag[0] for tag in tagsThresholded}
