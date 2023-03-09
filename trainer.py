@@ -259,8 +259,8 @@ elif currGPU == 'm40':
     # training config
 
     FLAGS['num_epochs'] = 10
-    FLAGS['batch_size'] = 256
-    FLAGS['gradient_accumulation_iterations'] = 8
+    FLAGS['batch_size'] = 128
+    FLAGS['gradient_accumulation_iterations'] = 16
 
     FLAGS['base_learning_rate'] = 1e-4
     FLAGS['base_batch_size'] = 2048
