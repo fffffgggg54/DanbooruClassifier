@@ -612,7 +612,8 @@ def modelSetup(classes):
     
     # regular timm models
     
-    model = timm.create_model('vit_base_patch32_clip_224', pretrained=True).reset_classifier(len(classes))
+    model = timm.create_model('vit_base_patch32_clip_224', pretrained=True)
+    model.reset_classifier(len(classes))
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.)
