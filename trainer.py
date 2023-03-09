@@ -41,8 +41,8 @@ import timm.optim
 #           CONFIGURATION OPTIONS
 # ================================================
 
-currGPU = '3090'
-#currGPU = 'm40'
+#currGPU = '3090'
+currGPU = 'm40'
 #currGPU = 'none'
 
 
@@ -157,8 +157,8 @@ if currGPU == '3090':
 
     # dataset config
     FLAGS['tagCount'] = 5500
-    FLAGS['image_size'] = 384
-    FLAGS['progressiveImageSize'] = True
+    FLAGS['image_size'] = 448
+    FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 1.6
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
@@ -199,7 +199,7 @@ if currGPU == '3090':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 85
+    FLAGS['resume_epoch'] = 95
 
     FLAGS['finetune'] = False
 
@@ -215,7 +215,7 @@ if currGPU == '3090':
 elif currGPU == 'm40':
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_s-Hill/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/vit_base_patch32_clip_224-ft-Hill-T-1588/'
 
 
     # post importer config
@@ -227,10 +227,10 @@ elif currGPU == 'm40':
 
     # dataset config
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 384
-    FLAGS['progressiveImageSize'] = True
+    FLAGS['image_size'] = 224
+    FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
-    FLAGS['progressiveAugRatio'] = 3.0
+    FLAGS['progressiveAugRatio'] = 5.0
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
     #FLAGS['cacheRoot'] = None
 
@@ -251,25 +251,25 @@ elif currGPU == 'm40':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 18
+    FLAGS['num_workers'] = 14
     FLAGS['postDataServerWorkerCount'] = 2
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
     # training config
 
-    FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 256
-    FLAGS['gradient_accumulation_iterations'] = 8
+    FLAGS['num_epochs'] = 10
+    FLAGS['batch_size'] = 128
+    FLAGS['gradient_accumulation_iterations'] = 16
 
-    FLAGS['base_learning_rate'] = 3e-3
+    FLAGS['base_learning_rate'] = 1e-4
     FLAGS['base_batch_size'] = 2048
     FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
-    FLAGS['lr_warmup_epochs'] = 2
+    FLAGS['lr_warmup_epochs'] = 0
 
-    FLAGS['weight_decay'] = 3e-3
+    FLAGS['weight_decay'] = 1e-6
 
-    FLAGS['resume_epoch'] = 44
+    FLAGS['resume_epoch'] = 0
 
     FLAGS['finetune'] = False
 
@@ -612,12 +612,13 @@ def modelSetup(classes):
     
     # regular timm models
     
-    #model = timm.create_model('maxvit_tiny_tf_224.in1k', pretrained=True, num_classes=len(classes))
+    model = timm.create_model('vit_base_patch32_clip_224', pretrained=True).reset_classifier(len(classes))
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
+    #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
+    #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('gernet_l', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
@@ -658,7 +659,7 @@ def modelSetup(classes):
     
     '''
     
-    model = add_ml_decoder_head(model)
+    #model = add_ml_decoder_head(model)
     
     if (FLAGS['resume_epoch'] > 0):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
@@ -713,10 +714,10 @@ def trainCycle(image_datasets, model):
     #ema = MLCSL.ModelEma(model, 0.9997)  # 0.9997^641=0.82
     
     
-    #criterion = MLCSL.Hill()
+    criterion = MLCSL.Hill()
     #criterion = MLCSL.SPLC(gamma=2.0)
     #criterion = MLCSL.SPLCModified(gamma=2.0)
-    criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
+    #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=5, gamma_pos=5, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.01)
     #criterion = MLCSL.AsymmetricLossAdaptiveWorking(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.2)
@@ -725,8 +726,8 @@ def trainCycle(image_datasets, model):
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    optimizer = torch_optimizer.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    #optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    #optimizer = torch_optimizer.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
     scheduler.last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch']
     
@@ -799,8 +800,8 @@ def trainCycle(image_datasets, model):
                                                           transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * FLAGS['progressiveAugRatio'])),
                                                           #transforms.RandAugment(),
                                                           transforms.RandomHorizontalFlip(),
-                                                          transforms.TrivialAugmentWide(),
-                                                          danbooruDataset.CutoutPIL(cutout_factor=0.2),
+                                                          #transforms.TrivialAugmentWide(),
+                                                          #danbooruDataset.CutoutPIL(cutout_factor=0.2),
                                                           transforms.ToTensor(),
                                                           #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                                                           ])
@@ -869,7 +870,8 @@ def trainCycle(image_datasets, model):
                         '''
 
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        loss = criterion(outputs.to(device2), tagBatch.to(device2))
+                        #loss = criterion(outputs.to(device2), tagBatch.to(device2))
+                        loss = criterion(outputs.to(device2) - torch.special.logit(boundary.detach()).to(device2), tagBatch.to(device2))
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
                         #loss, textOutput = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
                         #loss = criterion(outputs.cpu(), tags.cpu())
