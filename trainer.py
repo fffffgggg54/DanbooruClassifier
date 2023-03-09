@@ -267,7 +267,7 @@ elif currGPU == 'm40':
     FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
     FLAGS['lr_warmup_epochs'] = 0
 
-    FLAGS['weight_decay'] = 1e-6
+    FLAGS['weight_decay'] = 1e-4
 
     FLAGS['resume_epoch'] = 0
 
