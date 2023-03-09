@@ -872,7 +872,7 @@ def trainCycle(image_datasets, model):
 
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2))
-                        loss = criterion(outputs.to(device2) - torch.special.logit(boundary.detach()).to(device2), tagBatch.to(device2))
+                        loss = criterion(outputs.to(device2) - torch.special.logit(boundary.detach().clone()).to(device2), tagBatch.to(device2))
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
                         #loss, textOutput = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
                         #loss = criterion(outputs.cpu(), tags.cpu())
