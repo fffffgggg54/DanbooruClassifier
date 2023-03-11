@@ -269,7 +269,7 @@ elif currGPU == 'm40':
 
     FLAGS['weight_decay'] = 1e-4
 
-    FLAGS['resume_epoch'] = 0
+    FLAGS['resume_epoch'] = 3
 
     FLAGS['finetune'] = False
 
