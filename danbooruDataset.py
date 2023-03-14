@@ -263,7 +263,6 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
             tagCachePath = tagCacheDir + "/" + str(postID) + ".pkl.bz2"
             cachedTags = bz2.BZ2File(tagCachePath, 'rb')
             postTags = cPickle.load(cachedImage)
-            cachedTags.close()
             #print(f"got pickle from {cachePath}")
             '''
             if len(postTags) != len(tagList):
