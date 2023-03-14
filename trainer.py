@@ -251,7 +251,7 @@ elif currGPU == 'm40':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 14
+    FLAGS['num_workers'] = 26
     FLAGS['postDataServerWorkerCount'] = 2
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -259,8 +259,8 @@ elif currGPU == 'm40':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 128
-    FLAGS['gradient_accumulation_iterations'] = 16
+    FLAGS['batch_size'] = 256
+    FLAGS['gradient_accumulation_iterations'] = 8
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
