@@ -215,7 +215,7 @@ if currGPU == '3090':
 elif currGPU == 'm40':
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_pico-ASL-BCE-T-5500/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_s-ASL-BCE-T-5500/'
 
 
     # post importer config
@@ -612,7 +612,7 @@ def modelSetup(classes):
     
     # regular timm models
     
-    model = timm.create_model('convnext_pico', pretrained=False, num_classes=len(classes))
+    model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.)
