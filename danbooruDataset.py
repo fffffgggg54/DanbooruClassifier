@@ -263,6 +263,7 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
             tagCachePath = tagCacheDir + "/" + str(postID) + ".pkl.bz2"
             cachedTags = bz2.BZ2File(tagCachePath, 'rb')
             postTags = cPickle.load(cachedImage)
+            cachedTags.close()
             #print(f"got pickle from {cachePath}")
             '''
             if len(postTags) != len(tagList):
@@ -281,8 +282,9 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
                 postTags = torch.Tensor(postTags)
             '''
         
-        except:
-            print("cached file not found")
+        except Exception as e:
+            print(e)
+            #print("cached file not found")
             postTagList = set(postData.loc["tag_string"].split()).intersection(set(tagList.to_list()))
 
             # one-hot encode the tags of a given post
