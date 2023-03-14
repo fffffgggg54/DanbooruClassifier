@@ -212,8 +212,8 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
         self.serverProcessPool = []
         self.workQueue = multiprocessing.Queue()
         if cacheRoot is not None:
-            #imageCacheRoot = cacheRoot + 'images/' + str(size) + '/'
-            imageCacheRoot = cacheRoot + str(size) + '/'
+            imageCacheRoot = cacheRoot + 'images/' + str(size) + '/'
+            #imageCacheRoot = cacheRoot + str(size) + '/'
             tagCacheRoot = cacheRoot + 'tags/' + str(self.num_tags) + '/'
         for nthWorkerProcess in range(self.serverWorkerCount):
             currProcess = multiprocessing.Process(target=DFServerWorkerProcess,
@@ -254,11 +254,10 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
 
         try:
             imageCacheDir = create_dir(imageCacheRoot + str(postID % 1000).zfill(4))
-            imageCachePath = imageCacheDir + "/" + str(postID) + ".pkl.bz2"
+            imageCachePath = imageCacheDir + "/" + str(postID) + ".jpeg"
             
-            cachedImage = bz2.BZ2File(imageCachePath, 'rb')
-            image, _, _ = cPickle.load(cachedImage)
-            cachedImage.close()
+            image = Image.open(imageCachePath)    #check if file exists
+            image.load()
             
             tagCacheDir = create_dir(tagCacheRoot + str(postID % 1000).zfill(4))
             tagCachePath = tagCacheDir + "/" + str(postID) + ".pkl.bz2"
@@ -365,7 +364,6 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
             #image = transforms.functional.pil_to_tensor(image).squeeze()
 
             
-            image = transforms.functional.pil_to_tensor(image)
 
             postTags = torch.Tensor(postTags)
 
@@ -373,14 +371,15 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
 
             if(imageCacheRoot is not None):
                 imageCacheDir = create_dir(imageCacheRoot + str(postID % 1000).zfill(4))
-                imageCachePath = imageCacheDir + "/" + str(postID) + ".pkl.bz2"
-                with bz2.BZ2File(imageCachePath, 'w') as cachedSample: cPickle.dump((image, postTags, postID), cachedSample)
+                imageCachePath = imageCacheDir + "/" + str(postID) + ".jpeg"
+                image.save(imageCachePath, format='jpeg', quality=75, optimize=True)
+                #with bz2.BZ2File(imageCachePath, 'w') as cachedSample: cPickle.dump((image, postTags, postID), cachedSample)
                 
                 tagCacheDir = create_dir(tagCacheRoot + str(postID % 1000).zfill(4))
                 tagCachePath = tagCacheDir + "/" + str(postID) + ".pkl.bz2"
-                with bz2.BZ2File(imageCachePath, 'w') as cachedSample: cPickle.dump(postTags, cachedSample)
+                with bz2.BZ2File(tagCachePath, 'w') as cachedSample: cPickle.dump(postTags, cachedSample)
         
-        image = transforms.functional.to_pil_image(image)
+        
 
         if self.transform: image = self.transform(image)
 
