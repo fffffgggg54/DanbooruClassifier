@@ -215,7 +215,7 @@ if currGPU == '3090':
 elif currGPU == 'm40':
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/vit_base_patch32_clip_224-ft-Hill-T-1588/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_pico-ASL-BCE-T-5500/'
 
 
     # post importer config
@@ -226,11 +226,11 @@ elif currGPU == 'm40':
     FLAGS['stopReadingAt'] = 5000
 
     # dataset config
-    FLAGS['tagCount'] = 1588
+    FLAGS['tagCount'] = 5500
     FLAGS['image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
-    FLAGS['progressiveAugRatio'] = 5.0
+    FLAGS['progressiveAugRatio'] = 3.0
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
     #FLAGS['cacheRoot'] = None
 
@@ -258,18 +258,18 @@ elif currGPU == 'm40':
 
     # training config
 
-    FLAGS['num_epochs'] = 10
+    FLAGS['num_epochs'] = 100
     FLAGS['batch_size'] = 128
     FLAGS['gradient_accumulation_iterations'] = 16
 
-    FLAGS['base_learning_rate'] = 1e-4
+    FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
     FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
     FLAGS['lr_warmup_epochs'] = 0
 
-    FLAGS['weight_decay'] = 1e-4
+    FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 3
+    FLAGS['resume_epoch'] = 0
 
     FLAGS['finetune'] = False
 
@@ -612,8 +612,7 @@ def modelSetup(classes):
     
     # regular timm models
     
-    model = timm.create_model('vit_base_patch32_clip_224', pretrained=True)
-    model.reset_classifier(len(classes))
+    model = timm.create_model('convnext_pico', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.)
@@ -715,10 +714,10 @@ def trainCycle(image_datasets, model):
     #ema = MLCSL.ModelEma(model, 0.9997)  # 0.9997^641=0.82
     
     
-    criterion = MLCSL.Hill()
+    #criterion = MLCSL.Hill()
     #criterion = MLCSL.SPLC(gamma=2.0)
     #criterion = MLCSL.SPLCModified(gamma=2.0)
-    #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
+    criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=5, gamma_pos=5, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.01)
     #criterion = MLCSL.AsymmetricLossAdaptiveWorking(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.2)
@@ -726,9 +725,9 @@ def trainCycle(image_datasets, model):
     #parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = torch_optimizer.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    #optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
     scheduler.last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch']
     
@@ -802,7 +801,7 @@ def trainCycle(image_datasets, model):
                                                           #transforms.RandAugment(),
                                                           transforms.RandomHorizontalFlip(),
                                                           #transforms.TrivialAugmentWide(),
-                                                          #danbooruDataset.CutoutPIL(cutout_factor=0.2),
+                                                          danbooruDataset.CutoutPIL(cutout_factor=0.2),
                                                           transforms.ToTensor(),
                                                           #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                                                           ])
