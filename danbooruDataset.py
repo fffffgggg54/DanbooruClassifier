@@ -283,7 +283,7 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
             '''
         
         except:
-            #print("cached file not found")
+            print("cached file not found")
             postTagList = set(postData.loc["tag_string"].split()).intersection(set(tagList.to_list()))
 
             # one-hot encode the tags of a given post
