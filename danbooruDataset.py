@@ -283,7 +283,7 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
             '''
         
         except Exception as e:
-            print(e)
+            #print(e)
             #print("cached file not found")
             postTagList = set(postData.loc["tag_string"].split()).intersection(set(tagList.to_list()))
 
