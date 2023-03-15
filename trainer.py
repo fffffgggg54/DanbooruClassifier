@@ -251,7 +251,7 @@ elif currGPU == 'm40':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 26
+    FLAGS['num_workers'] = 16
     FLAGS['postDataServerWorkerCount'] = 2
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -269,7 +269,7 @@ elif currGPU == 'm40':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 0
+    FLAGS['resume_epoch'] = 3
 
     FLAGS['finetune'] = False
 
