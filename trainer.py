@@ -804,8 +804,9 @@ def trainCycle(image_datasets, model):
                                                           transforms.RandomHorizontalFlip(),
                                                           #transforms.TrivialAugmentWide(),
                                                           #danbooruDataset.CutoutPIL(cutout_factor=0.2),
-                                                          RandomErasing(probability=0.5, mode='pixel', device='cpu'),
+                                                          
                                                           transforms.ToTensor(),
+                                                          RandomErasing(probability=0.5, mode='pixel', device='cpu'),
                                                           #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                                                           ])
                 
