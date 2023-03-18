@@ -697,6 +697,7 @@ def trainCycle(image_datasets, model):
     memory_format = torch.channels_last if FLAGS['channels_last'] else torch.contiguous_format
     
     model = model.to(device, memory_format=memory_format)
+    model = torch.compile(model)
 
     print("initialized training, time spent: " + str(time.time() - startTime))
     
