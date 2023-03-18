@@ -27,6 +27,7 @@ import transformers
 
 import timm.layers.ml_decoder as ml_decoder
 from timm.data.mixup import FastCollateMixup, Mixup
+from timm.data.random_erasing import RandomErasing
 
 import parallelJsonReader
 import danbooruDataset
@@ -41,8 +42,8 @@ import timm.optim
 #           CONFIGURATION OPTIONS
 # ================================================
 
-#currGPU = '3090'
-currGPU = 'm40'
+currGPU = '3090'
+#currGPU = 'm40'
 #currGPU = 'none'
 
 
@@ -145,7 +146,7 @@ if currGPU == '3090':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/davit_base_ml-decoder-ASL-BCE/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_base-ASL_BCE_T-448-5500/'
 
 
     # post importer config
@@ -181,7 +182,7 @@ if currGPU == '3090':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 14
+    FLAGS['num_workers'] = 20
     FLAGS['postDataServerWorkerCount'] = 3
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -199,7 +200,7 @@ if currGPU == '3090':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 95
+    FLAGS['resume_epoch'] = 0
 
     FLAGS['finetune'] = False
 
@@ -612,7 +613,7 @@ def modelSetup(classes):
     
     # regular timm models
     
-    model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes))
+    model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes), drop_path_rate=0.4)
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.)
@@ -801,7 +802,8 @@ def trainCycle(image_datasets, model):
                                                           #transforms.RandAugment(),
                                                           transforms.RandomHorizontalFlip(),
                                                           #transforms.TrivialAugmentWide(),
-                                                          danbooruDataset.CutoutPIL(cutout_factor=0.2),
+                                                          #danbooruDataset.CutoutPIL(cutout_factor=0.2),
+                                                          RandomErasing(probability=0.5, mode='pixel', device='cpu'),
                                                           transforms.ToTensor(),
                                                           #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                                                           ])
