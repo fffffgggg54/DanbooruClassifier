@@ -662,8 +662,7 @@ def modelSetup(classes):
     
     #model = add_ml_decoder_head(model)
     
-    if (FLAGS['resume_epoch'] > 0):
-        model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
+
     #model.train()
     
     if FLAGS['finetune'] == True:
@@ -698,6 +697,8 @@ def trainCycle(image_datasets, model):
     
     model = model.to(device, memory_format=memory_format)
     model = torch.compile(model)
+    if (FLAGS['resume_epoch'] > 0):
+        model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
 
     print("initialized training, time spent: " + str(time.time() - startTime))
     
