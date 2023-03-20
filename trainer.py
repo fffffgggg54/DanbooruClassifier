@@ -696,7 +696,7 @@ def trainCycle(image_datasets, model):
     memory_format = torch.channels_last if FLAGS['channels_last'] else torch.contiguous_format
     
     model = model.to(device, memory_format=memory_format)
-    model = torch.compile(model)
+    #model = torch.compile(model)
     if (FLAGS['resume_epoch'] > 0):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
 
