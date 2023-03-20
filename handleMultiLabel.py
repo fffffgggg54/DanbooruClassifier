@@ -255,7 +255,7 @@ class SPLCModified(nn.Module):
         return loss
 
 
-def stepAtThreshold(x, threshold, k=10, base=10):
+def stepAtThreshold(x, threshold, k=5, base=10):
     return 1 / (1 + torch.pow(base, (0 - k) * (x - threshold)))
 
 def zero_grad(p, set_to_none=False):

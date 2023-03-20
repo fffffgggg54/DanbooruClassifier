@@ -42,8 +42,8 @@ import timm.optim
 #           CONFIGURATION OPTIONS
 # ================================================
 
-currGPU = '3090'
-#currGPU = 'm40'
+#currGPU = '3090'
+currGPU = 'm40'
 #currGPU = 'none'
 
 
@@ -216,7 +216,7 @@ if currGPU == '3090':
 elif currGPU == 'm40':
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_s-ASL-BCE-T-5500/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/efficientformerv2_s0_448-ASL-BCE-T-5500/'
 
 
     # post importer config
@@ -228,7 +228,7 @@ elif currGPU == 'm40':
 
     # dataset config
     FLAGS['tagCount'] = 5500
-    FLAGS['image_size'] = 224
+    FLAGS['image_size'] = 448
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 3.0
@@ -260,8 +260,8 @@ elif currGPU == 'm40':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 256
-    FLAGS['gradient_accumulation_iterations'] = 8
+    FLAGS['batch_size'] = 64
+    FLAGS['gradient_accumulation_iterations'] = 16
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -270,7 +270,7 @@ elif currGPU == 'm40':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 3
+    FLAGS['resume_epoch'] = 0
 
     FLAGS['finetune'] = False
 
@@ -613,7 +613,7 @@ def modelSetup(classes):
     
     # regular timm models
     
-    model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes), drop_path_rate=0.4)
+    model = timm.create_model('efficientformerv2_s0', img_size=448, pretrained=False, num_classes=len(classes), drop_path_rate=0.05)
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.)
