@@ -331,8 +331,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 16
-    FLAGS['gradient_accumulation_iterations'] = 8
+    FLAGS['batch_size'] = 8
+    FLAGS['gradient_accumulation_iterations'] = 16
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -769,13 +769,15 @@ def trainCycle(image_datasets, model):
     memory_format = torch.channels_last if FLAGS['channels_last'] else torch.contiguous_format
     
     model = model.to(device, memory_format=memory_format)
-    if(FLAGS['compile_model'] == True):
-        model = torch.compile(model)
+    
     
         
     if (FLAGS['use_ddp'] == True):
         
         model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
+        
+    if(FLAGS['compile_model'] == True):
+        model = torch.compile(model)
         
     if (FLAGS['resume_epoch'] > 0):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
@@ -816,10 +818,10 @@ def trainCycle(image_datasets, model):
 
     #mixup = Mixup(mixup_alpha = 0.2, cutmix_alpha = 0, num_classes = len(classes))
     
-    #boundaryCalculator = MLCSL.getDecisionBoundary(initial_threshold = 0.5, lr = 1e-5, threshold_min = 0.001, threshold_max = 0.999)
-    #if (FLAGS['resume_epoch'] > 0):
-    #    boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth').to(device)
-    #    optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth'))
+    boundaryCalculator = MLCSL.getDecisionBoundary(initial_threshold = 0.5, lr = 1e-5, threshold_min = 0.001, threshold_max = 0.999)
+    if (FLAGS['resume_epoch'] > 0):
+        boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth').to(device)
+        optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth'))
         
     
     if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
@@ -941,9 +943,9 @@ def trainCycle(image_datasets, model):
                         outputs = model(imageBatch)
                         #outputs = model(imageBatch).logits
                         preds = torch.sigmoid(outputs)
-                        #boundary = boundaryCalculator(preds, tagBatch)
-                        #predsModified = (preds > boundary).float()
-                        predsModified=preds
+                        boundary = boundaryCalculator(preds, tagBatch)
+                        predsModified = (preds > boundary).float()
+                        #predsModified=preds
                         #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
                         multiAccuracy = cm_tracker.update(predsModified.to(device), tagBatch.to(device))
                         
@@ -957,8 +959,8 @@ def trainCycle(image_datasets, model):
                         '''
 
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        loss = criterion(outputs.to(device), tagBatch.to(device))
-                        #loss = criterion(outputs.to(device) - torch.special.logit(boundary.detach().clone()).to(device), tagBatch.to(device))
+                        #loss = criterion(outputs.to(device), tagBatch.to(device))
+                        loss = criterion(outputs.to(device) - torch.special.logit(boundary.detach().clone()).to(device), tagBatch.to(device))
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
                         #loss, textOutput = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
                         #loss = criterion(outputs.cpu(), tags.cpu())
@@ -1124,7 +1126,7 @@ def main():
         dist.init_process_group("nccl")
         rank = dist.get_rank()
         FLAGS['device'] = rank % torch.cuda.device_count()
-        torch.cuda.set_device(rank)
+        torch.cuda.set_device(FLAGS['device'])
         torch.cuda.empty_cache()
     image_datasets = getData()
     model = modelSetup(classes)
