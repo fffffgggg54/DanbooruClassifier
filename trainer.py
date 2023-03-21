@@ -774,6 +774,8 @@ def trainCycle(image_datasets, model):
     
         
     if (FLAGS['use_ddp'] == True):
+        torch.cuda.set_device(dist.get_rank())
+        torch.cuda.empty_cache()
         model = DDP(model, device_ids=[FLAGS['device']])
         
     if (FLAGS['resume_epoch'] > 0):
@@ -809,11 +811,11 @@ def trainCycle(image_datasets, model):
     #optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = torch_optimizer.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    optimizer = ZeroRedundancyOptimizer(model.parameters(), optimizer_class=timm.optim.Adan, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
     scheduler.last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch']
-    
+    optimizer = ZeroRedundancyOptimizer(model.parameters(), optimizer_class=timm.optim.Adan, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+
     #mixup = Mixup(mixup_alpha = 0.2, cutmix_alpha = 0, num_classes = len(classes))
     
     boundaryCalculator = MLCSL.getDecisionBoundary(initial_threshold = 0.5, lr = 1e-5, threshold_min = 0.001, threshold_max = 0.999)
