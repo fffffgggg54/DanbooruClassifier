@@ -1031,7 +1031,7 @@ def trainCycle(image_datasets, model):
                     cycleTime = time.time()
                     
                     if(FLAGS['use_ddp'] == True):
-                        imagesPerSecond = torch.Tensor([imagesPerSecond], requires_grad=False)
+                        imagesPerSecond = torch.Tensor([imagesPerSecond])
                         torch.distributed.all_reduce(imagesPerSecond, op = torch.distributed.ReduceOp.SUM)
                         imagesPerSecond = imagesPerSecond.item()
                         
