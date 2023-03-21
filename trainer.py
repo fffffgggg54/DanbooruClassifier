@@ -821,7 +821,7 @@ def trainCycle(image_datasets, model):
     boundaryCalculator = MLCSL.getDecisionBoundary(initial_threshold = 0.5, lr = 1e-5, threshold_min = 0.001, threshold_max = 0.999)
     if (FLAGS['use_ddp'] == True):
         
-        boundaryCalculator = DDP(boundaryCalculator, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
+        boundaryCalculator = DDP(boundaryCalculator, device_ids=[FLAGS['device']])
     if (FLAGS['resume_epoch'] > 0):
         boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth').to(device)
         optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth'))
