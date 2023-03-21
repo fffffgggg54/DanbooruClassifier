@@ -836,7 +836,7 @@ def trainCycle(image_datasets, model):
     epoch = FLAGS['resume_epoch']
     
     while (epoch < FLAGS['num_epochs']):
-        prior = MLCSL.ComputePrior(classes, device2)
+        prior = MLCSL.ComputePrior(classes, device)
         epochTime = time.time()
         
         
@@ -984,7 +984,7 @@ def trainCycle(image_datasets, model):
                                     optimizer.zero_grad()
 
                             #ema.update(model)
-                            prior.update(outputs.to(device2))
+                            prior.update(outputs.to(device))
                         
                         if (phase == 'val'):
                             # for mAP calculation
