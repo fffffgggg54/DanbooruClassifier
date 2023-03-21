@@ -945,16 +945,12 @@ def trainCycle(image_datasets, model):
                         #outputs = model(imageBatch).logits
                         preds = torch.sigmoid(outputs)
                         boundary = boundaryCalculator(preds, tagBatch)
-                        if FLAGS['use_ddp'] == True:
-                            torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
-                            boundary = boundaryCalculator.thresholdPerClass
+
                         predsModified = (preds > boundary).float()
                         #predsModified=preds
                         #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
                         multiAccuracy = cm_tracker.update(predsModified.to(device), tagBatch.to(device))
-                        if FLAGS['use_ddp'] == True:
-                            torch.distributed.all_reduce(cm_tracker.running_confusion_matrix, op=torch.distributed.ReduceOp.AVG)
-                            multiAccuracy = cm_tracker.get_aggregate_metrics()
+                            
                         
                         outputs = outputs.float()
                         '''
@@ -1073,6 +1069,11 @@ def trainCycle(image_datasets, model):
                 #print(device)
                 #if(FLAGS['ngpu'] > 0):
                     #torch.cuda.empty_cache()
+                    
+                    
+            if FLAGS['use_ddp'] == True:
+                torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
+                torch.distributed.all_reduce(cm_tracker.running_confusion_matrix, op=torch.distributed.ReduceOp.AVG)
             if ((phase == 'val') and (FLAGS['skip_test_set'] == False)):
                 #torch.set_printoptions(profile="full")
                 
