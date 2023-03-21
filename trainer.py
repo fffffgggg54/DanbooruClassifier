@@ -1,7 +1,9 @@
 import torch
 import torch.cuda.amp
+import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.parallel
+from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.profiler
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
@@ -42,8 +44,9 @@ import timm.optim
 #           CONFIGURATION OPTIONS
 # ================================================
 
-currGPU = '3090'
+#currGPU = '3090'
 #currGPU = 'm40'
+currGPU = 'v100'
 #currGPU = 'none'
 
 
@@ -242,10 +245,8 @@ elif currGPU == 'm40':
 
 
     FLAGS['ngpu'] = torch.cuda.is_available()
-    FLAGS['device'] = torch.device("cuda:1" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
-    FLAGS['device2'] = FLAGS['device']
-    if(torch.has_mps == True): FLAGS['device2'] = "cpu"
-    #FLAGS['use_AMP'] = True if FLAGS['device'] == 'cuda:0' else False
+    FLAGS['device'] = torch.device('cuda:1')
+
     FLAGS['use_AMP'] = False
     FLAGS['use_scaler'] = FLAGS['use_AMP']
     #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
@@ -274,6 +275,73 @@ elif currGPU == 'm40':
 
     FLAGS['finetune'] = False
     
+    FLAGS['compile_model'] = False
+    FLAGS['channels_last'] = FLAGS['use_AMP']
+
+    # debugging config
+
+    FLAGS['verbose_debug'] = False
+    FLAGS['skip_test_set'] = False
+    FLAGS['stepsPerPrintout'] = 50
+    FLAGS['val'] = False
+
+elif currGPU == 'v100':
+
+
+
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_base-ASL_BCE_T-448-5500/'
+
+
+    # post importer config
+
+    FLAGS['chunkSize'] = 1000
+    FLAGS['importerProcessCount'] = 10
+    if(torch.has_mps == True): FLAGS['importerProcessCount'] = 7
+    FLAGS['stopReadingAt'] = 5000
+
+    # dataset config
+    FLAGS['tagCount'] = 5500
+    FLAGS['image_size'] = 448
+    FLAGS['progressiveImageSize'] = False
+    FLAGS['progressiveSizeStart'] = 0.5
+    FLAGS['progressiveAugRatio'] = 1.6
+    FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
+    #FLAGS['cacheRoot'] = None
+
+    FLAGS['workingSetSize'] = 1
+    FLAGS['trainSetSize'] = 0.8
+
+    # device config
+
+    FLAGS['use_ddp'] = True
+    FLAGS['device'] = None
+    FLAGS['use_AMP'] = True
+    FLAGS['use_scaler'] = FLAGS['use_AMP']
+    #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
+
+    # dataloader config
+
+    FLAGS['num_workers'] = 20
+    FLAGS['postDataServerWorkerCount'] = 3
+    if(torch.has_mps == True): FLAGS['num_workers'] = 2
+    if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
+
+    # training config
+
+    FLAGS['num_epochs'] = 100
+    FLAGS['batch_size'] = 24
+    FLAGS['gradient_accumulation_iterations'] = 32
+
+    FLAGS['base_learning_rate'] = 3e-3
+    FLAGS['base_batch_size'] = 2048
+    FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
+    FLAGS['lr_warmup_epochs'] = 5
+
+    FLAGS['weight_decay'] = 2e-2
+
+    FLAGS['resume_epoch'] = 0
+
+    FLAGS['finetune'] = False
     FLAGS['compile_model'] = False
     FLAGS['channels_last'] = FLAGS['use_AMP']
 
@@ -701,6 +769,9 @@ def trainCycle(image_datasets, model):
         model = torch.compile(model)
     if (FLAGS['resume_epoch'] > 0):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
+        
+    if (FLAGS['use_ddp'] == True):
+        model = DDP(model, device_ids=[FLAGS['device']])
 
     print("initialized training, time spent: " + str(time.time() - startTime))
     
@@ -1037,7 +1108,10 @@ def trainCycle(image_datasets, model):
 def main():
     #gc.set_debug(gc.DEBUG_LEAK)
     # load json files
-
+    if FLAGS['use_ddp']:
+        dist.init_process_group("nccl")
+        rank = dist.get_rank()
+        FLAGS['device'] = rank % torch.cuda.device_count()
     image_datasets = getData()
     model = modelSetup(classes)
     trainCycle(image_datasets, model)
