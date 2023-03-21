@@ -989,7 +989,7 @@ def trainCycle(image_datasets, model):
                         # TODO this is slow, profile and optimize
                         if phase == 'train' and (loss.isnan() == False):
                             if (FLAGS['use_scaler'] == True):   # cuda gpu case
-                                with ddp.no_sync():
+                                with model.no_sync():
                                     scaler.scale(loss).backward()   #lotta time spent here
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                                     nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
@@ -997,7 +997,7 @@ def trainCycle(image_datasets, model):
                                     scaler.update()
                                     optimizer.zero_grad()
                             else:                               # apple gpu/cpu case
-                                with ddp.no_sync():
+                                with model.no_sync():
                                     loss.backward()
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                                     nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
