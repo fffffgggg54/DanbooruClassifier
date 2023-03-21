@@ -324,7 +324,7 @@ elif currGPU == 'v100':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 10
+    FLAGS['num_workers'] = 8
     FLAGS['postDataServerWorkerCount'] = 2
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -993,14 +993,14 @@ def trainCycle(image_datasets, model):
                                     nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                     scaler.step(optimizer)
                                     scaler.update()
-                                    optimizer.zero_grad()
+                                    optimizer.zero_grad(set_to_none=True)
                             else:                               # apple gpu/cpu case
                                 with model.no_sync():
                                     loss.backward()
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                                     nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                     optimizer.step()
-                                    optimizer.zero_grad()
+                                    optimizer.zero_grad(set_to_none=True)
                         
                         
                             torch.cuda.synchronize()
