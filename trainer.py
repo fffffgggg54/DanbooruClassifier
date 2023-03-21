@@ -850,7 +850,7 @@ def trainCycle(image_datasets, model):
     epoch = FLAGS['resume_epoch']
     
     while (epoch < FLAGS['num_epochs']):
-        prior = MLCSL.ComputePrior(classes, device)
+        #prior = MLCSL.ComputePrior(classes, device)
         epochTime = time.time()
         
         
@@ -985,11 +985,10 @@ def trainCycle(image_datasets, model):
                         #loss = (1 - multiAccuracy[:,8]).pow(2).sum()
                         #model.zero_grad()
                         # backward + optimize only if in training phase
-                        # TODO this is slow, profile and optimize
                         if phase == 'train' and (loss.isnan() == False):
                             if (FLAGS['use_scaler'] == True):   # cuda gpu case
                                 with model.no_sync():
-                                    scaler.scale(loss).backward()   #lotta time spent here
+                                    scaler.scale(loss).backward()
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                                     nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                     scaler.step(optimizer)
@@ -1007,7 +1006,7 @@ def trainCycle(image_datasets, model):
                             torch.cuda.synchronize()
                         
                             #ema.update(model)
-                            prior.update(outputs.to(device))
+                            #prior.update(outputs.to(device))
                         
                         if (phase == 'val'):
                             # for mAP calculation
@@ -1036,6 +1035,7 @@ def trainCycle(image_datasets, model):
                     if(FLAGS['use_ddp'] == True):
                         imagesPerSecond = torch.Tensor([imagesPerSecond]).to(device)
                         torch.distributed.all_reduce(imagesPerSecond, op = torch.distributed.ReduceOp.SUM)
+                        imagesPerSecond = imagesPerSecond.cpu()
                         imagesPerSecond = imagesPerSecond.item()
                         
 
