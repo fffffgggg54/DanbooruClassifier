@@ -8,6 +8,7 @@ import torch.profiler
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
 import torch.utils.data
+from torch.utils.data import DistributedSampler
 import torchvision.datasets as dset
 from torchvision import models, transforms
 from torchvision.io import read_image
@@ -321,8 +322,8 @@ elif currGPU == 'v100':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 20
-    FLAGS['postDataServerWorkerCount'] = 3
+    FLAGS['num_workers'] = 10
+    FLAGS['postDataServerWorkerCount'] = 1
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
@@ -746,7 +747,8 @@ def modelSetup(classes):
     return model
     
 def getDataLoader(dataset, batch_size):
-    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=2, pin_memory = True, drop_last=True, generator=torch.Generator().manual_seed(41))
+    distSampler = DistributedSampler(dataset=dataset, seed=17, drop_last=True)
+    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, sampler=distSampler, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=2, pin_memory = True, generator=torch.Generator().manual_seed(41))
 
 def trainCycle(image_datasets, model):
     #print("starting training")
