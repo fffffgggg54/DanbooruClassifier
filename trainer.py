@@ -291,7 +291,7 @@ elif currGPU == 'v100':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_base-ASL_BCE_T-448-1588_v100/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-ASL_BCE_T-320-1588_v100/'
 
 
     # post importer config
@@ -304,6 +304,7 @@ elif currGPU == 'v100':
     # dataset config
     FLAGS['tagCount'] = 1588
     FLAGS['image_size'] = 448
+    FLAGS['actual_image_size'] = 320
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 1.6
@@ -331,8 +332,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 16
-    FLAGS['gradient_accumulation_iterations'] = 8
+    FLAGS['batch_size'] = 64
+    FLAGS['gradient_accumulation_iterations'] = 4
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -344,7 +345,8 @@ elif currGPU == 'v100':
     FLAGS['resume_epoch'] = 0
 
     FLAGS['finetune'] = False
-    FLAGS['compile_model'] = True
+    FLAGS['compile_model'] = False
+    FLAGS['fast_norm'] = True
     FLAGS['channels_last'] = FLAGS['use_AMP']
 
     # debugging config
@@ -429,6 +431,7 @@ myDataset = None
 
 
 
+timm.models.layers.fast_norm.set_fast_norm(enable=FLAGS['fast_norm'])
 
 # The flag below controls whether to allow TF32 on matmul. This flag defaults to False
 # in PyTorch 1.12 and later.
@@ -878,7 +881,7 @@ def trainCycle(image_datasets, model):
                     
                     dynamicResizeDim = int(FLAGS['image_size']*FLAGS['progressiveSizeStart'] + epoch * (FLAGS['image_size']-FLAGS['image_size']*FLAGS['progressiveSizeStart'])/FLAGS['num_epochs'])
                 else:
-                    dynamicResizeDim = FLAGS['image_size']
+                    dynamicResizeDim = FLAGS['actual_image_size']
                 
                 if(is_head_proc):
                     print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
