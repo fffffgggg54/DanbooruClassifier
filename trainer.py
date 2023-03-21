@@ -763,6 +763,8 @@ def trainCycle(image_datasets, model):
     device = FLAGS['device']
         
     
+    is_head_proc = not FLAGS['use_ddp'] or dist.get_rank() == 0
+    
     memory_format = torch.channels_last if FLAGS['channels_last'] else torch.contiguous_format
     
     model = model.to(device, memory_format=memory_format)
@@ -827,8 +829,8 @@ def trainCycle(image_datasets, model):
     
     
     MeanStackedAccuracyStored = torch.Tensor([2,1,2,1])
-    
-    print("starting training")
+    if(is_head_proc):
+        print("starting training")
     
     startTime = time.time()
     cycleTime = time.time()
@@ -842,7 +844,8 @@ def trainCycle(image_datasets, model):
         epochTime = time.time()
         
         
-        print("starting epoch: " + str(epoch))
+        if(is_head_proc):
+            print("starting epoch: " + str(epoch))
         AP_regular = []
         AccuracyRunning = []
         AP_ema = []
@@ -861,7 +864,7 @@ def trainCycle(image_datasets, model):
             if phase == 'train':
                 model.train()  # Set model to training mode
                 #if (hasTPU == True): xm.master_print("training set")
-                print("training set")
+                if(is_head_proc): print("training set")
                 
                 if FLAGS['progressiveImageSize'] == True:
                     
@@ -870,8 +873,8 @@ def trainCycle(image_datasets, model):
                 else:
                     dynamicResizeDim = FLAGS['image_size']
                 
-                
-                print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
+                if(is_head_proc):
+                    print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
                 
                 myDataset.transform = transforms.Compose([transforms.Resize(dynamicResizeDim),
                                                           transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * FLAGS['progressiveAugRatio'])),
@@ -984,7 +987,10 @@ def trainCycle(image_datasets, model):
                                     nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                     optimizer.step()
                                     optimizer.zero_grad()
-
+                        
+                        
+                        torch.cuda.synchronize()
+                        
                             #ema.update(model)
                             prior.update(outputs.to(device))
                         
@@ -1023,7 +1029,7 @@ def trainCycle(image_datasets, model):
                    
                     #print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f\tAccuracy: %.2f\tP4: %.2f\t%s' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), loss, imagesPerSecond, accuracy, multiAccuracy.mean(dim=0) * 100, textOutput))
                     torch.set_printoptions(linewidth = 200, sci_mode = False)
-                    print(f"[{epoch}/{FLAGS['num_epochs']}][{i}/{len(dataloaders[phase])}]\tLoss: {loss:.4f}\tImages/Second: {imagesPerSecond:.4f}\tAccuracy: {accuracy:.2f}\t {[f'{num:.4f}' for num in list((multiAccuracy * 100))]}\t{textOutput}")
+                    if(is_head_proc): print(f"[{epoch}/{FLAGS['num_epochs']}][{i}/{len(dataloaders[phase])}]\tLoss: {loss:.4f}\tImages/Second: {imagesPerSecond:.4f}\tAccuracy: {accuracy:.2f}\t {[f'{num:.4f}' for num in list((multiAccuracy * 100))]}\t{textOutput}")
                     torch.set_printoptions(profile='default')
                     #print(id[0])
                     #print(currPostTags)
@@ -1055,22 +1061,22 @@ def trainCycle(image_datasets, model):
                 LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[0][8], reverse=True)
                 MeanStackedAccuracy = cm_tracker.get_aggregate_metrics()
                 MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
-                print(*LabelledAccuracySorted, sep="\n")
+                if(is_head_proc): print(*LabelledAccuracySorted, sep="\n")
                 #torch.set_printoptions(profile="default")
-                print((MeanStackedAccuracy*100).tolist())
+                if(is_head_proc): print((MeanStackedAccuracy*100).tolist())
                 
                 
                 prior.save_prior()
                 prior.get_top_freq_classes()
                 lastPrior = prior.avg_pred_train
-                print(lastPrior[:30])
+                if(is_head_proc): print(lastPrior[:30])
                 
                 mAP_score_regular = np.mean(AP_regular)
                 #mAP_score_ema = np.mean(AP_ema)
-                print("mAP score regular {:.2f}".format(mAP_score_regular))
+                if(is_head_proc): print("mAP score regular {:.2f}".format(mAP_score_regular))
                 #top_mAP = max(mAP_score_regular, mAP_score_ema)
                 if hasattr(criterion, 'tau_per_class'):
-                    print(criterion.tau_per_class)
+                    if(is_head_proc): print(criterion.tau_per_class)
                 #print(boundaryCalculator.thresholdPerClass)
             currPhase += 1
             '''
@@ -1093,14 +1099,14 @@ def trainCycle(image_datasets, model):
     
         
         time_elapsed = time.time() - epochTime
-        print(f'epoch {epoch} completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
+        if(is_head_proc): print(f'epoch {epoch} completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
         #print(best)
         epoch += 1
         
 
         gc.collect()
 
-        print()
+        if(is_head_proc): print()
             
     #time_elapsed = time.time() - startTime
     #print(f'Training complete in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
