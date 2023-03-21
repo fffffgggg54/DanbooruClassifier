@@ -276,6 +276,7 @@ class getDecisionBoundary(nn.Module):
         super().__init__()
         self.initial_threshold = initial_threshold
         self.thresholdPerClass = None
+        self.opt = None
         self.needs_init = True
         self.lr = lr
         self.threshold_min = threshold_min
@@ -286,11 +287,22 @@ class getDecisionBoundary(nn.Module):
             classCount = preds.size(dim=1)
             currDevice = preds.device
             if self.thresholdPerClass == None:
-                self.thresholdPerClass = torch.ones(classCount, device=currDevice, requires_grad=True).to(torch.float64) * self.initial_threshold
+                self.thresholdPerClass = nn.Parameter(torch.ones(classCount, device=currDevice, requires_grad=True).to(torch.float64) * self.initial_threshold)
             else:
-                self.thresholdPerClass = torch.ones(classCount, device=currDevice, requires_grad=True).to(torch.float64) * self.thresholdPerClass
+                self.thresholdPerClass = nn.Parameter(torch.ones(classCount, device=currDevice, requires_grad=True).to(torch.float64) * self.thresholdPerClass)
             self.needs_init = False
+            self.opt = torch.optim.SGD(self.parameters(), lr=self.lr, maximize=True)
+            
+        if preds.requires_grad:
+            preds = preds.detach()
+            predsModified = stepAtThreshold(preds, self.thresholdPerClass)
+            metrics = getAccuracy(predsModified, targs)
+            numToMax = metrics[:,9].sum()
+            numToMax.backward()
+            self.opt.step()
+            self.opt.zero_grad()
         
+        '''
         # need fp64
         self.thresholdPerClass.retain_grad()
         self.thresholdPerClass = self.thresholdPerClass.to(torch.float64)
@@ -312,6 +324,7 @@ class getDecisionBoundary(nn.Module):
             self.thresholdPerClass = zero_grad(self.thresholdPerClass)
             self.thresholdPerClass = self.thresholdPerClass.detach()
             self.thresholdPerClass.requires_grad=True
+        '''
         return self.thresholdPerClass.detach()
 
 
