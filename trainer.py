@@ -431,7 +431,7 @@ myDataset = None
 
 
 
-timm.models.layers.fast_norm.set_fast_norm(enable=FLAGS['fast_norm'])
+timm.layers.fast_norm.set_fast_norm(enable=FLAGS['fast_norm'])
 
 # The flag below controls whether to allow TF32 on matmul. This flag defaults to False
 # in PyTorch 1.12 and later.
