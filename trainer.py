@@ -767,15 +767,15 @@ def trainCycle(image_datasets, model):
     is_head_proc = not FLAGS['use_ddp'] or dist.get_rank() == 0
     
     memory_format = torch.channels_last if FLAGS['channels_last'] else torch.contiguous_format
-    
+    torch.cuda.set_device(dist.get_rank())
+    torch.cuda.empty_cache()
     model = model.to(device, memory_format=memory_format)
     if(FLAGS['compile_model'] == True):
         model = torch.compile(model)
     
         
     if (FLAGS['use_ddp'] == True):
-        torch.cuda.set_device(dist.get_rank())
-        torch.cuda.empty_cache()
+        
         model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
         
     if (FLAGS['resume_epoch'] > 0):
