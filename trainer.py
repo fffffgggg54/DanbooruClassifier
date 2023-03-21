@@ -767,8 +767,7 @@ def trainCycle(image_datasets, model):
     is_head_proc = not FLAGS['use_ddp'] or dist.get_rank() == 0
     
     memory_format = torch.channels_last if FLAGS['channels_last'] else torch.contiguous_format
-    torch.cuda.set_device(dist.get_rank())
-    torch.cuda.empty_cache()
+    
     model = model.to(device, memory_format=memory_format)
     if(FLAGS['compile_model'] == True):
         model = torch.compile(model)
@@ -1125,6 +1124,8 @@ def main():
         dist.init_process_group("nccl")
         rank = dist.get_rank()
         FLAGS['device'] = rank % torch.cuda.device_count()
+        torch.cuda.set_device(rank)
+        torch.cuda.empty_cache()
     image_datasets = getData()
     model = modelSetup(classes)
     trainCycle(image_datasets, model)
