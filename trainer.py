@@ -948,12 +948,11 @@ def trainCycle(image_datasets, model):
                         #outputs = model(imageBatch).logits
                         preds = torch.sigmoid(outputs)
                         boundary = boundaryCalculator(preds, tagBatch)
-                        
-                        predsModified = (preds > boundary).float()
+
                         #predsModified=preds
                         #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
                         with torch.no_grad():
-                            multiAccuracy = cm_tracker.update(predsModified.to(device), tagBatch.to(device))
+                            multiAccuracy = cm_tracker.update((preds.detach() > boundary.detach()).float().to(device), tagBatch.to(device))
                             
                         
                         outputs = outputs.float()
@@ -967,7 +966,7 @@ def trainCycle(image_datasets, model):
 
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
                         #loss = criterion(outputs.to(device), tagBatch.to(device))
-                        loss = criterion(outputs.to(device) - torch.special.logit(boundary.detach().clone()).to(device), tagBatch.to(device))
+                        loss = criterion(outputs.to(device) - torch.special.logit(boundary.detach()).to(device), tagBatch.to(device))
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
                         #loss, textOutput = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
                         #loss = criterion(outputs.cpu(), tags.cpu())
