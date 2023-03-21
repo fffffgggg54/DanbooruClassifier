@@ -341,7 +341,7 @@ elif currGPU == 'v100':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 3
+    FLAGS['resume_epoch'] = 0
 
     FLAGS['finetune'] = False
     FLAGS['compile_model'] = True
@@ -770,14 +770,14 @@ def trainCycle(image_datasets, model):
     
     model = model.to(device, memory_format=memory_format)
     
-    if(FLAGS['compile_model'] == True):
-        model = torch.compile(model)
+    
         
     if (FLAGS['use_ddp'] == True):
         
         model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
         
-    
+    if(FLAGS['compile_model'] == True):
+        model = torch.compile(model)
         
     if (FLAGS['resume_epoch'] > 0):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
