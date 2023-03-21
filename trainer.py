@@ -817,9 +817,9 @@ def trainCycle(image_datasets, model):
 
     #mixup = Mixup(mixup_alpha = 0.2, cutmix_alpha = 0, num_classes = len(classes))
     
-    boundaryCalculator = MLCSL.getDecisionBoundary(initial_threshold = 0.5, lr = 1e-5, threshold_min = 0.001, threshold_max = 0.999)
+    #boundaryCalculator = MLCSL.getDecisionBoundary(initial_threshold = 0.5, lr = 1e-5, threshold_min = 0.001, threshold_max = 0.999)
     if (FLAGS['resume_epoch'] > 0):
-        boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth').to(device)
+        #boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth').to(device)
         optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth'))
         
     
@@ -942,8 +942,9 @@ def trainCycle(image_datasets, model):
                         outputs = model(imageBatch)
                         #outputs = model(imageBatch).logits
                         preds = torch.sigmoid(outputs)
-                        boundary = boundaryCalculator(preds, tagBatch)
-                        predsModified = (preds > boundary).float()
+                        #boundary = boundaryCalculator(preds, tagBatch)
+                        #predsModified = (preds > boundary).float()
+                        predsModified=preds
                         #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
                         multiAccuracy = cm_tracker.update(predsModified.to(device), tagBatch.to(device))
                         
@@ -957,8 +958,8 @@ def trainCycle(image_datasets, model):
                         '''
 
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        #loss = criterion(outputs.to(device2), tagBatch.to(device2))
-                        loss = criterion(outputs.to(device) - torch.special.logit(boundary.detach().clone()).to(device), tagBatch.to(device))
+                        loss = criterion(outputs.to(device2), tagBatch.to(device2))
+                        #loss = criterion(outputs.to(device) - torch.special.logit(boundary.detach().clone()).to(device), tagBatch.to(device))
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
                         #loss, textOutput = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
                         #loss = criterion(outputs.cpu(), tags.cpu())
