@@ -331,8 +331,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 4
-    FLAGS['gradient_accumulation_iterations'] = 32
+    FLAGS['batch_size'] = 32
+    FLAGS['gradient_accumulation_iterations'] = 4
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -947,6 +947,10 @@ def trainCycle(image_datasets, model):
                         #outputs = model(imageBatch).logits
                         preds = torch.sigmoid(outputs)
                         boundary = boundaryCalculator(preds, tagBatch)
+                        if FLAGS['use_ddp'] == True:
+                            torch.cuda.synchronize()
+                            torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
+                            boundary = boundaryCalculator.thresholdPerClass
                         predsModified = (preds > boundary).float()
                         #predsModified=preds
                         #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
