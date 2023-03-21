@@ -894,10 +894,10 @@ def trainCycle(image_datasets, model):
                 
                 if FLAGS['val'] == False:
                     modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
-                    torch.save(model.state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
-                    torch.save(boundaryCalculator.thresholdPerClass, modelDir + 'thresholds.pth')
-                    torch.save(optimizer.state_dict(), modelDir + 'optimizer' + '.pth')
-                    pd.DataFrame(tagNames).to_pickle(modelDir + "tags.pkl")
+                    if(is_head_proc): torch.save(model.state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
+                    if(is_head_proc): torch.save(boundaryCalculator.thresholdPerClass, modelDir + 'thresholds.pth')
+                    if(is_head_proc): torch.save(optimizer.state_dict(), modelDir + 'optimizer' + '.pth')
+                    if(is_head_proc): pd.DataFrame(tagNames).to_pickle(modelDir + "tags.pkl")
                 model.eval()   # Set model to evaluate mode
                 print("validation set")
                 if(FLAGS['skip_test_set'] == True):
