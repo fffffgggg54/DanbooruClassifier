@@ -324,7 +324,7 @@ elif currGPU == 'v100':
     # dataloader config
 
     FLAGS['num_workers'] = 10
-    FLAGS['postDataServerWorkerCount'] = 1
+    FLAGS['postDataServerWorkerCount'] = 2
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
@@ -1029,6 +1029,12 @@ def trainCycle(image_datasets, model):
 
                     imagesPerSecond = (dataloaders[phase].batch_size*stepsPerPrintout)/(time.time() - cycleTime)
                     cycleTime = time.time()
+                    
+                    if(FLAGS['use_ddp'] == True):
+                        imagesPerSecond = torch.Tensor([imagesPerSecond], requires_grad=False)
+                        torch.distributed.all_reduce(imagesPerSecond, op = torch.distributed.ReduceOp.SUM)
+                        imagesPerSecond = imagesPerSecond.item()
+                        
 
                     #currPostTags = []
                     #batchTagAccuracy = list(zip(tagNames, perTagAccuracy.tolist()))
