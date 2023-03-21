@@ -291,7 +291,7 @@ elif currGPU == 'v100':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-ASL_BCE_T-448-1588_v100/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-ASL_BCE_T-384-1588_v100/'
 
 
     # post importer config
@@ -304,7 +304,7 @@ elif currGPU == 'v100':
     # dataset config
     FLAGS['tagCount'] = 1588
     FLAGS['image_size'] = 448
-    FLAGS['actual_image_size'] = 448
+    FLAGS['actual_image_size'] = 384
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 1.6
@@ -948,7 +948,7 @@ def trainCycle(image_datasets, model):
                         #outputs = model(imageBatch).logits
                         preds = torch.sigmoid(outputs)
                         boundary = boundaryCalculator(preds, tagBatch)
-
+                        
                         predsModified = (preds > boundary).float()
                         #predsModified=preds
                         #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
