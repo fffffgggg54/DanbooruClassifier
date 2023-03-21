@@ -776,7 +776,7 @@ def trainCycle(image_datasets, model):
     if (FLAGS['use_ddp'] == True):
         torch.cuda.set_device(dist.get_rank())
         torch.cuda.empty_cache()
-        model = DDP(model, device_ids=[FLAGS['device']])
+        model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
         
     if (FLAGS['resume_epoch'] > 0):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
