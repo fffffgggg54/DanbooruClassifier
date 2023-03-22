@@ -42,8 +42,8 @@ import timm.optim
 #           CONFIGURATION OPTIONS
 # ================================================
 
-currGPU = '3090'
-#currGPU = 'm40'
+#currGPU = '3090'
+currGPU = 'm40'
 #currGPU = 'none'
 
 
@@ -270,7 +270,7 @@ elif currGPU == 'm40':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 0
+    FLAGS['resume_epoch'] = 6
 
     FLAGS['finetune'] = False
     
@@ -614,9 +614,9 @@ def modelSetup(classes):
     
     # regular timm models
     
-    #model = timm.create_model('efficientformerv2_s0', pretrained=False, num_classes=len(classes), drop_path_rate=0.05)
+    model = timm.create_model('efficientformerv2_s0', pretrained=False, num_classes=len(classes), drop_path_rate=0.05)
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
-    model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes), drop_path_rate=0.4)
+    #model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes), drop_path_rate=0.4)
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
