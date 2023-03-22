@@ -291,7 +291,7 @@ elif currGPU == 'v100':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/davit_large-448-ASL_BCE_T-1588_v100/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/davit_base-448-ASL_BCE_T-1588_v100/'
 
 
     # post importer config
@@ -307,7 +307,7 @@ elif currGPU == 'v100':
     FLAGS['actual_image_size'] = 448
     FLAGS['progressiveImageSize'] = True
     FLAGS['progressiveSizeStart'] = 0.5
-    FLAGS['progressiveAugRatio'] = 1.4
+    FLAGS['progressiveAugRatio'] = 2.0
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
     #FLAGS['cacheRoot'] = None
 
@@ -332,8 +332,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 16
-    FLAGS['gradient_accumulation_iterations'] = 8
+    FLAGS['batch_size'] = 32
+    FLAGS['gradient_accumulation_iterations'] = 4
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -700,7 +700,7 @@ def modelSetup(classes):
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
-    model = timm.create_model('davit_large', pretrained=False, num_classes=len(classes), drop_path_rate = 0.5, drop_rate = 0.1)
+    model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2, drop_rate = 0.05)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('efficientnetv2_xl', pretrained=False, num_classes=len(classes), drop_path_rate = 0.6)
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
@@ -787,7 +787,7 @@ def trainCycle(image_datasets, model):
         model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
         
     if(FLAGS['compile_model'] == True):
-        model = torch.compile(model, dynamic=FLAGS['progressiveImageSize'])
+        model = torch.compile(model)
         
     if (FLAGS['resume_epoch'] > 0):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
