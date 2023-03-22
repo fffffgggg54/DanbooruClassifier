@@ -291,7 +291,7 @@ elif currGPU == 'v100':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/vit_base_patch16_224-448-ASL_BCE_T-1588_v100/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/seresnet152d-448-ASL_BCE_T-1588_v100/'
 
 
     # post importer config
@@ -689,7 +689,7 @@ def modelSetup(classes):
     
     #model = timm.create_model('efficientformerv2_s0', pretrained=False, num_classes=len(classes), drop_path_rate=0.05)
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
-    model = timm.create_model('vit_base_patch16_224', img_size=448, pretrained=False, num_classes=len(classes), drop_path_rate=0.4)
+    model = timm.create_model('seresnet152d', img_size=448, pretrained=False, num_classes=len(classes), drop_path_rate=0.4)
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
@@ -904,12 +904,12 @@ def trainCycle(image_datasets, model):
             if phase == 'val':
                 
                 
-                if FLAGS['val'] == False:
+                if FLAGS['val'] == False and is_head_proc:
                     modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
-                    if(is_head_proc): torch.save(model.state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
-                    if(is_head_proc): torch.save(boundaryCalculator.thresholdPerClass, modelDir + 'thresholds.pth')
-                    if(is_head_proc): torch.save(optimizer.state_dict(), modelDir + 'optimizer' + '.pth')
-                    if(is_head_proc): pd.DataFrame(tagNames).to_pickle(modelDir + "tags.pkl")
+                    torch.save(model.state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
+                    torch.save(boundaryCalculator.thresholdPerClass, modelDir + 'thresholds.pth')
+                    torch.save(optimizer.state_dict(), modelDir + 'optimizer' + '.pth')
+                    pd.DataFrame(tagNames).to_pickle(modelDir + "tags.pkl")
                 model.eval()   # Set model to evaluate mode
                 print("validation set")
                 if(FLAGS['skip_test_set'] == True):
