@@ -859,6 +859,8 @@ def trainCycle(image_datasets, model):
         AP_regular = []
         AccuracyRunning = []
         AP_ema = []
+        targets_running = []
+        preds_running = []
         textOutput = None
         #lastPrior = None
         
@@ -1010,11 +1012,32 @@ def trainCycle(image_datasets, model):
                         
                         if (phase == 'val'):
                             # for mAP calculation
-                            targets = tags.numpy(force=True)
-                            preds_regular = preds.numpy(force=True)
-                            #preds_ema = output_ema.cpu().detach().numpy()
-                            accuracy = MLCSL.mAP(targets, preds_regular)
-                            AP_regular.append(accuracy)
+                            if(FLAGS['use_ddp'] == True):
+                                targets_all = None
+                                preds_all = None
+                                if(is_head_proc):
+                                    targets_all = [torch.zeros_like(tags) for _ in range(dist.get_world_size())]
+                                    preds_all = [torch.zeros_like(tags) for _ in range(dist.get_world_size())]
+                                torch.distributed.gather(tags, gather_list = targets_all, async_op=True)
+                                torch.distributed.gather(preds.detach().cpu(), gather_list = preds_all, async_op=True)
+                                if(is_head_proc):
+                                    targets_all = torch.cat(targets_all)
+                                    preds_all = torch.cat(preds_all)
+                            else:
+                                targets_all = tags
+                                preds_all = preds.detach().cpu()
+                            
+                            if is_head_proc:
+                                targets = targets_all.numpy(force=True)
+                                preds_regular = preds_all.numpy(force=True)
+                                #preds_ema = output_ema.cpu().detach().numpy()
+                                accuracy = MLCSL.mAP(targets, preds_regular)
+                            #AP_regular.append(accuracy)
+                            
+                            
+                            
+                            targets_running.append(targets_all.detach().clone())
+                            preds_running.append(preds_all.detach().clone())
                             
                             #AP_ema.append(MLCSL.mAP(targets, preds_ema))
                             #AccuracyRunning.append(multiAccuracy)
@@ -1058,14 +1081,14 @@ def trainCycle(image_datasets, model):
                     
                     #torch.cuda.empty_cache()
                 #losses.append(loss)
-                
+                '''
                 if (phase == 'val'):
                     if best is None:
                         best = (float(loss), epoch, i, accuracy.item())
                     elif best[0] > float(loss):
                         best = (float(loss), epoch, i, accuracy.item())
                         print(f"NEW BEST: {best}!")
-                
+                '''
                 if phase == 'train':
                     scheduler.step()
                 
@@ -1077,7 +1100,7 @@ def trainCycle(image_datasets, model):
             if FLAGS['use_ddp'] == True:
                 torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
                 torch.distributed.all_reduce(cm_tracker.running_confusion_matrix, op=torch.distributed.ReduceOp.AVG)
-            if ((phase == 'val') and (FLAGS['skip_test_set'] == False)):
+            if ((phase == 'val') and (FLAGS['skip_test_set'] == False) and is_head_proc):
                 #torch.set_printoptions(profile="full")
                 
                 #AvgAccuracy = torch.stack(AccuracyRunning)
@@ -1097,7 +1120,7 @@ def trainCycle(image_datasets, model):
                 lastPrior = prior.avg_pred_train
                 if(is_head_proc): print(lastPrior[:30])
                 
-                mAP_score_regular = np.mean(AP_regular)
+                mAP_score_regular = MLCSL.mAP(torch.cat(targets_running).numpy(force=True), torch.cat(preds_running).numpy(force=True))
                 #mAP_score_ema = np.mean(AP_ema)
                 if(is_head_proc): print("mAP score regular {:.2f}".format(mAP_score_regular))
                 #top_mAP = max(mAP_score_regular, mAP_score_ema)
