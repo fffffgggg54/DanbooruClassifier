@@ -866,6 +866,8 @@ def trainCycle(image_datasets, model):
         AP_regular = []
         AccuracyRunning = []
         AP_ema = []
+        targets_running = None
+        preds_running = None
         targets_running = []
         preds_running = []
         textOutput = None
@@ -1028,8 +1030,8 @@ def trainCycle(image_datasets, model):
                                 torch.distributed.gather(tagBatch, gather_list = targets_all, async_op=True)
                                 torch.distributed.gather(preds, gather_list = preds_all, async_op=True)
                                 if(is_head_proc):
-                                    targets_all = torch.cat(targets_all).detach().cpu()
-                                    preds_all = torch.cat(preds_all).detach().cpu()
+                                    targets_all = torch.cat(targets_all.clone()).detach().cpu()
+                                    preds_all = torch.cat(preds_all.clone()).detach().cpu()
                             else:
                                 targets_all = tags
                                 preds_all = preds.detach().cpu()
@@ -1048,6 +1050,8 @@ def trainCycle(image_datasets, model):
                                 
                                 #AP_ema.append(MLCSL.mAP(targets, preds_ema))
                                 #AccuracyRunning.append(multiAccuracy)
+                                targets_all = None
+                                preds_all = None
                 
                 #print(device)
                 if i % stepsPerPrintout == 0:
