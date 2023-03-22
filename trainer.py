@@ -291,7 +291,7 @@ elif currGPU == 'v100':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_base-448-ASL_BCE_T-5500_v100/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_base-224-ASL_BCE_T-1588_v100/'
 
 
     # post importer config
@@ -302,9 +302,9 @@ elif currGPU == 'v100':
     FLAGS['stopReadingAt'] = 5000
 
     # dataset config
-    FLAGS['tagCount'] = 5500
-    FLAGS['image_size'] = 448
-    FLAGS['actual_image_size'] = 448
+    FLAGS['tagCount'] = 1588
+    FLAGS['image_size'] = 224
+    FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 2.0
@@ -332,8 +332,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 16
-    FLAGS['gradient_accumulation_iterations'] = 8
+    FLAGS['batch_size'] = 32
+    FLAGS['gradient_accumulation_iterations'] = 4
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -345,8 +345,8 @@ elif currGPU == 'v100':
     FLAGS['resume_epoch'] = 1
 
     FLAGS['finetune'] = False
-    FLAGS['compile_model'] = True
-    FLAGS['fast_norm'] = False
+    FLAGS['compile_model'] = False
+    FLAGS['fast_norm'] = True
     FLAGS['channels_last'] = FLAGS['use_AMP']
 
     # debugging config
