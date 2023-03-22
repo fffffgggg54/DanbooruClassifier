@@ -345,8 +345,8 @@ elif currGPU == 'v100':
     FLAGS['resume_epoch'] = 0
 
     FLAGS['finetune'] = False
-    FLAGS['compile_model'] = True
-    FLAGS['fast_norm'] = False
+    FLAGS['compile_model'] = False
+    FLAGS['fast_norm'] = True
     FLAGS['channels_last'] = FLAGS['use_AMP']
 
     # debugging config
