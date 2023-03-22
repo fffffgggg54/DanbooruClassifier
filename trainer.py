@@ -291,7 +291,7 @@ elif currGPU == 'v100':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/davit_base-448-ASL_BCE_T-1588_v100/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_base-448-ASL_BCE_T-5500_v100/'
 
 
     # post importer config
@@ -302,7 +302,7 @@ elif currGPU == 'v100':
     FLAGS['stopReadingAt'] = 5000
 
     # dataset config
-    FLAGS['tagCount'] = 1588
+    FLAGS['tagCount'] = 5500
     FLAGS['image_size'] = 448
     FLAGS['actual_image_size'] = 448
     FLAGS['progressiveImageSize'] = False
@@ -345,8 +345,8 @@ elif currGPU == 'v100':
     FLAGS['resume_epoch'] = 0
 
     FLAGS['finetune'] = False
-    FLAGS['compile_model'] = False
-    FLAGS['fast_norm'] = True
+    FLAGS['compile_model'] = True
+    FLAGS['fast_norm'] = False
     FLAGS['channels_last'] = FLAGS['use_AMP']
 
     # debugging config
@@ -699,8 +699,8 @@ def modelSetup(classes):
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    #model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
-    model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2, drop_rate = 0.05)
+    model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2, drop_rate=0.05)
+    #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2, drop_rate = 0.05)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('efficientnetv2_xl', pretrained=False, num_classes=len(classes), drop_path_rate = 0.6)
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
