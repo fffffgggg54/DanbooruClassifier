@@ -759,7 +759,7 @@ def modelSetup(classes):
     
 def getDataLoader(dataset, batch_size):
     distSampler = DistributedSampler(dataset=dataset, seed=17, drop_last=True)
-    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, sampler=distSampler, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=2, pin_memory = True, generator=torch.Generator().manual_seed(41))
+    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, sampler=distSampler, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=2, pin_memory = True, generator=torch.Generator().manual_seed(41), pin_memory_device=FLAGS['device'])
 
 def trainCycle(image_datasets, model):
     #print("starting training")
