@@ -325,7 +325,7 @@ elif currGPU == 'v100':
     # dataloader config
 
     FLAGS['num_workers'] = 10
-    FLAGS['postDataServerWorkerCount'] = 1
+    FLAGS['postDataServerWorkerCount'] = 2
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
@@ -345,8 +345,8 @@ elif currGPU == 'v100':
     FLAGS['resume_epoch'] = 0
 
     FLAGS['finetune'] = False
-    FLAGS['compile_model'] = True
-    FLAGS['fast_norm'] = False
+    FLAGS['compile_model'] = False
+    FLAGS['fast_norm'] = True
     FLAGS['channels_last'] = FLAGS['use_AMP']
 
     # debugging config
