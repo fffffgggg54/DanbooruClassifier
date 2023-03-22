@@ -787,7 +787,7 @@ def trainCycle(image_datasets, model):
         model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
         
     if(FLAGS['compile_model'] == True):
-        model = torch.compile(model)
+        model = torch.compile(model, dynamic=FLAGS['progressiveImageSize'])
         
     if (FLAGS['resume_epoch'] > 0):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
