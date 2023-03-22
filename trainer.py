@@ -1003,7 +1003,7 @@ def trainCycle(image_datasets, model):
                                     optimizer.zero_grad(set_to_none=True)
                         
                         
-                            torch.cuda.synchronize()
+                            #torch.cuda.synchronize()
                         
                             #ema.update(model)
                             #prior.update(outputs.to(device))
