@@ -586,7 +586,7 @@ def getData():
     #trainSet, testSet = torch.utils.data.random_split(trimmedSet, [int(FLAGS['trainSetSize'] * len(trimmedSet)), len(trimmedSet) - int(FLAGS['trainSetSize'] * len(trimmedSet))], generator=torch.Generator().manual_seed(42)) # split dataset
     
     trainSet = getSubsetByID(myDataset, postData, 0, 900)
-    trainSet = getSubsetByID(myDataset, postData, 900, 930)
+    testSet = getSubsetByID(myDataset, postData, 900, 930)
     
     image_datasets = {'train': trainSet, 'val' : testSet}   # put dataset into a list for easy handling
     return image_datasets
