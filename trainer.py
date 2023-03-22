@@ -305,9 +305,9 @@ elif currGPU == 'v100':
     FLAGS['tagCount'] = 1588
     FLAGS['image_size'] = 448
     FLAGS['actual_image_size'] = 448
-    FLAGS['progressiveImageSize'] = False
+    FLAGS['progressiveImageSize'] = True
     FLAGS['progressiveSizeStart'] = 0.5
-    FLAGS['progressiveAugRatio'] = 2.0
+    FLAGS['progressiveAugRatio'] = 1.4
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
     #FLAGS['cacheRoot'] = None
 
@@ -332,8 +332,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 32
-    FLAGS['gradient_accumulation_iterations'] = 4
+    FLAGS['batch_size'] = 16
+    FLAGS['gradient_accumulation_iterations'] = 8
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -702,7 +702,7 @@ def modelSetup(classes):
     #model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('efficientnetv2_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
+    model = timm.create_model('efficientnetv2_xl', pretrained=False, num_classes=len(classes), drop_path_rate = 0.6)
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     
     # ViT-better similar to https://arxiv.org/abs/2205.01580
@@ -900,7 +900,7 @@ def trainCycle(image_datasets, model):
                                                           #transforms.RandAugment(),
                                                           transforms.RandomHorizontalFlip(),
                                                           #transforms.TrivialAugmentWide(),
-                                                          #danbooruDataset.CutoutPIL(cutout_factor=0.2),
+                                                          danbooruDataset.CutoutPIL(cutout_factor=0.2),
                                                           
                                                           transforms.ToTensor(),
                                                           RandomErasing(probability=0.4, mode='pixel', device='cpu'),
