@@ -65,7 +65,7 @@ FLAGS['postDFPickle'] = FLAGS['postMetaRoot'] + "postData.pkl"
 FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
-FLAGS['postDFPickleFilteredTrimmed'] = FLAGS['postMetaRoot'] + "tagDataFilteredTrimmed.pkl"
+FLAGS['postDFPickleFilteredTrimmed'] = FLAGS['postMetaRoot'] + "postDataFilteredTrimmed.pkl"
 
 '''
 if currGPU == '3090':
