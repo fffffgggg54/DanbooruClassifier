@@ -59,7 +59,7 @@ FLAGS = {}
 # path config for various directories and files
 # TODO replace string appending with os.path.join()
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
-#FLAGS['rootPath'] = "/media/fredo/Datasets/danbooru2021/"
+if currGPU == 'v100': FLAGS['rootPath'] = "/media/fredo/SAMSUNG_500GB/danbooru2021/"
 if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
 FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + "original/"
@@ -70,7 +70,7 @@ FLAGS['postDFPickle'] = FLAGS['postMetaRoot'] + "postData.pkl"
 FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
-FLAGS['postDFPickleFilteredTrimmed'] = FLAGS['postMetaRoot'] + "tagDataFilteredTrimmed.pkl"
+FLAGS['postDFPickleFilteredTrimmed'] = FLAGS['postMetaRoot'] + "postDataFilteredTrimmed.pkl"
 
 '''
 if currGPU == '3090':
@@ -291,7 +291,7 @@ elif currGPU == 'v100':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_nano-ASL_BCE_T-1588_v100/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_base-448-ASL_BCE_T-1588_v100/'
 
 
     # post importer config
@@ -303,8 +303,8 @@ elif currGPU == 'v100':
 
     # dataset config
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 224
-    FLAGS['actual_image_size'] = 224
+    FLAGS['image_size'] = 448
+    FLAGS['actual_image_size'] = 448
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 1.6
@@ -332,8 +332,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 128
-    FLAGS['gradient_accumulation_iterations'] = 1
+    FLAGS['batch_size'] = 16
+    FLAGS['gradient_accumulation_iterations'] = 8
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -689,7 +689,7 @@ def modelSetup(classes):
     
     #model = timm.create_model('efficientformerv2_s0', pretrained=False, num_classes=len(classes), drop_path_rate=0.05)
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
-    model = timm.create_model('convnext_nano', pretrained=False, num_classes=len(classes), drop_path_rate=0.1)
+    model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes), drop_path_rate=0.4)
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
