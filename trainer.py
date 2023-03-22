@@ -291,7 +291,7 @@ elif currGPU == 'v100':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_l-224-ASL_BCE_T-1588_v100/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/efficientnetv2_xl-448-ASL_BCE_T-1588_v100/'
 
 
     # post importer config
@@ -303,11 +303,11 @@ elif currGPU == 'v100':
 
     # dataset config
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 224
-    FLAGS['actual_image_size'] = 224
-    FLAGS['progressiveImageSize'] = False
+    FLAGS['image_size'] = 448
+    FLAGS['actual_image_size'] = 448
+    FLAGS['progressiveImageSize'] = True
     FLAGS['progressiveSizeStart'] = 0.5
-    FLAGS['progressiveAugRatio'] = 1.6
+    FLAGS['progressiveAugRatio'] = 1.4
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
     #FLAGS['cacheRoot'] = None
 
@@ -332,8 +332,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 256
-    FLAGS['gradient_accumulation_iterations'] = 1
+    FLAGS['batch_size'] = 32
+    FLAGS['gradient_accumulation_iterations'] = 4
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -702,7 +702,7 @@ def modelSetup(classes):
     #model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('gernet_l', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
+    model = timm.create_model('efficientnetv2_xl', pretrained=False, num_classes=len(classes), drop_path_rate = 0.5)
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     
     # ViT-better similar to https://arxiv.org/abs/2205.01580
@@ -828,7 +828,7 @@ def trainCycle(image_datasets, model):
 
     #mixup = Mixup(mixup_alpha = 0.2, cutmix_alpha = 0, num_classes = len(classes))
     
-    boundaryCalculator = MLCSL.getDecisionBoundary(initial_threshold = 0.5, lr = 1e-5, threshold_min = 0.001, threshold_max = 0.999)
+    boundaryCalculator = MLCSL.getDecisionBoundary(initial_threshold = 0.5, lr = 1e-4, threshold_min = 0.001, threshold_max = 0.999)
 
     if (FLAGS['resume_epoch'] > 0):
         boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth').to(device)
@@ -903,7 +903,7 @@ def trainCycle(image_datasets, model):
                                                           #danbooruDataset.CutoutPIL(cutout_factor=0.2),
                                                           
                                                           transforms.ToTensor(),
-                                                          RandomErasing(probability=0.5, mode='pixel', device='cpu'),
+                                                          RandomErasing(probability=0.4, mode='pixel', device='cpu'),
                                                           #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                                                           ])
                 
