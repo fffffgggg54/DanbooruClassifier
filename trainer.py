@@ -291,7 +291,7 @@ elif currGPU == 'v100':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/efficientnetv2_xl-448-ASL_BCE_T-1588_v100/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/efficientnetv2_s-448-ASL_BCE_T-1588_v100/'
 
 
     # post importer config
@@ -307,7 +307,7 @@ elif currGPU == 'v100':
     FLAGS['actual_image_size'] = 448
     FLAGS['progressiveImageSize'] = True
     FLAGS['progressiveSizeStart'] = 0.5
-    FLAGS['progressiveAugRatio'] = 1.4
+    FLAGS['progressiveAugRatio'] = 2.0
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
     #FLAGS['cacheRoot'] = None
 
@@ -340,7 +340,7 @@ elif currGPU == 'v100':
     FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
     FLAGS['lr_warmup_epochs'] = 5
 
-    FLAGS['weight_decay'] = 2e-2
+    FLAGS['weight_decay'] = 3e-3
 
     FLAGS['resume_epoch'] = 0
 
@@ -702,7 +702,7 @@ def modelSetup(classes):
     #model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('efficientnetv2_xl', pretrained=False, num_classes=len(classes), drop_path_rate = 0.5)
+    model = timm.create_model('efficientnetv2_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     
     # ViT-better similar to https://arxiv.org/abs/2205.01580
@@ -1039,15 +1039,15 @@ def trainCycle(image_datasets, model):
                                 preds_regular = preds_all.numpy(force=True)
                                 #preds_ema = output_ema.cpu().detach().numpy()
                                 accuracy = MLCSL.mAP(targets, preds_regular)
-                            #AP_regular.append(accuracy)
-                            
-                            
-                            
-                            targets_running.append(targets_all.detach().clone())
-                            preds_running.append(preds_all.detach().clone())
-                            
-                            #AP_ema.append(MLCSL.mAP(targets, preds_ema))
-                            #AccuracyRunning.append(multiAccuracy)
+                                #AP_regular.append(accuracy)
+                                
+                                
+                                
+                                targets_running.append(targets_all.detach().clone())
+                                preds_running.append(preds_all.detach().clone())
+                                
+                                #AP_ema.append(MLCSL.mAP(targets, preds_ema))
+                                #AccuracyRunning.append(multiAccuracy)
                 
                 #print(device)
                 if i % stepsPerPrintout == 0:
