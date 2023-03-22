@@ -342,7 +342,7 @@ elif currGPU == 'v100':
 
     FLAGS['weight_decay'] = 3e-3
 
-    FLAGS['resume_epoch'] = 0
+    FLAGS['resume_epoch'] = 1
 
     FLAGS['finetune'] = False
     FLAGS['compile_model'] = True
