@@ -303,8 +303,8 @@ elif currGPU == 'v100':
 
     # dataset config
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 448
-    FLAGS['actual_image_size'] = 448
+    FLAGS['image_size'] = 224
+    FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 1.6
@@ -325,7 +325,7 @@ elif currGPU == 'v100':
     # dataloader config
 
     FLAGS['num_workers'] = 10
-    FLAGS['postDataServerWorkerCount'] = 2
+    FLAGS['postDataServerWorkerCount'] = 1
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
@@ -759,7 +759,7 @@ def modelSetup(classes):
     
 def getDataLoader(dataset, batch_size):
     distSampler = DistributedSampler(dataset=dataset, seed=17, drop_last=True)
-    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, sampler=distSampler, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=2, pin_memory = True, generator=torch.Generator().manual_seed(41))
+    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, sampler=distSampler, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=2, pin_memory = False, generator=torch.Generator().manual_seed(41))
 
 def trainCycle(image_datasets, model):
     #print("starting training")
@@ -1025,11 +1025,11 @@ def trainCycle(image_datasets, model):
                                 if(is_head_proc):
                                     targets_all = [torch.zeros_like(tags) for _ in range(dist.get_world_size())]
                                     preds_all = [torch.zeros_like(tags) for _ in range(dist.get_world_size())]
-                                torch.distributed.gather(tags, gather_list = targets_all, async_op=True)
-                                torch.distributed.gather(preds.detach().cpu(), gather_list = preds_all, async_op=True)
+                                torch.distributed.gather(tagBatch, gather_list = targets_all, async_op=True)
+                                torch.distributed.gather(preds, gather_list = preds_all, async_op=True)
                                 if(is_head_proc):
-                                    targets_all = torch.cat(targets_all)
-                                    preds_all = torch.cat(preds_all)
+                                    targets_all = torch.cat(targets_all).detach().cpu()
+                                    preds_all = torch.cat(preds_all).detach().cpu()
                             else:
                                 targets_all = tags
                                 preds_all = preds.detach().cpu()
