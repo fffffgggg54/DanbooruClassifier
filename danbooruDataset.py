@@ -250,15 +250,7 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
         postTags = torch.Tensor()
         bruh = False
 
-
-
         try:
-            imageCacheDir = create_dir(imageCacheRoot + str(postID % 1000).zfill(4))
-            imageCachePath = imageCacheDir + "/" + str(postID) + ".jpeg"
-            
-            image = Image.open(imageCachePath)    #check if file exists
-            image.load()
-            
             tagCacheDir = create_dir(tagCacheRoot + str(postID % 1000).zfill(4))
             tagCachePath = tagCacheDir + "/" + str(postID) + ".pkl.bz2"
             cachedTags = bz2.BZ2File(tagCachePath, 'rb')
@@ -297,8 +289,16 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
                         match = True
 
                 postTags.append(int(match))
-
-
+        
+        
+        try:
+            imageCacheDir = create_dir(imageCacheRoot + str(postID % 1000).zfill(4))
+            imageCachePath = imageCacheDir + "/" + str(postID) + ".jpeg"
+            
+            image = Image.open(imageCachePath)    #check if file exists
+            image.load()
+            
+        except Exception as e:
             #metaTime = time.time() - startTime
             #startTime = time.time()
             imagePath = str(postID % 1000).zfill(4) + "/" + str(postID) + "." + postData.loc["file_ext"]
