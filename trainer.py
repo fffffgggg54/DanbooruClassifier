@@ -1023,8 +1023,8 @@ def trainCycle(image_datasets, model):
                                 targets_all = None
                                 preds_all = None
                                 if(is_head_proc):
-                                    targets_all = [torch.zeros_like(tags) for _ in range(dist.get_world_size())]
-                                    preds_all = [torch.zeros_like(tags) for _ in range(dist.get_world_size())]
+                                    targets_all = [torch.zeros_like(tagBatch) for _ in range(dist.get_world_size())]
+                                    preds_all = [torch.zeros_like(preds) for _ in range(dist.get_world_size())]
                                 torch.distributed.gather(tagBatch, gather_list = targets_all, async_op=True)
                                 torch.distributed.gather(preds, gather_list = preds_all, async_op=True)
                                 if(is_head_proc):
