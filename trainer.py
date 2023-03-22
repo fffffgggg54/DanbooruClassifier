@@ -291,7 +291,7 @@ elif currGPU == 'v100':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tresnet_l-448-ASL_BCE_T-1588_v100/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/vit_large_patch14_clip_224.openai_ft_in12k_in1k-224_ft-ASL_BCE_T-1588_v100/'
 
 
     # post importer config
@@ -303,8 +303,8 @@ elif currGPU == 'v100':
 
     # dataset config
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 448
-    FLAGS['actual_image_size'] = 448
+    FLAGS['image_size'] = 224
+    FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 1.6
@@ -332,8 +332,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 32
-    FLAGS['gradient_accumulation_iterations'] = 8
+    FLAGS['batch_size'] = 8
+    FLAGS['gradient_accumulation_iterations'] = 16
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -696,7 +696,7 @@ def modelSetup(classes):
     
     #model = timm.create_model('efficientformerv2_s0', pretrained=False, num_classes=len(classes), drop_path_rate=0.05)
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
-    model = timm.create_model('tresnet_l', pretrained=False, num_classes=len(classes))
+    model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
