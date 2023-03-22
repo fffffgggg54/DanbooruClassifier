@@ -59,7 +59,7 @@ FLAGS = {}
 # path config for various directories and files
 # TODO replace string appending with os.path.join()
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
-#if currGPU == 'v100': FLAGS['rootPath'] = "/media/fredo/SAMSUNG_500GB/danbooru2021/"
+if currGPU == 'v100': FLAGS['rootPath'] = "/media/fredo/SAMSUNG_500GB/danbooru2021/"
 if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
 FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + "original/"
@@ -291,7 +291,7 @@ elif currGPU == 'v100':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/vit_large_patch14_clip_224.openai_ft_in12k_in1k-224_ft-ASL_BCE_T-1588_v100/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_base-448_ft-ASL_BCE_T-1588_v100/'
 
 
     # post importer config
@@ -303,8 +303,8 @@ elif currGPU == 'v100':
 
     # dataset config
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 224
-    FLAGS['actual_image_size'] = 224
+    FLAGS['image_size'] = 448
+    FLAGS['actual_image_size'] = 448
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 1.6
@@ -332,8 +332,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 8
-    FLAGS['gradient_accumulation_iterations'] = 16
+    FLAGS['batch_size'] = 32
+    FLAGS['gradient_accumulation_iterations'] = 4
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -447,7 +447,6 @@ workQueue = multiprocessing.Queue()
 '''
 
 def getSubsetByID(dataset, postData, lower, upper, div = 1000):
-    print(postData[lower <= postData['id'] % 1000][upper > postData['id'] % 1000].info())
     return torch.utils.data.Subset(dataset, postData[lower <= postData['id'] % 1000][upper > postData['id'] % 1000].index.tolist())
 
 def getData():
@@ -580,14 +579,14 @@ def getData():
     classes = {classIndex : className for classIndex, className in enumerate(tagData.name)}
     
     #classes = {classIndex : className for classIndex, className in enumerate(tagData.name)}
-    #trimmedSet, _ = torch.utils.data.random_split(myDataset, [int(FLAGS['workingSetSize'] * len(myDataset)), len(myDataset) - int(FLAGS['workingSetSize'] * len(myDataset))], generator=torch.Generator().manual_seed(42)) # discard part of dataset if desired
+    trimmedSet, _ = torch.utils.data.random_split(myDataset, [int(FLAGS['workingSetSize'] * len(myDataset)), len(myDataset) - int(FLAGS['workingSetSize'] * len(myDataset))], generator=torch.Generator().manual_seed(42)) # discard part of dataset if desired
     
     # TODO implement modulo-based subsets for splits to standardize train/test sets and potentially a future val set for thresholding or wtv
     
-    #trainSet, testSet = torch.utils.data.random_split(trimmedSet, [int(FLAGS['trainSetSize'] * len(trimmedSet)), len(trimmedSet) - int(FLAGS['trainSetSize'] * len(trimmedSet))], generator=torch.Generator().manual_seed(42)) # split dataset
+    trainSet, testSet = torch.utils.data.random_split(trimmedSet, [int(FLAGS['trainSetSize'] * len(trimmedSet)), len(trimmedSet) - int(FLAGS['trainSetSize'] * len(trimmedSet))], generator=torch.Generator().manual_seed(42)) # split dataset
     
-    trainSet = getSubsetByID(myDataset, postData, 0, 900)
-    testSet = getSubsetByID(myDataset, postData, 900, 930)
+    #trainSet = getSubsetByID(myDataset, postData, 0, 900)
+    #testSet = getSubsetByID(myDataset, postData, 900, 930)
     
     image_datasets = {'train': trainSet, 'val' : testSet}   # put dataset into a list for easy handling
     return image_datasets
@@ -697,10 +696,10 @@ def modelSetup(classes):
     
     #model = timm.create_model('efficientformerv2_s0', pretrained=False, num_classes=len(classes), drop_path_rate=0.05)
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
-    model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
+    #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
+    model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('gernet_l', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
@@ -760,7 +759,7 @@ def modelSetup(classes):
     
 def getDataLoader(dataset, batch_size):
     distSampler = DistributedSampler(dataset=dataset, seed=17, drop_last=True)
-    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, sampler=distSampler, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=10, pin_memory = True, generator=torch.Generator().manual_seed(41))
+    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, sampler=distSampler, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=2, pin_memory = True, generator=torch.Generator().manual_seed(41))
 
 def trainCycle(image_datasets, model):
     #print("starting training")
