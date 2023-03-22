@@ -305,7 +305,7 @@ elif currGPU == 'v100':
     FLAGS['tagCount'] = 1588
     FLAGS['image_size'] = 448
     FLAGS['actual_image_size'] = 448
-    FLAGS['progressiveImageSize'] = True
+    FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 2.0
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
@@ -900,7 +900,7 @@ def trainCycle(image_datasets, model):
                                                           #transforms.RandAugment(),
                                                           transforms.RandomHorizontalFlip(),
                                                           #transforms.TrivialAugmentWide(),
-                                                          danbooruDataset.CutoutPIL(cutout_factor=0.2),
+                                                          #danbooruDataset.CutoutPIL(cutout_factor=0.2),
                                                           
                                                           transforms.ToTensor(),
                                                           RandomErasing(probability=0.4, mode='pixel', device='cpu'),
