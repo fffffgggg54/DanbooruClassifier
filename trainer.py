@@ -291,7 +291,7 @@ elif currGPU == 'v100':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-ASL_BCE_T-448-1588_v100/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_nano-ASL_BCE_T-1588_v100/'
 
 
     # post importer config
@@ -303,8 +303,8 @@ elif currGPU == 'v100':
 
     # dataset config
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 448
-    FLAGS['actual_image_size'] = 448
+    FLAGS['image_size'] = 224
+    FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 1.6
@@ -324,7 +324,7 @@ elif currGPU == 'v100':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 8
+    FLAGS['num_workers'] = 10
     FLAGS['postDataServerWorkerCount'] = 2
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -332,8 +332,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 32
-    FLAGS['gradient_accumulation_iterations'] = 8
+    FLAGS['batch_size'] = 128
+    FLAGS['gradient_accumulation_iterations'] = 1
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -689,7 +689,7 @@ def modelSetup(classes):
     
     #model = timm.create_model('efficientformerv2_s0', pretrained=False, num_classes=len(classes), drop_path_rate=0.05)
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
-    model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes), drop_path_rate=0.1)
+    model = timm.create_model('convnext_nano', pretrained=False, num_classes=len(classes), drop_path_rate=0.1)
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
@@ -752,7 +752,7 @@ def modelSetup(classes):
     
 def getDataLoader(dataset, batch_size):
     distSampler = DistributedSampler(dataset=dataset, seed=17, drop_last=True)
-    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, sampler=distSampler, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=10, pin_memory = False, generator=torch.Generator().manual_seed(41))
+    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, sampler=distSampler, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=10, pin_memory = True, generator=torch.Generator().manual_seed(41))
 
 def trainCycle(image_datasets, model):
     #print("starting training")
@@ -1003,7 +1003,7 @@ def trainCycle(image_datasets, model):
                                     optimizer.zero_grad(set_to_none=True)
                         
                         
-                            #torch.cuda.synchronize()
+                            torch.cuda.synchronize()
                         
                             #ema.update(model)
                             #prior.update(outputs.to(device))
