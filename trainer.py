@@ -291,7 +291,7 @@ elif currGPU == 'v100':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_base-224-ASL_BCE_T-1588_v100/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/test_v100/'
 
 
     # post importer config
@@ -332,21 +332,21 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 32
-    FLAGS['gradient_accumulation_iterations'] = 4
+    FLAGS['batch_size'] = 256
+    FLAGS['gradient_accumulation_iterations'] = 1
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
     FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
     FLAGS['lr_warmup_epochs'] = 5
 
-    FLAGS['weight_decay'] = 3e-3
+    FLAGS['weight_decay'] = 3e-2
 
     FLAGS['resume_epoch'] = 0
 
     FLAGS['finetune'] = False
-    FLAGS['compile_model'] = False
-    FLAGS['fast_norm'] = True
+    FLAGS['compile_model'] = True
+    FLAGS['fast_norm'] = False
     FLAGS['channels_last'] = FLAGS['use_AMP']
 
     # debugging config
@@ -699,7 +699,7 @@ def modelSetup(classes):
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2, drop_rate=0.05)
+    model = timm.create_model('coatnet_rmlp_2_rw_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2, drop_rate=0.05)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2, drop_rate = 0.05)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('efficientnetv2_xl', pretrained=False, num_classes=len(classes), drop_path_rate = 0.6)
@@ -1030,8 +1030,8 @@ def trainCycle(image_datasets, model):
                                 torch.distributed.gather(tagBatch, gather_list = targets_all, async_op=True)
                                 torch.distributed.gather(preds, gather_list = preds_all, async_op=True)
                                 if(is_head_proc):
-                                    targets_all = torch.cat(targets_all.clone()).detach().cpu()
-                                    preds_all = torch.cat(preds_all.clone()).detach().cpu()
+                                    targets_all = torch.cat(targets_all).detach().cpu()
+                                    preds_all = torch.cat(preds_all).detach().cpu()
                             else:
                                 targets_all = tags
                                 preds_all = preds.detach().cpu()
