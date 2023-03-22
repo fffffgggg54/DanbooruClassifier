@@ -253,9 +253,9 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
         try:
             tagCacheDir = create_dir(tagCacheRoot + str(postID % 1000).zfill(4))
             tagCachePath = tagCacheDir + "/" + str(postID) + ".pkl.bz2"
-            cachedTags = bz2.BZ2File(tagCachePath, 'rb')
-            postTags = cPickle.load(cachedTags)
-            cachedTags.close()
+            with bz2.BZ2File(tagCachePath, 'rb') as cachedTags:
+                postTags = cPickle.load(cachedTags)
+
             #print(f"got pickle from {cachePath}")
             '''
             if len(postTags) != len(tagList):
@@ -289,6 +289,13 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
                         match = True
 
                 postTags.append(int(match))
+            
+            postTags = torch.Tensor(postTags)
+            
+            if(tagCacheRoot is not None):    
+                tagCacheDir = create_dir(tagCacheRoot + str(postID % 1000).zfill(4))
+                tagCachePath = tagCacheDir + "/" + str(postID) + ".pkl.bz2"
+                with bz2.BZ2File(tagCachePath, 'w') as cachedSample: cPickle.dump(postTags, cachedSample)
         
         
         try:
@@ -363,24 +370,13 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
 
 
             #image = transforms.functional.pil_to_tensor(image).squeeze()
-
             
-
-            postTags = torch.Tensor(postTags)
-
-
-
             if(imageCacheRoot is not None):
                 imageCacheDir = create_dir(imageCacheRoot + str(postID % 1000).zfill(4))
                 imageCachePath = imageCacheDir + "/" + str(postID) + ".jpeg"
                 image.save(imageCachePath, format='jpeg', quality=75, optimize=True)
                 #with bz2.BZ2File(imageCachePath, 'w') as cachedSample: cPickle.dump((image, postTags, postID), cachedSample)
-                
-                tagCacheDir = create_dir(tagCacheRoot + str(postID % 1000).zfill(4))
-                tagCachePath = tagCacheDir + "/" + str(postID) + ".pkl.bz2"
-                with bz2.BZ2File(tagCachePath, 'w') as cachedSample: cPickle.dump(postTags, cachedSample)
-        
-        
+
 
         if self.transform: image = self.transform(image)
 
