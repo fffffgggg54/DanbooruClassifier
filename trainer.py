@@ -1122,10 +1122,10 @@ def trainCycle(image_datasets, model):
                 if(is_head_proc): print((MeanStackedAccuracy*100).tolist())
                 
                 
-                prior.save_prior()
-                prior.get_top_freq_classes()
-                lastPrior = prior.avg_pred_train
-                if(is_head_proc): print(lastPrior[:30])
+                #prior.save_prior()
+                #prior.get_top_freq_classes()
+                #lastPrior = prior.avg_pred_train
+                #if(is_head_proc): print(lastPrior[:30])
                 
                 mAP_score_regular = MLCSL.mAP(torch.cat(targets_running).numpy(force=True), torch.cat(preds_running).numpy(force=True))
                 #mAP_score_ema = np.mean(AP_ema)
