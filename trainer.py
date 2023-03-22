@@ -332,7 +332,7 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 128
+    FLAGS['batch_size'] = 256
     FLAGS['gradient_accumulation_iterations'] = 1
 
     FLAGS['base_learning_rate'] = 3e-3
@@ -759,7 +759,7 @@ def modelSetup(classes):
     
 def getDataLoader(dataset, batch_size):
     distSampler = DistributedSampler(dataset=dataset, seed=17, drop_last=True)
-    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, sampler=distSampler, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=2, pin_memory = False, generator=torch.Generator().manual_seed(41))
+    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, sampler=distSampler, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=2, pin_memory = True, generator=torch.Generator().manual_seed(41))
 
 def trainCycle(image_datasets, model):
     #print("starting training")
