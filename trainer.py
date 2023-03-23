@@ -335,9 +335,9 @@ elif currGPU == 'v100':
     FLAGS['batch_size'] = 128
     FLAGS['gradient_accumulation_iterations'] = 8
 
-    FLAGS['base_learning_rate'] = 1e-2
+    FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 1024
-    FLAGS['learning_rate'] = ((FLAGS['batch_size'] * dist.get_world_size() * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
+    FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
     FLAGS['lr_warmup_epochs'] = 5
 
     FLAGS['weight_decay'] = 2e-5
@@ -1181,6 +1181,7 @@ def main():
         FLAGS['device'] = rank % torch.cuda.device_count()
         torch.cuda.set_device(FLAGS['device'])
         torch.cuda.empty_cache()
+        FLAGS['learning_rate'] *= dist.get_world_size()
     image_datasets = getData()
     model = modelSetup(classes)
     trainCycle(image_datasets, model)
