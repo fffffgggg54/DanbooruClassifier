@@ -305,7 +305,7 @@ elif currGPU == 'v100':
     # dataset config
     FLAGS['tagCount'] = 1588
     FLAGS['image_size'] = 448
-    FLAGS['actual_image_size'] = 320
+    FLAGS['actual_image_size'] = 448
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 2.0
@@ -333,7 +333,7 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 64
+    FLAGS['batch_size'] = 32
     FLAGS['gradient_accumulation_iterations'] = 4
 
     FLAGS['base_learning_rate'] = 3e-3
