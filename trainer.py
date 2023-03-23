@@ -42,8 +42,8 @@ import timm.optim
 #           CONFIGURATION OPTIONS
 # ================================================
 
-#currGPU = '3090'
-currGPU = 'm40'
+currGPU = '3090'
+#currGPU = 'm40'
 #currGPU = 'none'
 
 
@@ -146,7 +146,7 @@ if currGPU == '3090':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_base-ASL_BCE_T-448-1588/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040_h-ASL_BCE_T-224-1588/'
 
 
     # post importer config
@@ -158,10 +158,10 @@ if currGPU == '3090':
 
     # dataset config
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 448
+    FLAGS['image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
-    FLAGS['progressiveAugRatio'] = 1.6
+    FLAGS['progressiveAugRatio'] = 2.0
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
     #FLAGS['cacheRoot'] = None
 
@@ -190,8 +190,8 @@ if currGPU == '3090':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 32
-    FLAGS['gradient_accumulation_iterations'] = 32
+    FLAGS['batch_size'] = 256
+    FLAGS['gradient_accumulation_iterations'] = 8
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -200,10 +200,10 @@ if currGPU == '3090':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 4
+    FLAGS['resume_epoch'] = 0
 
     FLAGS['finetune'] = False
-    FLAGS['compile_model'] = True
+    FLAGS['compile_model'] = False
     FLAGS['channels_last'] = FLAGS['use_AMP']
 
     # debugging config
@@ -614,7 +614,7 @@ def modelSetup(classes):
     
     # regular timm models
     
-    model = timm.create_model('efficientformerv2_s0', pretrained=False, num_classes=len(classes), drop_path_rate=0.05)
+    model = timm.create_model('regnetz_040_h', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes), drop_path_rate=0.4)
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.)
@@ -809,7 +809,7 @@ def trainCycle(image_datasets, model):
                                                           #danbooruDataset.CutoutPIL(cutout_factor=0.2),
                                                           
                                                           transforms.ToTensor(),
-                                                          RandomErasing(probability=0.5, mode='pixel', device='cpu'),
+                                                          RandomErasing(probability=0.3, mode='pixel', device='cpu'),
                                                           #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                                                           ])
                 
