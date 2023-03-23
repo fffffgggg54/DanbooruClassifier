@@ -291,7 +291,8 @@ elif currGPU == 'v100':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
+    #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/test/'
 
 
     # post importer config
@@ -705,7 +706,7 @@ def modelSetup(classes):
     #model = timm.create_model('efficientnetv2_xl', pretrained=False, num_classes=len(classes), drop_path_rate = 0.6)
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('regnetz_040_h', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2, drop_rate=0.05)
-    model = timm.create_model('gc_efficientnetv2_rw_t', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15, drop_rate=0.05)
+    model = timm.create_model('rexnetz_040_h', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15, drop_rate=0.05)
     
     # ViT-better similar to https://arxiv.org/abs/2205.01580
     # really only using the avgpool for now, so basically S/32 with gap
