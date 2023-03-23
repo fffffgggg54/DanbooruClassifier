@@ -291,7 +291,7 @@ elif currGPU == 'v100':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/caformer_s18-448-ASL_BCE_T-1588/'
 
 
     # post importer config
@@ -332,7 +332,7 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 48
+    FLAGS['batch_size'] = 32
     FLAGS['gradient_accumulation_iterations'] = 8
 
     FLAGS['base_learning_rate'] = 3e-3
@@ -704,7 +704,7 @@ def modelSetup(classes):
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('efficientnetv2_xl', pretrained=False, num_classes=len(classes), drop_path_rate = 0.6)
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.05)
+    model = timm.create_model('caformer_s18', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.05)
     
     # ViT-better similar to https://arxiv.org/abs/2205.01580
     # really only using the avgpool for now, so basically S/32 with gap
