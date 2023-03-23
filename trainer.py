@@ -292,7 +292,7 @@ elif currGPU == 'v100':
 
 
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/test/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
 
 
     # post importer config
@@ -705,7 +705,7 @@ def modelSetup(classes):
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('efficientnetv2_xl', pretrained=False, num_classes=len(classes), drop_path_rate = 0.6)
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('convnext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15, drop_rate=0.05)
+    model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15, drop_rate=0.05)
     
     # gap model
     '''
@@ -979,8 +979,8 @@ def trainCycle(image_datasets, model):
                         '''
 
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        #loss = criterion(outputs.to(device), tagBatch.to(device))
-                        loss = criterion(outputs.to(device) - torch.special.logit(boundary.detach()).to(device), tagBatch.to(device))
+                        loss = criterion(outputs.to(device), tagBatch.to(device))
+                        #loss = criterion(outputs.to(device) - torch.special.logit(boundary.detach()).to(device), tagBatch.to(device))
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
                         #loss, textOutput = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
                         #loss = criterion(outputs.cpu(), tags.cpu())
