@@ -294,7 +294,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnet_040_h-224-ASL_BCE_T-1588/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040_h-224-ASL_BCE_T-1588/'
 
     # post importer config
 
@@ -709,7 +709,7 @@ def modelSetup(classes):
     #model = timm.create_model('efficientnetv2_xl', pretrained=False, num_classes=len(classes), drop_path_rate = 0.6)
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15, drop_rate=0.05)
-    model = timm.create_model('regnet_040_h', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15, drop_rate=0.05)
+    model = timm.create_model('regnetz_040_h', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15, drop_rate=0.05)
     
     # gap model
     '''
