@@ -146,7 +146,7 @@ if currGPU == '3090':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_BCE_T-224-1588/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_l-ASL_BCE_T-224-1588/'
 
 
     # post importer config
@@ -190,20 +190,20 @@ if currGPU == '3090':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 128
-    FLAGS['gradient_accumulation_iterations'] = 16
+    FLAGS['batch_size'] = 256
+    FLAGS['gradient_accumulation_iterations'] = 8
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
     FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
     FLAGS['lr_warmup_epochs'] = 5
 
-    FLAGS['weight_decay'] = 2e-2
+    FLAGS['weight_decay'] = 2e-4
 
     FLAGS['resume_epoch'] = 0
 
     FLAGS['finetune'] = False
-    FLAGS['compile_model'] = False
+    FLAGS['compile_model'] = True
     FLAGS['channels_last'] = FLAGS['use_AMP']
 
     # debugging config
@@ -614,7 +614,7 @@ def modelSetup(classes):
     
     # regular timm models
     
-    model = timm.create_model('regnetz_040h', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
+    model = timm.create_model('gernet_l', pretrained=False, num_classes=len(classes), drop_path_rate=0.1)
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes), drop_path_rate=0.4)
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.)
