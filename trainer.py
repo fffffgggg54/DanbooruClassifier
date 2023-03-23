@@ -968,7 +968,7 @@ def trainCycle(image_datasets, model):
                         boundary = boundaryCalculator(preds, tagBatch)
                         if FLAGS['use_ddp'] == True:
                             torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
-                            boundary = boundaryCalculator.thresholdPerClass.detatch()
+                            boundary = boundaryCalculator.thresholdPerClass.detach()
 
                         #predsModified=preds
                         #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
