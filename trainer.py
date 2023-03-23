@@ -785,11 +785,7 @@ def trainCycle(image_datasets, model):
     startTime = time.time()
 
     #timm.utils.jit.set_jit_fuser("te")
-    
-    my_auto_wrap_policy = functools.partial(
-        size_based_auto_wrap_policy, min_num_params=100
-    )
-    
+
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
     device = FLAGS['device']
         
