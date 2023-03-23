@@ -303,8 +303,8 @@ elif currGPU == 'v100':
 
     # dataset config
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 448
-    FLAGS['actual_image_size'] = 448
+    FLAGS['image_size'] = 224
+    FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 2.0
@@ -333,7 +333,7 @@ elif currGPU == 'v100':
 
     FLAGS['num_epochs'] = 100
     FLAGS['batch_size'] = 128
-    FLAGS['gradient_accumulation_iterations'] = 8
+    FLAGS['gradient_accumulation_iterations'] = 1
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 1024
@@ -345,8 +345,8 @@ elif currGPU == 'v100':
     FLAGS['resume_epoch'] = 0
 
     FLAGS['finetune'] = False
-    FLAGS['compile_model'] = True
-    FLAGS['fast_norm'] = False
+    FLAGS['compile_model'] = False
+    FLAGS['fast_norm'] = True
     FLAGS['channels_last'] = FLAGS['use_AMP']
 
     # debugging config
@@ -699,7 +699,7 @@ def modelSetup(classes):
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('gernet_l', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2, drop_rate=0.05)
+    model = timm.create_model('regnetz_040_h', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2, drop_rate=0.05)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2, drop_rate = 0.05)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('efficientnetv2_xl', pretrained=False, num_classes=len(classes), drop_path_rate = 0.6)
