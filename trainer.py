@@ -146,7 +146,7 @@ if currGPU == '3090':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040_h-ASL_BCE_T-224-1588/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_BCE_T-224-1588/'
 
 
     # post importer config
@@ -614,7 +614,7 @@ def modelSetup(classes):
     
     # regular timm models
     
-    model = timm.create_model('regnetz_040_h', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
+    model = timm.create_model('regnetz_040h', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes), drop_path_rate=0.4)
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.)
