@@ -5,17 +5,6 @@ from torch.distributed.optim import ZeroRedundancyOptimizer
 import torch.nn as nn
 import torch.nn.parallel
 from torch.nn.parallel import DistributedDataParallel as DDP
-
-from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
-from torch.distributed.fsdp.fully_sharded_data_parallel import (
-    BackwardPrefetch,
-)
-from torch.distributed.fsdp.wrap import (
-    size_based_auto_wrap_policy,
-    enable_wrap,
-    wrap,
-)
-
 import torch.profiler
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
@@ -305,7 +294,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040_h-224-ASL_BCE_T-1588/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tresnet_m-224-ASL_BCE_T-1588/'
 
     # post importer config
 
@@ -329,8 +318,7 @@ elif currGPU == 'v100':
 
     # device config
 
-    FLAGS['use_ddp'] = False
-    FLAGS['use_fsdp'] = True
+    FLAGS['use_ddp'] = True
     FLAGS['device'] = None
     FLAGS['use_AMP'] = True
     FLAGS['use_scaler'] = FLAGS['use_AMP']
@@ -346,8 +334,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 64
-    FLAGS['gradient_accumulation_iterations'] = 4
+    FLAGS['batch_size'] = 256
+    FLAGS['gradient_accumulation_iterations'] = 1
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -721,7 +709,7 @@ def modelSetup(classes):
     #model = timm.create_model('efficientnetv2_xl', pretrained=False, num_classes=len(classes), drop_path_rate = 0.6)
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15, drop_rate=0.05)
-    model = timm.create_model('regnetz_040_h', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15, drop_rate=0.05)
+    model = timm.create_model('tresnet_m', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15, drop_rate=0.05)
     
     # gap model
     '''
@@ -786,7 +774,9 @@ def trainCycle(image_datasets, model):
     startTime = time.time()
 
     #timm.utils.jit.set_jit_fuser("te")
-
+    
+    
+    
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
     device = FLAGS['device']
         
@@ -801,13 +791,8 @@ def trainCycle(image_datasets, model):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
         
     if (FLAGS['use_ddp'] == True):
-        print('using ddp')
         
         model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
-        
-    elif(FLAGS['use_fsdp'] == True):
-        print('using fsdp')
-        model = FSDP(model)
         
     if(FLAGS['compile_model'] == True):
         model = torch.compile(model)
@@ -940,7 +925,6 @@ def trainCycle(image_datasets, model):
                 
                 
                 if FLAGS['val'] == False and is_head_proc:
-                    
                     modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
                     state_dict = model.state_dict()
                     if hasattr(state_dict, '_orig_mod'):
@@ -1215,7 +1199,7 @@ def trainCycle(image_datasets, model):
 def main():
     #gc.set_debug(gc.DEBUG_LEAK)
     # load json files
-    if FLAGS['use_ddp'] or FLAGS['use_fsdp']:
+    if FLAGS['use_ddp']:
         dist.init_process_group("nccl")
         rank = dist.get_rank()
         FLAGS['device'] = rank % torch.cuda.device_count()
