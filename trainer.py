@@ -1215,7 +1215,7 @@ def trainCycle(image_datasets, model):
 def main():
     #gc.set_debug(gc.DEBUG_LEAK)
     # load json files
-    if FLAGS['use_ddp']:
+    if FLAGS['use_ddp'] or FLAGS['use_fsdp']:
         dist.init_process_group("nccl")
         rank = dist.get_rank()
         FLAGS['device'] = rank % torch.cuda.device_count()
