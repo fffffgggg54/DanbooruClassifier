@@ -5,6 +5,17 @@ from torch.distributed.optim import ZeroRedundancyOptimizer
 import torch.nn as nn
 import torch.nn.parallel
 from torch.nn.parallel import DistributedDataParallel as DDP
+
+from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+from torch.distributed.fsdp.fully_sharded_data_parallel import (
+    BackwardPrefetch,
+)
+from torch.distributed.fsdp.wrap import (
+    size_based_auto_wrap_policy,
+    enable_wrap,
+    wrap,
+)
+
 import torch.profiler
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
@@ -334,8 +345,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 256
-    FLAGS['gradient_accumulation_iterations'] = 1
+    FLAGS['batch_size'] = 64
+    FLAGS['gradient_accumulation_iterations'] = 4
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -352,7 +363,6 @@ elif currGPU == 'v100':
     FLAGS['compile_model'] = False
     FLAGS['fast_norm'] = True
     FLAGS['channels_last'] = FLAGS['use_AMP']
-    FLAGS['grad_checkpointing'] = True
 
     # debugging config
 
@@ -751,7 +761,6 @@ def modelSetup(classes):
     
     #model = add_ml_decoder_head(model)
     
-    model.set_grad_checkpointing(enable=FLAGS['grad_checkpointing'])
 
     #model.train()
     
@@ -777,7 +786,9 @@ def trainCycle(image_datasets, model):
 
     #timm.utils.jit.set_jit_fuser("te")
     
-    
+    my_auto_wrap_policy = functools.partial(
+        size_based_auto_wrap_policy, min_num_params=100
+    )
     
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
     device = FLAGS['device']
@@ -793,8 +804,13 @@ def trainCycle(image_datasets, model):
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
         
     if (FLAGS['use_ddp'] == True):
+        print('using ddp')
         
         model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
+        
+    elif(FLAGS['use_fsdp'] == True):
+        print('using fsdp')
+        model = FSDP(model)
         
     if(FLAGS['compile_model'] == True):
         model = torch.compile(model)
@@ -927,6 +943,7 @@ def trainCycle(image_datasets, model):
                 
                 
                 if FLAGS['val'] == False and is_head_proc:
+                    
                     modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
                     state_dict = model.state_dict()
                     if hasattr(state_dict, '_orig_mod'):
