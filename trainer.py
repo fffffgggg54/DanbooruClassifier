@@ -329,7 +329,8 @@ elif currGPU == 'v100':
 
     # device config
 
-    FLAGS['use_ddp'] = True
+    FLAGS['use_ddp'] = False
+    FLAGS['use_fsdp'] = True
     FLAGS['device'] = None
     FLAGS['use_AMP'] = True
     FLAGS['use_scaler'] = FLAGS['use_AMP']
