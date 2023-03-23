@@ -293,7 +293,7 @@ elif currGPU == 'v100':
 
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
 
     # post importer config
 
@@ -343,7 +343,7 @@ elif currGPU == 'v100':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 0
+    FLAGS['resume_epoch'] = 1
 
     FLAGS['finetune'] = False
     FLAGS['compile_model'] = True
@@ -760,8 +760,9 @@ def modelSetup(classes):
         
     return model
     
-def getDataLoader(dataset, batch_size):
+def getDataLoader(dataset, batch_size, epoch):
     distSampler = DistributedSampler(dataset=dataset, seed=17, drop_last=True)
+    distSampler.set_epoch(epoch)
     return torch.utils.data.DataLoader(dataset, batch_size = batch_size, sampler=distSampler, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=2, pin_memory = True, generator=torch.Generator().manual_seed(41))
 
 def trainCycle(image_datasets, model):
@@ -770,7 +771,6 @@ def trainCycle(image_datasets, model):
 
     #timm.utils.jit.set_jit_fuser("te")
     
-    dataloaders = {x: getDataLoader(image_datasets[x], FLAGS['batch_size']) for x in image_datasets} # set up dataloaders
     
     
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
@@ -826,9 +826,8 @@ def trainCycle(image_datasets, model):
     #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     optimizer = torch_optimizer.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
-    scheduler.last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch']
-
+    
+    
     #mixup = Mixup(mixup_alpha = 0.2, cutmix_alpha = 0, num_classes = len(classes))
     
     boundaryCalculator = MLCSL.getDecisionBoundary(initial_threshold = 0.5, lr = 1e-4, threshold_min = 0.001, threshold_max = 0.999)
@@ -863,6 +862,11 @@ def trainCycle(image_datasets, model):
         #prior = MLCSL.ComputePrior(classes, device)
         epochTime = time.time()
         
+        dataloaders = {x: getDataLoader(image_datasets[x], FLAGS['batch_size'], epoch) for x in image_datasets} # set up dataloaders
+
+        scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
+        scheduler.last_epoch = len(dataloaders['train'])*epoch
+
         
         if(is_head_proc):
             print("starting epoch: " + str(epoch))
@@ -962,6 +966,9 @@ def trainCycle(image_datasets, model):
                         #outputs = model(imageBatch).logits
                         preds = torch.sigmoid(outputs)
                         boundary = boundaryCalculator(preds, tagBatch)
+                        if FLAGS['use_ddp'] == True:
+                            torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
+                            boundary = boundaryCalculator.thresholdPerClass.detatch()
 
                         #predsModified=preds
                         #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
@@ -979,8 +986,8 @@ def trainCycle(image_datasets, model):
                         '''
 
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        loss = criterion(outputs.to(device), tagBatch.to(device))
-                        #loss = criterion(outputs.to(device) - torch.special.logit(boundary), tagBatch.to(device))
+                        #loss = criterion(outputs.to(device), tagBatch.to(device))
+                        loss = criterion(outputs.to(device) - torch.special.logit(boundary), tagBatch.to(device))
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
                         #loss, textOutput = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
                         #loss = criterion(outputs.cpu(), tags.cpu())
@@ -1024,6 +1031,7 @@ def trainCycle(image_datasets, model):
                         
                         if (phase == 'val'):
                             # for mAP calculation
+                            # FIXME this is super slow and bottlenecked, figure out a faster way to do validation with correctly calculated metrics
                             if(FLAGS['use_ddp'] == True):
                                 targets_all = None
                                 preds_all = None
@@ -1112,7 +1120,6 @@ def trainCycle(image_datasets, model):
                     
                     
             if FLAGS['use_ddp'] == True:
-                torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
                 torch.distributed.all_reduce(cm_tracker.running_confusion_matrix, op=torch.distributed.ReduceOp.AVG)
             if ((phase == 'val') and (FLAGS['skip_test_set'] == False) and is_head_proc):
                 #torch.set_printoptions(profile="full")
