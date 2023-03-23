@@ -334,8 +334,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 64
-    FLAGS['gradient_accumulation_iterations'] = 4
+    FLAGS['batch_size'] = 256
+    FLAGS['gradient_accumulation_iterations'] = 1
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -352,6 +352,7 @@ elif currGPU == 'v100':
     FLAGS['compile_model'] = False
     FLAGS['fast_norm'] = True
     FLAGS['channels_last'] = FLAGS['use_AMP']
+    FLAGS['grad_checkpointing'] = True
 
     # debugging config
 
@@ -750,6 +751,7 @@ def modelSetup(classes):
     
     #model = add_ml_decoder_head(model)
     
+    model.set_grad_checkpointing(enable=FLAGS['grad_checkpointing'])
 
     #model.train()
     
