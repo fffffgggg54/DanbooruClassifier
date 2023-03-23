@@ -293,7 +293,7 @@ elif currGPU == 'v100':
 
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
 
     # post importer config
 
@@ -344,6 +344,8 @@ elif currGPU == 'v100':
     FLAGS['weight_decay'] = 2e-2
 
     FLAGS['resume_epoch'] = 0
+    
+    FLAGS['threshold_loss'] = True
 
     FLAGS['finetune'] = False
     FLAGS['compile_model'] = True
@@ -989,7 +991,10 @@ def trainCycle(image_datasets, model):
                         #loss = criterion(torch.mul(preds, tagBatch), tagBatch)
                         #loss = criterion(outputs, tagBatch)
                         '''
-
+                        
+                        if FLAGS['threshold_loss']:
+                            outputs = outputs - torch.special.logit(boundary)
+                        
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
                         loss = criterion(outputs.to(device), tagBatch.to(device))
                         #loss = criterion(outputs.to(device) - torch.special.logit(boundary), tagBatch.to(device))
