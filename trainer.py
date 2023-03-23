@@ -343,7 +343,7 @@ elif currGPU == 'v100':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 1
+    FLAGS['resume_epoch'] = 0
 
     FLAGS['finetune'] = False
     FLAGS['compile_model'] = True
@@ -783,7 +783,8 @@ def trainCycle(image_datasets, model):
     
     model = model.to(device, memory_format=memory_format)
     
-    
+    if (FLAGS['resume_epoch'] > 0):
+        model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
         
     if (FLAGS['use_ddp'] == True):
         
@@ -792,8 +793,7 @@ def trainCycle(image_datasets, model):
     if(FLAGS['compile_model'] == True):
         model = torch.compile(model)
         
-    if (FLAGS['resume_epoch'] > 0):
-        model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
+    
 
     print("initialized training, time spent: " + str(time.time() - startTime))
     
@@ -922,7 +922,12 @@ def trainCycle(image_datasets, model):
                 
                 if FLAGS['val'] == False and is_head_proc:
                     modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
-                    torch.save(model.state_dict(), modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
+                    state_dict = model.state_dict()
+                    if hasattr(state_dict, '_orig_mod'):
+                        state_dict = state_dict._orig_mod
+                    if hasattr(state_dict, 'module'):
+                        state_dict = state_dict.module
+                    torch.save(state_dict, modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
                     torch.save(boundaryCalculator.thresholdPerClass, modelDir + 'thresholds.pth')
                     torch.save(optimizer.state_dict(), modelDir + 'optimizer' + '.pth')
                     pd.DataFrame(tagNames).to_pickle(modelDir + "tags.pkl")
