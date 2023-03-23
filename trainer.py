@@ -319,7 +319,7 @@ elif currGPU == 'v100':
     # device config
 
     FLAGS['use_ddp'] = True
-    FLAGS['device'] = None
+    FLAGS['device'] = None 
     FLAGS['use_AMP'] = True
     FLAGS['use_scaler'] = FLAGS['use_AMP']
     #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
@@ -334,8 +334,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 64
-    FLAGS['gradient_accumulation_iterations'] = 4
+    FLAGS['batch_size'] = 32
+    FLAGS['gradient_accumulation_iterations'] = 8
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
