@@ -291,7 +291,7 @@ elif currGPU == 'v100':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040_h-224-ASL_BCE_T-1588/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
 
 
     # post importer config
@@ -303,8 +303,8 @@ elif currGPU == 'v100':
 
     # dataset config
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 224
-    FLAGS['actual_image_size'] = 224
+    FLAGS['image_size'] = 448
+    FLAGS['actual_image_size'] = 448
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 2.0
@@ -332,8 +332,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 128
-    FLAGS['gradient_accumulation_iterations'] = 1
+    FLAGS['batch_size'] = 64
+    FLAGS['gradient_accumulation_iterations'] = 4
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -345,7 +345,7 @@ elif currGPU == 'v100':
     FLAGS['resume_epoch'] = 0
 
     FLAGS['finetune'] = False
-    FLAGS['compile_model'] = True
+    FLAGS['compile_model'] = False
     FLAGS['fast_norm'] = not FLAGS['compile_model']
     FLAGS['channels_last'] = FLAGS['use_AMP']
 
