@@ -997,7 +997,7 @@ def trainCycle(image_datasets, model):
                         '''
                         
                         if FLAGS['threshold_loss']:
-                            outputs = outputs - torch.special.logit(boundary)
+                            outputs = outputs + torch.special.logit(boundary)
                         
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
                         loss = criterion(outputs.to(device), tagBatch.to(device))
