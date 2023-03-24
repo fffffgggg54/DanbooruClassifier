@@ -327,8 +327,8 @@ elif currGPU == 'v100':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 9
-    FLAGS['postDataServerWorkerCount'] = 2
+    FLAGS['num_workers'] = 10
+    FLAGS['postDataServerWorkerCount'] = 1
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
@@ -710,7 +710,7 @@ def modelSetup(classes):
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('efficientnetv2_xl', pretrained=False, num_classes=len(classes), drop_path_rate = 0.6)
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('convnext_pico', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.)
+    model = timm.create_model('regnetz_e8', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.)
     #model = timm.create_model('regnetz_b16', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.05)
     
     # gap model
