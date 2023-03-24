@@ -999,8 +999,15 @@ def trainCycle(image_datasets, model):
                         if FLAGS['threshold_loss']:
                             outputs = outputs + torch.special.logit(boundary)
                         
+                        
+                        tagsModified = tagbatch
+                        if FLAGS['splc']:
+                            with torch.no_grad():
+                                #targs = torch.where(preds > boundary.detach(), torch.tensor(1).to(preds), labels) # hard SPLC
+                                tagsModified = ((1 - tags) * MLCSL.stepAtThreshold(tags, boundary) + tags) # soft SPLC
+                        
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        loss = criterion(outputs.to(device), tagBatch.to(device))
+                        loss = criterion(outputs.to(device), tagsModified.to(device))
                         #loss = criterion(outputs.to(device) - torch.special.logit(boundary), tagBatch.to(device))
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
                         #loss, textOutput = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
