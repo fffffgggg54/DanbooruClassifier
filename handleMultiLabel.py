@@ -301,7 +301,7 @@ class getDecisionBoundary(nn.Module):
             numToMax.backward()
             self.opt.step()
             self.opt.zero_grad()
-            self.thresholdPerClass = self.thresholdPerClass.clamp(min=self.threshold_min, max=self.threshold_max)
+            self.thresholdPerClass.data = self.thresholdPerClass.clamp(min=self.threshold_min, max=self.threshold_max)
         
         '''
         # need fp64
