@@ -346,7 +346,8 @@ elif currGPU == 'v100':
 
     FLAGS['resume_epoch'] = 0
     
-    FLAGS['threshold_loss'] = True
+    FLAGS['threshold_loss'] = False
+    FLAGS['splc'] = True
 
     FLAGS['finetune'] = False
     FLAGS['compile_model'] = True
