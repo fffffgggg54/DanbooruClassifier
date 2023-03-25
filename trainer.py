@@ -792,13 +792,13 @@ def trainCycle(image_datasets, model):
     model = model.to(device, memory_format=memory_format)
     if (FLAGS['resume_epoch'] > 0) and is_head_proc:
         state_dict = torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth', map_location=torch.device('cpu'))
-        out_dict={}
-        for k, v in state_dict.items():
-            k = k.replace('_orig_mod.', '')
-            k = k.replace('module.', '')
-            out_dict[k] = v
+        #out_dict={}
+        #for k, v in state_dict.items():
+        #    k = k.replace('_orig_mod.', '')
+        #    k = k.replace('module.', '')
+        #    out_dict[k] = v
             
-        model.load_state_dict(out_dict)
+        model.load_state_dict(state_dict)
     
     
     
