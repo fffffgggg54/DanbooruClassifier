@@ -791,7 +791,7 @@ def trainCycle(image_datasets, model):
     
     
     if (FLAGS['resume_epoch'] > 0):
-        state_dict = torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth', map_location=torch.device('cpu'))
+        state_dict = torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth', map_location=torch.device(device))
         out_dict={}
         for k, v in state_dict.items():
             k = k.replace('_orig_mod.', '')
@@ -850,7 +850,7 @@ def trainCycle(image_datasets, model):
 
     if (FLAGS['resume_epoch'] > 0):
         boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth').to(device)
-        #optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth', map_location=torch.device(device)))
+        optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth', map_location=torch.device(device)))
         
     
     if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
