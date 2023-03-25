@@ -343,7 +343,7 @@ elif currGPU == 'v100':
     FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
     FLAGS['lr_warmup_epochs'] = 5
 
-    FLAGS['weight_decay'] = 3e-3
+    FLAGS['weight_decay'] = 1e-4
 
     FLAGS['resume_epoch'] = 0
     
@@ -710,7 +710,7 @@ def modelSetup(classes):
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('efficientnetv2_xl', pretrained=False, num_classes=len(classes), drop_path_rate = 0.6)
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('regnety_064', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15, drop_rate=0.02)
+    model = timm.create_model('cs3sedarknet_l', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15, drop_rate=0.02)
     #model = timm.create_model('regnetz_b16', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.05)
     
     # gap model
