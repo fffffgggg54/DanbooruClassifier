@@ -335,8 +335,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 256
-    FLAGS['gradient_accumulation_iterations'] = 1
+    FLAGS['batch_size'] = 32
+    FLAGS['gradient_accumulation_iterations'] = 16
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -710,7 +710,7 @@ def modelSetup(classes):
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('efficientnetv2_xl', pretrained=False, num_classes=len(classes), drop_path_rate = 0.6)
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('vovnet57a', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15, drop_rate=0.02)
+    model = timm.create_model('regnetz_e8', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15, drop_rate=0.02)
     #model = timm.create_model('regnetz_b16', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.05)
     
     # gap model
@@ -830,8 +830,8 @@ def trainCycle(image_datasets, model):
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    #optimizer = torch_optimizer.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    optimizer = torch_optimizer.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    #optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     
     
     #mixup = Mixup(mixup_alpha = 0.2, cutmix_alpha = 0, num_classes = len(classes))
