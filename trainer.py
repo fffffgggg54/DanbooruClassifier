@@ -295,7 +295,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convformer_s18-224-ASL_BCE_T-1588/'
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/test/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/vit_base_patch16_gap_224-ASL_BCE-5500/'
 
     # post importer config
 
@@ -349,6 +349,7 @@ elif currGPU == 'v100':
     
     FLAGS['threshold_loss'] = False
     FLAGS['splc'] = False
+    FLAGS['splc_start_epoch'] = 1
 
     FLAGS['finetune'] = False
     FLAGS['compile_model'] = True
@@ -1003,7 +1004,7 @@ def trainCycle(image_datasets, model):
                         
                         
                         tagsModified = tagBatch
-                        if FLAGS['splc']:
+                        if FLAGS['splc'] and epoch >= FLAGS['splc_start_epoch']:
                             with torch.no_grad():
                                 #targs = torch.where(preds > boundary.detach(), torch.tensor(1).to(preds), labels) # hard SPLC
                                 tagsModified = ((1 - tagsModified) * MLCSL.stepAtThreshold(preds, boundary) + tagsModified) # soft SPLC
@@ -1150,7 +1151,7 @@ def trainCycle(image_datasets, model):
                 #AvgAccuracy = torch.stack(AccuracyRunning)
                 #AvgAccuracy = AvgAccuracy.mean(dim=0)
                 AvgAccuracy = cm_tracker.get_full_metrics()
-                LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames, boundaryCalculator.thresholdPerClass))
+                LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames, boundaryCalculator.thresholdPerClass.data))
                 LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[0][8], reverse=True)
                 MeanStackedAccuracy = cm_tracker.get_aggregate_metrics()
                 MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
