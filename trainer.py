@@ -335,8 +335,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 128
-    FLAGS['gradient_accumulation_iterations'] = 4
+    FLAGS['batch_size'] = 256
+    FLAGS['gradient_accumulation_iterations'] = 8
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -351,8 +351,8 @@ elif currGPU == 'v100':
     FLAGS['splc'] = False
 
     FLAGS['finetune'] = False
-    FLAGS['compile_model'] = False
-    FLAGS['fast_norm'] = True
+    FLAGS['compile_model'] = True
+    FLAGS['fast_norm'] = False
     FLAGS['channels_last'] = FLAGS['use_AMP']
 
     # debugging config
