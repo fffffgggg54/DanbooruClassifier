@@ -710,7 +710,7 @@ def modelSetup(classes):
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('efficientnetv2_xl', pretrained=False, num_classes=len(classes), drop_path_rate = 0.6)
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('gernet_m', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.02)
+    model = timm.create_model('ese_vovnet99b_iabn', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.02)
     #model = timm.create_model('regnetz_b16', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.05)
     
     # gap model
