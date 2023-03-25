@@ -788,10 +788,10 @@ def trainCycle(image_datasets, model):
     
     memory_format = torch.channels_last if FLAGS['channels_last'] else torch.contiguous_format
     
-    model = model.to(device, memory_format=memory_format)
+    
     
     if (FLAGS['resume_epoch'] > 0):
-        state_dict = torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth', map_location=torch.device(device))
+        state_dict = torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth', map_location=torch.device('cpu'))
         out_dict={}
         for k, v in state_dict.items():
             k = k.replace('_orig_mod.', '')
@@ -799,7 +799,9 @@ def trainCycle(image_datasets, model):
             out_dict[k] = v
             
         model.load_state_dict(out_dict)
-        
+    
+    model = model.to(device, memory_format=memory_format)
+    
     if (FLAGS['use_ddp'] == True):
         
         model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
