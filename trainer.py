@@ -1098,7 +1098,7 @@ def trainCycle(image_datasets, model):
                         #torch.cuda.empty_cache()
                         
 
-            if ((phase == 'val') and (FLAGS['skip_test_set'] == False) and accelerator.is_main_process:
+            if (phase == 'val') and (FLAGS['skip_test_set'] == False) and accelerator.is_main_process:
                 #torch.set_printoptions(profile="full")
                 
                 #AvgAccuracy = torch.stack(AccuracyRunning)
