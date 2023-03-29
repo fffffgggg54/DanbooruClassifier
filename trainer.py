@@ -791,6 +791,7 @@ def trainCycle(image_datasets, model):
     
     
     model = model.to(device, memory_format=memory_format)
+    
     if (FLAGS['resume_epoch'] > 0):
 
         model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
@@ -801,6 +802,7 @@ def trainCycle(image_datasets, model):
     if(FLAGS['compile_model'] == True):
         model = torch.compile(model)
         
+    model=accelerator.prepare(model)
     
     dataloaders = {x: accelerator.prepare_data_loader(
         getDataLoader(image_datasets[x], FLAGS['batch_size'])) for x in image_datasets} # set up dataloaders
@@ -810,7 +812,7 @@ def trainCycle(image_datasets, model):
     accelerator.print("initialized training, time spent: " + str(time.time() - startTime))
     
     
-    model=accelerator.prepare(model)
+    
     FLAGS['learning_rate'] *= accelerator.num_processes
     
     #criterion = nn.BCEWithLogitsLoss()
