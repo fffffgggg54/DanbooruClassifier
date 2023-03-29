@@ -296,7 +296,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convformer_s18-224-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tresnet_m-224-ASL_BCE_T-5500/'
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/davit_base-ASL_BCE_T-5500/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_l-224-ASL_BCE_T-5500/'
 
     # post importer config
 
@@ -307,8 +307,8 @@ elif currGPU == 'v100':
 
     # dataset config
     FLAGS['tagCount'] = 5500
-    FLAGS['image_size'] = 448
-    FLAGS['actual_image_size'] = 448
+    FLAGS['image_size'] = 224
+    FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 2.0
@@ -336,8 +336,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 64
-    FLAGS['gradient_accumulation_iterations'] = 4
+    FLAGS['batch_size'] = 192
+    FLAGS['gradient_accumulation_iterations'] = 3
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
