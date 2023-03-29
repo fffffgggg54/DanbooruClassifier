@@ -296,7 +296,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convformer_s18-224-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tresnet_m-224-ASL_BCE_T-5500/'
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_l-224-ASL_BCE_T-5500/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/vit_base_patch16-448-ASL_BCE_T-5500/'
 
     # post importer config
 
@@ -307,8 +307,8 @@ elif currGPU == 'v100':
 
     # dataset config
     FLAGS['tagCount'] = 5500
-    FLAGS['image_size'] = 224
-    FLAGS['actual_image_size'] = 224
+    FLAGS['image_size'] = 448
+    FLAGS['actual_image_size'] = 448
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 2.0
@@ -705,7 +705,7 @@ def modelSetup(classes):
     #model = timm.create_model('efficientformerv2_s0', pretrained=False, num_classes=len(classes), drop_path_rate=0.05)
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
-    model = timm.create_model('gernet_l', pretrained=False, num_classes=len(classes), drop_path_rate = 0.)
+    #model = timm.create_model('gernet_l', pretrained=False, num_classes=len(classes), drop_path_rate = 0.)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4, drop_rate = 0.05)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
@@ -713,9 +713,9 @@ def modelSetup(classes):
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('ese_vovnet99b_iabn', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.02)
     #model = timm.create_model('tresnet_m', pretrained=False, num_classes=len(classes))
-    '''
+    
     model = timm.create_model(
-        'vit_small_patch16_224', 
+        'vit_base_patch16_224', 
         img_size = FLAGS['actual_image_size'], 
         patch_size = 16, 
         global_pool='avg', 
@@ -728,7 +728,7 @@ def modelSetup(classes):
         drop_path_rate = 0.2, 
         drop_rate=0.02
     )
-    '''
+    
     
     # gap model
     '''
