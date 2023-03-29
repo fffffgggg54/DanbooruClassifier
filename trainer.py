@@ -970,7 +970,7 @@ def trainCycle(image_datasets, model):
                     
                     with torch.set_grad_enabled(phase == 'train'):
                         
-                        accelerator.autocast():
+                        with accelerator.autocast():
                             
                             
                             outputs = model(imageBatch)
