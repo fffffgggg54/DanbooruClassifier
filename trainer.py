@@ -307,7 +307,7 @@ elif currGPU == 'v100':
     # dataset config
     FLAGS['tagCount'] = 5500
     FLAGS['image_size'] = 448
-    FLAGS['actual_image_size'] = 224
+    FLAGS['actual_image_size'] = 448
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 2.0
