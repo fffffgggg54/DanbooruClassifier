@@ -1053,7 +1053,7 @@ def trainCycle(image_datasets, model):
                     if i % stepsPerPrintout == 0:
 
 
-                        imagesPerSecond = (dataloaders[phase].batch_size*stepsPerPrintout)/(time.time() - cycleTime)
+                        imagesPerSecond = (len(tags)*stepsPerPrintout)/(time.time() - cycleTime)
                         cycleTime = time.time()
                         
 
