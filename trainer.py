@@ -39,6 +39,11 @@ import handleMultiLabel as MLCSL
 
 import timm.optim
 
+from accelerate import Accelerator
+from accelerate.utils import set_seed
+
+set_seed(42)
+
 
 
 
@@ -767,10 +772,8 @@ def modelSetup(classes):
         
     return model
     
-def getDataLoader(dataset, batch_size, epoch):
-    distSampler = DistributedSampler(dataset=dataset, seed=17, drop_last=True)
-    distSampler.set_epoch(epoch)
-    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, sampler=distSampler, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=2, pin_memory = True, generator=torch.Generator().manual_seed(41))
+def getDataLoader(dataset, batch_size):
+    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=2, pin_memory = True)
 
 def trainCycle(image_datasets, model):
     #print("starting training")
@@ -778,42 +781,36 @@ def trainCycle(image_datasets, model):
 
     #timm.utils.jit.set_jit_fuser("te")
     
+    accelerator = Accelerator(project_dir=FLAGS['modelDir'])
     
-    
-    dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
-    device = FLAGS['device']
-        
-    
-    is_head_proc = not FLAGS['use_ddp'] or dist.get_rank() == 0
-    
+    #dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
+    device = accelerator.device
+
     memory_format = torch.channels_last if FLAGS['channels_last'] else torch.contiguous_format
     
     
     model = model.to(device, memory_format=memory_format)
-    if (FLAGS['resume_epoch'] > 0) and is_head_proc:
-        state_dict = torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth', map_location=torch.device('cpu'))
-        #out_dict={}
-        #for k, v in state_dict.items():
-        #    k = k.replace('_orig_mod.', '')
-        #    k = k.replace('module.', '')
-        #    out_dict[k] = v
-            
-        model.load_state_dict(state_dict)
+    if (FLAGS['resume_epoch'] > 0):
+
+        model.load_state_dict(torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth'))
     
     
     
-    if (FLAGS['use_ddp'] == True):
-        
-        model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
-        
+
     if(FLAGS['compile_model'] == True):
         model = torch.compile(model)
         
     
+    dataloaders = {x: accelerator.prepare_data_loader(
+        getDataLoader(image_datasets[x], FLAGS['batch_size'])) for x in image_datasets} # set up dataloaders
 
+    
+    
     print("initialized training, time spent: " + str(time.time() - startTime))
     
-
+    
+    model=accelerator.prepare(model)
+    FLAGS['learning_rate'] *= accelerator.num_processes
     
     #criterion = nn.BCEWithLogitsLoss()
     #criterion = nn.BCEWithLogitsLoss(pos_weight=tagWeights.to(FLAGS['device']))
@@ -838,11 +835,16 @@ def trainCycle(image_datasets, model):
     #criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0.05, gamma_pos=1, gamma_neg=6, gamma_unann=4, alpha_pos=1, alpha_neg=1, alpha_unann=1)
     #parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    #optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    optimizer = torch_optimizer.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    #optimizer = torch_optimizer.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     
+    scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
+    scheduler.last_epoch = len(dataloaders['train'])*FLAGS['resume_epoch']
+    
+    optimizer, scheduler = accelerator.prepare(optimizer, scheduler)
+
     
     #mixup = Mixup(mixup_alpha = 0.2, cutmix_alpha = 0, num_classes = len(classes))
     
@@ -850,13 +852,9 @@ def trainCycle(image_datasets, model):
 
     if (FLAGS['resume_epoch'] > 0):
         boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth').to(device)
-        #optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth', map_location=torch.device(device)))
+        optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth', map_location=torch.device(device)))
         
-    
-    if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
-    
-    # end MLCSL code
-    
+
     losses = []
     best = None
     tagNames = list(classes.values())
@@ -864,8 +862,8 @@ def trainCycle(image_datasets, model):
     
     
     MeanStackedAccuracyStored = torch.Tensor([2,1,2,1])
-    if(is_head_proc):
-        print("starting training")
+    
+    print("starting training")
     
     startTime = time.time()
     cycleTime = time.time()
@@ -878,14 +876,11 @@ def trainCycle(image_datasets, model):
         #prior = MLCSL.ComputePrior(classes, device)
         epochTime = time.time()
         
-        dataloaders = {x: getDataLoader(image_datasets[x], FLAGS['batch_size'], epoch) for x in image_datasets} # set up dataloaders
-
-        scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
-        scheduler.last_epoch = len(dataloaders['train'])*epoch
+        
 
         
-        if(is_head_proc):
-            print("starting epoch: " + str(epoch))
+        
+        accelerator.print("starting epoch: " + str(epoch))
         AP_regular = []
         AccuracyRunning = []
         AP_ema = []
@@ -908,17 +903,14 @@ def trainCycle(image_datasets, model):
             if phase == 'train':
                 model.train()  # Set model to training mode
                 #if (hasTPU == True): xm.master_print("training set")
-                if(is_head_proc): print("training set")
+                accelerator.print("training set")
                 
                 if FLAGS['progressiveImageSize'] == True:
-                    
-                    
                     dynamicResizeDim = int(FLAGS['image_size']*FLAGS['progressiveSizeStart'] + epoch * (FLAGS['image_size']-FLAGS['image_size']*FLAGS['progressiveSizeStart'])/FLAGS['num_epochs'])
                 else:
                     dynamicResizeDim = FLAGS['actual_image_size']
-                
-                if(is_head_proc):
-                    print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
+
+                accelerator.print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
                 
                 myDataset.transform = transforms.Compose([transforms.Resize(dynamicResizeDim),
                                                           transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * FLAGS['progressiveAugRatio'])),
@@ -936,26 +928,20 @@ def trainCycle(image_datasets, model):
             if phase == 'val':
                 
                 
-                if FLAGS['val'] == False and is_head_proc:
+                if FLAGS['val'] == False and accelerator.is_main_process:
                     modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
-                    state_dict = model.state_dict()
-                    
-                    out_dict={}
-                    for k, v in state_dict.items():
-                        k = k.replace('_orig_mod.', '')
-                        k = k.replace('module.', '')
-                        out_dict[k] = v
-                    
-                    torch.save(out_dict, modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
+
+                    #torch.save(out_dict, modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
                     torch.save(boundaryCalculator.thresholdPerClass, modelDir + 'thresholds.pth')
-                    torch.save(optimizer.state_dict(), modelDir + 'optimizer' + '.pth')
+                    #torch.save(optimizer.state_dict(), modelDir + 'optimizer' + '.pth')
                     pd.DataFrame(tagNames).to_pickle(modelDir + "tags.pkl")
+                    accelerator.save_state()
                 
                 
                 model.eval()   # Set model to evaluate mode
-                print("validation set")
+                accelerator.print("validation set")
                 if(FLAGS['skip_test_set'] == True):
-                    print("skipping...")
+                    accelerator.print("skipping...")
                     break;
                 
                 myDataset.transform = transforms.Compose([#transforms.Resize((224,224)),
@@ -977,189 +963,142 @@ def trainCycle(image_datasets, model):
             loaderIterable = enumerate(dataloaders[phase])
             for i, (images, tags) in loaderIterable:
                 
-
-                imageBatch = images.to(device, memory_format=memory_format, non_blocking=True)
-                tagBatch = tags.to(device, non_blocking=True)
-                
-                
-                with torch.set_grad_enabled(phase == 'train'):
-                    # TODO switch between using autocast and not using it
+                with accelerator.accumulate(model):
+                    imageBatch = images.to(memory_format)
+                    tagBatch = tags
                     
-                    with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
+                    
+                    with torch.set_grad_enabled(phase == 'train'):
                         
-                        
-                        outputs = model(imageBatch)
-                        #outputs = model(imageBatch).logits
-                        preds = torch.sigmoid(outputs)
-                        
-                        with torch.cuda.amp.autocast(enabled=False):
-                            boundary = boundaryCalculator(preds, tagBatch)
-                            if FLAGS['use_ddp'] == True:
-                                torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
-                                boundary = boundaryCalculator.thresholdPerClass.detach()
-
-                        #predsModified=preds
-                        #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
-                        with torch.no_grad():
-                            multiAccuracy = cm_tracker.update((preds.detach() > boundary.detach()).float().to(device), tagBatch.to(device))
+                        accelerator.autocast():
                             
-                        
-                        outputs = outputs.float()
-                        '''
-                        if phase == 'val':
-                            #output_ema = torch.sigmoid(ema.module(imageBatch)).cpu()
-                            output_regular = preds.cpu()
-                        #loss = criterion(torch.mul(preds, tagBatch), tagBatch)
-                        #loss = criterion(outputs, tagBatch)
-                        '''
-                        
-                        if FLAGS['threshold_loss']:
-                            outputs = outputs + torch.special.logit(boundary)
-                        
-                        
-                        tagsModified = tagBatch
-                        if FLAGS['splc'] and epoch >= FLAGS['splc_start_epoch']:
+                            
+                            outputs = model(imageBatch)
+                            preds = torch.sigmoid(outputs)
+                            
+                            predsAll = accelerator.gather_for_metrics(preds)
+                            tagsAll = accelerator.gather_for_metrics(tagBatch)
+                            boundary = boundaryCalculator(predsAll, tagsAll)
+
+                            #predsModified=preds
+                            #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
                             with torch.no_grad():
-                                #targs = torch.where(preds > boundary.detach(), torch.tensor(1).to(preds), labels) # hard SPLC
-                                tagsModified = ((1 - tagsModified) * MLCSL.stepAtThreshold(preds, boundary) + tagsModified) # soft SPLC
-                        
-                        #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        loss = criterion(outputs.to(device), tagsModified.to(device))
-                        #loss = criterion(outputs.to(device) - torch.special.logit(boundary), tagBatch.to(device))
-                        #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
-                        #loss, textOutput = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
-                        #loss = criterion(outputs.cpu(), tags.cpu())
-                        
-                        #loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([2,1,2,1]).to(device2)).sum()
-                        #loss = (1 - multiAccuracy[:,4:]).pow(2).sum()
-                        #loss = (1 - multiAccuracy[:,6:7]).pow(2).sum()     # high precision with easy classes
-                        #loss = (multiAccuracy[:,1] + multiAccuracy[:,2]).pow(2).sum()
-                        #loss = criterion(multiAccuracy, referenceTable)
-                        #loss = (multiAccuracy - referenceTable).pow(2).sum()
-                        #loss = (-torch.log(multiAccuracy[0,4:])).sum()
-                        #loss = (1 - multiAccuracy[:,4:]).pow(2).div(MeanStackedAccuracyStored.to(device2)).sum()
-                        #loss = (1 - multiAccuracy[:,4:]).sum()
-                        #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).sum()
-                        #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).pow(2).sum()
-                        #loss = (1 - multiAccuracy[:,8]).pow(2).sum()
-                        #model.zero_grad()
-                        # backward + optimize only if in training phase
-                        if phase == 'train' and (loss.isnan() == False):
-                            if (FLAGS['use_scaler'] == True):   # cuda gpu case
-                                with model.no_sync():
-                                    scaler.scale(loss).backward()
-                                if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
-                                    scaler.step(optimizer)
-                                    scaler.update()
-                                    optimizer.zero_grad(set_to_none=True)
-                            else:                               # apple gpu/cpu case
-                                with model.no_sync():
-                                    loss.backward()
-                                if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
-                                    optimizer.step()
-                                    optimizer.zero_grad(set_to_none=True)
-                        
-                        
-                            torch.cuda.synchronize()
-                        
-                            #ema.update(model)
-                            #prior.update(outputs.to(device))
-                        
-                        if (phase == 'val'):
+                                multiAccuracy = cm_tracker.update((predsAll.detach() > boundary.detach()).float(), tagsAll)
+                                
+                            
+                            outputs = outputs.float()
+                            '''
+                            if phase == 'val':
+                                #output_ema = torch.sigmoid(ema.module(imageBatch)).cpu()
+                                output_regular = preds.cpu()
+                            #loss = criterion(torch.mul(preds, tagBatch), tagBatch)
+                            
+                            '''
+                            
+                            if FLAGS['threshold_loss']:
+                                outputs = outputs + torch.special.logit(boundary)
+                            
+                            
+                            tagsModified = tagBatch
+                            if FLAGS['splc'] and epoch >= FLAGS['splc_start_epoch']:
+                                with torch.no_grad():
+                                    #targs = torch.where(preds > boundary.detach(), torch.tensor(1).to(preds), labels) # hard SPLC
+                                    tagsModified = ((1 - tagsModified) * MLCSL.stepAtThreshold(preds, boundary) + tagsModified) # soft SPLC
+                            loss = criterion(outputs, tagBatch)
+                            
+                            
+                            #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
+                            #loss = criterion(outputs.to(device), tagsModified.to(device))
+                            #loss = criterion(outputs.to(device) - torch.special.logit(boundary), tagBatch.to(device))
+                            #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
+                            #loss, textOutput = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
+                            #loss = criterion(outputs.cpu(), tags.cpu())
+                            
+                            #loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([2,1,2,1]).to(device2)).sum()
+                            #loss = (1 - multiAccuracy[:,4:]).pow(2).sum()
+                            #loss = (1 - multiAccuracy[:,6:7]).pow(2).sum()     # high precision with easy classes
+                            #loss = (multiAccuracy[:,1] + multiAccuracy[:,2]).pow(2).sum()
+                            #loss = criterion(multiAccuracy, referenceTable)
+                            #loss = (multiAccuracy - referenceTable).pow(2).sum()
+                            #loss = (-torch.log(multiAccuracy[0,4:])).sum()
+                            #loss = (1 - multiAccuracy[:,4:]).pow(2).div(MeanStackedAccuracyStored.to(device2)).sum()
+                            #loss = (1 - multiAccuracy[:,4:]).sum()
+                            #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).sum()
+                            #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).pow(2).sum()
+                            #loss = (1 - multiAccuracy[:,8]).pow(2).sum()
+                            #model.zero_grad()
+                            # backward + optimize only if in training phase
+                            if phase == 'train' and (loss.isnan() == False):
+
+                                accelerator.backward(loss)
+                                optimizer.step()
+
+                                accelerator.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+
+                            
+                            
                             # for mAP calculation
                             # FIXME this is super slow and bottlenecked, figure out a faster way to do validation with correctly calculated metrics
-                            if(FLAGS['use_ddp'] == True):
-                                targets_all = None
-                                preds_all = None
-                                if(is_head_proc):
-                                    targets_all = [torch.zeros_like(tagBatch) for _ in range(dist.get_world_size())]
-                                    preds_all = [torch.zeros_like(preds) for _ in range(dist.get_world_size())]
-                                torch.distributed.gather(tagBatch, gather_list = targets_all, async_op=True)
-                                torch.distributed.gather(preds, gather_list = preds_all, async_op=True)
-                                if(is_head_proc):
-                                    targets_all = torch.cat(targets_all).detach().cpu()
-                                    preds_all = torch.cat(preds_all).detach().cpu()
-                            else:
-                                targets_all = tags
-                                preds_all = preds.detach().cpu()
-                            
-                            if is_head_proc:
-                                targets = targets_all.numpy(force=True)
-                                preds_regular = preds_all.numpy(force=True)
-                                #preds_ema = output_ema.cpu().detach().numpy()
-                                accuracy = MLCSL.mAP(targets, preds_regular)
-                                #AP_regular.append(accuracy)
-                                
-                                
-                                
-                                targets_running.append(targets_all.detach().clone())
-                                preds_running.append(preds_all.detach().clone())
-                                
-                                #AP_ema.append(MLCSL.mAP(targets, preds_ema))
-                                #AccuracyRunning.append(multiAccuracy)
-                                targets_all = None
-                                preds_all = None
-                
-                #print(device)
-                if i % stepsPerPrintout == 0:
-                    
-                    if (phase == 'train'):
-                        targets_batch = tags.numpy(force=True)
-                        preds_regular_batch = preds.numpy(force=True)
-                        accuracy = MLCSL.mAP(targets_batch, preds_regular_batch)
-                        
-                    
 
-                    imagesPerSecond = (dataloaders[phase].batch_size*stepsPerPrintout)/(time.time() - cycleTime)
-                    cycleTime = time.time()
+                            if accelerator.is_main_process:
+                                targets = tagsAll.numpy(force=True)
+                                preds_regular = predsAll.numpy(force=True)
+                                accuracy = MLCSL.mAP(targets, preds_regular)
+                                if (phase == 'val'):
+                                    targets_running.append(tagsAll.detach().clone())
+                                    preds_running.append(predsAll.detach().clone())
+
                     
-                    if(FLAGS['use_ddp'] == True):
+                    #print(device)
+                    if i % stepsPerPrintout == 0:
+
+
+                        imagesPerSecond = (dataloaders[phase].batch_size*stepsPerPrintout)/(time.time() - cycleTime)
+                        cycleTime = time.time()
+                        
+
                         imagesPerSecond = torch.Tensor([imagesPerSecond]).to(device)
-                        torch.distributed.all_reduce(imagesPerSecond, op = torch.distributed.ReduceOp.SUM)
+                        imagesPerSecond = accelerator.reduce(imagesPerSecond, reduction="sum")
                         imagesPerSecond = imagesPerSecond.cpu()
                         imagesPerSecond = imagesPerSecond.item()
+                            
+
+                        #currPostTags = []
+                        #batchTagAccuracy = list(zip(tagNames, perTagAccuracy.tolist()))
+                        
+                        # TODO find better way to generate this output that doesn't involve iterating, zip()?
+                        #for tagIndex, tagVal in enumerate(torch.mul(preds, tagBatch)[0]):
+                        #    if tagVal.item() != 0:
+                        #        currPostTags.append((tagNames[tagIndex], tagVal.item()))
+                        
+                       
+                        #print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f\tAccuracy: %.2f\tP4: %.2f\t%s' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), loss, imagesPerSecond, accuracy, multiAccuracy.mean(dim=0) * 100, textOutput))
+                        torch.set_printoptions(linewidth = 200, sci_mode = False)
+                        if accelerator.is_main_process: print(f"[{epoch}/{FLAGS['num_epochs']}][{i}/{len(dataloaders[phase])}]\tLoss: {loss:.4f}\tImages/Second: {imagesPerSecond:.4f}\tAccuracy: {accuracy:.2f}\t {[f'{num:.4f}' for num in list((multiAccuracy * 100))]}\t{textOutput}")
+                        torch.set_printoptions(profile='default')
+                        #print(id[0])
+                        #print(currPostTags)
+                        #print(sorted(batchTagAccuracy, key = lambda x: x[1], reverse=True))
+                        
+                        #torch.cuda.empty_cache()
+                    #losses.append(loss)
+                    '''
+                    if (phase == 'val'):
+                        if best is None:
+                            best = (float(loss), epoch, i, accuracy.item())
+                        elif best[0] > float(loss):
+                            best = (float(loss), epoch, i, accuracy.item())
+                            print(f"NEW BEST: {best}!")
+                    '''
+                    if phase == 'train':
+                        scheduler.step()
+                    
+                    #print(device)
+                    #if(FLAGS['ngpu'] > 0):
+                        #torch.cuda.empty_cache()
                         
 
-                    #currPostTags = []
-                    #batchTagAccuracy = list(zip(tagNames, perTagAccuracy.tolist()))
-                    
-                    # TODO find better way to generate this output that doesn't involve iterating, zip()?
-                    #for tagIndex, tagVal in enumerate(torch.mul(preds, tagBatch)[0]):
-                    #    if tagVal.item() != 0:
-                    #        currPostTags.append((tagNames[tagIndex], tagVal.item()))
-                    
-                   
-                    #print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f\tAccuracy: %.2f\tP4: %.2f\t%s' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), loss, imagesPerSecond, accuracy, multiAccuracy.mean(dim=0) * 100, textOutput))
-                    torch.set_printoptions(linewidth = 200, sci_mode = False)
-                    if(is_head_proc): print(f"[{epoch}/{FLAGS['num_epochs']}][{i}/{len(dataloaders[phase])}]\tLoss: {loss:.4f}\tImages/Second: {imagesPerSecond:.4f}\tAccuracy: {accuracy:.2f}\t {[f'{num:.4f}' for num in list((multiAccuracy * 100))]}\t{textOutput}")
-                    torch.set_printoptions(profile='default')
-                    #print(id[0])
-                    #print(currPostTags)
-                    #print(sorted(batchTagAccuracy, key = lambda x: x[1], reverse=True))
-                    
-                    #torch.cuda.empty_cache()
-                #losses.append(loss)
-                '''
-                if (phase == 'val'):
-                    if best is None:
-                        best = (float(loss), epoch, i, accuracy.item())
-                    elif best[0] > float(loss):
-                        best = (float(loss), epoch, i, accuracy.item())
-                        print(f"NEW BEST: {best}!")
-                '''
-                if phase == 'train':
-                    scheduler.step()
-                
-                #print(device)
-                #if(FLAGS['ngpu'] > 0):
-                    #torch.cuda.empty_cache()
-                    
-                    
-            if FLAGS['use_ddp'] == True:
-                torch.distributed.all_reduce(cm_tracker.running_confusion_matrix, op=torch.distributed.ReduceOp.AVG)
-            if ((phase == 'val') and (FLAGS['skip_test_set'] == False) and is_head_proc):
+            if ((phase == 'val') and (FLAGS['skip_test_set'] == False) and accelerator.is_main_process:
                 #torch.set_printoptions(profile="full")
                 
                 #AvgAccuracy = torch.stack(AccuracyRunning)
@@ -1223,13 +1162,10 @@ def trainCycle(image_datasets, model):
 def main():
     #gc.set_debug(gc.DEBUG_LEAK)
     # load json files
-    if FLAGS['use_ddp']:
-        dist.init_process_group("nccl")
-        rank = dist.get_rank()
-        FLAGS['device'] = rank % torch.cuda.device_count()
-        torch.cuda.set_device(FLAGS['device'])
-        torch.cuda.empty_cache()
-        FLAGS['learning_rate'] *= dist.get_world_size()
+
+    dist.init_process_group("nccl")
+
+        
     image_datasets = getData()
     model = modelSetup(classes)
     trainCycle(image_datasets, model)
