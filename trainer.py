@@ -350,7 +350,7 @@ elif currGPU == 'v100':
 
     FLAGS['weight_decay'] = 1e-4
 
-    FLAGS['resume_epoch'] = 5
+    FLAGS['resume_epoch'] = 0
     
     FLAGS['threshold_loss'] = False
     FLAGS['splc'] = False
