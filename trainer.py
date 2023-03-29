@@ -448,10 +448,10 @@ timm.layers.fast_norm.set_fast_norm(enable=FLAGS['fast_norm'])
 
 # The flag below controls whether to allow TF32 on matmul. This flag defaults to False
 # in PyTorch 1.12 and later.
-torch.backends.cuda.matmul.allow_tf32 = True if FLAGS['device'] == 'cuda:0' else False
+#torch.backends.cuda.matmul.allow_tf32 = True if FLAGS['device'] == 'cuda:0' else False
 
 # The flag below controls whether to allow TF32 on cuDNN. This flag defaults to True.
-torch.backends.cudnn.allow_tf32 = True
+#torch.backends.cudnn.allow_tf32 = True
 
 
 '''
@@ -1033,8 +1033,8 @@ def trainCycle(image_datasets, model):
 
                                 accelerator.backward(loss)
                                 optimizer.step()
-
-                                accelerator.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                if accelerator.sync_gradients:
+                                    accelerator.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
 
                             
                             
