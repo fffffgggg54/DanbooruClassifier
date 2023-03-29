@@ -296,7 +296,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convformer_s18-224-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tresnet_m-224-ASL_BCE_T-5500/'
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/vit_base_patch16-224-ASL_BCE_T-5500/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_base-224-ASL_BCE_T-5500/'
 
     # post importer config
 
@@ -339,12 +339,12 @@ elif currGPU == 'v100':
     FLAGS['batch_size'] = 128
     FLAGS['gradient_accumulation_iterations'] = 4
 
-    FLAGS['base_learning_rate'] = 3e-3
-    FLAGS['base_batch_size'] = 2048
+    FLAGS['base_learning_rate'] = 4e-3
+    FLAGS['base_batch_size'] = 4096
     FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
     FLAGS['lr_warmup_epochs'] = 5
 
-    FLAGS['weight_decay'] = 2e-2
+    FLAGS['weight_decay'] = 5e-2
 
     FLAGS['resume_epoch'] = 0
     
@@ -710,10 +710,10 @@ def modelSetup(classes):
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4, drop_rate = 0.05)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('efficientnetv2_xl', pretrained=False, num_classes=len(classes), drop_path_rate = 0.6)
-    #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
+    model = timm.create_model('convnext_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.5)
     #model = timm.create_model('ese_vovnet99b_iabn', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.02)
     #model = timm.create_model('tresnet_m', pretrained=False, num_classes=len(classes))
-    
+    '''
     model = timm.create_model(
         'vit_base_patch16_224', 
         img_size = FLAGS['actual_image_size'], 
@@ -728,7 +728,7 @@ def modelSetup(classes):
         drop_path_rate = 0.2, 
         drop_rate=0.02
     )
-    
+    '''
     
     # gap model
     '''
@@ -855,8 +855,8 @@ def trainCycle(image_datasets, model):
     #parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'], momentum=0.9)
-    #optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
-    optimizer = torch_optimizer.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    optimizer = optim.AdamW(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    #optimizer = torch_optimizer.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     
     
@@ -944,7 +944,7 @@ def trainCycle(image_datasets, model):
                                                           #danbooruDataset.CutoutPIL(cutout_factor=0.2),
                                                           
                                                           transforms.ToTensor(),
-                                                          RandomErasing(probability=0.4, mode='pixel', device='cpu'),
+                                                          RandomErasing(probability=0.25, mode='pixel', device='cpu'),
                                                           #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                                                           ])
                 
