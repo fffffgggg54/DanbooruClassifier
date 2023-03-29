@@ -806,7 +806,7 @@ def trainCycle(image_datasets, model):
 
     
     
-    print("initialized training, time spent: " + str(time.time() - startTime))
+    accelerator.print("initialized training, time spent: " + str(time.time() - startTime))
     
     
     model=accelerator.prepare(model)
@@ -863,7 +863,7 @@ def trainCycle(image_datasets, model):
     
     MeanStackedAccuracyStored = torch.Tensor([2,1,2,1])
     
-    print("starting training")
+    accelerator.print("starting training")
     
     startTime = time.time()
     cycleTime = time.time()
@@ -964,7 +964,7 @@ def trainCycle(image_datasets, model):
             for i, (images, tags) in loaderIterable:
                 
                 with accelerator.accumulate(model):
-                    imageBatch = images.to(memory_format)
+                    imageBatch = images.to(device, non_blocking=True, memory_format=memory_format)
                     tagBatch = tags
                     
                     
