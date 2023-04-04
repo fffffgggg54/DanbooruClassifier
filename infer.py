@@ -204,7 +204,7 @@ def main():
         currPostTags = []
         #print(outputs.tolist())
         currPostTags = list(zip(['*' if set(tagNames) in set(trueTags) else ''], tagNames, outputs.tolist()[0]))
-        currPostTags.sort(key=lambda y: y[1])
+        currPostTags.sort(key=lambda y: y[-1])
         
         print(*currPostTags, sep="\n")
         
