@@ -187,7 +187,7 @@ def main():
         
 
         transform = transforms.Compose([
-            transforms.Resize((384, 384)),
+            transforms.Resize((288,288)),
             transforms.ToTensor(),
             #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
             ])
@@ -202,11 +202,11 @@ def main():
         print(f"preprocessing time: {processingTime} infer time: {predTime}")
         
         currPostTags = []
-        #print(outputs.tolist())
+        print(outputs.tolist())
         currPostTags = list(zip(tagNames, outputs.tolist()[0]))
         currPostTags.sort(key=lambda y: y[1])
         
-        #print(*currPostTags, sep="\n")
+        print(*currPostTags, sep="\n")
         
         if haveThresholds:
             tagsThresholded = [(*x, thresholds[i]) for i, x in enumerate(currPostTags) if x[1] > thresholds[i]]
