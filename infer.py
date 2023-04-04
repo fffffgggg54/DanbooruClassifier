@@ -218,8 +218,8 @@ def main():
             
             #missingTags = trueTags.difference(predTags)
             #newTags = predTags.difference(trueTags)
-            missingTags = [x for x in tagsThresholded if trueTags not in set(x[0])]
-            newTags = [x for x in tagsThresholded if x[0] not in trueTags]
+            missingTags = [x for x in currPostTags if trueTags not in set(x[0])]
+            newTags = [x for x in currPostTags if x[0] not in trueTags]
             print("\nmissing tags:\n")
             print(*missingTags, sep="\n")
             print(f"\nnewly detected tags:\n")
