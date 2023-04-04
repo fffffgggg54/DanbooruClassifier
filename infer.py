@@ -206,15 +206,15 @@ def main():
         currPostTags = []
         #print(outputs.tolist())
         currPostTags = list(zip(['*' if set(tagNames) in set(trueTags) else ''], tagNames, outputs.tolist()[0]))
-        currPostTags.sort(key=lambda y: y[-1])
+        currPostTags.sort(key=lambda y: y[2])
         
         print(*currPostTags, sep="\n")
         
         if haveThresholds:
-            tagsThresholded = [(*x, thresholds[i]) for i, x in enumerate(currPostTags) if x[-1] > thresholds[i]]
+            tagsThresholded = [(*x, thresholds[i]) for i, x in enumerate(currPostTags) if x[2] > thresholds[i]]
             print("\nTags filtered using threshold:\n")
             print(*tagsThresholded, sep="\n")
-            predTags = {tag[-2] for tag in tagsThresholded}
+            predTags = {tag[0] for tag in tagsThresholded}
             
             missingTags = trueTags.difference(predTags)
             newTags = predTags.difference(trueTags)
