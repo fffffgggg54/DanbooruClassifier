@@ -218,7 +218,7 @@ def main():
             
             #missingTags = trueTags.difference(predTags)
             #newTags = predTags.difference(trueTags)
-            missingTags = [(*x, thresholds[i]) for i, x in enumerate(currPostTags) if trueTags not in set(x[0]) and x[1] > thresholds[i]]
+            missingTags = [(*x, thresholds[i]) for i, x in enumerate(currPostTags) if x[0] in trueTags and x[1] <= thresholds[i]]
             newTags = [(*x, thresholds[i]) for i, x in enumerate(currPostTags) if x[0] not in trueTags and x[1] > thresholds[i]]
             print("\nmissing tags:\n")
             print(*missingTags, sep="\n")
