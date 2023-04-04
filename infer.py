@@ -199,6 +199,8 @@ def main():
         outputs = model(image.unsqueeze(0)).sigmoid()
         predTime = time.time() - startTime
         
+        trueTags = set(postData['tag_string'].split(" "))
+        
         print(f"preprocessing time: {processingTime} infer time: {predTime}")
         
         currPostTags = []
@@ -213,7 +215,7 @@ def main():
             print("\nTags filtered using threshold:\n")
             print(*tagsThresholded, sep="\n")
             predTags = {tag[0] for tag in tagsThresholded}
-            trueTags = set(postData['tag_string'].split(" "))
+            
             missingTags = trueTags.difference(predTags)
             newTags = predTags.difference(trueTags)
             print(f"missing tags: {missingTags}")
