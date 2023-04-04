@@ -202,7 +202,7 @@ def main():
         print(f"preprocessing time: {processingTime} infer time: {predTime}")
         
         currPostTags = []
-        print(outputs.tolist())
+        #print(outputs.tolist())
         currPostTags = list(zip(tagNames, outputs.tolist()[0]))
         currPostTags.sort(key=lambda y: y[1])
         
