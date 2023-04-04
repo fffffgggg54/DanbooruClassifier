@@ -205,13 +205,13 @@ def main():
         
         currPostTags = []
         #print(outputs.tolist())
-        currPostTags = list(zip(['*' if set(tagNames) in set(trueTags) else ''], tagNames, outputs.tolist()[0]))
-        currPostTags.sort(key=lambda y: y[2])
+        currPostTags = list(zip(tagNames, outputs.tolist()[0]))
+        currPostTags.sort(key=lambda y: y[1])
         
         print(*currPostTags, sep="\n")
         
         if haveThresholds:
-            tagsThresholded = [(*x, thresholds[i]) for i, x in enumerate(currPostTags) if x[2] > thresholds[i]]
+            tagsThresholded = [(*x, thresholds[i]) for i, x in enumerate(currPostTags) if x[1] > thresholds[i]]
             print("\nTags filtered using threshold:\n")
             print(*tagsThresholded, sep="\n")
             predTags = {tag[0] for tag in tagsThresholded}
