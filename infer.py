@@ -220,8 +220,10 @@ def main():
             #newTags = predTags.difference(trueTags)
             missingTags = [x for x in tagsThresholded if trueTags not in set(x[0])]
             newTags = [x for x in tagsThresholded if x[0] not in trueTags]
-            print(f"missing tags: {missingTags}")
-            print(f"newly detected tags: {newTags}")
+            print("\nmissing tags:\n")
+            print(*missingTags, sep="\n")
+            print(f"\nnewly detected tags:\n")
+            print(*newTags, sep="\n")
             
         else:
             print("not using thresholds")
