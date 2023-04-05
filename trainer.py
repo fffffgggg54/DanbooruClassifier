@@ -336,8 +336,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 64
-    FLAGS['gradient_accumulation_iterations'] = 32
+    FLAGS['batch_size'] = 96
+    FLAGS['gradient_accumulation_iterations'] = 20
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -361,7 +361,7 @@ elif currGPU == 'v100':
 
     FLAGS['verbose_debug'] = False
     FLAGS['skip_test_set'] = False
-    FLAGS['stepsPerPrintout'] = 50
+    FLAGS['stepsPerPrintout'] = 250
     FLAGS['val'] = False
 
 elif currGPU == 'none':
