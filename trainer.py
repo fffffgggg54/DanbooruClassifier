@@ -146,7 +146,7 @@ if currGPU == '3090':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_BCE_T-224-1588/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_BCE_+_T-224-1588/'
 
 
     # post importer config
@@ -182,7 +182,7 @@ if currGPU == '3090':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 20
+    FLAGS['num_workers'] = 14
     FLAGS['postDataServerWorkerCount'] = 3
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
@@ -200,7 +200,7 @@ if currGPU == '3090':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 88
+    FLAGS['resume_epoch'] = 0
 
     FLAGS['finetune'] = False
     FLAGS['compile_model'] = False
@@ -878,7 +878,7 @@ def trainCycle(image_datasets, model):
 
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2))
-                        loss = criterion(outputs.to(device2) - torch.special.logit(boundary.detach().clone()).to(device2), tagBatch.to(device2))
+                        loss = criterion(outputs.to(device2) + torch.special.logit(boundary.detach().clone()).to(device2), tagBatch.to(device2))
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
                         #loss, textOutput = criterion(outputs.to(device2), tagBatch.to(device2), updateAdaptive = (phase == 'train'), printAdaptive = (i % stepsPerPrintout == 0))
                         #loss = criterion(outputs.cpu(), tags.cpu())
