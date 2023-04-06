@@ -296,7 +296,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convformer_s18-224-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tresnet_m-224-ASL_BCE_T-5500/'
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_BCE_-_T-224-1588-30epoch/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_BCE_-_T-224-1588-50epoch/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_b16-ASL_BCE_-_T-224-1588/'
     
     
@@ -337,14 +337,14 @@ elif currGPU == 'v100':
 
     # training config
 
-    FLAGS['num_epochs'] = 30
+    FLAGS['num_epochs'] = 50
     FLAGS['batch_size'] = 96
     FLAGS['gradient_accumulation_iterations'] = 4
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
     FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
-    FLAGS['lr_warmup_epochs'] = 2
+    FLAGS['lr_warmup_epochs'] = 5
 
     FLAGS['weight_decay'] = 2e-2
 
