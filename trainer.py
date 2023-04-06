@@ -296,8 +296,10 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convformer_s18-224-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tresnet_m-224-ASL_BCE_T-5500/'
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_BCE_-_T-224-1588/'
-
+    #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_BCE_-_T-224-1588/'
+    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnety_040-ASL_BCE_-_T-224-1588/'
+    
+    
     # post importer config
 
     FLAGS['chunkSize'] = 1000
@@ -336,8 +338,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 96
-    FLAGS['gradient_accumulation_iterations'] = 4
+    FLAGS['batch_size'] = 256
+    FLAGS['gradient_accumulation_iterations'] = 1
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -710,7 +712,8 @@ def modelSetup(classes):
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4, drop_rate = 0.05)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('efficientnetv2_xl', pretrained=False, num_classes=len(classes), drop_path_rate = 0.6)
-    model = timm.create_model('regnetz_040h', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
+    #model = timm.create_model('regnetz_040h', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
+    model = timm.create_model('regnety_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
     #model = timm.create_model('ese_vovnet99b_iabn', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.02)
     #model = timm.create_model('tresnet_m', pretrained=False, num_classes=len(classes))
     '''
