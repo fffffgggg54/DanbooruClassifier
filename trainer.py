@@ -1005,8 +1005,7 @@ def trainCycle(image_datasets, model):
                     # TODO switch between using autocast and not using it
                     
                     with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
-                        print(i)
-                        
+                                                
                         outputs = model(imageBatch)
                         #outputs = model(imageBatch).logits
                         preds = torch.sigmoid(outputs)
