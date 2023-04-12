@@ -556,10 +556,10 @@ class AsymmetricLossAdaptive(nn.Module):
                 gap = pt0.sum(dim=0) / (y.sum(dim=0) + self.eps) - pt1.sum(dim=0) / ((1 - y).sum(dim=0) + self.eps)
                 
                 if updateAdaptive == True:
-                    #self.gamma_neg_per_class = self.gamma_neg_per_class - (self.gamma_step) * (gap - self.gap_target)
+                    self.gamma_neg_per_class = self.gamma_neg_per_class - (self.gamma_step) * (gap - self.gap_target)
                     
                     #self.gamma_neg_per_class = self.gamma_neg_per_class - (self.gamma_step * y.mean(dim=0)) * (gap - self.gap_target)
-                    self.gamma_neg_per_class = self.gamma_neg_per_class - (self.gamma_step * y.mean(dim=0).sqrt()) * (gap - self.gap_target)
+                    #self.gamma_neg_per_class = self.gamma_neg_per_class - (self.gamma_step * y.mean(dim=0).sqrt()) * (gap - self.gap_target)
                     
                     #self.gamma_neg_per_class = self.gamma_neg_per_class - (self.gamma_step * (1-y).mean(dim=0)) * (gap - self.gap_target)
                     #self.gamma_neg_per_class = self.gamma_neg_per_class - (self.gamma_step * (1-y).mean(dim=0).sqrt()) * (gap - self.gap_target)
@@ -624,36 +624,33 @@ class AsymmetricLossAdaptiveWorking(nn.Module):
         los_pos = y * torch.log(xs_pos.clamp(min=self.eps))
         los_neg = (1 - y) * torch.log(xs_neg.clamp(min=self.eps))
         loss = los_pos + los_neg
-        
-        
-        
+
         # Asymmetric Focusing
-        #if (self.gamma_neg > 0) or (self.gamma_pos > 0):
-        if self.disable_torch_grad_focal_loss:
-            torch.set_grad_enabled(False)
-        pt0 = xs_pos * y
-        pt1 = xs_neg * (1 - y)  # pt = p if t > 0 else 1-p
-        pt = pt0 + pt1
-        #if(self.adaptive == True):
-    
-        gap = pt0.sum() / (y.sum() + self.eps) - pt1.sum() / ((1 - y).sum() + self.eps)
-        
-        
-        if updateAdaptive == True:
-            #self.gamma_neg = self.gamma_neg - self.gamma_step * (gap - self.gap_target)
-            self.gamma_neg = self.gamma_neg + self.gamma_step * (gap - self.gap_target)
+        if self.gamma_neg > 0 or self.gamma_pos > 0:
+            if self.disable_torch_grad_focal_loss:
+                torch.set_grad_enabled(False)
+            pt0 = xs_pos * y
+            pt1 = xs_neg * (1 - y)  # pt = p if t > 0 else 1-p
+            pt = pt0 + pt1
+            if(self.adaptive == True):
             
-        
-        output = None
-        if printAdaptive == True:
-            with torch.no_grad():
-                output = str(f'\tpos: {pt0.sum() / (y.sum() + self.eps):.4f},\tneg: {pt1.sum() / ((1 - y).sum() + self.eps):.4f},\tgap: {gap:.4f},\tchange: {self.gamma_step * (gap - self.gap_target):.6f},\tgamma neg: {self.gamma_neg:.6f}')
-            
-        one_sided_gamma = self.gamma_pos * y + self.gamma_neg * (1 - y)
-        one_sided_w = torch.pow(1 - pt, one_sided_gamma)
-        if self.disable_torch_grad_focal_loss:
-            torch.set_grad_enabled(True)
-        loss *= one_sided_w
+                gap = pt0.sum() / (y.sum() + self.eps) - pt1.sum() / ((1 - y).sum() + self.eps)
+                
+                
+                if updateAdaptive == True:
+                    #self.gamma_neg = self.gamma_neg - self.gamma_step * (gap - self.gap_target)
+                    self.gamma_neg = self.gamma_neg + self.gamma_step * (gap - self.gap_target)
+                    
+                
+                output = None
+                if printAdaptive == True:
+                    output = str(f'\tpos: {pt0.sum() / (y.sum() + self.eps):.4f},\tneg: {pt1.sum() / ((1 - y).sum() + self.eps):.4f},\tgap: {gap:.4f},\tchange: {self.gamma_step * (gap - self.gap_target):.6f},\tgamma neg: {self.gamma_neg:.6f}')
+                
+            one_sided_gamma = self.gamma_pos * y + self.gamma_neg * (1 - y)
+            one_sided_w = torch.pow(1 - pt, one_sided_gamma)
+            if self.disable_torch_grad_focal_loss:
+                torch.set_grad_enabled(True)
+            loss *= one_sided_w
 
         return -loss.sum(), output
 
