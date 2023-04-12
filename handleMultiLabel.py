@@ -628,32 +628,32 @@ class AsymmetricLossAdaptiveWorking(nn.Module):
         
         
         # Asymmetric Focusing
-        if (self.gamma_neg > 0) or (self.gamma_pos > 0):
-            if self.disable_torch_grad_focal_loss:
-                torch.set_grad_enabled(False)
-            pt0 = xs_pos * y
-            pt1 = xs_neg * (1 - y)  # pt = p if t > 0 else 1-p
-            pt = pt0 + pt1
-            #if(self.adaptive == True):
+        #if (self.gamma_neg > 0) or (self.gamma_pos > 0):
+        if self.disable_torch_grad_focal_loss:
+            torch.set_grad_enabled(False)
+        pt0 = xs_pos * y
+        pt1 = xs_neg * (1 - y)  # pt = p if t > 0 else 1-p
+        pt = pt0 + pt1
+        #if(self.adaptive == True):
+    
+        gap = pt0.sum() / (y.sum() + self.eps) - pt1.sum() / ((1 - y).sum() + self.eps)
         
-            gap = pt0.sum() / (y.sum() + self.eps) - pt1.sum() / ((1 - y).sum() + self.eps)
+        
+        if updateAdaptive == True:
+            #self.gamma_neg = self.gamma_neg - self.gamma_step * (gap - self.gap_target)
+            self.gamma_neg = self.gamma_neg + self.gamma_step * (gap - self.gap_target)
             
+        
+        output = None
+        if printAdaptive == True:
+            with torch.no_grad():
+                output = str(f'\tpos: {pt0.sum() / (y.sum() + self.eps):.4f},\tneg: {pt1.sum() / ((1 - y).sum() + self.eps):.4f},\tgap: {gap:.4f},\tchange: {self.gamma_step * (gap - self.gap_target):.6f},\tgamma neg: {self.gamma_neg:.6f}')
             
-            if updateAdaptive == True:
-                #self.gamma_neg = self.gamma_neg - self.gamma_step * (gap - self.gap_target)
-                self.gamma_neg = self.gamma_neg + self.gamma_step * (gap - self.gap_target)
-                
-            
-            output = None
-            if printAdaptive == True:
-                with torch.no_grad():
-                    output = str(f'\tpos: {pt0.sum() / (y.sum() + self.eps):.4f},\tneg: {pt1.sum() / ((1 - y).sum() + self.eps):.4f},\tgap: {gap:.4f},\tchange: {self.gamma_step * (gap - self.gap_target):.6f},\tgamma neg: {self.gamma_neg:.6f}')
-                
-            one_sided_gamma = self.gamma_pos * y + self.gamma_neg * (1 - y)
-            one_sided_w = torch.pow(1 - pt, one_sided_gamma)
-            if self.disable_torch_grad_focal_loss:
-                torch.set_grad_enabled(True)
-            loss *= one_sided_w
+        one_sided_gamma = self.gamma_pos * y + self.gamma_neg * (1 - y)
+        one_sided_w = torch.pow(1 - pt, one_sided_gamma)
+        if self.disable_torch_grad_focal_loss:
+            torch.set_grad_enabled(True)
+        loss *= one_sided_w
 
         return -loss.sum(), output
 
