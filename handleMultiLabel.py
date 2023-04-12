@@ -624,7 +624,9 @@ class AsymmetricLossAdaptiveWorking(nn.Module):
         los_pos = y * torch.log(xs_pos.clamp(min=self.eps))
         los_neg = (1 - y) * torch.log(xs_neg.clamp(min=self.eps))
         loss = los_pos + los_neg
-
+        
+        output = None
+        
         # Asymmetric Focusing
         if self.gamma_neg > 0 or self.gamma_pos > 0:
             if self.disable_torch_grad_focal_loss:
@@ -642,7 +644,7 @@ class AsymmetricLossAdaptiveWorking(nn.Module):
                     self.gamma_neg = self.gamma_neg + self.gamma_step * (gap - self.gap_target)
                     
                 
-                output = None
+                
                 if printAdaptive == True:
                     output = str(f'\tpos: {pt0.sum() / (y.sum() + self.eps):.4f},\tneg: {pt1.sum() / ((1 - y).sum() + self.eps):.4f},\tgap: {gap:.4f},\tchange: {self.gamma_step * (gap - self.gap_target):.6f},\tgamma neg: {self.gamma_neg:.6f}')
                 
