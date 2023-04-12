@@ -628,7 +628,7 @@ class AsymmetricLossAdaptiveWorking(nn.Module):
         
         
         # Asymmetric Focusing
-        if self.gamma_neg > 0 or self.gamma_pos > 0:
+        if (self.gamma_neg > 0) or (self.gamma_pos > 0):
             if self.disable_torch_grad_focal_loss:
                 torch.set_grad_enabled(False)
             pt0 = xs_pos * y
