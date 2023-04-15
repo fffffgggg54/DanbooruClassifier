@@ -1064,7 +1064,7 @@ def trainCycle(image_datasets, model):
                         #loss = (1 - multiAccuracy[:,8]).pow(2).sum()
                         #model.zero_grad()
                         
-                        if (FLAGS['use_ddp'] == True) and hasattr(criterion, gamma_neg_per_class):
+                        if (FLAGS['use_ddp'] == True):
                             torch.distributed.all_reduce(criterion.gamma_neg_per_class, op = torch.distributed.ReduceOp.AVG)
                         
                         # backward + optimize only if in training phase
