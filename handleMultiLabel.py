@@ -563,6 +563,7 @@ class AsymmetricLossAdaptive(nn.Module):
                     if updateAdaptive == True:
                         self.gamma_neg_per_class = self.gamma_neg_per_class - (self.gamma_step) * (gap - self.gap_target)
                         
+                        
                         #self.gamma_neg_per_class = self.gamma_neg_per_class - (self.gamma_step * y.mean(dim=0)) * (gap - self.gap_target)
                         #self.gamma_neg_per_class = self.gamma_neg_per_class - (self.gamma_step * y.mean(dim=0).sqrt()) * (gap - self.gap_target)
                         
@@ -579,7 +580,7 @@ class AsymmetricLossAdaptive(nn.Module):
                         
                         
                         
-                        
+                        self.gamma_neg_per_class = torch.max(0, self.gamma_neg_per_class)
                         
                     
                     if printAdaptive == True:
