@@ -523,12 +523,12 @@ class AsymmetricLossAdaptive(nn.Module):
         x: input logits
         y: targets (multi-label binarized vector)
         """
-        
-        if self.gamma_neg_per_class == None or self.gamma_pos_per_class == None:
-            classCount = y.size(dim=1)
-            currDevice = y.device
-            self.gamma_neg_per_class = torch.ones(classCount, device=currDevice) * self.gamma_neg
-            self.gamma_pos_per_class = torch.ones(classCount, device=currDevice) * self.gamma_pos
+        with torch.no_grad():
+            if self.gamma_neg_per_class == None or self.gamma_pos_per_class == None:
+                classCount = y.size(dim=1)
+                currDevice = y.device
+                self.gamma_neg_per_class = torch.ones(classCount, device=currDevice) * self.gamma_neg
+                self.gamma_pos_per_class = torch.ones(classCount, device=currDevice) * self.gamma_pos
 
         # Calculating Probabilities
         x_sigmoid = torch.sigmoid(x)
@@ -553,8 +553,9 @@ class AsymmetricLossAdaptive(nn.Module):
             pt = pt0 + pt1
             if(self.adaptive == True):
             
-                gap = pt0.sum(dim=0) / (y.sum(dim=0) + self.eps) - pt1.sum(dim=0) / ((1 - y).sum(dim=0) + self.eps)
                 with torch.no_grad():
+                    gap = pt0.sum(dim=0) / (y.sum(dim=0) + self.eps) - pt1.sum(dim=0) / ((1 - y).sum(dim=0) + self.eps)
+
                     if updateAdaptive == True:
                         self.gamma_neg_per_class = self.gamma_neg_per_class - (self.gamma_step) * (gap - self.gap_target)
                         
