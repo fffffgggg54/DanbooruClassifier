@@ -525,6 +525,7 @@ class AsymmetricLossAdaptive(nn.Module):
         """
         with torch.no_grad():
             if self.gamma_neg_per_class == None or self.gamma_pos_per_class == None:
+                print("initializing loss values")
                 classCount = y.size(dim=1)
                 currDevice = y.device
                 self.gamma_neg_per_class = torch.ones(classCount, device=currDevice) * self.gamma_neg
