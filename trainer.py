@@ -713,7 +713,7 @@ def modelSetup(classes):
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4, drop_rate = 0.05)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('efficientnetv2_xl', pretrained=False, num_classes=len(classes), drop_path_rate = 0.6)
-    model = timm.create_model('regnetz_040h', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
+    model = timm.create_model('regnetz_040_h', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
     #model = timm.create_model('regnetz_b16', pretrained=False, num_classes=len(classes), drop_path_rate=0.1)
     #model = timm.create_model('ese_vovnet99b_iabn', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.02)
     #model = timm.create_model('tresnet_m', pretrained=False, num_classes=len(classes))
@@ -1064,8 +1064,7 @@ def trainCycle(image_datasets, model):
                         #loss = (1 - multiAccuracy[:,8]).pow(2).sum()
                         #model.zero_grad()
                         
-                        if (FLAGS['use_ddp'] == True):
-                            torch.distributed.all_reduce(criterion.gamma_neg_per_class, op = torch.distributed.ReduceOp.AVG)
+                        
                         
                         # backward + optimize only if in training phase
                         if phase == 'train' and (loss.isnan() == False):
@@ -1183,6 +1182,8 @@ def trainCycle(image_datasets, model):
                     
             if FLAGS['use_ddp'] == True:
                 torch.distributed.all_reduce(cm_tracker.running_confusion_matrix, op=torch.distributed.ReduceOp.AVG)
+                
+                torch.distributed.all_reduce(criterion.gamma_neg_per_class, op = torch.distributed.ReduceOp.AVG)
             if ((phase == 'val') and (FLAGS['skip_test_set'] == False) and is_head_proc):
                 #torch.set_printoptions(profile="full")
                 
