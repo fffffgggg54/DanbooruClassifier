@@ -523,6 +523,9 @@ class AsymmetricLossAdaptive(nn.Module):
         x: input logits
         y: targets (multi-label binarized vector)
         """
+        
+        output = None
+        
         with torch.no_grad():
             if self.gamma_neg_per_class == None or self.gamma_pos_per_class == None:
                 print("initializing loss values")
@@ -578,7 +581,7 @@ class AsymmetricLossAdaptive(nn.Module):
                         
                         
                         
-                    output = None
+                    
                     if printAdaptive == True:
                         #output = str(f'\tpos: {pt0.sum() / (y.sum() + self.eps):.4f},\tneg: {pt1.sum() / ((1 - y).sum() + self.eps):.4f}')
                         output = str(f'pos: {pt0.sum() / (y.sum() + self.eps):.4f},\tneg: {pt1.sum() / ((1 - y).sum() + self.eps):.4f},\tGN: [{self.gamma_neg_per_class.min():.4f}, {self.gamma_neg_per_class.max():.4f}],\tGP: [{self.gamma_pos_per_class.min():.4f}, {self.gamma_pos_per_class.max():.4f}]')
