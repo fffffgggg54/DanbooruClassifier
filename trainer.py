@@ -297,7 +297,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convformer_s18-224-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tresnet_m-224-ASL_BCE_T-5500/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_GP0_GNADAPC_-224-1588-50epoch/'
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_-035_FT-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_035_FT-224-1588-50epoch/"
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_GP1_GN5_CL005-224-1588-50epoch/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_b16-ASL_BCE_-_T-224-1588/'
     
@@ -895,6 +895,8 @@ def trainCycle(image_datasets, model):
     
     epoch = FLAGS['resume_epoch']
     
+    offset = torch.special.logit(torch.Tensor([0.35])).to(device)
+    
     while (epoch < FLAGS['num_epochs']):
         #prior = MLCSL.ComputePrior(classes, device)
         epochTime = time.time()
@@ -1036,7 +1038,8 @@ def trainCycle(image_datasets, model):
                         if FLAGS['threshold_loss']:
                             #outputs = outputs - torch.special.logit(boundary)
                             outputs = outputs + torch.special.logit(boundary)
-                        outputs = outputs - torch.special.logit(torch.Tensor([0.35])).to(outputs.device)
+                            
+                        outputs = outputs + offset
                         tagsModified = tagBatch
                         if FLAGS['splc'] and epoch >= FLAGS['splc_start_epoch']:
                             with torch.no_grad():
@@ -1184,7 +1187,7 @@ def trainCycle(image_datasets, model):
             if FLAGS['use_ddp'] == True:
                 torch.distributed.all_reduce(cm_tracker.running_confusion_matrix, op=torch.distributed.ReduceOp.AVG)
                 
-                torch.distributed.all_reduce(criterion.gamma_neg_per_class, op = torch.distributed.ReduceOp.AVG)
+                #torch.distributed.all_reduce(criterion.gamma_neg_per_class, op = torch.distributed.ReduceOp.AVG)
             if ((phase == 'val') and (FLAGS['skip_test_set'] == False) and is_head_proc):
                 #torch.set_printoptions(profile="full")
                 
