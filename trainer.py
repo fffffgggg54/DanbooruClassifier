@@ -1036,7 +1036,7 @@ def trainCycle(image_datasets, model):
                         if FLAGS['threshold_loss']:
                             #outputs = outputs - torch.special.logit(boundary)
                             outputs = outputs + torch.special.logit(boundary)
-                        outputs = outputs - torch.special.logit(0.35)
+                        outputs = outputs - torch.special.logit(torch.Tensor([0.35]))
                         tagsModified = tagBatch
                         if FLAGS['splc'] and epoch >= FLAGS['splc_start_epoch']:
                             with torch.no_grad():
