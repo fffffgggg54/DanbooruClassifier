@@ -136,7 +136,10 @@ def main():
     #gc.set_debug(gc.DEBUG_LEAK)
     # load json files
     
-    modelPath = rootPath + "models/davit_base_ml-decoder-ASL-BCE/"
+    #modelPath = rootPath + "models/davit_base_ml-decoder-ASL-BCE/"
+    #modelPath = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_-_T-224-1588-50epoch/"
+    modelPath = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE-224-1588-50epoch/"
+    #modelPath = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_+_T-224-1588-50epoch/"
     tagPicklePath = modelPath + "tags.pkl"
     tagNames = pd.read_pickle(tagPicklePath)
     tagNames = tagNames.squeeze('columns').tolist()
@@ -158,7 +161,7 @@ def main():
     #model = cvt.get_cls_model(len(tagNames), config=modelConfCust1)
     #model.load_state_dict(torch.load("models/saved_model_epoch_4.pth", map_location=myDevice))
     #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(tagNames), ignore_mismatched_sizes=True)
-    model.load_state_dict(torch.load(modelPath + "saved_model_epoch_85.pth", map_location=myDevice))
+    model.load_state_dict(torch.load(modelPath + "saved_model_epoch_49.pth", map_location=myDevice))
     model.eval()   # Set model to evaluate mode
     model = torch.jit.script(model)
     model = torch.jit.optimize_for_inference(model)
