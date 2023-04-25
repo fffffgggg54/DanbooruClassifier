@@ -137,9 +137,9 @@ def main():
     # load json files
     
     #modelPath = rootPath + "models/davit_base_ml-decoder-ASL-BCE/"
-    #modelPath = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_-_T-224-1588-50epoch/"
+    modelPath = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_-_T-224-1588-50epoch/"
     #modelPath = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE-224-1588-50epoch/"
-    modelPath = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_+_T-224-1588-50epoch/"
+    #modelPath = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_+_T-224-1588-50epoch/"
     tagPicklePath = modelPath + "tags.pkl"
     tagNames = pd.read_pickle(tagPicklePath)
     tagNames = tagNames.squeeze('columns').tolist()
