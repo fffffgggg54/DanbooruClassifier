@@ -283,6 +283,8 @@ class getDecisionBoundary(nn.Module):
         self.threshold_max = threshold_max
         
     def forward(self, preds, targs):
+        # parameter initial_threshold
+        # TODO clean this up and make it work consistently, use proper lazy init
         if self.needs_init:
             classCount = preds.size(dim=1)
             currDevice = preds.device
@@ -293,11 +295,14 @@ class getDecisionBoundary(nn.Module):
             self.needs_init = False
             self.opt = torch.optim.SGD(self.parameters(), lr=self.lr, maximize=True)
             
+        # update only when training
         if preds.requires_grad:
+            # ignore what happened before, only need values
             preds = preds.detach()
+            # stepping fn, currently steep version of logistic fn
             predsModified = stepAtThreshold(preds, self.thresholdPerClass)
             metrics = getAccuracy(predsModified, targs)
-            numToMax = metrics[:,9].sum()
+            numToMax = metrics[:,8].sum()
             numToMax.backward()
             self.opt.step()
             self.opt.zero_grad()

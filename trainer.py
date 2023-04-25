@@ -297,7 +297,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convformer_s18-224-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tresnet_m-224-ASL_BCE_T-5500/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_GP0_GNADAPC_-224-1588-50epoch/'
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_065_FT-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_-_T-P4_FT-224-1588-50epoch/"
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_GP1_GN5_CL005-224-1588-50epoch/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_b16-ASL_BCE_-_T-224-1588/'
     
@@ -352,7 +352,7 @@ elif currGPU == 'v100':
 
     FLAGS['resume_epoch'] = 0
     
-    FLAGS['threshold_loss'] = False
+    FLAGS['threshold_loss'] = True
     FLAGS['splc'] = False
     FLAGS['splc_start_epoch'] = 1
 
@@ -1036,10 +1036,10 @@ def trainCycle(image_datasets, model):
                         '''
                         
                         if FLAGS['threshold_loss']:
-                            #outputs = outputs - torch.special.logit(boundary)
-                            outputs = outputs + torch.special.logit(boundary)
+                            outputs = outputs - torch.special.logit(boundary)
+                            #outputs = outputs + torch.special.logit(boundary)
                             
-                        outputs = outputs + offset
+                        #outputs = outputs + offset
                         tagsModified = tagBatch
                         if FLAGS['splc'] and epoch >= FLAGS['splc_start_epoch']:
                             with torch.no_grad():
