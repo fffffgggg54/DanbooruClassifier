@@ -297,7 +297,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convformer_s18-224-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tresnet_m-224-ASL_BCE_T-5500/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_GP0_GNADAPC_-224-1588-50epoch/'
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_035_FT-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_065_FT-224-1588-50epoch/"
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_GP1_GN5_CL005-224-1588-50epoch/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_b16-ASL_BCE_-_T-224-1588/'
     
@@ -895,7 +895,7 @@ def trainCycle(image_datasets, model):
     
     epoch = FLAGS['resume_epoch']
     
-    offset = torch.special.logit(torch.Tensor([0.35])).to(device)
+    offset = torch.special.logit(torch.Tensor([0.65])).to(device)
     
     while (epoch < FLAGS['num_epochs']):
         #prior = MLCSL.ComputePrior(classes, device)
