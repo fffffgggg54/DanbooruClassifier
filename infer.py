@@ -155,9 +155,9 @@ def main():
         haveThresholds = False
     
     myDevice = 'cpu'
-    #model = timm.create_model('efficientnet_b0', pretrained=True, num_classes=len(tagNames))
-    model = timm.create_model('davit_base', num_classes=len(tagNames))
-    model = add_ml_decoder_head(model)
+    model = timm.create_model('regnetz_040_h', pretrained=True, num_classes=len(tagNames))
+    #model = timm.create_model('davit_base', num_classes=len(tagNames))
+    #model = add_ml_decoder_head(model)
     #model = cvt.get_cls_model(len(tagNames), config=modelConfCust1)
     #model.load_state_dict(torch.load("models/saved_model_epoch_4.pth", map_location=myDevice))
     #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(tagNames), ignore_mismatched_sizes=True)
