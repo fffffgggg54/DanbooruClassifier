@@ -135,6 +135,8 @@ if currGPU == 'v100':
     FLAGS['num_epochs'] = 50
     FLAGS['batch_size'] = 96
     FLAGS['fast_norm'] = True
+    FLAGS['channels_last'] = True
+    FLAGS['compile'] = False
     
 
 
