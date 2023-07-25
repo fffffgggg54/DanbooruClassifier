@@ -78,7 +78,7 @@ FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 FLAGS['postDFPickleFilteredTrimmed'] = FLAGS['postMetaRoot'] + "postDataFilteredTrimmed.pkl"
 
 
-elif currGPU == 'v100':
+if currGPU == 'v100':
 
 
 
