@@ -404,7 +404,6 @@ def trainCycle(image_datasets, model):
     
     dataloaders = {x: getDataLoader(image_datasets[x], FLAGS['batch_size'], epoch) for x in image_datasets} # set up dataloaders
 
-    scheduler.last_epoch = len(dataloaders['train'])*epoch
 
     
     if(is_head_proc):
