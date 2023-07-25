@@ -583,7 +583,7 @@ def trainCycle(image_datasets, model):
             runningPreds = torch.stack(runningPreds)
             modelOutputs = {'labels':runningLabels, 'preds':runningPreds}
             print(modelOutputs)
-            cachePath = torch.load(FLAGS['modelDir'] + "evalOutputs.pkl.bz2"
+            cachePath = FLAGS['modelDir'] + "evalOutputs.pkl.bz2"
             with bz2.BZ2File(cachePath, 'w') as cachedSample: cPickle.dump(modelOutputs, cachedSample)
             
 
