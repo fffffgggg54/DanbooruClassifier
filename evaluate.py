@@ -431,9 +431,6 @@ def trainCycle(image_datasets, model):
 
             model.eval()   # Set model to evaluate mode
             print("validation set")
-            if(FLAGS['skip_test_set'] == True):
-                print("skipping...")
-                break;
             
             myDataset.transform = transforms.Compose([#transforms.Resize((224,224)),
                                                       transforms.ToTensor(),
