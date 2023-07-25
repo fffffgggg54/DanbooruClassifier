@@ -569,10 +569,7 @@ def trainCycle(image_datasets, model):
             mAP_score_regular = MLCSL.mAP(torch.cat(targets_running).numpy(force=True), torch.cat(preds_running).numpy(force=True))
             #mAP_score_ema = np.mean(AP_ema)
             if(is_head_proc): print("mAP score regular {:.2f}".format(mAP_score_regular))
-            #top_mAP = max(mAP_score_regular, mAP_score_ema)
-            if hasattr(criterion, 'tau_per_class'):
-                if(is_head_proc): print(criterion.tau_per_class)
-            #print(boundaryCalculator.thresholdPerClass)
+
         currPhase += 1
         '''
         except Exception as e:
