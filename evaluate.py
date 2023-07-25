@@ -549,7 +549,7 @@ def trainCycle(image_datasets, model):
             torch.distributed.all_reduce(cm_tracker.running_confusion_matrix, op=torch.distributed.ReduceOp.AVG)
             
             #torch.distributed.all_reduce(criterion.gamma_neg_per_class, op = torch.distributed.ReduceOp.AVG)
-        if ((phase == 'val') and (FLAGS['skip_test_set'] == False) and is_head_proc):
+        if ((phase == 'val') and is_head_proc):
             #torch.set_printoptions(profile="full")
             
             #AvgAccuracy = torch.stack(AccuracyRunning)
