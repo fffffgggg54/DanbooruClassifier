@@ -428,24 +428,7 @@ def trainCycle(image_datasets, model):
   
             
         if phase == 'val':
-            
-            
-            if FLAGS['val'] == False and is_head_proc:
-                modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
-                state_dict = model.state_dict()
-                
-                out_dict={}
-                for k, v in state_dict.items():
-                    k = k.replace('_orig_mod.', '')
-                    k = k.replace('module.', '')
-                    out_dict[k] = v
-                
-                torch.save(out_dict, modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
-                torch.save(boundaryCalculator.thresholdPerClass, modelDir + 'thresholds.pth')
-                torch.save(optimizer.state_dict(), modelDir + 'optimizer' + '.pth')
-                pd.DataFrame(tagNames).to_pickle(modelDir + "tags.pkl")
-            
-            
+
             model.eval()   # Set model to evaluate mode
             print("validation set")
             if(FLAGS['skip_test_set'] == True):
