@@ -44,6 +44,9 @@ import handleMultiLabel as MLCSL
 
 import timm.optim
 
+import bz2
+import pickle
+import _pickle as cPickle
 
 
 
@@ -437,6 +440,10 @@ def trainCycle(image_datasets, model):
                                                       #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                                                       ])
         
+        
+        
+        runningLabels = []
+        runningPreds = []
 
         
         loaderIterable = enumerate(dataloaders[phase])
@@ -455,6 +462,9 @@ def trainCycle(image_datasets, model):
                     outputs = model(imageBatch)
                     #outputs = model(imageBatch).logits
                     preds = torch.sigmoid(outputs)
+                    
+                    runningLabels += tagBatch
+                    runningPreds += preds.detach()
                     
                     with torch.cuda.amp.autocast(enabled=False):
                         boundary = boundaryCalculator(preds, tagBatch)
@@ -569,6 +579,14 @@ def trainCycle(image_datasets, model):
             mAP_score_regular = MLCSL.mAP(torch.cat(targets_running).numpy(force=True), torch.cat(preds_running).numpy(force=True))
             #mAP_score_ema = np.mean(AP_ema)
             if(is_head_proc): print("mAP score regular {:.2f}".format(mAP_score_regular))
+            runningLabels = torch.stack(runningLabels)
+            runningPreds = torch.stack(runningPreds)
+            modelOutputs = {'labels':runningLabels, 'preds':runningPreds}
+            print(modelOutputs)
+            cachePath = torch.load(FLAGS['modelDir'] + "evalOutputs.pkl.bz2"
+            with bz2.BZ2File(cachePath, 'w') as cachedSample: cPickle.dump(modelOutputs, cachedSample)
+            
+
 
         currPhase += 1
         '''
