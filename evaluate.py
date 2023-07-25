@@ -408,7 +408,6 @@ def trainCycle(image_datasets, model):
     
     dataloaders = {x: getDataLoader(image_datasets[x], FLAGS['batch_size'], epoch) for x in image_datasets} # set up dataloaders
 
-    scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
     scheduler.last_epoch = len(dataloaders['train'])*epoch
 
     
@@ -642,7 +641,6 @@ def main():
         FLAGS['device'] = rank % torch.cuda.device_count()
         torch.cuda.set_device(FLAGS['device'])
         torch.cuda.empty_cache()
-        FLAGS['learning_rate'] *= dist.get_world_size()
     image_datasets = getData()
     model = modelSetup(classes)
     trainCycle(image_datasets, model)
