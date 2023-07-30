@@ -581,7 +581,7 @@ def trainCycle(image_datasets, model):
             if(is_head_proc): print("mAP score regular {:.2f}".format(mAP_score_regular))
             runningLabels = torch.stack(runningLabels)
             runningPreds = torch.stack(runningPreds)
-            modelOutputs = {'labels':runningLabels, 'preds':runningPreds}
+            modelOutputs = {'labels':runningLabels.cpu(), 'preds':runningPreds.cpu()}
             print(modelOutputs)
             cachePath = FLAGS['modelDir'] + "evalOutputs.pkl.bz2"
             with bz2.BZ2File(cachePath, 'w') as cachedSample: cPickle.dump(modelOutputs, cachedSample)
