@@ -20,7 +20,6 @@ import pickle
 import _pickle as cPickle
 import json
 
-
 from copy import deepcopy
 import gc
 
@@ -44,7 +43,6 @@ def create_dir(dir):
 
 
 # TODO migrate to datapipes when mature
-
 
 
 
@@ -229,9 +227,165 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
             currProcess.start()
             self.serverProcessPool.append(currProcess)
 
+    def __len__(self):
+        return self.postListLength
+
+    # TODO profile and optimize
+    def __getitem__(self, index):
+        if torch.is_tensor(index):
+            index = index.item()
+
+        #startTime = time.time()
+        #postData = self.postList.iloc[index].copy()
+        #postData.tag_string = postData.tag_string.split()
+
+        recvConn, sendConn = multiprocessing.Pipe()
+
+        self.workQueue.put((index, sendConn))
+
+        (postData, tagList, imageRoot, imageCacheRoot, tagCacheRoot) = recvConn.recv()
+
+        postID = int(postData.loc["id"])
+        image = torch.Tensor()
+        postTags = torch.Tensor()
+        bruh = False
+
+        try:
+            tagCacheDir = create_dir(tagCacheRoot + str(postID % 1000).zfill(4))
+            tagCachePath = tagCacheDir + "/" + str(postID) + ".pkl.bz2"
+            with bz2.BZ2File(tagCachePath, 'rb') as cachedTags:
+                postTags = cPickle.load(cachedTags)
+
+            #print(f"got pickle from {cachePath}")
+            '''
+            if len(postTags) != len(tagList):
+                postTagList = set(postData.loc["tag_string"].split()).intersection(set(tagList.to_list()))
+
+                # one-hot encode the tags of a given post
+                # TODO find better way to find matching tags
+                postTags = []
+                for key in list(tagList.to_list()):
+                    match = False
+                    for tag in postTagList:
+                        if tag == key:
+                            match = True
+
+                    postTags.append(int(match))
+                postTags = torch.Tensor(postTags)
+            '''
+        
+        except Exception as e:
+            #print(e)
+            #print("cached file not found")
+            postTagList = set(postData.loc["tag_string"].split()).intersection(set(tagList.to_list()))
+
+            # one-hot encode the tags of a given post
+            # TODO find better way to find matching tags
+            postTags = []
+            for key in list(tagList.to_list()):
+                match = False
+                for tag in postTagList:
+                    if tag == key:
+                        match = True
+
+                postTags.append(int(match))
+            
+            postTags = torch.Tensor(postTags)
+            
+            if(tagCacheRoot is not None):    
+                tagCacheDir = create_dir(tagCacheRoot + str(postID % 1000).zfill(4))
+                tagCachePath = tagCacheDir + "/" + str(postID) + ".pkl.bz2"
+                with bz2.BZ2File(tagCachePath, 'w') as cachedSample: cPickle.dump(postTags, cachedSample)
+        
+        
+        try:
+            imageCacheDir = create_dir(imageCacheRoot + str(postID % 1000).zfill(4))
+            imageCachePath = imageCacheDir + "/" + str(postID) + ".jpeg"
+            
+            image = Image.open(imageCachePath)    #check if file exists
+            image.load()
+            
+        except Exception as e:
+            #metaTime = time.time() - startTime
+            #startTime = time.time()
+            imagePath = str(postID % 1000).zfill(4) + "/" + str(postID) + "." + postData.loc["file_ext"]
+            #cachedImagePath = cacheRoot + imagePath
+            imagePath = imageRoot + imagePath
+
+            try: 
+                #path = cachedImagePath
+                path = imagePath
+                '''
+                # TODO mess with gpu decoding, needs rewrite for how stuff is handled later on
+                if postData.loc["file_ext"] == 'jpg' and torch.cuda.is_available():
+                    image = torchvision.io.read_file(path)
+                    image = torchvision.io.decode_jpeg(image, device='cuda:0')
+                    image = torchvision.transforms.functional.to_pil_image(image)
+                else:
+                '''
+                image = Image.open(path)    #check if file exists
+                image.load()    # check if file valid
+            except:     #if file doesn't exist or isn't valid, download it and save/overwrite
+                imageURL = postData.loc["file_url"]
+                #print("Getting image from " + imageURL)
+                response = requests.get(imageURL)
+                image = Image.open(BytesIO(response.content))
+                myFile = open(path, "wb")
+                myFile.write(response.content)
+                myFile.close()
+
+                #print("Image saved to " + path)
+            # TODO implement switchable cache use
+            '''
+            old caching and crawling
+            except FileNotFoundError:
+                
+                try:
+                    create_dir(cacheRoot + str(postID % 1000).zfill(4))
+                    #print(f"copy {imagePath} to {cachedImagePath}")
+                    image = Image.open(shutil.copy2(imagePath, cachedImagePath))
+                    image = image.convert("RGB")
+           
+                except:
+                    imageURL = postData.loc["file_url"]
+                    print("Getting image from " + imageURL)
+                    response = requests.get(imageURL)
+                    image = ImageOps.pad(Image.open(BytesIO(response.content)), (512, 512))
+                    image = image.convert("RGB")
+                    image.save(path)
+                    print("Image saved to " + path)
+            '''
+            #image = ImageOps.exif_transpose(image)
+            #imageLoadTime = time.time() - startTime
+            #startTime = time.time()
+            #process our image
+            image = transforms.functional.resize(image, (self.size, self.size))
+            image = image.convert("RGBA")
+
+            color = (255,255,255)
+
+            background = Image.new('RGB', image.size, color)
+            background.paste(image, mask=image.split()[3])
+            image = background
 
 
+            #image = transforms.functional.pil_to_tensor(image).squeeze()
+            
+            if(imageCacheRoot is not None):
+                imageCacheDir = create_dir(imageCacheRoot + str(postID % 1000).zfill(4))
+                imageCachePath = imageCacheDir + "/" + str(postID) + ".jpeg"
+                image.save(imageCachePath, format='jpeg', quality=75, optimize=True)
+                #with bz2.BZ2File(imageCachePath, 'w') as cachedSample: cPickle.dump((image, postTags, postID), cachedSample)
 
+
+        if self.transform: image = self.transform(image)
+
+
+        del postData
+        # if(torch.utils.data.get_worker_info().id == 1):objgraph.show_growth() 
+
+
+        return image, postTags
 
 def filterDanbooruData(tagData, postData, minPostCount = 10000, blockedRatings = [], blockedTags = ['animated', 'flash', 'corrupted_file', 'corrupted_metadata', 'cosplay_photo']):
     
@@ -307,8 +461,6 @@ def filterDanbooruData(tagData, postData, minPostCount = 10000, blockedRatings =
     print("split time: " + str(time.time()-queryStartTime)) #split time: 37.70384955406189
     '''
     return tagData, postData
-
-# CutoutPIL from https://github.com/Alibaba-MIIL/ASL
 
 class CutoutPIL(object):
     def __init__(self, cutout_factor=0.5):
