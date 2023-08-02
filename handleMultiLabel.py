@@ -430,7 +430,8 @@ class AdaptiveWeightedLoss(nn.Module):
             else:
                 self.weight_per_class = nn.Parameter(torch.ones(classCount, device=currDevice, requires_grad=True) * self.weight_per_class)
             self.needs_init = False
-            self.opt = torch.optim.SGD(self.parameters(), lr=self.lr)
+            #self.opt = torch.optim.SGD(self.parameters(), lr=self.lr)\
+            self.opt = torch.optim.AdamW(self.parameters(), lr=self.lr)
             # TODO maybe another optimizer will work better?
             # TODO maybe a plain EMA?
             
