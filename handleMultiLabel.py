@@ -407,6 +407,7 @@ class getDecisionBoundaryOld(nn.Module):
 
 class AdaptiveWeightedLoss(nn.Module):
     def __init__(self, initial_weight = 1.0, lr = 1e-3, weight_limit = 10.0, eps = 1e-8):
+        super().__init__()
         self.initial_weight = initial_weight
         self.weight_per_class = None
         self.opt = None
