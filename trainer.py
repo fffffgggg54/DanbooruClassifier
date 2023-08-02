@@ -857,7 +857,7 @@ def trainCycle(image_datasets, model):
     #criterion = MLCSL.Hill()
     #criterion = MLCSL.SPLC(gamma=2.0)
     #criterion = MLCSL.SPLCModified(gamma=2.0)
-    criterion = MLCSL.AdaptiveWeightedLoss(initial_weight = 1.0, lr = 1e-3, weight_limit = 10.0)
+    criterion = MLCSL.AdaptiveWeightedLoss(initial_weight = 1.0, lr = 1e-3, weight_limit = 1e5)
     #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=5, gamma_pos=1, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False, adaptive = True, gap_target = 0.1, gamma_step = 0.001)
@@ -1200,7 +1200,7 @@ def trainCycle(image_datasets, model):
                 #AvgAccuracy = torch.stack(AccuracyRunning)
                 #AvgAccuracy = AvgAccuracy.mean(dim=0)
                 AvgAccuracy = cm_tracker.get_full_metrics()
-                LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames, boundaryCalculator.thresholdPerClass.data))
+                LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames, boundaryCalculator.thresholdPerClass.data, criterion.weight_per_class))
                 LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[0][8], reverse=True)
                 MeanStackedAccuracy = cm_tracker.get_aggregate_metrics()
                 MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
@@ -1221,7 +1221,7 @@ def trainCycle(image_datasets, model):
                 if hasattr(criterion, 'tau_per_class'):
                     if(is_head_proc): print(criterion.tau_per_class)
                 #print(boundaryCalculator.thresholdPerClass)
-                print(criterion.weight_per_class)
+                #print(criterion.weight_per_class)
             currPhase += 1
             '''
             except Exception as e:
