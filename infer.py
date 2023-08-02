@@ -257,38 +257,31 @@ def main():
     
     
     size = image.size
+       
+        print(f"preprocessing time: {processingTime} infer time: {predTime}")
+        handleOutputs(outputs)
         
-            
-    targetMul = 56
-    xPad = targetMul - (size[0] % targetMul)
-    yPad = targetMul - (size[1] % targetMul)
-    xPadL = int(xPad * random.random())
-    xPadR = xPad - xPadL
-    yPadT = int(yPad * random.random())
-    yPadB = yPad - yPadT
-    targetPad = (xPadL, yPadT, xPadR, yPadB)
-    
-    image = transforms.Pad(targetPad).forward(image)
-    
-    transform = transforms.Compose([
-        #transforms.Resize((224,224)),
-        transforms.ToTensor(),
-        #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
-    image = transform(image)
-    
-    
-    
-    outputs = model(image.unsqueeze(0)).sigmoid()
-    
-    
+def handleOutputs(outputs):
     currPostTags = []
     #print(outputs.tolist())
     currPostTags = list(zip(tagNames, outputs.tolist()[0]))
     currPostTags.sort(key=lambda y: y[1])
     
-    print(currPostTags)
+    #print(*currPostTags, sep="\n")
     
+    if haveThresholds:
+        tagsThresholded = [(*x, thresholds[i]) for i, x in enumerate(currPostTags) if x[1] > thresholds[i]]
+        print("\nTags filtered using threshold:\n")
+        print(*tagsThresholded, sep="\n")
+        predTags = {tag[0] for tag in tagsThresholded}
+        trueTags = set(postData['tag_string'].split(" "))
+        missingTags = trueTags.difference(predTags)
+        newTags = predTags.difference(trueTags)
+        print(f"missing tags: {missingTags}")
+        print(f"newly detected tags: {newTags}")
+        
+    else:
+        print("not using thresholds")
 
 
 
