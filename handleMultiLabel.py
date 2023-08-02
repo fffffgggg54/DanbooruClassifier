@@ -425,9 +425,9 @@ class AdaptiveWeightedLoss(nn.Module):
             classCount = x.size(dim=1)
             currDevice = x.device
             if self.weight_per_class == None:
-                self.weight_per_class = nn.Parameter(torch.ones(classCount, device=currDevice, requires_grad=True)'''.to(torch.float64)''' * self.initial_weight)
+                self.weight_per_class = nn.Parameter(torch.ones(classCount, device=currDevice, requires_grad=True) * self.initial_weight)
             else:
-                self.weight_per_class = nn.Parameter(torch.ones(classCount, device=currDevice, requires_grad=True)'''.to(torch.float64)''' * self.weight_per_class)
+                self.weight_per_class = nn.Parameter(torch.ones(classCount, device=currDevice, requires_grad=True) * self.weight_per_class)
             self.needs_init = False
             self.opt = torch.optim.SGD(self.parameters(), lr=self.lr)
             # TODO maybe another optimizer will work better?
