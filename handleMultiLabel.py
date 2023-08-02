@@ -20,6 +20,7 @@ from copy import deepcopy
 
 
 
+
 '''
 
 
@@ -1026,10 +1027,12 @@ def mAP_partial(targs, preds):
     mAP = results[1]
     return mAP
 
-
+# getAccuracy calculates a confusion matrix and some related values.
 def getAccuracy(preds, targs):
     epsilon = 1e-12
+
     #preds = torch.sigmoid(preds)
+
     targs_inv = 1 - targs
     batchSize = targs.size(dim=0)
     P = targs * preds
@@ -1046,6 +1049,7 @@ def getAccuracy(preds, targs):
     Pprecision = TP / (TP + FP + epsilon)
     Nprecision = TN / (TN + FN + epsilon)
     
+
     P4 = (4 * TP * TN) / ((4 * TN * TP) + (TN + TP) * (FP + FN) + epsilon)
     F1 = (2 * TP) / (2 * TP + FP + FN + epsilon)
     
@@ -1136,7 +1140,7 @@ class MetricTracker():
             
         return self.get_aggregate_metrics()
         
-    
+
 class AverageMeter(object):
     def __init__(self):
         self.val = None
