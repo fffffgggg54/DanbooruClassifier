@@ -1221,6 +1221,7 @@ def trainCycle(image_datasets, model):
                 if hasattr(criterion, 'tau_per_class'):
                     if(is_head_proc): print(criterion.tau_per_class)
                 #print(boundaryCalculator.thresholdPerClass)
+                print(criterion.weight_per_class)
             currPhase += 1
             '''
             except Exception as e:
