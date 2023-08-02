@@ -20,6 +20,7 @@ from copy import deepcopy
 
 
 
+
 '''
 
 
@@ -561,6 +562,165 @@ class AsymmetricLossOptimized(nn.Module):
 
         return -self.loss.sum()
 
+class AsymmetricLossAdaptive(nn.Module):
+    def __init__(self, gamma_neg=1, gamma_pos=1, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.1):
+        super(AsymmetricLossAdaptive, self).__init__()
+
+        self.gamma_neg = gamma_neg
+        self.gamma_pos = gamma_pos
+        self.clip = clip
+        self.disable_torch_grad_focal_loss = disable_torch_grad_focal_loss
+        self.eps = eps
+        self.adaptive = adaptive
+        self.gap_target = gap_target
+        self.gamma_step = gamma_step
+        self.gamma_neg_per_class = None
+        self.gamma_pos_per_class = None
+        
+        
+    def forward(self, x, y, updateAdaptive = True, printAdaptive = False):
+        """"
+        Parameters
+        ----------
+        x: input logits
+        y: targets (multi-label binarized vector)
+        """
+        
+        output = None
+        
+        with torch.no_grad():
+            if self.gamma_neg_per_class == None or self.gamma_pos_per_class == None:
+                print("initializing loss values")
+                classCount = y.size(dim=1)
+                currDevice = y.device
+                self.gamma_neg_per_class = torch.ones(classCount, device=currDevice) * self.gamma_neg
+                self.gamma_pos_per_class = torch.ones(classCount, device=currDevice) * self.gamma_pos
+
+        # Calculating Probabilities
+        x_sigmoid = torch.sigmoid(x)
+        xs_pos = x_sigmoid
+        xs_neg = 1 - x_sigmoid
+
+        # Asymmetric Clipping
+        if self.clip is not None and self.clip > 0:
+            xs_neg = (xs_neg + self.clip).clamp(max=1)
+
+        # Basic CE calculation
+        los_pos = y * torch.log(xs_pos.clamp(min=self.eps))
+        los_neg = (1 - y) * torch.log(xs_neg.clamp(min=self.eps))
+        loss = los_pos + los_neg
+
+        # Asymmetric Focusing
+        if self.gamma_neg > 0 or self.gamma_pos > 0:
+            if self.disable_torch_grad_focal_loss:
+                torch.set_grad_enabled(False)
+            pt0 = xs_pos * y
+            pt1 = xs_neg * (1 - y)  # pt = p if t > 0 else 1-p
+            pt = pt0 + pt1
+            if(self.adaptive == True):
+            
+                with torch.no_grad():
+                    gap = pt0.sum(dim=0) / (y.sum(dim=0) + self.eps) - pt1.sum(dim=0) / ((1 - y).sum(dim=0) + self.eps)
+
+                    if updateAdaptive == True:
+                        self.gamma_neg_per_class = self.gamma_neg_per_class - (self.gamma_step) * (gap - self.gap_target)
+                        
+                        
+                        #self.gamma_neg_per_class = self.gamma_neg_per_class - (self.gamma_step * y.mean(dim=0)) * (gap - self.gap_target)
+                        #self.gamma_neg_per_class = self.gamma_neg_per_class - (self.gamma_step * y.mean(dim=0).sqrt()) * (gap - self.gap_target)
+                        
+                        #self.gamma_neg_per_class = self.gamma_neg_per_class - (self.gamma_step * (1-y).mean(dim=0)) * (gap - self.gap_target)
+                        #self.gamma_neg_per_class = self.gamma_neg_per_class - (self.gamma_step * (1-y).mean(dim=0).sqrt()) * (gap - self.gap_target)
+                        
+                        
+                        
+                        #self.gamma_pos_per_class = self.gamma_pos_per_class - (self.gamma_step * (1-y).mean(dim=0)) * (gap - self.gap_target)
+                        #self.gamma_pos_per_class = self.gamma_pos_per_class - (self.gamma_step * (1-y).mean(dim=0).sqrt()) * (gap - self.gap_target)
+                        
+                        #self.gamma_pos_per_class = self.gamma_pos_per_class - (self.gamma_step * y.mean(dim=0)) * (gap - self.gap_target)
+                        #self.gamma_pos_per_class = self.gamma_pos_per_class - (self.gamma_step * y.mean(dim=0).sqrt()) * (gap - self.gap_target)
+                        
+                        
+                        
+                        self.gamma_neg_per_class = torch.clamp(self.gamma_neg_per_class, min=0)
+                        
+                    
+                    if printAdaptive == True:
+                        #output = str(f'\tpos: {pt0.sum() / (y.sum() + self.eps):.4f},\tneg: {pt1.sum() / ((1 - y).sum() + self.eps):.4f}')
+                        output = str(f'pos: {pt0.sum() / (y.sum() + self.eps):.4f},\tneg: {pt1.sum() / ((1 - y).sum() + self.eps):.4f},\tGN: [{self.gamma_neg_per_class.min():.4f}, {self.gamma_neg_per_class.max():.4f}],\tGP: [{self.gamma_pos_per_class.min():.4f}, {self.gamma_pos_per_class.max():.4f}]')
+                
+            one_sided_gamma = self.gamma_pos_per_class * y + self.gamma_neg_per_class * (1 - y)
+            one_sided_w = torch.pow(1 - pt, one_sided_gamma)
+            if self.disable_torch_grad_focal_loss:
+                torch.set_grad_enabled(True)
+            loss *= one_sided_w
+
+        return -loss.sum(), output
+
+class AsymmetricLossAdaptiveWorking(nn.Module):
+    def __init__(self, gamma_neg=1, gamma_pos=1, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.1):
+        super(AsymmetricLossAdaptiveWorking, self).__init__()
+
+        self.gamma_neg = gamma_neg
+        self.gamma_pos = gamma_pos
+        self.clip = clip
+        self.disable_torch_grad_focal_loss = disable_torch_grad_focal_loss
+        self.eps = eps
+        self.adaptive = adaptive
+        self.gap_target = gap_target
+        self.gamma_step = gamma_step
+        
+        
+    def forward(self, x, y, updateAdaptive = True, printAdaptive = False):
+        """"
+        Parameters
+        ----------
+        x: input logits
+        y: targets (multi-label binarized vector)
+        """
+
+        # Calculating Probabilities
+        x_sigmoid = torch.sigmoid(x)
+        xs_pos = x_sigmoid
+        xs_neg = 1 - x_sigmoid
+
+        # Asymmetric Clipping
+        if self.clip is not None and self.clip > 0:
+            xs_neg = (xs_neg + self.clip).clamp(max=1)
+
+        # Basic CE calculation
+        los_pos = y * torch.log(xs_pos.clamp(min=self.eps))
+        los_neg = (1 - y) * torch.log(xs_neg.clamp(min=self.eps))
+        loss = los_pos + los_neg
+
+        # Asymmetric Focusing
+        if self.gamma_neg > 0 or self.gamma_pos > 0:
+            if self.disable_torch_grad_focal_loss:
+                torch.set_grad_enabled(False)
+            pt0 = xs_pos * y
+            pt1 = xs_neg * (1 - y)  # pt = p if t > 0 else 1-p
+            pt = pt0 + pt1
+            if(self.adaptive == True):
+            
+                gap = pt0.sum() / (y.sum() + self.eps) - pt1.sum() / ((1 - y).sum() + self.eps)
+                
+                
+                if updateAdaptive == True:
+                    #self.gamma_neg = self.gamma_neg - self.gamma_step * (gap - self.gap_target)
+                    self.gamma_neg = self.gamma_neg + self.gamma_step * (gap - self.gap_target)
+                    
+                
+                output = None
+                if printAdaptive == True:
+                    output = str(f'\tpos: {pt0.sum() / (y.sum() + self.eps):.4f},\tneg: {pt1.sum() / ((1 - y).sum() + self.eps):.4f},\tgap: {gap:.4f},\tchange: {self.gamma_step * (gap - self.gap_target):.6f},\tgamma neg: {self.gamma_neg:.6f}')
+                
+            one_sided_gamma = self.gamma_pos * y + self.gamma_neg * (1 - y)
+            one_sided_w = torch.pow(1 - pt, one_sided_gamma)
+            if self.disable_torch_grad_focal_loss:
+                torch.set_grad_enabled(True)
+            loss *= one_sided_w
+
+        return -loss.sum(), output
 
 class ASLSingleLabel(nn.Module):
     '''
@@ -752,7 +912,7 @@ class PartialSelectiveLoss(nn.Module):
 # likelihood_topk: K un-annotated labels are allowed to be assumed positive
 
 
-def edit_targets_parital_labels(targets, targets_weights, xs_neg, device, partial_loss_mode = 'selective', prior_classes=None, likelihood_topk = 100, prior_threshold=0.05):
+def edit_targets_parital_labels(targets, targets_weights, xs_neg, device, partial_loss_mode = 'ignore_normalize_classes', prior_classes=None, likelihood_topk = 100, prior_threshold=0.05):
     # targets_weights is and internal state of AsymmetricLoss class. we don't want to re-allocate it every batch
     if partial_loss_mode is None:
         targets_weights = 1.0
@@ -778,7 +938,7 @@ def edit_targets_parital_labels(targets, targets_weights, xs_neg, device, partia
         targets_weights[targets == -1] = 0
 
     elif partial_loss_mode == 'selective':
-        targets[targets == 0] = -1
+        #targets[targets == 0] = -1
         if targets_weights is None or targets_weights.shape != targets.shape:
             targets_weights = torch.ones(targets.shape, device=device)
         else:
@@ -926,7 +1086,9 @@ def mAP_partial(targs, preds):
 # getAccuracy calculates a confusion matrix and some related values.
 def getAccuracy(preds, targs):
     epsilon = 1e-12
-    preds = torch.sigmoid(preds)
+
+    #preds = torch.sigmoid(preds)
+
     targs_inv = 1 - targs
     batchSize = targs.size(dim=0)
     P = targs * preds
@@ -943,7 +1105,97 @@ def getAccuracy(preds, targs):
     Pprecision = TP / (TP + FP + epsilon)
     Nprecision = TN / (TN + FN + epsilon)
     
-    return torch.column_stack([TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision])
+
+    P4 = (4 * TP * TN) / ((4 * TN * TP) + (TN + TP) * (FP + FN) + epsilon)
+    F1 = (2 * TP) / (2 * TP + FP + FN + epsilon)
+    
+    return torch.column_stack([TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision, P4, F1])
+    
+# recall
+def Precall(TP, FN, FP, TN, epsilon):
+    return TP / (TP + FN + epsilon)
+    
+# specificity
+def Nrecall(TP, FN, FP, TN, epsilon):
+    return TN / (TN + FP + epsilon)
+
+# precision
+def Pprecision(TP, FN, FP, TN, epsilon):
+    return TP / (TP + FP + epsilon)
+
+# negative predictive value (NPV)
+def Nprecision(TP, FN, FP, TN, epsilon):
+    return TN / (TN + FN + epsilon)
+
+# P4 metric
+def P4(TP, FN, FP, TN, epsilon):
+    return (4 * TP * TN) / ((4 * TN * TP) + (TN + TP) * (FP + FN) + epsilon)
+    
+# F1 metric
+def F1(TP, FN, FP, TN, epsilon):
+    return (2 * TP) / (2 * TP + FP + FN + epsilon)
+
+# tracking for performance metrics that can be computed from confusion matrix
+class MetricTracker():
+    def __init__(self):
+        self.running_confusion_matrix = None
+        self.epsilon = 1e-12
+        self.sampleCount = 0
+        self.metrics = [Precall, Nrecall, Pprecision, Nprecision, P4, F1]
+        
+    def get_full_metrics(self):
+        with torch.no_grad():
+            TP, FN, FP, TN = self.running_confusion_matrix / self.sampleCount
+            
+            #Precall = TP / (TP + FN + self.epsilon)
+            #Nrecall = TN / (TN + FP + self.epsilon)
+            #Pprecision = TP / (TP + FP + self.epsilon)
+            #Nprecision = TN / (TN + FN + self.epsilon)
+            
+            #P4 = (4 * TP * TN) / ((4 * TN * TP) + (TN + TP) * (FP + FN) + self.epsilon)
+            
+            metrics = [metric(TP, FN, FP, TN, self.epsilon) for metric in self.metrics]
+        
+            return torch.column_stack([TP, FN, FP, TN, *metrics])
+        
+    def get_aggregate_metrics(self):
+        '''
+        with torch.no_grad():
+        
+            TP, FN, FP, TN = (self.running_confusion_matrix / self.sampleCount).mean(dim=1)
+            
+            Precall = TP / (TP + FN + self.epsilon)
+            Nrecall = TN / (TN + FP + self.epsilon)
+            Pprecision = TP / (TP + FP + self.epsilon)
+            Nprecision = TN / (TN + FN + self.epsilon)
+            
+            P4 = (4 * TP * TN) / ((4 * TN * TP) + (TN + TP) * (FP + FN) + self.epsilon)
+            return torch.stack([TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision, P4])
+        '''
+        return self.get_full_metrics().mean(dim=0)
+    
+    def update(self, preds, targs):
+        self.sampleCount += targs.size(dim=0)
+        
+        targs_inv = 1 - targs
+        P = targs * preds
+        N = targs_inv * preds
+        
+        
+        TP = P.sum(dim=0)
+        FN = (targs - P).sum(dim=0)
+        FP = N.sum(dim=0)
+        TN = (targs_inv - N).sum(dim=0)
+        
+        output = torch.stack([TP, FN, FP, TN])
+        if self.running_confusion_matrix is None:
+            self.running_confusion_matrix = output
+        
+        else:
+            self.running_confusion_matrix += output
+            
+        return self.get_aggregate_metrics()
+        
 
 class AverageMeter(object):
     def __init__(self):

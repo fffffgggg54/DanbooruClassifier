@@ -24,6 +24,9 @@ from PIL import Image, ImageOps
 import PIL
 import random
 
+import timm
+import transformers
+
 import requests
 from io import BytesIO
 import json
@@ -31,10 +34,10 @@ import json
 import parallelJsonReader
 import danbooruDataset
 import handleMultiLabel as MLCSL
-import MLDecoderHead
-import cvt
-from tresnet import TResnetS, TResnetM, TResnetL, TResnetXL
-# ================================================
+
+import timm.layers.ml_decoder as ml_decoder
+MLDecoder = ml_decoder.MLDecoder
+
 #           CONFIGURATION OPTIONS
 # ================================================
 
@@ -69,219 +72,158 @@ device2 = device
 if(torch.has_mps == True): device2 = "cpu"
 lr = 0.0005
 
+def add_ml_decoder_head(model):
+
+    # TODO levit, ViT
+
+    if hasattr(model, 'global_pool') and hasattr(model, 'fc'):  # most CNN models, like Resnet50
+        model.global_pool = nn.Identity()
+        del model.fc
+        num_classes = model.num_classes
+        num_features = model.num_features
+        model.fc = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
+    #this is kinda ugly, can make general case?
+    elif 'RegNet' in model._get_name() or 'TResNet' in model._get_name():
+        del model.head
+        num_classes = model.num_classes
+        num_features = model.num_features
+        model.head = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
+
+    elif hasattr(model, 'head'):    # ClassifierHead and ConvNext
+        if hasattr(model.head, 'flatten'):  # ConvNext case
+            model.head.flatten = nn.Identity()
+        model.head.global_pool = nn.Identity()
+        del model.head.fc
+        num_classes = model.num_classes
+        num_features = model.num_features
+        model.head.fc = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
+    
+    elif 'MobileNetV3' in model._get_name(): # mobilenetv3 - conflict with efficientnet
+        
+        model.flatten = nn.Identity()
+        del model.classifier
+        num_classes = model.num_classes
+        num_features = model.num_features
+        model.classifier = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
+
+    elif hasattr(model, 'global_pool') and hasattr(model, 'classifier'):  # EfficientNet
+        model.global_pool = nn.Identity()
+        del model.classifier
+        num_classes = model.num_classes
+        num_features = model.num_features
+        model.classifier = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
+
+    else:
+        print("Model code-writing is not aligned currently with ml-decoder")
+        exit(-1)
+    if hasattr(model, 'drop_rate'):  # Ml-Decoder has inner dropout
+        model.drop_rate = 0
+    return model
+
+headers = {"User-Agent": "fffffgggg54 inference test",}
+
+def getPost(postID):
+    postURL = "https://danbooru.donmai.us/posts/" + str(postID) + ".json"
+
+    postData = json.loads(requests.get(postURL, headers=headers).content)
+    imageURL = postData['file_url']
+    
+    print("Getting image from " + imageURL)
+    response = requests.get(imageURL, headers=headers)
+    return Image.open(BytesIO(response.content)), postData
 
 def main():
     #gc.set_debug(gc.DEBUG_LEAK)
     # load json files
-    startTime = time.time()
-    '''
-    tagData = pd.read_pickle(rootPath + "tagData.pkl")
-    postData = pd.read_pickle(rootPath + "postData.pkl")
     
-    
-    
-    
-    try:
-        print("attempting to read pickled post metadata file at " + tagDFPickle)
-        tagData = pd.read_pickle(tagDFPickle)
-    except:
-        print("pickled post metadata file at " + tagDFPickle + " not found")
-        tagData = parallelJsonReader.dataImporter(postMetaDir + tagListFile)   # read tags from json in parallel
-        print("saving pickled post metadata to " + tagDFPickle)
-        tagData.to_pickle(tagDFPickle)
-    
-    #postData = pd.concat(map(dataImporter, glob.iglob(postMetaDir + 'posts*')), ignore_index=True) # read all post metadata files in metadata dir
-    try:
-        print("attempting to read pickled post metadata file at " + postDFPickle)
-        postData = pd.read_pickle(postDFPickle)
-    except:
-        print("pickled post metadata file at " + postDFPickle + " not found")
-        postData = parallelJsonReader.dataImporter(postMetaDir + postListFile, keep = 0.1)    # read posts
-        print("saving pickled post metadata to " + postDFPickle)
-        postData.to_pickle(postDFPickle)
-        
-        
-    
-    print("got posts, time spent: " + str(time.time() - startTime))
-    
-    # filter data
-    startTime = time.time()
-    print("applying filters")
-    # TODO this filter process is slow, need to speed it up, currently only single threaded
-    tagData, postData = danbooruDataset.filterDanbooruData(tagData, postData)   # apply various filters to preprocess data
-    
-    #tagData.to_pickle(tagDFPickleFiltered)
-    #postData.to_pickle(postDFPickleFiltered)
-    
-    #tagData = pd.read_pickle(tagDFPickleFiltered)
-    #postData = pd.read_pickle(postDFPickleFiltered)
-    #print(postData.info())
-    
-    print("finished preprocessing, time spent: " + str(time.time() - startTime))
-    print(f"got {len(postData)} posts with {len(tagData)} tags") #got 3821384 posts with 423 tags
-    
-    startTime = time.time()
-    
-    
-    
-    classes = {classIndex : className for classIndex, className in enumerate(set(tagData.name))}
-    
-    
-    '''
-    startTime = time.time()
-    tagNames = pd.read_pickle("/home/fredo/tags.pkl")
+    #modelPath = rootPath + "models/davit_base_ml-decoder-ASL-BCE/"
+    modelPath = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_-_T-224-1588-50epoch/"
+    #modelPath = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE-224-1588-50epoch/"
+    #modelPath = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_+_T-224-1588-50epoch/"
+    tagPicklePath = modelPath + "tags.pkl"
+    tagNames = pd.read_pickle(tagPicklePath)
     tagNames = tagNames.squeeze('columns').tolist()
     #print(tagNames)
-    #model = models.resnet152(weights=models.ResNet152_Weights.DEFAULT)
-    #model = models.resnet152()
-    #model = models.resnet101(weights=models.ResNet101_Weights.DEFAULT)
-    #model = models.resnet34()
-    #model = models.resnet34(weights = models.ResNet34_Weights.DEFAULT)
-    #model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
-    #model.fc = nn.Linear(model.fc.in_features, len(classes))
     
-    #model = TResnetM({'num_classes':len(tagNames)})
-    #model.load_state_dict(torch.load("/home/fredo/Code/ML/danbooru2021/tresnet_m.pth"), strict=False)
-    #model = MLDecoderHead.add_ml_decoder_head(model, num_of_groups=int(len(tagNames)/48))
+    thresholds = None
+    thresholdsPath = modelPath + "thresholds.pth"
     
-    #model.apply(weights_init)
+    try:
+        thresholds = torch.load(thresholdsPath)
+        haveThresholds = True
+    except:
+        haveThresholds = False
     
-    
-    
-    modelConfCust1 = {
-        'INIT': 'trunc_norm',
-        'NUM_STAGES': 4,
-        'PATCH_SIZE': [7, 5, 3, 3],
-        'PATCH_STRIDE': [4, 3, 2, 2],
-        'PATCH_PADDING': [2, 2, 1, 1],
-        'DIM_EMBED': [64, 240, 384, 896],
-        'NUM_HEADS': [1, 3, 6, 14],
-        'DEPTH': [1, 4, 8, 16],
-        'MLP_RATIO': [4.0, 4.0, 4.0, 4.0],
-        'ATTN_DROP_RATE': [0.0, 0.0, 0.0, 0.0],
-        'DROP_RATE': [0.0, 0.0, 0.0, 0.0],
-        'DROP_PATH_RATE': [0.0, 0.0, 0.0, 0.1],
-        'QKV_BIAS': [True, True, True, True],
-        'CLS_TOKEN': [False, False, False, True],
-        'POS_EMBED': [False, False, False, False],
-        'QKV_PROJ_METHOD': ['dw_bn', 'dw_bn', 'dw_bn', 'dw_bn'],
-        'KERNEL_QKV': [3, 3, 3, 3],
-        'PADDING_KV': [1, 1, 1, 1],
-        'STRIDE_KV': [2, 2, 2, 2],
-        'PADDING_Q': [1, 1, 1, 1],
-        'STRIDE_Q': [1, 1, 1, 1]
-        }
-    
-    
-    
-    modelConf21 = {
-        'INIT': 'trunc_norm',
-        'NUM_STAGES': 3,
-        'PATCH_SIZE': [7, 3, 3],
-        'PATCH_STRIDE': [4, 2, 2],
-        'PATCH_PADDING': [2, 1, 1],
-        'DIM_EMBED': [64, 192, 384],
-        'NUM_HEADS': [1, 3, 6],
-        'DEPTH': [1, 4, 16],
-        'MLP_RATIO': [4.0, 4.0, 4.0],
-        'ATTN_DROP_RATE': [0.0, 0.0, 0.0],
-        'DROP_RATE': [0.0, 0.0, 0.0],
-        'DROP_PATH_RATE': [0.0, 0.0, 0.1],
-        'QKV_BIAS': [True, True, True],
-        'CLS_TOKEN': [False, False, True],
-        'POS_EMBED': [False, False, False],
-        'QKV_PROJ_METHOD': ['dw_bn', 'dw_bn', 'dw_bn'],
-        'KERNEL_QKV': [3, 3, 3],
-        'PADDING_KV': [1, 1, 1],
-        'STRIDE_KV': [2, 2, 2],
-        'PADDING_Q': [1, 1, 1],
-        'STRIDE_Q': [1, 1, 1]
-        }
-        
-        
-        
-    modelConf13 = {
-        'INIT': 'trunc_norm',
-        'NUM_STAGES': 3,
-        'PATCH_SIZE': [7, 3, 3],
-        'PATCH_STRIDE': [4, 2, 2],
-        'PATCH_PADDING': [2, 1, 1],
-        'DIM_EMBED': [64, 192, 384],
-        'NUM_HEADS': [1, 3, 6],
-        'DEPTH': [1, 2, 10],
-        'MLP_RATIO': [4.0, 4.0, 4.0],
-        'ATTN_DROP_RATE': [0.0, 0.0, 0.0],
-        'DROP_RATE': [0.0, 0.0, 0.0],
-        'DROP_PATH_RATE': [0.0, 0.0, 0.1],
-        'QKV_BIAS': [True, True, True],
-        'CLS_TOKEN': [False, False, True],
-        'POS_EMBED': [False, False, False],
-        'QKV_PROJ_METHOD': ['dw_bn', 'dw_bn', 'dw_bn'],
-        'KERNEL_QKV': [3, 3, 3],
-        'PADDING_KV': [1, 1, 1],
-        'STRIDE_KV': [2, 2, 2],
-        'PADDING_Q': [1, 1, 1],
-        'STRIDE_Q': [1, 1, 1]
-        }
-         
     myDevice = 'cpu'
-    
-    model = cvt.get_cls_model(len(tagNames), config=modelConfCust1)
+    model = timm.create_model('regnetz_040_h', pretrained=True, num_classes=len(tagNames))
+    #model = timm.create_model('davit_base', num_classes=len(tagNames))
+    #model = add_ml_decoder_head(model)
+    #model = cvt.get_cls_model(len(tagNames), config=modelConfCust1)
     #model.load_state_dict(torch.load("models/saved_model_epoch_4.pth", map_location=myDevice))
-    model.load_state_dict(torch.load("models/CvT-Cust1/saved_model_epoch_4.pth", map_location=myDevice))
+    #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(tagNames), ignore_mismatched_sizes=True)
+    model.load_state_dict(torch.load(modelPath + "saved_model_epoch_49.pth", map_location=myDevice))
     model.eval()   # Set model to evaluate mode
+    model = torch.jit.script(model)
+    model = torch.jit.optimize_for_inference(model)
     model = model.to(myDevice)
     
-    
-    postID = int(input("Danbooru Post ID:"))
-    postURL = "https://danbooru.donmai.us/posts/" + str(postID) + ".json"
+    while(True):
+        try:
+            postID = int(input("Danbooru Post ID:"))
+        except:
+            print("invalid post ID, exiting...")
+            exit()
+        
+        image, postData = getPost(postID)
+        
+        startTime = time.time()
+        #path = "testImage.jpg"
+        #image = Image.open(path)    #check if file exists
+        image.load()    # check if file valid
+        image = image.convert("RGBA")
+            
+        color = (255,255,255)
+        
+        background = Image.new('RGB', image.size, color)
+        background.paste(image, mask=image.split()[3])
+        image = background
+        
 
-    postData = json.loads(requests.get(postURL).content)
-    imageURL = postData['file_url']
-    
-    print("Getting image from " + imageURL)
-    response = requests.get(imageURL)
-    image = Image.open(BytesIO(response.content))
-    
-    
-    #path = "testImage.jpg"
-    #image = Image.open(path)    #check if file exists
-    image.load()    # check if file valid
-    image = image.convert("RGBA")
+        transform = transforms.Compose([
+            transforms.Resize((384, 384)),
+            transforms.ToTensor(),
+            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ])
+        image = transform(image)
+        processingTime = time.time() - startTime
         
-    color = (255,255,255)
-    
-    background = Image.new('RGB', image.size, color)
-    background.paste(image, mask=image.split()[3])
-    image = background
-    
-    
-    size = image.size
-       
+        startTime = time.time()
+        #outputs = model(image.unsqueeze(0)).logits.sigmoid()
+        outputs = model(image.unsqueeze(0)).sigmoid()
+        predTime = time.time() - startTime
+        
         print(f"preprocessing time: {processingTime} infer time: {predTime}")
-        handleOutputs(outputs)
         
-def handleOutputs(outputs):
-    currPostTags = []
-    #print(outputs.tolist())
-    currPostTags = list(zip(tagNames, outputs.tolist()[0]))
-    currPostTags.sort(key=lambda y: y[1])
-    
-    #print(*currPostTags, sep="\n")
-    
-    if haveThresholds:
-        tagsThresholded = [(*x, thresholds[i]) for i, x in enumerate(currPostTags) if x[1] > thresholds[i]]
-        print("\nTags filtered using threshold:\n")
-        print(*tagsThresholded, sep="\n")
-        predTags = {tag[0] for tag in tagsThresholded}
-        trueTags = set(postData['tag_string'].split(" "))
-        missingTags = trueTags.difference(predTags)
-        newTags = predTags.difference(trueTags)
-        print(f"missing tags: {missingTags}")
-        print(f"newly detected tags: {newTags}")
+        currPostTags = []
+        #print(outputs.tolist())
+        currPostTags = list(zip(tagNames, outputs.tolist()[0]))
+        currPostTags.sort(key=lambda y: y[1])
         
-    else:
-        print("not using thresholds")
+        #print(*currPostTags, sep="\n")
+        
+        if haveThresholds:
+            tagsThresholded = [(*x, thresholds[i]) for i, x in enumerate(currPostTags) if x[1] > thresholds[i]]
+            print("\nTags filtered using threshold:\n")
+            print(*tagsThresholded, sep="\n")
+            predTags = {tag[0] for tag in tagsThresholded}
+            trueTags = set(postData['tag_string'].split(" "))
+            missingTags = trueTags.difference(predTags)
+            newTags = predTags.difference(trueTags)
+            print(f"missing tags: {missingTags}")
+            print(f"newly detected tags: {newTags}")
+            
+        else:
+            print("not using thresholds")
 
 
 
