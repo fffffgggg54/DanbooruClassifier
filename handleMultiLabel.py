@@ -448,7 +448,7 @@ class AdaptiveWeightedLoss(nn.Module):
             #self.weight_this_batch = self.anti_targets.sum(dim=1) / (self.targets.sum(dim=1) + self.eps) # via labels
             self.weight_this_batch = (self.xs_neg * self.anti_targets).sum(dim=1) / ((self.xs_pos * self.targets).sum(dim=1) + self.eps) # via preds
             
-            self.weight_this_batch = self.weight_this_batch.detach() # TODO will removing this cause excessive memory use?
+            #self.weight_this_batch = self.weight_this_batch.detach() # TODO will removing this cause excessive memory use?
             
             numToMin = (self.weight_this_batch - self.weight_per_class) ** 2
             numToMin.backward()
