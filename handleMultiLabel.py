@@ -452,7 +452,7 @@ class AdaptiveWeightedLoss(nn.Module):
             #self.weight_this_batch = self.weight_this_batch.detach() # TODO will removing this cause excessive memory use?
             
             numToMin = (self.weight_this_batch - self.weight_per_class) ** 2
-            numToMin.backward()
+            numToMin.mean().backward()
             self.opt.step()
             self.opt.zero_grad()
             self.weight_per_class.data = self.weight_per_class.clamp(min=self.weight_limit_lower, max=self.weight_limit_upper)
