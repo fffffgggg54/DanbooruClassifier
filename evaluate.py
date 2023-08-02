@@ -475,8 +475,8 @@ def trainCycle(image_datasets, model):
                     #predsModified=preds
                     #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
                     with torch.no_grad():
-                        #multiAccuracy = cm_tracker.update((preds.detach() > boundary.detach()).float().to(device), tagBatch.to(device))
-                        multiAccuracy = cm_tracker.update(preds.detach().float().to(device), tagBatch.to(device))
+                        multiAccuracy = cm_tracker.update((preds.detach() > boundary.detach()).float().to(device), tagBatch.to(device))
+                        #multiAccuracy = cm_tracker.update(preds.detach().float().to(device), tagBatch.to(device))
                     
                     outputs = outputs.float()
 
