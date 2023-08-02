@@ -24,25 +24,20 @@ import os
 
 import torch_optimizer
 
-
 import multiprocessing
 
 import timm
-
 import transformers
 
 import timm.layers.ml_decoder as ml_decoder
 from timm.data.mixup import FastCollateMixup, Mixup
 from timm.data.random_erasing import RandomErasing
 
-
 import parallelJsonReader
 import danbooruDataset
 import handleMultiLabel as MLCSL
 
-
 import timm.optim
-
 
 
 
@@ -64,9 +59,7 @@ FLAGS = {}
 # path config for various directories and files
 # TODO replace string appending with os.path.join()
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
-
 if currGPU == 'v100': FLAGS['rootPath'] = "/media/fredo/SAMSUNG_500GB/danbooru2021/"
-
 if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
 FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + "original/"
@@ -79,15 +72,12 @@ FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 FLAGS['postDFPickleFilteredTrimmed'] = FLAGS['postMetaRoot'] + "postDataFilteredTrimmed.pkl"
 
-
 '''
 if currGPU == '3090':
 
 
 
-
     FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_l-ASL-BCE/'
-
 
 
     # post importer config
@@ -111,6 +101,8 @@ if currGPU == '3090':
     FLAGS['trainSetSize'] = 0.8
 
     # device config
+
+
     FLAGS['ngpu'] = torch.cuda.is_available()
     FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
     FLAGS['device2'] = FLAGS['device']
@@ -119,7 +111,6 @@ if currGPU == '3090':
     FLAGS['use_AMP'] = True
     FLAGS['use_scaler'] = FLAGS['use_AMP']
     #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
-
 
     # dataloader config
 
@@ -474,7 +465,6 @@ workQueue = multiprocessing.Queue()
 def getSubsetByID(dataset, postData, lower, upper, div = 1000):
     return torch.utils.data.Subset(dataset, postData[lower <= postData['id'] % 1000][upper > postData['id'] % 1000].index.tolist())
 
-
 def getData():
     startTime = time.time()
 
@@ -524,7 +514,6 @@ def getData():
     #print(postData.info())
     
     # get posts that are not banned
-
     #queryStartTime = time.time()
     #postData.query("is_banned == False", inplace = True)
     #blockedIDs = [5190773, 5142098, 5210705, 5344403, 5237708, 5344394, 5190771, 5237705, 5174387, 5344400, 5344397, 5174384]
@@ -538,7 +527,6 @@ def getData():
     #print(postData.info())
     #postData.to_pickle(FLAGS['postDFPickleFilteredTrimmed'])
     
-
     
 
     print("finished preprocessing, time spent: " + str(time.time() - startTime))
@@ -559,10 +547,8 @@ def getData():
     '''    
     # TODO custom normalization values that fit the dataset better
     # TODO investigate ways to return full size images instead of crops
-
     # this should allow use of full sized images that vary in size, which can then be fed into a model that takes images of arbitrary resolution
     '''
-
     myDataset = danbooruDataset.DanbooruDataset(FLAGS['imageRoot'], postData, tagData.name, transforms.Compose([
         #transforms.Resize((224,224)),
         danbooruDataset.CutoutPIL(cutout_factor=0.5),
@@ -680,7 +666,6 @@ def add_ml_decoder_head(model):
 
 
 def modelSetup(classes):
-
     
     '''
     myCvtConfig = transformers.CvtConfig(num_channels=3,
@@ -712,7 +697,6 @@ def modelSetup(classes):
     #model = transformers.CvtForImageClassification(myCvtConfig)
     
     # pytorch builtin models
-
     
     #model = models.resnet152(weights=models.ResNet152_Weights.DEFAULT)
     #model = models.resnet152()
@@ -720,7 +704,6 @@ def modelSetup(classes):
     #model = models.resnet50(weights = models.ResNet50_Weights.DEFAULT)
     #model = models.resnet34()
     #model = models.resnet34(weights = models.ResNet34_Weights.DEFAULT)
-
     #model = models.resnet18(weights = models.ResNet18_Weights.DEFAULT)
     
     #model.fc = nn.Linear(model.fc.in_features, len(classes))
@@ -807,7 +790,6 @@ def modelSetup(classes):
             for param in model.head_dist.parameters():
                 param.requires_grad = True
         
-
     return model
     
 def getDataLoader(dataset, batch_size, epoch):
@@ -818,7 +800,6 @@ def getDataLoader(dataset, batch_size, epoch):
 def trainCycle(image_datasets, model):
     #print("starting training")
     startTime = time.time()
-
 
     #timm.utils.jit.set_jit_fuser("te")
     
@@ -855,7 +836,6 @@ def trainCycle(image_datasets, model):
         
     
 
-
     print("initialized training, time spent: " + str(time.time() - startTime))
     
 
@@ -871,9 +851,7 @@ def trainCycle(image_datasets, model):
     
     # use partial label approaches from http://arxiv.org/abs/2110.10955v1
     #ema = MLCSL.ModelEma(model, 0.9997)  # 0.9997^641=0.82
-
     
-
     
     criterion = MLCSL.Hill()
     #criterion = MLCSL.SPLC(gamma=2.0)
@@ -899,7 +877,7 @@ def trainCycle(image_datasets, model):
         boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth').to(device)
         #optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth', map_location=torch.device(device)))
         
-
+    
     if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
     
     # end MLCSL code
@@ -927,7 +905,6 @@ def trainCycle(image_datasets, model):
         #prior = MLCSL.ComputePrior(classes, device)
         epochTime = time.time()
         
-
         dataloaders = {x: getDataLoader(image_datasets[x], FLAGS['batch_size'], epoch) for x in image_datasets} # set up dataloaders
 
         scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
@@ -1025,7 +1002,6 @@ def trainCycle(image_datasets, model):
             '''
             
             loaderIterable = enumerate(dataloaders[phase])
-
             for i, (images, tags) in loaderIterable:
                 
 
@@ -1036,7 +1012,6 @@ def trainCycle(image_datasets, model):
                 with torch.set_grad_enabled(phase == 'train'):
                     # TODO switch between using autocast and not using it
                     
-
                     with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
                                                 
                         outputs = model(imageBatch)
@@ -1158,7 +1133,6 @@ def trainCycle(image_datasets, model):
                                 targets_all = None
                                 preds_all = None
                 
-
                 #print(device)
                 if i % stepsPerPrintout == 0:
                     
@@ -1187,6 +1161,7 @@ def trainCycle(image_datasets, model):
                     #    if tagVal.item() != 0:
                     #        currPostTags.append((tagNames[tagIndex], tagVal.item()))
                     
+                   
                     #print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f\tAccuracy: %.2f\tP4: %.2f\t%s' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), loss, imagesPerSecond, accuracy, multiAccuracy.mean(dim=0) * 100, textOutput))
                     torch.set_printoptions(linewidth = 200, sci_mode = False)
                     if(is_head_proc): print(f"[{epoch}/{FLAGS['num_epochs']}][{i}/{len(dataloaders[phase])}]\tLoss: {loss:.4f}\tImages/Second: {imagesPerSecond:.4f}\tAccuracy: {accuracy:.2f}\t {[f'{num:.4f}' for num in list((multiAccuracy * 100))]}\t{textOutput}")
@@ -1197,23 +1172,18 @@ def trainCycle(image_datasets, model):
                     
                     #torch.cuda.empty_cache()
                 #losses.append(loss)
-
                 '''
-
                 if (phase == 'val'):
                     if best is None:
                         best = (float(loss), epoch, i, accuracy.item())
                     elif best[0] > float(loss):
                         best = (float(loss), epoch, i, accuracy.item())
                         print(f"NEW BEST: {best}!")
-
                 '''
-
                 if phase == 'train':
                     scheduler.step()
                 
                 #print(device)
-
                 #if(FLAGS['ngpu'] > 0):
                     #torch.cuda.empty_cache()
                     
@@ -1273,14 +1243,12 @@ def trainCycle(image_datasets, model):
         if(is_head_proc): print(f'epoch {epoch} completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
         #print(best)
         epoch += 1
-
         
 
         gc.collect()
 
         if(is_head_proc): print()
             
-
     #time_elapsed = time.time() - startTime
     #print(f'Training complete in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
 
@@ -1288,7 +1256,6 @@ def trainCycle(image_datasets, model):
 def main():
     #gc.set_debug(gc.DEBUG_LEAK)
     # load json files
-
     if FLAGS['use_ddp']:
         dist.init_process_group("nccl")
         rank = dist.get_rank()
@@ -1296,12 +1263,9 @@ def main():
         torch.cuda.set_device(FLAGS['device'])
         torch.cuda.empty_cache()
         FLAGS['learning_rate'] *= dist.get_world_size()
-
     image_datasets = getData()
     model = modelSetup(classes)
-
     trainCycle(image_datasets, model)
-
 
 
 if __name__ == '__main__':
