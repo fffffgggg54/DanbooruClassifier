@@ -1,6 +1,7 @@
 import os
 import torch
 import torch.utils.data
+import torchvision
 import pandas as pd
 import time
 import shutil
@@ -18,6 +19,14 @@ import bz2
 import pickle
 import _pickle as cPickle
 import json
+
+
+from copy import deepcopy
+import gc
+
+import multiprocessing
+
+
 
 from PIL import PngImagePlugin
 LARGE_ENOUGH_NUMBER = 100
@@ -38,55 +47,58 @@ def create_dir(dir):
 
 
 
+
 class DanbooruDataset(torch.utils.data.Dataset):
 
 
     def __init__(self, imageRoot, postList, tagList, transform=None, cacheRoot = None):
 
-        PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True
-        self.classes = {classIndex : className for classIndex, className in enumerate(tagList)} #property of dataset?
-        self.postList = postList    #dataframe with string type, not object
-        self.imageRoot = imageRoot  #string
-        self.tagList = tagList
-        self.tagList = pd.Series(tagList, dtype=pd.StringDtype())
+        #PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True
+        #self.classes = deepcopy({classIndex : className for classIndex, className in enumerate(deepcopy(tagList))}) #property of dataset?
+        self.postList = deepcopy(postList)    #dataframe with string type, not object
+        #self.imageRoot = deepcopy(imageRoot)  #string
+        #self.tagList = tagList
+        self.tagList = pd.Series(deepcopy(tagList), dtype=pd.StringDtype())
         self.transform = transform  #transform, callable?
-        self.cacheRoot = cacheRoot  #string
+        self.cacheRoot = deepcopy(cacheRoot)  #string
 
     def __len__(self):
-        return len(self.postList)
+        return deepcopy(len(self.postList))
     
     # TODO profile and optimize
     #@profile
     def __getitem__(self, index):
-        if torch.is_tensor(index):
-            index = index.item()
+    
+
+        if torch.is_tensor(deepcopy(index)):
+            index = deepcopy(index.item())
         
         #startTime = time.time()
-        postData = self.postList.iloc[index].copy()
+        postData = deepcopy(self.postList.iloc[index])
         #postData.tag_string = postData.tag_string.split()
         
-        postID = int(postData.loc["id"])
+        postID = int(deepcopy(postData.loc["id"]))
         image = torch.Tensor()
         postTags = torch.Tensor()
-        bruh = False
         
         
         
         try:
-            assert self.cacheRoot is not None
-            cacheDir = create_dir(self.cacheRoot + str(postID % 1000).zfill(4))
+            assert deepcopy(self.cacheRoot) is not None
+            cacheDir = create_dir(deepcopy(self.cacheRoot) + str(postID % 1000).zfill(4))
             cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
             cachedSample = bz2.BZ2File(cachePath, 'rb')
             image, postTags,_ = cPickle.load(cachedSample)
+            cachedSample.close()
             #print(f"got pickle from {cachePath}")
         except:
         
-            postTagList = set(postData.loc["tag_string"].split()).intersection(set(self.tagList.to_list()))
+            postTagList = set(deepcopy(postData.loc["tag_string"]).split()).intersection(set(deepcopy(self.tagList.to_list())))
 
             # one-hot encode the tags of a given post
             # TODO find better way to find matching tags
             postTags = []
-            for key in list(self.tagList.to_list()):
+            for key in list(deepcopy(self.tagList.to_list())):
                 match = False
                 for tag in postTagList:
                     if tag == key:
@@ -97,9 +109,9 @@ class DanbooruDataset(torch.utils.data.Dataset):
             
             #metaTime = time.time() - startTime
             #startTime = time.time()
-            imagePath = str(postID % 1000).zfill(4) + "/" + str(postID) + "." + postData.loc["file_ext"]
+            imagePath = str(postID % 1000).zfill(4) + "/" + str(postID) + "." + deepcopy(postData.loc["file_ext"])
             #cachedImagePath = cacheRoot + imagePath
-            imagePath = self.imageRoot + imagePath
+            imagePath = deepcopy(self.imageRoot) + imagePath
             
             try: 
                 #path = cachedImagePath
@@ -107,7 +119,7 @@ class DanbooruDataset(torch.utils.data.Dataset):
                 image = Image.open(path)    #check if file exists
                 image.load()    # check if file valid
             except:     #if file doesn't exist or isn't valid, download it and save/overwrite
-                imageURL = postData.loc["file_url"]
+                imageURL = deepcopy(postData.loc["file_url"])
                 #print("Getting image from " + imageURL)
                 response = requests.get(imageURL)
                 image = Image.open(BytesIO(response.content))
@@ -117,7 +129,7 @@ class DanbooruDataset(torch.utils.data.Dataset):
             
                 #print("Image saved to " + path)
             # TODO implement switchable cache use
-            ''' old caching and crawling
+            '''
             except FileNotFoundError:
                 
                 try:
@@ -159,7 +171,7 @@ class DanbooruDataset(torch.utils.data.Dataset):
 
             
             if(self.cacheRoot is not None):
-                cacheDir = create_dir(self.cacheRoot + str(postID % 1000).zfill(4))
+                cacheDir = create_dir(deepcopy(self.cacheRoot) + str(postID % 1000).zfill(4))
                 cachePath = cacheDir + "/" + str(postID) + ".pkl.bz2"
                 with bz2.BZ2File(cachePath, 'w') as cachedSample: cPickle.dump((image, postTags, postID), cachedSample)
         
@@ -167,15 +179,58 @@ class DanbooruDataset(torch.utils.data.Dataset):
         
         if self.transform: image = self.transform(image)
 
-        if bruh == True: print("asdf")
         
         del postData
+        
         # if(torch.utils.data.get_worker_info().id == 1):objgraph.show_growth() 
             
             
-        return image, postTags, postID
+        return image, postTags
         
         
+
+def DFServerWorkerProcess(workQueue, myDF, tagList, imageRoot, imageCacheRoot, tagCacheRoot):
+    while(1):
+        (index, returnConnection) = workQueue.get()
+        returnConnection.send((myDF.loc[index].copy(deep=True), tagList, imageRoot, imageCacheRoot, tagCacheRoot))
+        returnConnection.close()
+
+class DanbooruDatasetWithServer(torch.utils.data.Dataset):
+
+
+    def __init__(self, postData, tagData, imageRoot, cacheRoot, size, serverWorkerCount, transform=None):
+
+        #PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True
+        #self.classes = {classIndex : className for classIndex, className in enumerate(tagList)} #property of dataset?
+        self.postListLength = len(postData)
+        #self.imageRoot = imageRoot  #string
+        #self.tagList = tagList
+        #self.tagList = pd.Series(tagList, dtype=pd.StringDtype())
+        self.transform = transform  #transform, callable?
+        #self.cacheRoot = cacheRoot  #string
+        self.size = size
+        self.num_tags = len(tagData)
+        self.serverWorkerCount = serverWorkerCount
+        self.serverProcessPool = []
+        self.workQueue = multiprocessing.Queue()
+        if cacheRoot is not None:
+            imageCacheRoot = cacheRoot + 'images/' + str(size) + '/'
+            #imageCacheRoot = cacheRoot + str(size) + '/'
+            tagCacheRoot = cacheRoot + 'tags/' + str(self.num_tags) + '/'
+        for nthWorkerProcess in range(self.serverWorkerCount):
+            currProcess = multiprocessing.Process(target=DFServerWorkerProcess,
+                args=(self.workQueue,
+                    postData.copy(deep=True),
+                    pd.Series(tagData.name.copy(deep=True), dtype=pd.StringDtype()),
+                    imageRoot,
+                    imageCacheRoot,
+                    tagCacheRoot,),
+                daemon = True)
+            currProcess.start()
+            self.serverProcessPool.append(currProcess)
+
+
+
 
 
 def filterDanbooruData(tagData, postData, minPostCount = 10000, blockedRatings = [], blockedTags = ['animated', 'flash', 'corrupted_file', 'corrupted_metadata', 'cosplay_photo']):
