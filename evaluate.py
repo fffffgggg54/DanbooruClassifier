@@ -135,7 +135,7 @@ if currGPU == 'v100':
 
     # training config
 
-    FLAGS['num_epochs'] = 20
+    FLAGS['num_epochs'] = 50
     FLAGS['batch_size'] = 96
     
     FLAGS['fast_norm'] = True
