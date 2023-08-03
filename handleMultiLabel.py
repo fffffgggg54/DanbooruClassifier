@@ -303,7 +303,7 @@ class getDecisionBoundary(nn.Module):
             # stepping fn, currently steep version of logistic fn
             predsModified = stepAtThreshold(preds, self.thresholdPerClass)
             metrics = getAccuracy(predsModified, targs)
-            numToMax = metrics[:,9].sum()
+            numToMax = metrics[:,8].sum()
             numToMax.backward()
             self.opt.step()
             self.opt.zero_grad()
