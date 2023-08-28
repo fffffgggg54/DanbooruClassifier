@@ -459,7 +459,7 @@ class AdaptiveWeightedLoss(nn.Module):
             #self.opt.zero_grad()
             
             # EMA
-            self.weight_per_class = (1-self.lr) * self.weight_per_class + (self.lr) * self.weight_this_batch
+            self.weight_per_class.data = (1-self.lr) * self.weight_per_class.data + (self.lr) * self.weight_this_batch
             
             self.weight_per_class.data = self.weight_per_class.clamp(min=self.weight_limit_lower, max=self.weight_limit_upper)
             
