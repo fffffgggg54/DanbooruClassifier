@@ -431,7 +431,7 @@ class AdaptiveWeightedLoss(nn.Module):
                 self.weight_per_class = nn.Parameter(torch.ones(classCount, device=currDevice, requires_grad=True) * self.weight_per_class)
             self.needs_init = False
             #self.opt = torch.optim.SGD(self.parameters(), lr=self.lr)
-            #self.opt = torch.optim.AdamW(self.parameters(), lr=self.lr)
+            self.opt = torch.optim.AdamW(self.parameters(), lr=self.lr)
             # TODO maybe another optimizer will work better?
             # TODO maybe a plain EMA?
             
@@ -459,7 +459,8 @@ class AdaptiveWeightedLoss(nn.Module):
             #self.opt.zero_grad()
             
             # EMA
-            self.weight_per_class.data = (1-self.lr) * self.weight_per_class.data + (self.lr) * self.weight_this_batch
+            # TODO get this to work, currently collapsing to high false positive count (87ish %)
+            #self.weight_per_class.data = (1-self.lr) * self.weight_per_class.data + (self.lr) * self.weight_this_batch
             
             self.weight_per_class.data = self.weight_per_class.clamp(min=self.weight_limit_lower, max=self.weight_limit_upper)
             
