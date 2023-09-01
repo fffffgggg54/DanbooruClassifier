@@ -453,10 +453,10 @@ class AdaptiveWeightedLoss(nn.Module):
             self.weight_this_batch = self.weight_this_batch.detach() # isolate the weight optimization
             
             # optimization
-            #numToMin = (self.weight_this_batch - self.weight_per_class) ** 2
-            #numToMin.mean().backward()
-            #self.opt.step()
-            #self.opt.zero_grad()
+            numToMin = (self.weight_this_batch - self.weight_per_class) ** 2
+            numToMin.mean().backward()
+            self.opt.step()
+            self.opt.zero_grad()
             
             # EMA
             # TODO get this to work, currently collapsing to high false positive count (87ish %)
