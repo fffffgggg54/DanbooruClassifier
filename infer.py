@@ -48,9 +48,9 @@ MLDecoder = ml_decoder.MLDecoder
 # root directory of danbooru dataset
 #rootPath = "D:/Datasets/danbooru2021/"
 #rootPath = "C:/Users/Fredo/Downloads/Datasets/danbooru2021/"
-rootPath = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
+rootPath = "/media/fredo/SAMSUNG_500GB/danbooru2021/"
 #rootPath = "/media/fredo/Datasets/danbooru2021/"
-if(torch.has_mps == True): rootPath = "/Users/fredoguan/Datasets/danbooru2021/"
+#if(torch.has_mps == True): rootPath = "/Users/fredoguan/Datasets/danbooru2021/"
 #cacheRoot = "G:/DanbooruCache/"
 #postMetaDir = rootPath + "metadata/"
 postMetaDir = rootPath
@@ -137,7 +137,7 @@ def main():
     # load json files
     
     #modelPath = rootPath + "models/davit_base_ml-decoder-ASL-BCE/"
-    modelPath = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_-_T-224-1588-50epoch/"
+    modelPath = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-F1-x+120e-1-224-1588-50epoch/"
     #modelPath = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE-224-1588-50epoch/"
     #modelPath = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_+_T-224-1588-50epoch/"
     tagPicklePath = modelPath + "tags.pkl"
