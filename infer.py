@@ -216,7 +216,7 @@ def main():
             print("\nTags filtered using threshold:\n")
             print(*tagsThresholded, sep="\n")
             predTags = {tag[0] for tag in tagsThresholded}
-            trueTags = set(postData['tag_string'].split(" "))
+            trueTags = set(postData['tag_string'].split(" ")).intersection(tagNames)
             missingTags = trueTags.difference(predTags)
             newTags = predTags.difference(trueTags)
             print(f"missing tags: {missingTags}")
