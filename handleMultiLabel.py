@@ -464,7 +464,7 @@ class AdaptiveWeightedLoss(nn.Module):
             
             self.weight_per_class.data = self.weight_per_class.clamp(min=self.weight_limit_lower, max=self.weight_limit_upper)
             
-        return -((self.loss_neg + self.loss_pos * self.weight_per_class.detach()) / (1 + self.weight_per_class.detach()).sum()
+        return -((self.loss_neg + self.loss_pos * self.weight_per_class.detach()) / (1 + self.weight_per_class.detach())).sum()
         
         
 
