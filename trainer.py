@@ -299,7 +299,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_GP0_GNADAPC_-224-1588-50epoch/'
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-Hill-T-F1-x+00e-1-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_SWL_T-F1-x+40e-1-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_SWL_T-F1-x+80e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_224-gap-ASL_BCE_T-F1-x+00e-1-224-5500-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/caformer_s18-gap-ASL_BCE_T-P4-x+80e-1-224-1588-300epoch/"
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_GP1_GN5_CL005-224-1588-50epoch/'
@@ -357,7 +357,7 @@ elif currGPU == 'v100':
     FLAGS['resume_epoch'] = 0
     
     FLAGS['threshold_loss'] = True
-    FLAGS['threshold_multiplier'] = 4.0
+    FLAGS['threshold_multiplier'] = 8.0
     FLAGS['splc'] = False
     FLAGS['splc_start_epoch'] = 1
 
@@ -976,6 +976,7 @@ def trainCycle(image_datasets, model):
                         out_dict[k] = v
                     
                     torch.save(out_dict, modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
+                    if(epoch > 0): os.remove(modelDir + 'saved_model_epoch_' + str(epoch - 1) + '.pth')
                     torch.save(boundaryCalculator.thresholdPerClass, modelDir + 'thresholds.pth')
                     torch.save(optimizer.state_dict(), modelDir + 'optimizer' + '.pth')
                     pd.DataFrame(tagNames).to_pickle(modelDir + "tags.pkl")

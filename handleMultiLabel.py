@@ -17,6 +17,8 @@ import pandas as pd
 import numpy as np
 from copy import deepcopy
 
+import torch.distributed
+
 
 
 
@@ -463,6 +465,9 @@ class AdaptiveWeightedLoss(nn.Module):
             #self.weight_per_class.data = (1-self.lr) * self.weight_per_class.data + (self.lr) * self.weight_this_batch
             
             self.weight_per_class.data = self.weight_per_class.clamp(min=self.weight_limit_lower, max=self.weight_limit_upper)
+            
+            # surely there's a better way to sync parameters right?
+            torch.distributed.all_reduce(self.weight_per_class, op = torch.distributed.ReduceOp.AVG)
             
         return -((self.loss_neg + self.loss_pos * self.weight_per_class.detach()) / (1 + self.weight_per_class.detach())).sum()
         
