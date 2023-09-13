@@ -469,7 +469,7 @@ class AdaptiveWeightedLoss(nn.Module):
             # surely there's a better way to sync parameters right?
             torch.distributed.all_reduce(self.weight_per_class, op = torch.distributed.ReduceOp.AVG)
             
-        return -((self.loss_neg + self.loss_pos * self.weight_per_class.detach()) / (1 + self.weight_per_class.detach())).sum()
+        return -(self.loss_neg + self.loss_pos * self.weight_per_class.detach()).sum()
         
         
 
