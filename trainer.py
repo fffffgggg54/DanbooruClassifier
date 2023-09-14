@@ -1226,7 +1226,7 @@ def trainCycle(image_datasets, model):
                 #print(boundaryCalculator.thresholdPerClass)
                 #print(criterion.weight_per_class)
                 
-                modelOutputs = {'labels':targets_running.cpu(), 'preds':preds_running.cpu()}
+                modelOutputs = {'labels':torch.cat(targets_running).cpu(), 'preds':torch.cat(preds_running).cpu()}
                 #print(modelOutputs)
                 cachePath = FLAGS['modelDir'] + "evalOutputs.pkl.bz2"
                 with bz2.BZ2File(cachePath, 'w') as cachedSample: cPickle.dump(modelOutputs, cachedSample)
