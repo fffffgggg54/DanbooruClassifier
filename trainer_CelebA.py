@@ -30,7 +30,7 @@ import pandas as pd
 lr = 3e-3
 lr_warmup_epochs = 5
 num_epochs = 100
-batch_size = 1024
+batch_size = 256
 grad_acc_epochs = 1
 num_classes = 40
 weight_decay = 2e-2
@@ -43,7 +43,7 @@ def getDataLoader(dataset):
     return torch.utils.data.DataLoader(dataset,
         batch_size = batch_size,
         shuffle=True,
-        num_workers=16,
+        num_workers=32,
         persistent_workers = True,
         prefetch_factor=2, 
         pin_memory = True, 
@@ -103,11 +103,11 @@ if __name__ == '__main__':
     #criterion = AsymmetricLossSigmoidMod(gamma_neg=0, gamma_pos=0, clip=0.0)
     #criterion = SPLCModified(margin = 0.0, loss_fn = nn.BCEWithLogitsLoss())
     #criterion = Hill()
-    criterion = MLUtil.AdaptiveWeightedLoss(initial_weight = 1.0, lr = 1e-4, weight_limit = 1e5)
+    criterion = MLUtil.AdaptiveWeightedLoss(initial_weight = 1.0, lr = 1e-3, weight_limit = 1e5)
     #criterion = SymHill()
     #criterion = nn.BCEWithLogitsLoss()
-    #optimizer = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=weight_decay)
-    optimizer = timm.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
+    optimizer = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=weight_decay)
+    #optimizer = timm.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
     scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer,
         max_lr=lr, 
         steps_per_epoch=len(dataloaders['train']),
@@ -115,7 +115,7 @@ if __name__ == '__main__':
         pct_start=lr_warmup_epochs/num_epochs
     )
     
-    boundaryCalculator = MLUtil.getDecisionBoundary(initial_threshold = 0.5, lr = 1e-5, threshold_min = 0.1, threshold_max = 0.9)
+    boundaryCalculator = MLUtil.getDecisionBoundary(initial_threshold = 0.5, lr = 1e-3, threshold_min = 0.1, threshold_max = 0.9)
     
     scheduler.last_epoch = len(dataloaders['train'])*resume_epoch
     cycleTime = time.time()
