@@ -424,7 +424,7 @@ def resnet20(**kwargs):
     return ResNet(BasicBlock, [3, 3, 3], **kwargs)
     
 def resnet20w(**kwargs):
-    return ResNet(BasicBlock, [3, 3, 3], in_planes=32 **kwargs)
+    return ResNet(BasicBlock, [3, 3, 3], in_planes=32, **kwargs)
 
 
 def resnet32(**kwargs):
