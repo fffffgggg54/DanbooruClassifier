@@ -420,7 +420,7 @@ class AdaptiveWeightedLoss(nn.Module):
         self.weight_limit_lower = 1 / weight_limit
         self.eps = eps
         
-    def forward(self, x, y):
+    def forward(self, x, y, ddp=False):
     
         # parameter initialization
         # TODO clean this up and make it work consistently, use proper lazy init
@@ -467,7 +467,8 @@ class AdaptiveWeightedLoss(nn.Module):
             self.weight_per_class.data = self.weight_per_class.clamp(min=self.weight_limit_lower, max=self.weight_limit_upper)
             
             # surely there's a better way to sync parameters right?
-            torch.distributed.all_reduce(self.weight_per_class, op = torch.distributed.ReduceOp.AVG)
+            if(use_ddp):
+                torch.distributed.all_reduce(self.weight_per_class, op = torch.distributed.ReduceOp.AVG)
             
         return -(self.loss_neg + self.loss_pos * self.weight_per_class.detach()).sum()
         
