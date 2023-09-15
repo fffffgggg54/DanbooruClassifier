@@ -205,7 +205,7 @@ if __name__ == '__main__':
                 #torch.set_printoptions(profile="full")
                 AvgAccuracy = cm_tracker.get_full_metrics()
                 AvgAccuracyUnmod = cm_tracker_unmod.get_full_metrics()
-                LabelledAccuracy = list(zip(AvgAccuracy.tolist(), AvgAccuracyUnmod.tolist(), tagNames, boundaryCalculator.thresholdPerClass))
+                LabelledAccuracy = list(zip(AvgAccuracy.tolist(), AvgAccuracyUnmod.tolist(), tagNames, boundaryCalculator.thresholdPerClass.data, criterion.weight_per_class))
                 LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[0][8], reverse=True)
                 MeanStackedAccuracy = cm_tracker.get_aggregate_metrics()
                 MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
