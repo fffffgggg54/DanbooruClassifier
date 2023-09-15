@@ -23,7 +23,7 @@ from torch import nn
 from torch import nn, Tensor
 from torch.nn.modules.transformer import _get_activation_fn
 import modelZooCelebA as mz
-import handelMultiLabel as MLUtil
+import handleMultiLabel as MLUtil
 
 import pandas as pd
 
