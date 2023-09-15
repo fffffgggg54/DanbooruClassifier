@@ -467,7 +467,7 @@ class AdaptiveWeightedLoss(nn.Module):
             self.weight_per_class.data = self.weight_per_class.clamp(min=self.weight_limit_lower, max=self.weight_limit_upper)
             
             # surely there's a better way to sync parameters right?
-            if(use_ddp):
+            if(ddp):
                 torch.distributed.all_reduce(self.weight_per_class, op = torch.distributed.ReduceOp.AVG)
             
         return -(self.loss_neg + self.loss_pos * self.weight_per_class.detach()).sum()
