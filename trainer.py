@@ -1202,15 +1202,15 @@ def trainCycle(image_datasets, model):
                 #torch.distributed.all_reduce(criterion.gamma_neg_per_class, op = torch.distributed.ReduceOp.AVG)
             if ((phase == 'val') and (FLAGS['skip_test_set'] == False) and is_head_proc):
                 #torch.set_printoptions(profile="full")
-                
-                #AvgAccuracy = torch.stack(AccuracyRunning)
-                #AvgAccuracy = AvgAccuracy.mean(dim=0)
-                AvgAccuracy = cm_tracker.get_full_metrics()
-                LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames, boundaryCalculator.thresholdPerClass.data, criterion.weight_per_class))
-                LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[0][8], reverse=True)
-                MeanStackedAccuracy = cm_tracker.get_aggregate_metrics()
-                MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
-                if(is_head_proc): print(*LabelledAccuracySorted, sep="\n")
+                if(epoch == FLAGS['num_epochs'] - 1):
+                    #AvgAccuracy = torch.stack(AccuracyRunning)
+                    #AvgAccuracy = AvgAccuracy.mean(dim=0)
+                    AvgAccuracy = cm_tracker.get_full_metrics()
+                    LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames, boundaryCalculator.thresholdPerClass.data, criterion.weight_per_class))
+                    LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[0][8], reverse=True)
+                    MeanStackedAccuracy = cm_tracker.get_aggregate_metrics()
+                    MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
+                    if(is_head_proc): print(*LabelledAccuracySorted, sep="\n")
                 #torch.set_printoptions(profile="default")
                 if(is_head_proc): print((MeanStackedAccuracy*100).tolist())
                 
@@ -1220,9 +1220,9 @@ def trainCycle(image_datasets, model):
                 #lastPrior = prior.avg_pred_train
                 #if(is_head_proc): print(lastPrior[:30])
                 
-                mAP_score_regular = MLCSL.mAP(torch.cat(targets_running).numpy(force=True), torch.cat(preds_running).numpy(force=True))
+                #mAP_score_regular = MLCSL.mAP(torch.cat(targets_running).numpy(force=True), torch.cat(preds_running).numpy(force=True))
                 #mAP_score_ema = np.mean(AP_ema)
-                if(is_head_proc): print("mAP score regular {:.2f}".format(mAP_score_regular))
+                #if(is_head_proc): print("mAP score regular {:.2f}".format(mAP_score_regular))
                 #top_mAP = max(mAP_score_regular, mAP_score_ema)
                 if hasattr(criterion, 'tau_per_class'):
                     if(is_head_proc): print(criterion.tau_per_class)
