@@ -1208,10 +1208,11 @@ def trainCycle(image_datasets, model):
                     AvgAccuracy = cm_tracker.get_full_metrics()
                     LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames, boundaryCalculator.thresholdPerClass.data, criterion.weight_per_class))
                     LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[0][8], reverse=True)
-                    MeanStackedAccuracy = cm_tracker.get_aggregate_metrics()
-                    MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
+                    
                     if(is_head_proc): print(*LabelledAccuracySorted, sep="\n")
                 #torch.set_printoptions(profile="default")
+                MeanStackedAccuracy = cm_tracker.get_aggregate_metrics()
+                MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
                 if(is_head_proc): print((MeanStackedAccuracy*100).tolist())
                 
                 
