@@ -1228,11 +1228,12 @@ def trainCycle(image_datasets, model):
                     if(is_head_proc): print(criterion.tau_per_class)
                 #print(boundaryCalculator.thresholdPerClass)
                 #print(criterion.weight_per_class)
-                
-                modelOutputs = {'labels':torch.cat(targets_running).cpu(), 'preds':torch.cat(preds_running).cpu()}
-                #print(modelOutputs)
-                cachePath = FLAGS['modelDir'] + "evalOutputs.pkl.bz2"
-                with bz2.BZ2File(cachePath, 'w') as cachedSample: cPickle.dump(modelOutputs, cachedSample)
+                if(epoch == FLAGS['num_epochs'] - 1):
+                    print("saving eval data")
+                    modelOutputs = {'labels':torch.cat(targets_running).cpu(), 'preds':torch.cat(preds_running).cpu()}
+                    #print(modelOutputs)
+                    cachePath = FLAGS['modelDir'] + "evalOutputs.pkl.bz2"
+                    with bz2.BZ2File(cachePath, 'w') as cachedSample: cPickle.dump(modelOutputs, cachedSample)
             currPhase += 1
             '''
             except Exception as e:
