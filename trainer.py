@@ -372,7 +372,7 @@ elif currGPU == 'v100':
     # debugging config
 
     FLAGS['verbose_debug'] = False
-    FLAGS['skip_test_set'] = False
+    FLAGS['skip_test_set'] = True
     FLAGS['stepsPerPrintout'] = 50
     FLAGS['val'] = False
 
@@ -988,7 +988,7 @@ def trainCycle(image_datasets, model):
                 
                 model.eval()   # Set model to evaluate mode
                 print("validation set")
-                if(FLAGS['skip_test_set'] == True):
+                if(FLAGS['skip_test_set'] == True and (epoch != FLAGS['num_epochs'] - 1)):
                     print("skipping...")
                     break;
                 
