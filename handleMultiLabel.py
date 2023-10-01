@@ -257,6 +257,32 @@ class SPLCModified(nn.Module):
         
         return loss
 
+# A Modified Logistic Regression for Positive and Unlabeled Learning
+# Jaskie et. al., 2019
+# http://dx.doi.org/10.1109/IEEECONF44664.2019.9048765
+class ModifiedLogisticRegression(nn.Module):
+    def __init__(self, num_classes = 1588, initial_weight = 1.0, initial_beta = 0.0, eps = 1e-8):
+        super().__init__()
+        self.num_classes = num_classes
+        self.weight_per_class = nn.Parameter(data=initial_weight * torch.ones(num_classes))
+        self.beta_per_class = nn.Parameter(data=initial_beta * torch.ones(num_classes))
+        self.eps = eps
+        # store intermediate results as attributes to avoid memory realloc as per ASLOptimized
+        self.NtC_out = None
+        self.c_hat = None
+        self.pred = None
+        
+        
+    def forward(self, x):
+        # P(s = 1 | x_bar) as per equation #4 and section 4.1 from paper
+        self.NtC_out = 1/(1 + (self.beta ** 2) + (e ** (-self.weight_per_class * x)))
+        # c_hat = 1 / (1 + b^2)
+        # step isolated since we don't want to optimize beta here, conly compute c_hat
+        with torch.no_grad():
+            self.c_hat = 1 / (1 + self.beta_per_class ** 2)
+        # P(y = 1 | x) as per section 4.2 from paper
+        self.pred = self.NtC_out / (self.c_hat + self.eps)
+        
 
 def stepAtThreshold(x, threshold, k=5, base=10):
     return 1 / (1 + torch.pow(base, (0 - k) * (x - threshold)))
