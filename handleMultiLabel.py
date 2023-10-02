@@ -322,9 +322,9 @@ class getDecisionBoundary(nn.Module):
             else:
                 self.thresholdPerClass = nn.Parameter(torch.ones(classCount, device=currDevice, requires_grad=True).to(torch.float64) * self.thresholdPerClass)
             self.needs_init = False
-            #self.opt = torch.optim.SGD(self.parameters(), lr=self.lr, maximize=True)
-            self.opt = torch.optim.SGD(self.parameters(), lr=self.lr, maximize=False)
-            self.criterion = AsymmetricLossOptimized(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
+            self.opt = torch.optim.SGD(self.parameters(), lr=self.lr, maximize=True)
+            #self.opt = torch.optim.SGD(self.parameters(), lr=self.lr, maximize=False)
+            #self.criterion = AsymmetricLossOptimized(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
             
         # update only when training
         if preds.requires_grad:
@@ -332,11 +332,11 @@ class getDecisionBoundary(nn.Module):
             preds = preds.detach()
             # stepping fn, currently steep version of logistic fn
             predsModified = stepAtThreshold(preds, self.thresholdPerClass)
-            #metrics = getAccuracy(predsModified, targs)
-            #numToMax = metrics[:,9].sum()
-            #numToMax.backward()
-            loss = self.criterion(torch.special.logit(predsModified), targs)
-            loss.backward()
+            metrics = getAccuracy(predsModified, targs)
+            numToMax = metrics[:,9].sum()
+            numToMax.backward()
+            #loss = self.criterion(torch.special.logit(predsModified), targs)
+            #loss.backward()
             self.opt.step()
             self.opt.zero_grad()
             self.thresholdPerClass.data = self.thresholdPerClass.clamp(min=self.threshold_min, max=self.threshold_max)
