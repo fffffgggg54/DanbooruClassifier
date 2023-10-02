@@ -283,7 +283,32 @@ class ModifiedLogisticRegression(nn.Module):
         # P(y = 1 | x) as per section 4.2 from paper
         self.pred = self.NtC_out / (self.c_hat + self.eps)
         return self.pred
+
+# rationale is that since this is going after the cls_head of an image backbone, the cls_head, where the linear layer already has a weight and bias term
+# is redundant with the weight term of the MLR algorithm, hence an implementation where it is removed from the actual algorithm and handled in the image backbone
+class ModifiedLogisticRegression_NoWeight(nn.Module):
+    def __init__(self, num_classes = 1588, initial_beta = 0.0, eps = 1e-8):
+        super().__init__()
+        self.num_classes = num_classes
+        self.beta_per_class = nn.Parameter(data=initial_beta * torch.ones(num_classes))
+        self.eps = eps
+        # store intermediate results as attributes to avoid memory realloc as per ASLOptimized
+        self.NtC_out = None
+        self.c_hat = None
+        self.pred = None
         
+        
+    def forward(self, x):
+        # P(s = 1 | x_bar) as per equation #4 and section 4.1 from paper
+        # weight term handled in image backbone
+        self.NtC_out = 1/(1 + (self.beta_per_class ** 2) + torch.exp(-x))
+        # c_hat = 1 / (1 + b^2)
+        # step isolated since we don't want to optimize beta here, conly compute c_hat
+        with torch.no_grad():
+            self.c_hat = 1 / (1 + self.beta_per_class ** 2)
+        # P(y = 1 | x) as per section 4.2 from paper
+        self.pred = self.NtC_out / (self.c_hat + self.eps)
+        return self.pred
 
 def stepAtThreshold(x, threshold, k=5, base=10):
     return 1 / (1 + torch.pow(base, (0 - k) * (x - threshold)))
