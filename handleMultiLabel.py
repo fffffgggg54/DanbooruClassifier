@@ -282,6 +282,7 @@ class ModifiedLogisticRegression(nn.Module):
             self.c_hat = 1 / (1 + self.beta_per_class ** 2)
         # P(y = 1 | x) as per section 4.2 from paper
         self.pred = self.NtC_out / (self.c_hat + self.eps)
+        return self.pred
         
 
 def stepAtThreshold(x, threshold, k=5, base=10):
