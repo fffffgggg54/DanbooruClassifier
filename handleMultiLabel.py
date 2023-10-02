@@ -275,7 +275,7 @@ class ModifiedLogisticRegression(nn.Module):
         
     def forward(self, x):
         # P(s = 1 | x_bar) as per equation #4 and section 4.1 from paper
-        self.NtC_out = 1/(1 + (self.beta ** 2) + (e ** (-self.weight_per_class * x)))
+        self.NtC_out = 1/(1 + (self.beta_per_class ** 2) + (e ** (-self.weight_per_class * x)))
         # c_hat = 1 / (1 + b^2)
         # step isolated since we don't want to optimize beta here, conly compute c_hat
         with torch.no_grad():
