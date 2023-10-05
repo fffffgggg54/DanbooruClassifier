@@ -301,8 +301,9 @@ class ModifiedLogisticRegression_NoWeight(nn.Module):
         NtC_out = 1/(1 + (self.beta_per_class ** 2) + torch.exp(-x))
         # c_hat = 1 / (1 + b^2)
         # step isolated since we don't want to optimize beta here, conly compute c_hat
-        
-        c_hat = 1 / (1 + self.beta_per_class.detach() ** 2)
+        c_hat = None
+        with torch.no_grad():
+            c_hat = 1 / (1 + self.beta_per_class ** 2)
         # P(y = 1 | x) as per section 4.2 from paper
         pred = NtC_out / (c_hat + self.eps)
         return pred
