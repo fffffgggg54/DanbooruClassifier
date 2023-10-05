@@ -302,9 +302,9 @@ class ModifiedLogisticRegression_NoWeight(nn.Module):
         # c_hat = 1 / (1 + b^2)
         # step isolated since we don't want to optimize beta here, conly compute c_hat
         
-        c_hat = 1 / (1 + self.beta_per_class.detach() ** 2)
+        c_hat = (1 / (1 + self.beta_per_class ** 2)).detach()
         # P(y = 1 | x) as per section 4.2 from paper
-        pred = NtC_out / (c_hat.detach() + self.eps)
+        pred = NtC_out / (c_hat + self.eps)
         return pred
 
 def stepAtThreshold(x, threshold, k=5, base=10):
