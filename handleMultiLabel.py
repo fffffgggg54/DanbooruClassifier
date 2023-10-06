@@ -293,20 +293,22 @@ class ModifiedLogisticRegression_NoWeight(nn.Module):
         self.beta_per_class = nn.Parameter(data=initial_beta * torch.ones(num_classes, dtype=torch.float64))
         self.eps = eps
         
-        
+        # store intermediate results as attributes to avoid memory realloc as per ASLOptimized
+        self.NtC_out = None
+        self.c_hat = None
+        self.pred = None
         
     def forward(self, x):
         # P(s = 1 | x_bar) as per equation #4 and section 4.1 from paper
         # weight term handled in image backbone
-        NtC_out = 1/(1 + (self.beta_per_class ** 2) + torch.exp(-x))
+        self.NtC_out = 1/(1 + (self.beta_per_class ** 2) + torch.exp(-x))
         # c_hat = 1 / (1 + b^2)
         # step isolated since we don't want to optimize beta here, only compute c_hat
-        c_hat = None
         with torch.no_grad():
-            c_hat = 1 / (1 + self.beta_per_class.detach() ** 2)
+            self.c_hat = 1 / (1 + self.beta_per_class.detach() ** 2)
         # P(y = 1 | x) as per section 4.2 from paper
-        pred = NtC_out / (c_hat + self.eps)
-        return pred
+        self.pred = self.NtC_out / (self.c_hat + self.eps)
+        return self.pred
 
 def stepAtThreshold(x, threshold, k=5, base=10):
     return 1 / (1 + torch.pow(base, (0 - k) * (x - threshold)))
