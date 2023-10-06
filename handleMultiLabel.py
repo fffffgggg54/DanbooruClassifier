@@ -307,7 +307,7 @@ class ModifiedLogisticRegression_NoWeight(nn.Module):
         with torch.no_grad():
             self.c_hat = 1 / (1 + self.beta_per_class.detach() ** 2)
         # P(y = 1 | x) as per section 4.2 from paper
-        self.pred = self.NtC_out / (self.c_hat + self.eps)
+        self.pred = self.NtC_out / (self.c_hat.detach() + self.eps)
         return self.pred
 
 def stepAtThreshold(x, threshold, k=5, base=10):
@@ -506,8 +506,9 @@ class AdaptiveWeightedLoss(nn.Module):
         # weight update, update only when training
         if x.requires_grad:
             #self.weight_this_batch = self.anti_targets.sum(dim=1) / (self.targets.sum(dim=1) + self.eps) # via labels
-            self.weight_this_batch = (self.xs_neg.detach() * self.anti_targets.detach()).sum(dim=0) / ((self.xs_pos.detach() * self.targets.detach()).sum(dim=0) + self.eps) # via preds
-            
+            with torhc.no_grad():
+                self.weight_this_batch = (self.xs_neg.detach() * self.anti_targets.detach()).sum(dim=0) / ((self.xs_pos.detach() * self.targets.detach()).sum(dim=0) + self.eps) # via preds
+                
             self.weight_this_batch = self.weight_this_batch.detach() # isolate the weight optimization
             
             # optimization
@@ -519,8 +520,8 @@ class AdaptiveWeightedLoss(nn.Module):
             # EMA
             # TODO get this to work, currently collapsing to high false positive count (87ish %)
             #self.weight_per_class.data = (1-self.lr) * self.weight_per_class.data + (self.lr) * self.weight_this_batch
-            
-            self.weight_per_class.data = self.weight_per_class.clamp(min=self.weight_limit_lower, max=self.weight_limit_upper)
+            with torch.no_grad():
+                self.weight_per_class.data = self.weight_per_class.clamp(min=self.weight_limit_lower, max=self.weight_limit_upper)
             
             # surely there's a better way to sync parameters right?
             if(ddp):
