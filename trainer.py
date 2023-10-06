@@ -1016,7 +1016,10 @@ def trainCycle(image_datasets, model):
             '''
             
             loaderIterable = enumerate(dataloaders[phase])
+            print( torch.cuda.memory_allocated())
+            print(torch.cuda.max_memory_allocated())
             for i, (images, tags) in loaderIterable:
+                
                 
 
                 imageBatch = images.to(device, memory_format=memory_format, non_blocking=True)
@@ -1156,7 +1159,7 @@ def trainCycle(image_datasets, model):
                     
                     if (phase == 'train'):
                         targets_batch = tags.numpy(force=True)
-                        preds_regular_batch = preds.numpy(force=True)
+                        preds_regular_batch = preds.detach().numpy(force=True)
                         accuracy = MLCSL.mAP(targets_batch, preds_regular_batch)
                         
                     
