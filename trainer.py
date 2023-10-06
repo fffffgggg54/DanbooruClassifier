@@ -789,7 +789,7 @@ def modelSetup(classes):
     
     # I mean it's really just an activation fn with trainable weights
     #mlr_act = MLCSL.ModifiedLogisticRegression(num_classes = len(classes), initial_weight = 1.0, initial_beta = 0.0, eps = 1e-8)
-    mlr_act = MLCSL.ModifiedLogisticRegression_NoWeight(num_classes = len(classes), initial_beta = 0.0, eps = 1e-8)
+    #mlr_act = MLCSL.ModifiedLogisticRegression_NoWeight(num_classes = len(classes), initial_beta = 0.0, eps = 1e-8)
     
     if FLAGS['finetune'] == True:
         for param in model.parameters():
@@ -800,7 +800,7 @@ def modelSetup(classes):
             for param in model.head_dist.parameters():
                 param.requires_grad = True
     
-    model = nn.Sequential(model, mlr_act)
+    #model = nn.Sequential(model, mlr_act)
     
     return model
     
@@ -1019,9 +1019,7 @@ def trainCycle(image_datasets, model):
             
             for i, (images, tags) in loaderIterable:
                 
-                if is_head_proc:
-                    print( torch.cuda.memory_allocated())
-                    print(torch.cuda.max_memory_allocated())
+
 
                 imageBatch = images.to(device, memory_format=memory_format, non_blocking=True)
                 tagBatch = tags.to(device, non_blocking=True)
