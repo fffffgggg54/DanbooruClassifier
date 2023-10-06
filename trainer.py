@@ -1016,14 +1016,16 @@ def trainCycle(image_datasets, model):
             '''
             
             loaderIterable = enumerate(dataloaders[phase])
-            print( torch.cuda.memory_allocated())
-            print(torch.cuda.max_memory_allocated())
+            
             for i, (images, tags) in loaderIterable:
                 
                 
 
                 imageBatch = images.to(device, memory_format=memory_format, non_blocking=True)
                 tagBatch = tags.to(device, non_blocking=True)
+                print( torch.cuda.memory_allocated())
+                print(torch.cuda.max_memory_allocated())
+                continue
                 
                 
                 with torch.set_grad_enabled(phase == 'train'):
