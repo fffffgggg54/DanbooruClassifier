@@ -504,7 +504,7 @@ class AdaptiveWeightedLoss(nn.Module):
         # weight update, update only when training
         if x.requires_grad:
             #self.weight_this_batch = self.anti_targets.sum(dim=1) / (self.targets.sum(dim=1) + self.eps) # via labels
-            self.weight_this_batch = (self.xs_neg * self.anti_targets).sum(dim=0) / ((self.xs_pos * self.targets).sum(dim=0) + self.eps) # via preds
+            self.weight_this_batch = (self.xs_neg.detach() * self.anti_targets.detach()).sum(dim=0) / ((self.xs_pos.detach() * self.targets.detach()).sum(dim=0) + self.eps) # via preds
             
             self.weight_this_batch = self.weight_this_batch.detach() # isolate the weight optimization
             
