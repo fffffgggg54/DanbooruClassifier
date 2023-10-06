@@ -1009,7 +1009,6 @@ def trainCycle(image_datasets, model):
             with torch.profiler.profile(
                 activities = [torch.profiler.ProfilerActivity.CUDA],
                 schedule=torch.profiler.schedule(wait=1000, warmup=1, active=3),
-                on_trace_ready=torch.profiler.tensorboard_trace_handler('./log/latestRun' + device),
                 record_shapes=True,
                 profile_memory=True,
                 with_stack=True
@@ -1207,7 +1206,7 @@ def trainCycle(image_datasets, model):
                     #print(device)
                     #if(FLAGS['ngpu'] > 0):
                         #torch.cuda.empty_cache()
-                    
+                prof.export_chrome_trace("trace" + str(dist.get_rank) ".json")   
                     
             if FLAGS['use_ddp'] == True:
                 torch.distributed.all_reduce(cm_tracker.running_confusion_matrix, op=torch.distributed.ReduceOp.AVG)
