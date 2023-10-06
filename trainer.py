@@ -1030,15 +1030,13 @@ def trainCycle(image_datasets, model):
                     # TODO switch between using autocast and not using it
                     
                     with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
-                                                
+                        print( torch.cuda.memory_allocated())
+                        print(torch.cuda.max_memory_allocated())
                         #outputs = model(imageBatch)
                         #outputs = model(imageBatch).logits
                         #preds = torch.sigmoid(outputs)
                         
                         preds = model(imageBatch)
-                        print( torch.cuda.memory_allocated())
-                        print(torch.cuda.max_memory_allocated())
-                        continue
                         outputs = torch.special.logit(preds)
                         
                         with torch.cuda.amp.autocast(enabled=False):
@@ -1046,7 +1044,9 @@ def trainCycle(image_datasets, model):
                             if FLAGS['use_ddp'] == True:
                                 torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
                                 boundary = boundaryCalculator.thresholdPerClass.detach()
-
+                        
+                        
+                        
                         #predsModified=preds
                         #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
                         with torch.no_grad():
