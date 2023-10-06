@@ -304,10 +304,12 @@ class ModifiedLogisticRegression_NoWeight(nn.Module):
         self.NtC_out = 1/(1 + (self.beta_per_class ** 2) + torch.exp(-x))
         # c_hat = 1 / (1 + b^2)
         # step isolated since we don't want to optimize beta here, only compute c_hat
-        with torch.no_grad():
-            self.c_hat = 1 / (1 + self.beta_per_class.detach() ** 2)
+        #with torch.no_grad():
+        #    self.c_hat = 1 / (1 + self.beta_per_class.detach() ** 2)
         # P(y = 1 | x) as per section 4.2 from paper
-        self.pred = self.NtC_out / (self.c_hat.detach() + self.eps)
+        #self.pred = self.NtC_out / (self.c_hat.detach() + self.eps)
+        self.c_hat = 1 / (1 + self.beta_per_class ** 2)
+        self.pred = self.NtC_out / (self.c_hat + self.eps)
         return self.pred
 
 def stepAtThreshold(x, threshold, k=5, base=10):
