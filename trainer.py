@@ -1019,7 +1019,9 @@ def trainCycle(image_datasets, model):
             
             for i, (images, tags) in loaderIterable:
                 
-                
+                if is_head_proc:
+                    print( torch.cuda.memory_allocated())
+                    print(torch.cuda.max_memory_allocated())
 
                 imageBatch = images.to(device, memory_format=memory_format, non_blocking=True)
                 tagBatch = tags.to(device, non_blocking=True)
@@ -1030,8 +1032,7 @@ def trainCycle(image_datasets, model):
                     # TODO switch between using autocast and not using it
                     
                     with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
-                        print( torch.cuda.memory_allocated())
-                        print(torch.cuda.max_memory_allocated())
+                        
                         #outputs = model(imageBatch)
                         #outputs = model(imageBatch).logits
                         #preds = torch.sigmoid(outputs)
