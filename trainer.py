@@ -1206,7 +1206,7 @@ def trainCycle(image_datasets, model):
                     #print(device)
                     #if(FLAGS['ngpu'] > 0):
                         #torch.cuda.empty_cache()
-                prof.export_chrome_trace("trace" + str(dist.get_rank) ".json")   
+                prof.export_chrome_trace("trace" + str(dist.get_rank) + ".json")   
                     
             if FLAGS['use_ddp'] == True:
                 torch.distributed.all_reduce(cm_tracker.running_confusion_matrix, op=torch.distributed.ReduceOp.AVG)
