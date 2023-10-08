@@ -308,8 +308,8 @@ class ModifiedLogisticRegression_NoWeight(nn.Module):
         #    self.c_hat = 1 / (1 + self.beta_per_class.detach() ** 2)
         # P(y = 1 | x) as per section 4.2 from paper
         #self.pred = self.NtC_out / (self.c_hat.detach() + self.eps)
-        self.c_hat = 1 / (1 + self.beta_per_class ** 2)
-        self.pred = self.NtC_out / (self.c_hat + self.eps)
+        self.c_hat = 1 / (1 + self.beta_per_class.detach() ** 2)
+        self.pred = self.NtC_out / (self.c_hat.detach() + self.eps)
         return self.pred
 
 def stepAtThreshold(x, threshold, k=5, base=10):
@@ -360,8 +360,7 @@ class getDecisionBoundary(nn.Module):
             preds = preds.detach()
             # stepping fn, currently steep version of logistic fn
             predsModified = stepAtThreshold(preds, self.thresholdPerClass)
-            metrics = getAccuracy(predsModified, targs)
-            numToMax = metrics[:,9].sum()
+            numToMax = getSingleMetric(predsModified, targs, F1).sum()
             numToMax.backward()
             #loss = self.criterion(torch.special.logit(predsModified), targs)
             #loss.backward()
@@ -369,7 +368,7 @@ class getDecisionBoundary(nn.Module):
             self.opt.zero_grad()
             self.thresholdPerClass.data = self.thresholdPerClass.clamp(min=self.threshold_min, max=self.threshold_max)
         
-        '''
+        ''' old code that uses manual optimization calls instead of an optimizer
         # need fp64
         self.thresholdPerClass.retain_grad()
         self.thresholdPerClass = self.thresholdPerClass.to(torch.float64)
@@ -511,7 +510,7 @@ class AdaptiveWeightedLoss(nn.Module):
             with torch.no_grad():
                 self.weight_this_batch = (self.xs_neg.detach() * self.anti_targets.detach()).sum(dim=0) / ((self.xs_pos.detach() * self.targets.detach()).sum(dim=0) + self.eps) # via preds
                 
-            self.weight_this_batch = self.weight_this_batch.detach() # isolate the weight optimization
+                self.weight_this_batch = self.weight_this_batch.detach() # isolate the weight optimization
             
             # optimization
             numToMin = (self.weight_this_batch - self.weight_per_class) ** 2
@@ -522,8 +521,9 @@ class AdaptiveWeightedLoss(nn.Module):
             # EMA
             # TODO get this to work, currently collapsing to high false positive count (87ish %)
             #self.weight_per_class.data = (1-self.lr) * self.weight_per_class.data + (self.lr) * self.weight_this_batch
+            
             with torch.no_grad():
-                self.weight_per_class.data = self.weight_per_class.clamp(min=self.weight_limit_lower, max=self.weight_limit_upper)
+                self.weight_per_class.data = self.weight_per_class.detach().clamp(min=self.weight_limit_lower, max=self.weight_limit_upper)
             
             # surely there's a better way to sync parameters right?
             if(ddp):
@@ -1183,6 +1183,24 @@ def getAccuracy(preds, targs):
     F1 = (2 * TP) / (2 * TP + FP + FN + epsilon)
     
     return torch.column_stack([TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision, P4, F1])
+    
+def getSingleMetric(preds, targs, metric):
+    epsilon = 1e-12
+
+    #preds = torch.sigmoid(preds)
+
+    targs_inv = 1 - targs
+    batchSize = targs.size(dim=0)
+    P = targs * preds
+    N = targs_inv * preds
+    
+    
+    TP = P.sum(dim=0) / batchSize
+    FN = (targs - P).sum(dim=0) / batchSize
+    FP = N.sum(dim=0) / batchSize
+    TN = (targs_inv - N).sum(dim=0) / batchSize
+    
+    return metric(TP, FN, FP, TN, epsilon)
     
 # recall
 def Precall(TP, FN, FP, TN, epsilon):
