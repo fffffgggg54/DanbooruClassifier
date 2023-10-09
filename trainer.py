@@ -362,7 +362,7 @@ elif currGPU == 'v100':
     FLAGS['resume_epoch'] = 0
     
     FLAGS['threshold_loss'] = True
-    FLAGS['threshold_multiplier'] = 1.0
+    FLAGS['threshold_multiplier'] = 2.0
     FLAGS['splc'] = False
     FLAGS['splc_start_epoch'] = 1
 
