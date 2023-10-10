@@ -302,7 +302,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-Hill-T-F1-x+00e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-P4-x+160e-1-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnety_016-ADA_WL_T-F1-x+160e-1-MLR_NW-224-1588-20epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-F1-x+10e-1-MLR_NW-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/scratch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/eva02_large_patch14_224.mim_m38m-FT-ADA_WL_T-P4-x+160e-1-224-1588-10epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_224-gap-ASL_BCE_T-F1-x+00e-1-224-5500-50epoch/"
@@ -348,9 +348,9 @@ elif currGPU == 'v100':
 
     # training config
 
-    FLAGS['num_epochs'] = 20
-    FLAGS['batch_size'] = 256
-    FLAGS['gradient_accumulation_iterations'] = 2
+    FLAGS['num_epochs'] = 50
+    FLAGS['batch_size'] = 96
+    FLAGS['gradient_accumulation_iterations'] = 4
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -362,7 +362,7 @@ elif currGPU == 'v100':
     FLAGS['resume_epoch'] = 0
     
     FLAGS['threshold_loss'] = True
-    FLAGS['threshold_multiplier'] = 16.0
+    FLAGS['threshold_multiplier'] = 1.0
     FLAGS['splc'] = False
     FLAGS['splc_start_epoch'] = 1
 
@@ -724,8 +724,8 @@ def modelSetup(classes):
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4, drop_rate = 0.05)
     #model = timm.create_model('regnetx_016', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_large_patch16_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.3)
-    #model = timm.create_model('regnetz_040_h', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
-    model = timm.create_model('regnety_016', pretrained=False, num_classes=len(classes), drop_path_rate=0.1)
+    model = timm.create_model('regnetz_040_h', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
+    #model = timm.create_model('regnety_016', pretrained=False, num_classes=len(classes), drop_path_rate=0.1)
     #model = timm.create_model('ese_vovnet99b_iabn', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.02)
     #model = timm.create_model('tresnet_m', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('eva02_large_patch14_224.mim_m38m', pretrained=True, num_classes=len(classes))
