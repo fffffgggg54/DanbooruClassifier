@@ -948,6 +948,7 @@ def trainCycle(image_datasets, model):
             #try:
             if phase == 'train':
                 model.train()  # Set model to training mode
+                boundaryCalculator.train()
                 #if (hasTPU == True): xm.master_print("training set")
                 if(is_head_proc): print("training set")
                 
@@ -995,6 +996,7 @@ def trainCycle(image_datasets, model):
                 
                 
                 model.eval()   # Set model to evaluate mode
+                boundaryCalculator.eval()
                 print("validation set")
                 if(FLAGS['skip_test_set'] == True and (epoch != FLAGS['num_epochs'] - 1)):
                     print("skipping...")

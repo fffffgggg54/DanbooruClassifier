@@ -327,6 +327,8 @@ def zero_grad(p, set_to_none=False):
             p.grad.zero_()
     return p
 
+
+
 # gradient based boundary calculation
 class getDecisionBoundary(nn.Module):
     def __init__(self, initial_threshold = 0.5, lr = 1e-3, threshold_min = 0.2, threshold_max = 0.8):
@@ -355,7 +357,7 @@ class getDecisionBoundary(nn.Module):
             #self.criterion = AsymmetricLossOptimized(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
             
         # update only when training
-        if preds.requires_grad:
+        if self.training:
             # ignore what happened before, only need values
             preds = preds.detach()
             # stepping fn, currently steep version of logistic fn
@@ -393,6 +395,26 @@ class getDecisionBoundary(nn.Module):
         '''
         return self.thresholdPerClass.detach()
 
+class thresholdPenalty(nn.Module):
+    def __init__(self, threshold_multiplier, initial_threshold = 0.5, lr = 1e-3, threshold_min = 0.2, threshold_max = 0.8):
+        super().__init__()
+        self.thresholdCalculator = getDecisionBoundary(
+            initial_threshold = initial_threshold,
+            lr = lr, 
+            threshold_min = threshold_min, 
+            threshold_max = threshold_max
+        )
+        self.threshold_multiplier = threshold_multiplier
+        # external call changes order, probably insignificant
+        self.updateThreshold = self.thresholdCalculator.forward
+        
+    # forward step in model
+    def forward(self, logits):
+        threshold = self.thresholdCalculator.thresholdPerClass.detach()
+        outputs = logits + self.threshold_multiplier * torch.special.logit(threshold)
+        return outputs
+    
+    
 
 # derived from SW-CV-ModelZoo/tools/analyze_metrics.py
 
