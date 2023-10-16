@@ -302,7 +302,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-Hill-T-F1-x+00e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-P4-x+160e-1-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-F1-x+40e-1-MLR_NW-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-Module-F1-x+10e-1-MLR_NW-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/scratch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/eva02_large_patch14_224.mim_m38m-FT-ADA_WL_T-P4-x+160e-1-224-1588-10epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_224-gap-ASL_BCE_T-F1-x+00e-1-224-5500-50epoch/"
@@ -362,7 +362,7 @@ elif currGPU == 'v100':
     FLAGS['resume_epoch'] = 0
     
     FLAGS['threshold_loss'] = True
-    FLAGS['threshold_multiplier'] = 4.0
+    FLAGS['threshold_multiplier'] = 1.0
     FLAGS['splc'] = False
     FLAGS['splc_start_epoch'] = 1
 
@@ -788,6 +788,9 @@ def modelSetup(classes):
 
     #model.train()
     
+    # threshold as a neural network module
+    threshold_penalty = MLCSL.thresholdPenalty(FLAGS['threshold_multiplier'], initial_threshold = 0.5, lr = 1e-5, threshold_min = 0.1, threshold_max = 0.9, num_classes = len(classes))
+    
     # I mean it's really just an activation fn with trainable weights
     #mlr_act = MLCSL.ModifiedLogisticRegression(num_classes = len(classes), initial_weight = 1.0, initial_beta = 0.0, eps = 1e-8)
     mlr_act = MLCSL.ModifiedLogisticRegression_NoWeight(num_classes = len(classes), initial_beta = 0.0, eps = 1e-8)
@@ -801,7 +804,7 @@ def modelSetup(classes):
             for param in model.head_dist.parameters():
                 param.requires_grad = True
     
-    model = nn.Sequential(model, mlr_act)
+    model = nn.Sequential(model, threshold_penalty, mlr_act)
     
     return model
     
@@ -841,8 +844,7 @@ def trainCycle(image_datasets, model):
     
     
     if (FLAGS['use_ddp'] == True):
-        
-        model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True, static_graph=True)
+        model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True, find_unused_parameters=True)
         
     if(FLAGS['compile_model'] == True):
         model = torch.compile(model)
@@ -885,13 +887,20 @@ def trainCycle(image_datasets, model):
     
     #mixup = Mixup(mixup_alpha = 0.2, cutmix_alpha = 0, num_classes = len(classes))
     
-    boundaryCalculator = MLCSL.getDecisionBoundary(initial_threshold = 0.5, lr = 1e-5, threshold_min = 0.1, threshold_max = 0.9)
+    #boundaryCalculator = MLCSL.getDecisionBoundary(initial_threshold = 0.5, lr = 1e-5, threshold_min = 0.1, threshold_max = 0.9)
+    
+    boundaryCalculator = None
+    for name, module in model.named_modules():
+        if(type(module) == MLCSL.getDecisionBoundary):
+            boundaryCalculator = module
+            break
+    '''
 
     if (FLAGS['resume_epoch'] > 0):
         boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth').to(device)
         #optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth', map_location=torch.device(device)))
         
-    
+    '''
     if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
     
     # end MLCSL code
@@ -948,6 +957,7 @@ def trainCycle(image_datasets, model):
             #try:
             if phase == 'train':
                 model.train()  # Set model to training mode
+                #boundaryCalculator.train()
                 #if (hasTPU == True): xm.master_print("training set")
                 if(is_head_proc): print("training set")
                 
@@ -995,6 +1005,7 @@ def trainCycle(image_datasets, model):
                 
                 
                 model.eval()   # Set model to evaluate mode
+                #boundaryCalculator.eval()
                 print("validation set")
                 if(FLAGS['skip_test_set'] == True and (epoch != FLAGS['num_epochs'] - 1)):
                     print("skipping...")
@@ -1041,9 +1052,10 @@ def trainCycle(image_datasets, model):
                         
                         with torch.cuda.amp.autocast(enabled=False):
                             boundary = boundaryCalculator(preds.detach(), tagBatch)
-                            if FLAGS['use_ddp'] == True:
-                                torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
-                                boundary = boundaryCalculator.thresholdPerClass.detach()
+                            torch.cuda.synchronize()
+                            #if FLAGS['use_ddp'] == True:
+                            #    torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
+                            #    boundary = boundaryCalculator.thresholdPerClass.detach()
                         
                         
                         
@@ -1061,11 +1073,11 @@ def trainCycle(image_datasets, model):
                         #loss = criterion(torch.mul(preds, tagBatch), tagBatch)
                         #loss = criterion(outputs, tagBatch)
                         '''
-                        
+                        '''
                         if FLAGS['threshold_loss']:
                             #outputs = outputs - torch.special.logit(boundary)
                             outputs = outputs + FLAGS['threshold_multiplier'] * torch.special.logit(boundary)
-                            
+                        '''
                         #outputs = outputs + offset
                         tagsModified = tagBatch
                         if FLAGS['splc'] and epoch >= FLAGS['splc_start_epoch']:
