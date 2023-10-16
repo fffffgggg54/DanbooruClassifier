@@ -331,30 +331,18 @@ def zero_grad(p, set_to_none=False):
 
 # gradient based boundary calculation
 class getDecisionBoundary(nn.Module):
-    def __init__(self, initial_threshold = 0.5, lr = 1e-3, threshold_min = 0.2, threshold_max = 0.8):
+    def __init__(self, initial_threshold = 0.5, lr = 1e-3, threshold_min = 0.2, threshold_max = 0.8, num_classes = 1588):
         super().__init__()
         self.initial_threshold = initial_threshold
-        self.thresholdPerClass = None
-        self.opt = None
+        self.thresholdPerClass = nn.Parameter(torch.ones(num_classes, requires_grad=True).to(torch.float64) * self.initial_threshold)
+        self.opt = torch.optim.SGD(self.parameters(), lr=self.lr, maximize=True)
         self.needs_init = True
         self.lr = lr
         self.threshold_min = threshold_min
         self.threshold_max = threshold_max
         
     def forward(self, preds, targs):
-        # parameter initial_threshold
-        # TODO clean this up and make it work consistently, use proper lazy init
-        if self.needs_init:
-            classCount = preds.size(dim=1)
-            currDevice = preds.device
-            if self.thresholdPerClass == None:
-                self.thresholdPerClass = nn.Parameter(torch.ones(classCount, device=currDevice, requires_grad=True).to(torch.float64) * self.initial_threshold)
-            else:
-                self.thresholdPerClass = nn.Parameter(torch.ones(classCount, device=currDevice, requires_grad=True).to(torch.float64) * self.thresholdPerClass)
-            self.needs_init = False
-            self.opt = torch.optim.SGD(self.parameters(), lr=self.lr, maximize=True)
-            #self.opt = torch.optim.SGD(self.parameters(), lr=self.lr, maximize=False)
-            #self.criterion = AsymmetricLossOptimized(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
+        
             
         # update only when training
         if self.training:
@@ -364,8 +352,6 @@ class getDecisionBoundary(nn.Module):
             predsModified = stepAtThreshold(preds, self.thresholdPerClass)
             numToMax = getSingleMetric(predsModified, targs, F1).sum()
             numToMax.backward()
-            #loss = self.criterion(torch.special.logit(predsModified), targs)
-            #loss.backward()
             self.opt.step()
             self.opt.zero_grad()
             self.thresholdPerClass.data = self.thresholdPerClass.clamp(min=self.threshold_min, max=self.threshold_max)
@@ -396,13 +382,14 @@ class getDecisionBoundary(nn.Module):
         return self.thresholdPerClass.detach()
 
 class thresholdPenalty(nn.Module):
-    def __init__(self, threshold_multiplier, initial_threshold = 0.5, lr = 1e-3, threshold_min = 0.2, threshold_max = 0.8):
+    def __init__(self, threshold_multiplier, initial_threshold = 0.5, lr = 1e-3, threshold_min = 0.2, threshold_max = 0.8, num_classes = 1588):
         super().__init__()
         self.thresholdCalculator = getDecisionBoundary(
             initial_threshold = initial_threshold,
             lr = lr, 
             threshold_min = threshold_min, 
-            threshold_max = threshold_max
+            threshold_max = threshold_max,
+            num_classes
         )
         self.threshold_multiplier = threshold_multiplier
         # external call changes order, probably insignificant

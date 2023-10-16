@@ -789,7 +789,7 @@ def modelSetup(classes):
     #model.train()
     
     # threshold as a neural network module
-    threshold_penalty = thresholdPenalty(FLAGS['threshold_multiplier'], initial_threshold = 0.5, lr = 1e-5, threshold_min = 0.1, threshold_max = 0.9)
+    threshold_penalty = MLCSL.thresholdPenalty(FLAGS['threshold_multiplier'], initial_threshold = 0.5, lr = 1e-5, threshold_min = 0.1, threshold_max = 0.9, num_classes = len(classes))
     
     # I mean it's really just an activation fn with trainable weights
     #mlr_act = MLCSL.ModifiedLogisticRegression(num_classes = len(classes), initial_weight = 1.0, initial_beta = 0.0, eps = 1e-8)
