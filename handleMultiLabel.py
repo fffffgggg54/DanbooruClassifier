@@ -389,7 +389,7 @@ class thresholdPenalty(nn.Module):
             lr = lr, 
             threshold_min = threshold_min, 
             threshold_max = threshold_max,
-            num_classes
+            num_classes = num_classes
         )
         self.threshold_multiplier = threshold_multiplier
         # external call changes order, probably insignificant
