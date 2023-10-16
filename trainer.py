@@ -842,7 +842,7 @@ def trainCycle(image_datasets, model):
     
     if (FLAGS['use_ddp'] == True):
         
-        model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
+        model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True, static_graph=True)
         
     if(FLAGS['compile_model'] == True):
         model = torch.compile(model)
