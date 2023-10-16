@@ -845,7 +845,7 @@ def trainCycle(image_datasets, model):
     
     if (FLAGS['use_ddp'] == True):
         
-        model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
+        model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True, find_unused_parameters=True)
         
     if(FLAGS['compile_model'] == True):
         model = torch.compile(model)
@@ -1053,6 +1053,7 @@ def trainCycle(image_datasets, model):
                         
                         with torch.cuda.amp.autocast(enabled=False):
                             boundary = boundaryCalculator(preds.detach(), tagBatch)
+                            torch.cuda.synchronize()
                             #if FLAGS['use_ddp'] == True:
                             #    torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
                             #    boundary = boundaryCalculator.thresholdPerClass.detach()
