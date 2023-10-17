@@ -788,7 +788,7 @@ def modelSetup(classes):
 
     #model.train()
     
-    # threshold as a neural network module
+    # threshold as a neural network module, everything about its use needs to be handled manually, nested optimization loops are a headache
     threshold_penalty = MLCSL.thresholdPenalty(FLAGS['threshold_multiplier'], initial_threshold = 0.5, lr = 1e-5, threshold_min = 0.1, threshold_max = 0.9, num_classes = len(classes))
     
     # I mean it's really just an activation fn with trainable weights
@@ -844,7 +844,7 @@ def trainCycle(image_datasets, model):
     
     
     if (FLAGS['use_ddp'] == True):
-        model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True, find_unused_parameters=True)
+        model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
         
     if(FLAGS['compile_model'] == True):
         model = torch.compile(model)
@@ -1053,9 +1053,9 @@ def trainCycle(image_datasets, model):
                         with torch.cuda.amp.autocast(enabled=False):
                             boundary = boundaryCalculator(preds.detach(), tagBatch)
                             torch.cuda.synchronize()
-                            #if FLAGS['use_ddp'] == True:
-                            #    torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
-                            #    boundary = boundaryCalculator.thresholdPerClass.detach()
+                            if FLAGS['use_ddp'] == True:
+                                torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
+                                boundary = boundaryCalculator.thresholdPerClass.detach()
                         
                         
                         
