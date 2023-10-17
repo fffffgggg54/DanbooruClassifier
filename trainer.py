@@ -844,7 +844,6 @@ def trainCycle(image_datasets, model):
     
     
     if (FLAGS['use_ddp'] == True):
-        
         model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True, find_unused_parameters=True)
         
     if(FLAGS['compile_model'] == True):
@@ -895,13 +894,13 @@ def trainCycle(image_datasets, model):
         if(type(module) == MLCSL.getDecisionBoundary):
             boundaryCalculator = module
             break
-    '''
+    
 
     if (FLAGS['resume_epoch'] > 0):
         boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth').to(device)
         #optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth', map_location=torch.device(device)))
         
-    '''
+    
     if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
     
     # end MLCSL code
