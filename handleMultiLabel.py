@@ -333,7 +333,7 @@ def zero_grad(p, set_to_none=False):
 class getDecisionBoundary(nn.Module):
     def __init__(self, initial_threshold = 0.5, lr = 1e-3, threshold_min = 0.2, threshold_max = 0.8, num_classes = 1588):
         super().__init__()
-        self.thresholdPerClass = (torch.ones(num_classes).to(torch.float64) * initial_threshold).requires_grad_(True)
+        self.thresholdPerClass = (torch.ones(num_classes).to(torch.float64) * initial_threshold)
         self.opt = None
         self.lr = lr
         self.threshold_min = threshold_min
@@ -342,7 +342,7 @@ class getDecisionBoundary(nn.Module):
         
     def forward(self, preds, targs):
         if self.check_device:
-            self.thresholdPerClass = self.thresholdPerClass.to(preds)
+            self.thresholdPerClass = self.thresholdPerClass.to(preds).requires_grad_(True)
             self.opt = torch.optim.SGD([self.thresholdPerClass], lr=self.lr, maximize=True)
             self.check_device = False
             
