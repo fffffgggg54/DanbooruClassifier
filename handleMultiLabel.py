@@ -337,9 +337,13 @@ class getDecisionBoundary(nn.Module):
         self.opt = torch.optim.SGD([self.thresholdPerClass], lr=lr, maximize=True)
         self.threshold_min = threshold_min
         self.threshold_max = threshold_max
+        self.check_device = True
         
     def forward(self, preds, targs):
-        
+        if self.check_device:
+            self.thresholdPerClass = self.thresholdPerClass.to(preds)
+            self.opt = self.opt.to(preds)
+            self.check_device = False
             
         # update only when training
         if self.training:
