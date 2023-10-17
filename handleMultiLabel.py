@@ -334,7 +334,7 @@ class getDecisionBoundary(nn.Module):
     def __init__(self, initial_threshold = 0.5, lr = 1e-3, threshold_min = 0.2, threshold_max = 0.8, num_classes = 1588):
         super().__init__()
         self.thresholdPerClass = (torch.ones(num_classes).to(torch.float64) * initial_threshold).requires_grad_(True)
-        self.opt = torch.optim.SGD([self.thresholdPerClass], lr=lr, maximize=True)
+        self.opt = None
         self.threshold_min = threshold_min
         self.threshold_max = threshold_max
         self.check_device = True
@@ -342,7 +342,7 @@ class getDecisionBoundary(nn.Module):
     def forward(self, preds, targs):
         if self.check_device:
             self.thresholdPerClass = self.thresholdPerClass.to(preds)
-            self.opt = self.opt.to(preds)
+            self.opt = torch.optim.SGD([self.thresholdPerClass], lr=lr, maximize=True)
             self.check_device = False
             
         # update only when training
