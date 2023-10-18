@@ -804,7 +804,7 @@ def modelSetup(classes):
             for param in model.head_dist.parameters():
                 param.requires_grad = True
     
-    model = nn.Sequential(model, threshold_penalty, mlr_act)
+    model = nn.Sequential(model, mlr_act)
     
     return model
     
@@ -887,14 +887,14 @@ def trainCycle(image_datasets, model):
     
     #mixup = Mixup(mixup_alpha = 0.2, cutmix_alpha = 0, num_classes = len(classes))
     
-    #boundaryCalculator = MLCSL.getDecisionBoundary(initial_threshold = 0.5, lr = 1e-5, threshold_min = 0.1, threshold_max = 0.9)
-    
+    boundaryCalculator = MLCSL.getDecisionBoundary(initial_threshold = 0.5, lr = 1e-5, threshold_min = 0.1, threshold_max = 0.9)
+    '''
     boundaryCalculator = None
     for name, module in model.named_modules():
         if(type(module) == MLCSL.getDecisionBoundary):
             boundaryCalculator = module
             break
-    
+    '''
 
     if (FLAGS['resume_epoch'] > 0):
         boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth').to(device)
