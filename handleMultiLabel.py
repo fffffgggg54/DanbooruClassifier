@@ -405,7 +405,9 @@ class thresholdPenalty(nn.Module):
         if self.thresholdCalculator.thresholdPerClass.device != logits.device:
             self.threshold = self.threshold.to(logits)
         
-        outputs = logits + self.threshold_multiplier * torch.special.logit(self.threshold)
+        shift = self.threshold_multiplier * torch.special.logit(self.threshold)
+        print(shift)
+        outputs = logits + shift
         return outputs
     
     
