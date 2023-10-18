@@ -401,14 +401,8 @@ class thresholdPenalty(nn.Module):
     # forward step in model
     def forward(self, logits):
         # detached call should prevent model optim from affecting threshold parameters
-        self.threshold = self.thresholdCalculator.thresholdPerClass.detach()
-        if self.thresholdCalculator.thresholdPerClass.device != logits.device:
-            self.threshold = self.threshold.to(logits)
-        
-        shift = self.threshold_multiplier * torch.special.logit(self.threshold)
-        print(shift)
-        outputs = logits + shift
-        return outputs
+
+        return logits + self.threshold_multiplier * torch.special.logit(self.thresholdCalculator.thresholdPerClass.detach().to(logits))
     
     
 
