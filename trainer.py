@@ -891,7 +891,7 @@ def trainCycle(image_datasets, model):
     
     boundaryCalculator = None
     for name, module in model.named_modules():
-        if(type(module) == MLCSL.getDecisionBoundary):
+        if(type(module) == MLCSL.getDecisionBoundaryWorking):
             boundaryCalculator = module
             break
     
