@@ -469,7 +469,7 @@ class thresholdPenalty(nn.Module):
     def forward(self, logits):
         # detached call should prevent model optim from affecting threshold parameters
         with torch.no_grad():
-            self.shift = self.threshold_multiplier * torch.special.logit(self.thresholdCalculator.thresholdPerClass.detach().to(logits).detach()) if self.thresholdCalculator.needs_init else 0
+            self.shift = self.threshold_multiplier * 0 if self.thresholdCalculator.needs_init else torch.special.logit(self.thresholdCalculator.thresholdPerClass.detach().to(logits).detach())
 
         return logits + self.shift.detach()
     
