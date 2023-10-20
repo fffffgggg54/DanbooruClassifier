@@ -404,7 +404,7 @@ class thresholdPenalty(nn.Module):
         #with torch.no_grad():
         #    self.shift = self.threshold_multiplier * torch.special.logit(self.thresholdCalculator.thresholdPerClass.detach().to(logits).detach())
 
-        return logits + self.shift
+        return logits# + self.shift
     
     
 
