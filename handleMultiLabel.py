@@ -395,8 +395,8 @@ class thresholdPenalty(nn.Module):
         )
         self.threshold_multiplier = threshold_multiplier
         # external call changes order, probably insignificant
-        self.updateThreshold = self.thresholdCalculator.forward
-        self.shift = None
+        #self.updateThreshold = self.thresholdCalculator.forward
+        #self.shift = None
         
     # forward step in model
     def forward(self, logits):
