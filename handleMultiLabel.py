@@ -402,11 +402,11 @@ class getDecisionBoundaryWorking(nn.Module):
             classCount = preds.size(dim=1)
             currDevice = preds.device
             if self.thresholdPerClass == None:
-                self.thresholdPerClass = nn.Parameter(torch.ones(classCount, device=currDevice, requires_grad=True).to(torch.float64) * self.initial_threshold)
+                self.thresholdPerClass = (torch.ones(classCount, device=currDevice).to(torch.float64) * self.initial_threshold).requires_grad_(True)
             else:
-                self.thresholdPerClass = nn.Parameter(torch.ones(classCount, device=currDevice, requires_grad=True).to(torch.float64) * self.thresholdPerClass)
+                self.thresholdPerClass = (torch.ones(classCount, device=currDevice).to(torch.float64) * self.thresholdPerClass).requires_grad_(True)
             self.needs_init = False
-            self.opt = torch.optim.SGD(self.parameters(), lr=self.lr, maximize=True)
+            self.opt = torch.optim.SGD([self.thresholdPerClass, lr=self.lr, maximize=True)
             #self.opt = torch.optim.SGD(self.parameters(), lr=self.lr, maximize=False)
             #self.criterion = AsymmetricLossOptimized(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
             
