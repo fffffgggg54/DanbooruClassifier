@@ -422,7 +422,7 @@ class getDecisionBoundaryWorking(nn.Module):
             #loss.backward()
             self.opt.step()
             self.opt.zero_grad()
-            with torch.no_grad():
+            with torch.no_grad(): 
                 self.thresholdPerClass = self.thresholdPerClass.clamp(min=self.threshold_min, max=self.threshold_max)
         
         ''' old code that uses manual optimization calls instead of an optimizer
