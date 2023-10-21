@@ -416,13 +416,14 @@ class getDecisionBoundaryWorking(nn.Module):
             preds = preds.detach()
             # stepping fn, currently steep version of logistic fn
             predsModified = stepAtThreshold(preds, self.thresholdPerClass)
-            numToMax = getSingleMetric(predsModified, targs, F1).sum()
+            numToMax = getSingleMetric(predsModified, targs.detach(), F1).sum()
             numToMax.backward()
             #loss = self.criterion(torch.special.logit(predsModified), targs)
             #loss.backward()
             self.opt.step()
             self.opt.zero_grad()
-            self.thresholdPerClass.data = self.thresholdPerClass.clamp(min=self.threshold_min, max=self.threshold_max)
+            with torch.no_grad():
+                self.thresholdPerClass = self.thresholdPerClass.clamp(min=self.threshold_min, max=self.threshold_max)
         
         ''' old code that uses manual optimization calls instead of an optimizer
         # need fp64
@@ -1308,6 +1309,7 @@ def F1(TP, FN, FP, TN, epsilon):
     return (2 * TP) / (2 * TP + FP + FN + epsilon)
 
 
+# TODO test as boundary opt metric
 # https://www.cs.uic.edu/~liub/publications/icml-03.pdf
 # metric proposed in 
 # Lee, W. S., & Liu, B. (2003).
