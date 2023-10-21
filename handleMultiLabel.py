@@ -1307,13 +1307,22 @@ def P4(TP, FN, FP, TN, epsilon):
 def F1(TP, FN, FP, TN, epsilon):
     return (2 * TP) / (2 * TP + FP + FN + epsilon)
 
+
+# https://www.cs.uic.edu/~liub/publications/icml-03.pdf
+# metric proposed in 
+# Lee, W. S., & Liu, B. (2003).
+# Learning with positive and unlabeled examples using weighted logistic regression.
+# In Proceedings of the twentieth international conference on machine learning (pp. 448–455).
+def PU_F_Metric(TP, FN, FP, TN, epsilon):
+    return (Precall(TP, FN, FP, TN, epsilon) ** 2) / (FP + TP + epsilon)
+
 # tracking for performance metrics that can be computed from confusion matrix
 class MetricTracker():
     def __init__(self):
         self.running_confusion_matrix = None
         self.epsilon = 1e-12
         self.sampleCount = 0
-        self.metrics = [Precall, Nrecall, Pprecision, Nprecision, P4, F1]
+        self.metrics = [Precall, Nrecall, Pprecision, Nprecision, P4, F1, PU_F_Metric]
         
     def get_full_metrics(self):
         with torch.no_grad():
