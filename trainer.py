@@ -1061,7 +1061,7 @@ def trainCycle(image_datasets, model):
                         #preds = torch.sigmoid(outputs)
                         
                         logits = model(imageBatch)
-                        boundary = boundaryCalculator.thresholdPerClass
+                        boundary = boundaryCalculator.thresholdPerClass.to(device)
                         if FLAGS['threshold_loss']:
                             #outputs = outputs - torch.special.logit(boundary)
                             logits = logits + FLAGS['threshold_multiplier'] * torch.special.logit(boundary)
