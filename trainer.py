@@ -1321,6 +1321,7 @@ def trainCycle(image_datasets, model):
                     if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
                         print(type(obj), obj.size())
                 except: pass
+            print(torch.cuda.memory_summary(device = device))
         gc.collect()
 
         if(is_head_proc): print()
