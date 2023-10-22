@@ -302,14 +302,11 @@ class ModifiedLogisticRegression_NoWeight(nn.Module):
         # P(s = 1 | x_bar) as per equation #4 and section 4.1 from paper
         # weight term handled in image backbone
         self.NtC_out = 1/(1 + (self.beta_per_class ** 2) + torch.exp(-x))
-        # c_hat = 1 / (1 + b^2)
         # step isolated since we don't want to optimize beta here, only compute c_hat
-        #with torch.no_grad():
-        #    self.c_hat = 1 / (1 + self.beta_per_class.detach() ** 2)
+        with torch.no_grad():
+            self.c_hat = 1 / (1 + self.beta_per_class.detach() ** 2)
         # P(y = 1 | x) as per section 4.2 from paper
-        #self.pred = self.NtC_out / (self.c_hat.detach() + self.eps)
-        self.c_hat = 1 / (1 + self.beta_per_class.detach() ** 2)
-        self.pred = self.NtC_out / (self.c_hat.detach() + self.eps)
+        self.pred = self.NtC_out / (self.c_hat + self.eps)
         return self.pred
 
 def stepAtThreshold(x, threshold, k=5, base=10):
@@ -393,6 +390,7 @@ class getDecisionBoundaryWorking(nn.Module):
         self.lr = lr
         self.threshold_min = threshold_min
         self.threshold_max = threshold_max
+        self.predsModified = None
         
     def forward(self, preds, targs):
         # parameter initial_threshold
@@ -410,8 +408,8 @@ class getDecisionBoundaryWorking(nn.Module):
             # ignore what happened before, only need values
             preds = preds.detach()
             # stepping fn, currently steep version of logistic fn
-            predsModified = stepAtThreshold(preds, self.thresholdPerClass)
-            numToMax = getSingleMetric(predsModified, targs.detach(), F1).sum()
+            self.predsModified = stepAtThreshold(preds, self.thresholdPerClass)
+            numToMax = getSingleMetric(self.predsModified, targs.detach(), F1).sum()
             numToMax.backward()
             #loss = self.criterion(torch.special.logit(predsModified), targs)
             #loss.backward()
