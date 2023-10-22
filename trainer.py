@@ -1315,8 +1315,11 @@ def trainCycle(image_datasets, model):
         if(is_head_proc): print(f'epoch {epoch} completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
         #print(best)
         epoch += 1
-        
-
+        for obj in gc.get_objects():
+            try:
+                if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
+                    print(type(obj), obj.size())
+            except: pass
         gc.collect()
 
         if(is_head_proc): print()
