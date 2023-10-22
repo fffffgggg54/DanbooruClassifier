@@ -387,8 +387,7 @@ class getDecisionBoundary(nn.Module):
 class getDecisionBoundaryWorking(nn.Module):
     def __init__(self, initial_threshold = 0.5, lr = 1e-3, threshold_min = 0.2, threshold_max = 0.8):
         super().__init__()
-        self.initial_threshold = initial_threshold
-        self.thresholdPerClass = None
+        self.thresholdPerClass = torch.Tensor([initial_threshold])
         self.opt = None
         self.needs_init = True
         self.lr = lr
@@ -400,11 +399,7 @@ class getDecisionBoundaryWorking(nn.Module):
         # TODO clean this up and make it work consistently, use proper lazy init
         if self.needs_init:
             classCount = preds.size(dim=1)
-            currDevice = preds.device
-            if self.thresholdPerClass == None:
-                self.thresholdPerClass = (torch.ones(classCount, device=currDevice).to(torch.float64) * self.initial_threshold).requires_grad_(True)
-            else:
-                self.thresholdPerClass = (torch.ones(classCount, device=currDevice).to(torch.float64) * self.thresholdPerClass).requires_grad_(True)
+            self.thresholdPerClass = (torch.ones(classCount, device=currDevice).to(torch.float64) * self.thresholdPerClass).requires_grad_(True)
             self.needs_init = False
             self.opt = torch.optim.SGD([self.thresholdPerClass], lr=self.lr, maximize=True)
             #self.opt = torch.optim.SGD(self.parameters(), lr=self.lr, maximize=False)
