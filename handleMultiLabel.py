@@ -399,7 +399,7 @@ class getDecisionBoundaryWorking(nn.Module):
         # TODO clean this up and make it work consistently, use proper lazy init
         if self.needs_init:
             classCount = preds.size(dim=1)
-            self.thresholdPerClass = (torch.ones(classCount, device=currDevice).to(torch.float64) * self.thresholdPerClass).requires_grad_(True)
+            self.thresholdPerClass = (torch.ones(classCount, device=preds.device).to(torch.float64) * self.thresholdPerClass.to(preds.device)).requires_grad_(True)
             self.needs_init = False
             self.opt = torch.optim.SGD([self.thresholdPerClass], lr=self.lr, maximize=True)
             #self.opt = torch.optim.SGD(self.parameters(), lr=self.lr, maximize=False)
