@@ -345,10 +345,8 @@ class getDecisionBoundary(nn.Module):
             
         # update only when training
         if self.training:
-            # ignore what happened before, only need values
-            preds = preds.detach()
             # stepping fn, currently steep version of logistic fn
-            predsModified = stepAtThreshold(preds, self.thresholdPerClass)
+            predsModified = stepAtThreshold(preds.detach(), self.thresholdPerClass)
             numToMax = getSingleMetric(predsModified, targs, F1).sum()
             numToMax.backward()
             self.opt.step()
@@ -405,10 +403,8 @@ class getDecisionBoundaryWorking(nn.Module):
             
         # update only when training
         if preds.requires_grad:
-            # ignore what happened before, only need values
-            preds = preds.detach()
             # stepping fn, currently steep version of logistic fn
-            self.predsModified = stepAtThreshold(preds, self.thresholdPerClass)
+            self.predsModified = stepAtThreshold(preds.detach(), self.thresholdPerClass)
             numToMax = getSingleMetric(self.predsModified, targs.detach(), F1).sum()
             numToMax.backward()
             #loss = self.criterion(torch.special.logit(predsModified), targs)
