@@ -1319,7 +1319,8 @@ def trainCycle(image_datasets, model):
             for obj in gc.get_objects():
                 try:
                     if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
-                        print(type(obj), obj.size())
+                        print(type(obj), obj.size(), obj.grad_fn, obj.grad)
+                        
                 except: pass
             print(torch.cuda.memory_summary(device = device))
         gc.collect()
