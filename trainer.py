@@ -1292,6 +1292,9 @@ def trainCycle(image_datasets, model):
                     cachePath = FLAGS['modelDir'] + "evalOutputs.pkl.bz2"
                     with bz2.BZ2File(cachePath, 'w') as cachedSample: cPickle.dump(modelOutputs, cachedSample)
             currPhase += 1
+            optimizer.zero_grad(set_to_none=True)
+            mlr_act_opt.zero_grad(set_to_none=True)
+
             '''
             except Exception as e:
                 print(e)
