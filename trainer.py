@@ -793,7 +793,7 @@ def modelSetup(classes):
     
     # I mean it's really just an activation fn with trainable weights
     #mlr_act = MLCSL.ModifiedLogisticRegression(num_classes = len(classes), initial_weight = 1.0, initial_beta = 0.0, eps = 1e-8)
-    #mlr_act = MLCSL.ModifiedLogisticRegression_NoWeight(num_classes = len(classes), initial_beta = 0.0, eps = 1e-8)
+    mlr_act = MLCSL.ModifiedLogisticRegression_NoWeight(num_classes = len(classes), initial_beta = 0.0, eps = 1e-8)
     
     if FLAGS['finetune'] == True:
         for param in model.parameters():
@@ -804,7 +804,7 @@ def modelSetup(classes):
             for param in model.head_dist.parameters():
                 param.requires_grad = True
     
-    
+    model = nn.Sequential(model, mlr_act)
     
     return model
     
@@ -831,8 +831,8 @@ def trainCycle(image_datasets, model):
     
     
     model = model.to(device, memory_format=memory_format)
-    mlr_act = MLCSL.ModifiedLogisticRegression_NoWeight(num_classes = len(classes), initial_beta = 0.0, eps = 1e-8)
-    mlr_act = mlr_act.to(device, memory_format = memory_format)
+    #mlr_act = MLCSL.ModifiedLogisticRegression_NoWeight(num_classes = len(classes), initial_beta = 0.0, eps = 1e-8)
+    #mlr_act = mlr_act.to(device, memory_format = memory_format)
     
     if (FLAGS['resume_epoch'] > 0) and is_head_proc:
         state_dict = torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth', map_location=torch.device('cpu'))
@@ -843,14 +843,14 @@ def trainCycle(image_datasets, model):
         #    out_dict[k] = v
             
         model.load_state_dict(state_dict)
-        mlr_act_state_dict = torch.load(FLAGS['modelDir'] + 'mlr_act_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth', map_location=torch.device('cpu'))
-        mlr_act.load_state_dict(mlr_act_state_dict)
+        #mlr_act_state_dict = torch.load(FLAGS['modelDir'] + 'mlr_act_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth', map_location=torch.device('cpu'))
+        #mlr_act.load_state_dict(mlr_act_state_dict)
     
     
     
     if (FLAGS['use_ddp'] == True):
         model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
-        mlr_act = DDP(mlr_act, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
+        #mlr_act = DDP(mlr_act, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
         
     if(FLAGS['compile_model'] == True):
         model = torch.compile(model)
@@ -891,7 +891,7 @@ def trainCycle(image_datasets, model):
     optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     
     
-    mlr_act_opt = timm.optim.Adan(mlr_act.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
+    #mlr_act_opt = timm.optim.Adan(mlr_act.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     
     #mixup = Mixup(mixup_alpha = 0.2, cutmix_alpha = 0, num_classes = len(classes))
     
@@ -965,7 +965,7 @@ def trainCycle(image_datasets, model):
             #try:
             if phase == 'train':
                 model.train()  # Set model to training mode
-                mlr_act.train()
+                #mlr_act.train()
                 #boundaryCalculator.train()
                 #if (hasTPU == True): xm.master_print("training set")
                 if(is_head_proc): print("training set")
@@ -1007,17 +1007,17 @@ def trainCycle(image_datasets, model):
                         out_dict[k] = v
                     
                     torch.save(out_dict, modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
-                    torch.save(mlr_act.state_dict(), modelDir + 'mlr_act_epoch_' + str(epoch) + '.pth')
+                    #torch.save(mlr_act.state_dict(), modelDir + 'mlr_act_epoch_' + str(epoch) + '.pth')
                     if(epoch > 0):
                         os.remove(modelDir + 'saved_model_epoch_' + str(epoch - 1) + '.pth')
-                        os.remove(modelDir + 'mlr_act_epoch_' + str(epoch - 1) + '.pth')
+                        #os.remove(modelDir + 'mlr_act_epoch_' + str(epoch - 1) + '.pth')
                     torch.save(boundaryCalculator.thresholdPerClass, modelDir + 'thresholds.pth')
                     torch.save(optimizer.state_dict(), modelDir + 'optimizer' + '.pth')
                     pd.DataFrame(tagNames).to_pickle(modelDir + "tags.pkl")
                 
                 
                 model.eval()   # Set model to evaluate mode
-                mlr_act.eval()
+                #mlr_act.eval()
                 #boundaryCalculator.eval()
                 print("validation set")
                 if(FLAGS['skip_test_set'] == True and (epoch != FLAGS['num_epochs'] - 1)):
@@ -1060,12 +1060,7 @@ def trainCycle(image_datasets, model):
                         #outputs = model(imageBatch).logits
                         #preds = torch.sigmoid(outputs)
                         
-                        logits = model(imageBatch)
-                        boundary = boundaryCalculator.thresholdPerClass.to(device)
-                        if FLAGS['threshold_loss']:
-                            #outputs = outputs - torch.special.logit(boundary)
-                            logits = logits + FLAGS['threshold_multiplier'] * torch.special.logit(boundary)
-                        preds = mlr_act(logits)
+                        preds = model(imageBatch)
                         outputs = torch.special.logit(preds)
                         
                         with torch.cuda.amp.autocast(enabled=False):
@@ -1139,10 +1134,10 @@ def trainCycle(image_datasets, model):
                                     scaler.update()
                                     optimizer.zero_grad(set_to_none=True)
                                     
-                                    nn.utils.clip_grad_norm_(mlr_act.parameters(), max_norm=1.0, norm_type=2)
-                                    scaler.step(mlr_act_opt)
-                                    scaler.update()
-                                    mlr_act_opt.zero_grad(set_to_none=True)
+                                    #nn.utils.clip_grad_norm_(mlr_act.parameters(), max_norm=1.0, norm_type=2)
+                                    #scaler.step(mlr_act_opt)
+                                    #scaler.update()
+                                    #mlr_act_opt.zero_grad(set_to_none=True)
                                     
                             else:                               # apple gpu/cpu case
                                 with model.no_sync():
@@ -1152,9 +1147,9 @@ def trainCycle(image_datasets, model):
                                     optimizer.step()
                                     optimizer.zero_grad(set_to_none=True)
                                     
-                                    nn.utils.clip_grad_norm_(mlr_act.parameters(), max_norm=1.0, norm_type=2)
-                                    lr_act_opt.step()
-                                    mlr_act_opt.zero_grad(set_to_none=True)
+                                    #nn.utils.clip_grad_norm_(mlr_act.parameters(), max_norm=1.0, norm_type=2)
+                                    #lr_act_opt.step()
+                                    #mlr_act_opt.zero_grad(set_to_none=True)
                         
                         
                             torch.cuda.synchronize()
@@ -1318,6 +1313,7 @@ def trainCycle(image_datasets, model):
         if(is_head_proc): print(f'epoch {epoch} completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
         #print(best)
         epoch += 1
+        '''
         if(is_head_proc):
             for obj in gc.get_objects():
                 try:
@@ -1326,6 +1322,7 @@ def trainCycle(image_datasets, model):
                         
                 except: pass
             print(torch.cuda.memory_summary(device = device))
+        '''
         gc.collect()
 
         if(is_head_proc): print()
