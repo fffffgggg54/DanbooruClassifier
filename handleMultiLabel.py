@@ -582,9 +582,10 @@ class AdaptiveWeightedLoss(nn.Module):
         if x.requires_grad:
             #self.weight_this_batch = self.anti_targets.sum(dim=1) / (self.targets.sum(dim=1) + self.eps) # via labels
             with torch.no_grad():
-                self.weight_this_batch = (self.xs_neg.detach() * self.anti_targets.detach()).sum(dim=0) / ((self.xs_pos.detach() * self.targets.detach()).sum(dim=0) + self.eps) # via preds
-                
-                self.weight_this_batch = self.weight_this_batch.detach() # isolate the weight optimization
+                #self.weight_this_batch = (self.xs_neg.detach() * self.anti_targets.detach()).sum(dim=0) / ((self.xs_pos.detach() * self.targets.detach()).sum(dim=0) + self.eps) # via preds
+                self.weight_this_batch = (self.xs_neg * self.anti_targets).sum(dim=0) / ((self.xs_pos * self.targets).sum(dim=0) + self.eps) # via preds
+
+                #self.weight_this_batch = self.weight_this_batch.detach() # isolate the weight optimization
             
             # optimization
             numToMin = (self.weight_this_batch - self.weight_per_class) ** 2
@@ -599,9 +600,9 @@ class AdaptiveWeightedLoss(nn.Module):
             with torch.no_grad():
                 self.weight_per_class.data = self.weight_per_class.clamp(min=self.weight_limit_lower, max=self.weight_limit_upper)
             
-            # surely there's a better way to sync parameters right?
-            if(ddp):
-                torch.distributed.all_reduce(self.weight_per_class, op = torch.distributed.ReduceOp.AVG)
+                # surely there's a better way to sync parameters right?
+                if(ddp):
+                    torch.distributed.all_reduce(self.weight_per_class, op = torch.distributed.ReduceOp.AVG)
             
         return -(self.loss_neg + self.loss_pos * self.weight_per_class.detach()).sum()
         
