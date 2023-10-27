@@ -408,7 +408,7 @@ class getDecisionBoundaryWorking(nn.Module):
         if preds.requires_grad:
             # stepping fn, currently steep version of logistic fn
             self.predsModified = stepAtThreshold(preds.detach(), self.thresholdPerClass)
-            numToMax = getSingleMetric(self.predsModified, targs.detach(), F1).sum()
+            numToMax = getSingleMetric(self.predsModified, targs.detach(), PU_F_Metric).sum()
             numToMax.backward()
             #loss = self.criterion(torch.special.logit(predsModified), targs)
             #loss.backward()
