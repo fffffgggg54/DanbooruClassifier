@@ -1056,12 +1056,12 @@ def trainCycle(image_datasets, model):
                     
                     with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
                         
-                        #outputs = model(imageBatch)
+                        outputs = model(imageBatch)
                         #outputs = model(imageBatch).logits
-                        #preds = torch.sigmoid(outputs)
+                        preds = torch.sigmoid(outputs)
                         
-                        preds = model(imageBatch)
-                        outputs = torch.special.logit(preds)
+                        #preds = model(imageBatch)
+                        #outputs = torch.special.logit(preds)
                         
                         with torch.cuda.amp.autocast(enabled=False):
                             boundary = boundaryCalculator(preds.detach(), tagBatch)
