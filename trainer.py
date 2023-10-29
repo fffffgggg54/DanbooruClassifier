@@ -1251,16 +1251,16 @@ def trainCycle(image_datasets, model):
                 torch.distributed.all_reduce(cm_tracker.running_confusion_matrix, op=torch.distributed.ReduceOp.AVG)
                 
                 #torch.distributed.all_reduce(criterion.gamma_neg_per_class, op = torch.distributed.ReduceOp.AVG)
-            if ((phase == 'val') and (FLAGS['skip_test_set'] == False) and is_head_proc):
+            if ((phase == 'val') and (FLAGS['skip_test_set'] == False or epoch == FLAGS['num_epochs'] - 1) and is_head_proc):
                 #torch.set_printoptions(profile="full")
-                if(epoch == FLAGS['num_epochs'] - 1):
-                    #AvgAccuracy = torch.stack(AccuracyRunning)
-                    #AvgAccuracy = AvgAccuracy.mean(dim=0)
-                    AvgAccuracy = cm_tracker.get_full_metrics()
-                    LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames, boundaryCalculator.thresholdPerClass.data, criterion.weight_per_class))
-                    LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[0][8], reverse=True)
-                    
-                    if(is_head_proc): print(*LabelledAccuracySorted, sep="\n")
+                
+                #AvgAccuracy = torch.stack(AccuracyRunning)
+                #AvgAccuracy = AvgAccuracy.mean(dim=0)
+                AvgAccuracy = cm_tracker.get_full_metrics()
+                LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames, boundaryCalculator.thresholdPerClass.data, criterion.weight_per_class))
+                LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[0][8], reverse=True)
+                
+                if(is_head_proc): print(*LabelledAccuracySorted, sep="\n")
                 #torch.set_printoptions(profile="default")
                 MeanStackedAccuracy = cm_tracker.get_aggregate_metrics()
                 MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
