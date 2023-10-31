@@ -602,7 +602,7 @@ class AdaptiveWeightedLoss(nn.Module):
             #self.weight_per_class.data = (1-self.lr) * self.weight_per_class.data + (self.lr) * self.weight_this_batch
             
             with torch.no_grad():
-                self.weight_per_class.data = self.weight_per_class.clamp(min=self.weight_limit_lower, max=self.weight_limit_upper)
+                self.weight_per_class.data = self.weight_per_class.detach().clamp(min=self.weight_limit_lower, max=self.weight_limit_upper)
             
                 # surely there's a better way to sync parameters right?
                 if(ddp):
