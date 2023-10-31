@@ -566,9 +566,7 @@ class AdaptiveWeightedLoss(nn.Module):
                 self.weight_per_class = (torch.ones(classCount, device=currDevice) * self.weight_per_class).requires_grad_(True)
             self.needs_init = False
             #self.opt = torch.optim.SGD(self.parameters(), lr=self.lr)
-            print(self.weight_per_class.requires_grad)
             self.opt = torch.optim.AdamW([self.weight_per_class], lr=self.lr)
-            print(self.weight_per_class.requires_grad)
             # TODO maybe another optimizer will work better?
             # TODO maybe a plain EMA?
             
@@ -589,10 +587,8 @@ class AdaptiveWeightedLoss(nn.Module):
                 self.weight_this_batch = (self.xs_neg.detach() * self.anti_targets.detach()).sum(dim=0) / ((self.xs_pos.detach() * self.targets.detach()).sum(dim=0) + self.eps) # via preds
 
                 self.weight_this_batch = self.weight_this_batch.detach() # isolate the weight optimization
-            print(self.weight_per_class.requires_grad)
             # optimization
             numToMin = (self.weight_this_batch - self.weight_per_class) ** 2
-            print(self.weight_per_class.requires_grad)
             numToMin.mean().backward()
             self.opt.step()
             self.opt.zero_grad()
@@ -602,7 +598,7 @@ class AdaptiveWeightedLoss(nn.Module):
             #self.weight_per_class.data = (1-self.lr) * self.weight_per_class.data + (self.lr) * self.weight_this_batch
             
             with torch.no_grad():
-                self.weight_per_class = self.weight_per_class.clamp(min=self.weight_limit_lower, max=self.weight_limit_upper)
+                self.weight_per_class.data = self.weight_per_class.clamp(min=self.weight_limit_lower, max=self.weight_limit_upper)
             
                 # surely there's a better way to sync parameters right?
                 if(ddp):
