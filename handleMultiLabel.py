@@ -385,37 +385,42 @@ class getDecisionBoundary(nn.Module):
 class getDecisionBoundaryWorking(nn.Module):
     def __init__(self, initial_threshold = 0.5, lr = 1e-3, threshold_min = 0.2, threshold_max = 0.8):
         super().__init__()
-        self.thresholdPerClass = torch.Tensor([initial_threshold])
+        self.initial_threshold = initial_threshold
+        self.thresholdPerClass = None
         self.opt = None
         self.needs_init = True
         self.lr = lr
         self.threshold_min = threshold_min
         self.threshold_max = threshold_max
-        self.predsModified = None
         
     def forward(self, preds, targs):
         # parameter initial_threshold
         # TODO clean this up and make it work consistently, use proper lazy init
         if self.needs_init:
             classCount = preds.size(dim=1)
-            self.thresholdPerClass = (torch.ones(classCount, device=preds.device).to(torch.float64) * self.thresholdPerClass.to(preds.device)).requires_grad_(True)
+            currDevice = preds.device
+            if self.thresholdPerClass == None:
+                self.thresholdPerClass = nn.Parameter(torch.ones(classCount, device=currDevice, requires_grad=True).to(torch.float64) * self.initial_threshold)
+            else:
+                self.thresholdPerClass = nn.Parameter(torch.ones(classCount, device=currDevice, requires_grad=True).to(torch.float64) * self.thresholdPerClass)
             self.needs_init = False
-            self.opt = torch.optim.SGD([self.thresholdPerClass], lr=self.lr, maximize=True)
+            self.opt = torch.optim.SGD(self.parameters(), lr=self.lr, maximize=True)
             #self.opt = torch.optim.SGD(self.parameters(), lr=self.lr, maximize=False)
             #self.criterion = AsymmetricLossOptimized(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
             
         # update only when training
         if preds.requires_grad:
+            # ignore what happened before, only need values
+            preds = preds.detach()
             # stepping fn, currently steep version of logistic fn
-            self.predsModified = stepAtThreshold(preds.detach(), self.thresholdPerClass)
-            numToMax = getSingleMetric(self.predsModified, targs.detach(), PU_F_Metric).sum()
+            predsModified = stepAtThreshold(preds, self.thresholdPerClass)
+            numToMax = getSingleMetric(predsModified, targs, F1).sum()
             numToMax.backward()
             #loss = self.criterion(torch.special.logit(predsModified), targs)
             #loss.backward()
             self.opt.step()
             self.opt.zero_grad()
-            with torch.no_grad(): 
-                self.thresholdPerClass = self.thresholdPerClass.clamp(min=self.threshold_min, max=self.threshold_max)
+            self.thresholdPerClass.data = self.thresholdPerClass.clamp(min=self.threshold_min, max=self.threshold_max)
         
         ''' old code that uses manual optimization calls instead of an optimizer
         # need fp64
