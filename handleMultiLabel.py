@@ -559,14 +559,12 @@ class AdaptiveWeightedLoss(nn.Module):
             classCount = x.size(dim=1)
             currDevice = x.device
             if self.weight_per_class == None:
-                #self.weight_per_class = nn.Parameter(torch.ones(classCount, device=currDevice, requires_grad=True) * self.initial_weight)
-                self.weight_per_class = (torch.ones(classCount, device=currDevice) * self.initial_weight).requires_grad_(True)
+                self.weight_per_class = nn.Parameter(torch.ones(classCount, device=currDevice, requires_grad=True) * self.initial_weight)
             else:
-                #self.weight_per_class = nn.Parameter(torch.ones(classCount, device=currDevice, requires_grad=True) * self.weight_per_class)
-                self.weight_per_class = (torch.ones(classCount, device=currDevice) * self.weight_per_class).requires_grad_(True)
+                self.weight_per_class = nn.Parameter(torch.ones(classCount, device=currDevice, requires_grad=True) * self.weight_per_class)
             self.needs_init = False
             #self.opt = torch.optim.SGD(self.parameters(), lr=self.lr)
-            self.opt = torch.optim.AdamW([self.weight_per_class], lr=self.lr)
+            self.opt = torch.optim.AdamW(self.parameters(), lr=self.lr)
             # TODO maybe another optimizer will work better?
             # TODO maybe a plain EMA?
             
@@ -587,6 +585,7 @@ class AdaptiveWeightedLoss(nn.Module):
                 self.weight_this_batch = (self.xs_neg.detach() * self.anti_targets.detach()).sum(dim=0) / ((self.xs_pos.detach() * self.targets.detach()).sum(dim=0) + self.eps) # via preds
 
                 self.weight_this_batch = self.weight_this_batch.detach() # isolate the weight optimization
+            
             # optimization
             numToMin = (self.weight_this_batch - self.weight_per_class) ** 2
             numToMin.mean().backward()
