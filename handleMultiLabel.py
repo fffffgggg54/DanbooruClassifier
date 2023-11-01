@@ -353,7 +353,7 @@ class getDecisionBoundary(nn.Module):
             numToMax = getSingleMetric(predsModified, targs, F1).sum()
             numToMax.backward()
             self.opt.step()
-            self.opt.zero_grad()
+            self.opt.zero_grad(set_to_none=True)
             self.thresholdPerClass.data = self.thresholdPerClass.clamp(min=self.threshold_min, max=self.threshold_max)
         
         ''' old code that uses manual optimization calls instead of an optimizer
@@ -419,7 +419,7 @@ class getDecisionBoundaryWorking(nn.Module):
             #loss = self.criterion(torch.special.logit(predsModified), targs)
             #loss.backward()
             self.opt.step()
-            self.opt.zero_grad()
+            self.opt.zero_grad(set_to_none=True)
             self.thresholdPerClass.data = self.thresholdPerClass.clamp(min=self.threshold_min, max=self.threshold_max)
         
         ''' old code that uses manual optimization calls instead of an optimizer
@@ -589,13 +589,13 @@ class AdaptiveWeightedLoss(nn.Module):
             with torch.no_grad():
                 self.weight_this_batch = (self.xs_neg.detach() * self.anti_targets.detach()).sum(dim=0) / ((self.xs_pos.detach() * self.targets.detach()).sum(dim=0) + self.eps) # via preds
 
-                self.weight_this_batch = self.weight_this_batch.detach() # isolate the weight optimization
+                #self.weight_this_batch = self.weight_this_batch.detach() # isolate the weight optimization
             
             # optimization
             numToMin = (self.weight_this_batch - self.weight_per_class) ** 2
             numToMin.mean().backward()
             self.opt.step()
-            self.opt.zero_grad()
+            self.opt.zero_grad(set_to_none=True)
             
             # EMA
             # TODO get this to work, currently collapsing to high false positive count (87ish %)
