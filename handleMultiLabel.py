@@ -1320,7 +1320,7 @@ def F1(TP, FN, FP, TN, epsilon):
 # In Proceedings of the twentieth international conference on machine learning (pp. 448–455).
 def PU_F_Metric(TP, FN, FP, TN, epsilon):
     return (Precall(TP, FN, FP, TN, epsilon) ** 2) / (FP + TP + epsilon)
- '''  
+ '''
 # AUL and AUROC helper, implements shared portion of eqs 1 and 2 in paper
 # https://openreview.net/forum?id=2NU7a9AHo-6
 # AUL is a better optimization metric in PU learning
