@@ -1077,6 +1077,8 @@ def trainCycle(image_datasets, model):
                             multiAccuracy = cm_tracker.update((preds.detach() > boundary.detach()).float().to(device), tagBatch.to(device))
                             #multiAccuracy = cm_tracker.update(preds.detach().float().to(device), tagBatch.to(device))
                         
+                        
+                        
                         outputs = outputs.float()
                         '''
                         if phase == 'val':
@@ -1085,11 +1087,11 @@ def trainCycle(image_datasets, model):
                         #loss = criterion(torch.mul(preds, tagBatch), tagBatch)
                         #loss = criterion(outputs, tagBatch)
                         '''
-                        '''
+                        
                         if FLAGS['threshold_loss']:
                             #outputs = outputs - torch.special.logit(boundary)
                             outputs = outputs + FLAGS['threshold_multiplier'] * torch.special.logit(boundary)
-                        '''
+                        
                         #outputs = outputs + offset
                         tagsModified = tagBatch
                         if FLAGS['splc'] and epoch >= FLAGS['splc_start_epoch']:
@@ -1097,9 +1099,15 @@ def trainCycle(image_datasets, model):
                                 #targs = torch.where(preds > boundary.detach(), torch.tensor(1).to(preds), labels) # hard SPLC
                                 tagsModified = ((1 - tagsModified) * MLCSL.stepAtThreshold(preds, boundary) + tagsModified) # soft SPLC
                         
+                        criterion.update(outputs.to(device), tagsModified.to(device))
+                                
+                        if(FLAGS['use_ddp'] == True):
+                            torch.distributed.all_reduce(criterion.weight_per_class, op = torch.distributed.ReduceOp.AVG)
+                            torch.cuda.synchronize()
+                        
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        #loss = criterion(outputs.to(device), tagsModified.to(device))
-                        loss = criterion(outputs.to(device), tagsModified.to(device), ddp=FLAGS['use_ddp'])
+                        loss = criterion(outputs.to(device), tagsModified.to(device))
+                        #loss = criterion(outputs.to(device), tagsModified.to(device), ddp=FLAGS['use_ddp'])
                         #loss = criterion(outputs.to(device) - torch.special.logit(boundary), tagBatch.to(device))
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
                         #loss, textOutput = criterion(outputs.to(device), tagBatch.to(device), updateAdaptive = (phase == 'train'), printAdaptive = ((i % stepsPerPrintout == 0) and is_head_proc))

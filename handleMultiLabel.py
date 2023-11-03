@@ -555,7 +555,24 @@ class AdaptiveWeightedLoss(nn.Module):
         self.weight_limit_lower = 1 / weight_limit
         self.eps = eps
         
-    def forward(self, x, y, ddp=False):
+    def forward(self, x, y):
+    
+        
+            
+        # process logits, ASLOptimized style
+        self.targets = y
+        self.anti_targets = 1 - y
+        self.xs_pos = torch.sigmoid(x)
+        self.xs_neg = 1.0 - self.xs_pos
+        
+        # basic loss calculation, ASL/ASLOptimized style
+        self.loss_pos = self.targets * torch.log(self.xs_pos)
+        self.loss_neg = self.anti_targets * torch.log(self.xs_neg)
+        
+        
+        return -(self.loss_neg + self.loss_pos * self.weight_per_class.detach()).sum()
+    
+    def update(self, x, y):
     
         # parameter initialization
         # TODO clean this up and make it work consistently, use proper lazy init
@@ -577,39 +594,27 @@ class AdaptiveWeightedLoss(nn.Module):
         self.anti_targets = 1 - y
         self.xs_pos = torch.sigmoid(x)
         self.xs_neg = 1.0 - self.xs_pos
-        
-        # basic loss calculation, ASL/ASLOptimized style
-        self.loss_pos = self.targets * torch.log(self.xs_pos)
-        self.loss_neg = self.anti_targets * torch.log(self.xs_neg)
-        
-        # weight update, update only when training
-        if x.requires_grad:
-            #self.weight_this_batch = self.anti_targets.sum(dim=1) / (self.targets.sum(dim=1) + self.eps) # via labels
-            with torch.no_grad():
-                self.weight_this_batch = (self.xs_neg.detach() * self.anti_targets.detach()).sum(dim=0) / ((self.xs_pos.detach() * self.targets.detach()).sum(dim=0) + self.eps) # via preds
+    
+        #self.weight_this_batch = self.anti_targets.sum(dim=1) / (self.targets.sum(dim=1) + self.eps) # via labels
+        with torch.no_grad():
+            self.weight_this_batch = (self.xs_neg.detach() * self.anti_targets.detach()).sum(dim=0) / ((self.xs_pos.detach() * self.targets.detach()).sum(dim=0) + self.eps) # via preds
 
-                #self.weight_this_batch = self.weight_this_batch.detach() # isolate the weight optimization
-            
-            # optimization
-            numToMin = (self.weight_this_batch - self.weight_per_class) ** 2
-            numToMin.mean().backward()
-            self.opt.step()
-            self.opt.zero_grad(set_to_none=True)
-            
-            # EMA
-            # TODO get this to work, currently collapsing to high false positive count (87ish %)
-            #self.weight_per_class.data = (1-self.lr) * self.weight_per_class.data + (self.lr) * self.weight_this_batch
-            
-            with torch.no_grad():
-                self.weight_per_class.data = self.weight_per_class.detach().clamp(min=self.weight_limit_lower, max=self.weight_limit_upper)
-            
-                # surely there's a better way to sync parameters right?
-                if(ddp):
-                    torch.distributed.all_reduce(self.weight_per_class, op = torch.distributed.ReduceOp.AVG)
-                    torch.cuda.synchronize()
-            
-        return -(self.loss_neg + self.loss_pos * self.weight_per_class.detach()).sum()
+            self.weight_this_batch = self.weight_this_batch.detach() # isolate the weight optimization
         
+        # optimization
+        numToMin = (self.weight_this_batch - self.weight_per_class) ** 2
+        numToMin.mean().backward()
+        self.opt.step()
+        self.opt.zero_grad(set_to_none=True)
+        
+        # EMA
+        # TODO get this to work, currently collapsing to high false positive count (87ish %)
+        #self.weight_per_class.data = (1-self.lr) * self.weight_per_class.data + (self.lr) * self.weight_this_batch
+        
+        with torch.no_grad():
+            self.weight_per_class.data = self.weight_per_class.detach().clamp(min=self.weight_limit_lower, max=self.weight_limit_upper)
+
+            
         
 
 
