@@ -589,7 +589,7 @@ class AdaptiveWeightedLoss(nn.Module):
             with torch.no_grad():
                 self.weight_this_batch = (self.xs_neg.detach() * self.anti_targets.detach()).sum(dim=0) / ((self.xs_pos.detach() * self.targets.detach()).sum(dim=0) + self.eps) # via preds
 
-                #self.weight_this_batch = self.weight_this_batch.detach() # isolate the weight optimization
+                self.weight_this_batch = self.weight_this_batch.detach() # isolate the weight optimization
             
             # optimization
             numToMin = (self.weight_this_batch - self.weight_per_class) ** 2
