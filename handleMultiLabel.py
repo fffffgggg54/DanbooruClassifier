@@ -573,30 +573,30 @@ class AdaptiveWeightedLoss(nn.Module):
         return -(self.loss_neg + self.loss_pos * self.weight_per_class.detach()).sum()
     
     def update(self, x, y):
-    
-        # parameter initialization
-        # TODO clean this up and make it work consistently, use proper lazy init
-        if self.needs_init:
-            classCount = x.size(dim=1)
-            currDevice = x.device
-            if self.weight_per_class == None:
-                self.weight_per_class = nn.Parameter(torch.ones(classCount, device=currDevice, requires_grad=True) * self.initial_weight)
-            else:
-                self.weight_per_class = nn.Parameter(torch.ones(classCount, device=currDevice, requires_grad=True) * self.weight_per_class)
-            self.needs_init = False
-            #self.opt = torch.optim.SGD(self.parameters(), lr=self.lr)
-            self.opt = torch.optim.AdamW(self.parameters(), lr=self.lr)
-            # TODO maybe another optimizer will work better?
-            # TODO maybe a plain EMA?
-            
-        # process logits, ASLOptimized style
-        self.targets = y
-        self.anti_targets = 1 - y
-        self.xs_pos = torch.sigmoid(x)
-        self.xs_neg = 1.0 - self.xs_pos
-    
-        #self.weight_this_batch = self.anti_targets.sum(dim=1) / (self.targets.sum(dim=1) + self.eps) # via labels
         with torch.no_grad():
+            # parameter initialization
+            # TODO clean this up and make it work consistently, use proper lazy init
+            if self.needs_init:
+                classCount = x.size(dim=1)
+                currDevice = x.device
+                if self.weight_per_class == None:
+                    self.weight_per_class = nn.Parameter(torch.ones(classCount, device=currDevice, requires_grad=True) * self.initial_weight)
+                else:
+                    self.weight_per_class = nn.Parameter(torch.ones(classCount, device=currDevice, requires_grad=True) * self.weight_per_class)
+                self.needs_init = False
+                #self.opt = torch.optim.SGD(self.parameters(), lr=self.lr)
+                self.opt = torch.optim.AdamW(self.parameters(), lr=self.lr)
+                # TODO maybe another optimizer will work better?
+                # TODO maybe a plain EMA?
+                
+            # process logits, ASLOptimized style
+            self.targets = y
+            self.anti_targets = 1 - y
+            self.xs_pos = torch.sigmoid(x)
+            self.xs_neg = 1.0 - self.xs_pos
+        
+            #self.weight_this_batch = self.anti_targets.sum(dim=1) / (self.targets.sum(dim=1) + self.eps) # via labels
+        
             self.weight_this_batch = (self.xs_neg.detach() * self.anti_targets.detach()).sum(dim=0) / ((self.xs_pos.detach() * self.targets.detach()).sum(dim=0) + self.eps) # via preds
 
             self.weight_this_batch = self.weight_this_batch.detach() # isolate the weight optimization
@@ -604,14 +604,15 @@ class AdaptiveWeightedLoss(nn.Module):
         # optimization
         numToMin = (self.weight_this_batch - self.weight_per_class) ** 2
         numToMin.mean().backward()
-        self.opt.step()
-        self.opt.zero_grad(set_to_none=True)
-        
-        # EMA
-        # TODO get this to work, currently collapsing to high false positive count (87ish %)
-        #self.weight_per_class.data = (1-self.lr) * self.weight_per_class.data + (self.lr) * self.weight_this_batch
-        
         with torch.no_grad():
+            self.opt.step()
+            self.opt.zero_grad(set_to_none=True)
+            
+            # EMA
+            # TODO get this to work, currently collapsing to high false positive count (87ish %)
+            #self.weight_per_class.data = (1-self.lr) * self.weight_per_class.data + (self.lr) * self.weight_this_batch
+        
+        
             self.weight_per_class.data = self.weight_per_class.detach().clamp(min=self.weight_limit_lower, max=self.weight_limit_upper)
 
             
@@ -1278,7 +1279,7 @@ def getSingleMetric(preds, targs, metric):
     P = targs * preds
     N = targs_inv * preds
     
-    
+    # [K]
     TP = P.sum(dim=0) / batchSize
     FN = (targs - P).sum(dim=0) / batchSize
     FP = N.sum(dim=0) / batchSize
@@ -1319,7 +1320,29 @@ def F1(TP, FN, FP, TN, epsilon):
 # In Proceedings of the twentieth international conference on machine learning (pp. 448–455).
 def PU_F_Metric(TP, FN, FP, TN, epsilon):
     return (Precall(TP, FN, FP, TN, epsilon) ** 2) / (FP + TP + epsilon)
+ '''  
+# AUL and AUROC helper, implements shared portion of eqs 1 and 2 in paper
+# https://openreview.net/forum?id=2NU7a9AHo-6
+# AUL is a better optimization metric in PU learning
+# by Shangchuan Huang, Songtao Wang, Dan Li, Liwei Jiang
+def chart_inner(preds):
 
+    # [K, B] <- [B, K]
+    preds = preds.permute(0,1)
+    # [K, B, 1]
+    sample1 = preds.unsqueeze(2)
+    # [K, 1, B]
+    sample2 = preds.unsqueeze(1)
+    # [K, B, B]
+    return (sample1 == sample2).int() * 0.5 + (sample1 > sample2).int()
+    
+def AUROC(TP, FN, FP, TN, epsilon):
+    # reconstruct preds
+    # shape of [B, K]
+    preds = FP + TP
+    num_pos = 
+    return 
+'''
 # tracking for performance metrics that can be computed from confusion matrix
 class MetricTracker():
     def __init__(self):
