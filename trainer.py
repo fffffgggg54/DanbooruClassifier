@@ -1098,12 +1098,12 @@ def trainCycle(image_datasets, model):
                             with torch.no_grad():
                                 #targs = torch.where(preds > boundary.detach(), torch.tensor(1).to(preds), labels) # hard SPLC
                                 tagsModified = ((1 - tagsModified) * MLCSL.stepAtThreshold(preds, boundary) + tagsModified) # soft SPLC
-                        
-                        criterion.update(outputs.to(device), tagsModified.to(device))
+                        if(phase == 'train' and hasattr(criterion, 'update')):
+                            criterion.update(outputs.to(device), tagsModified.to(device))
                                 
-                        if(FLAGS['use_ddp'] == True):
-                            torch.distributed.all_reduce(criterion.weight_per_class, op = torch.distributed.ReduceOp.AVG)
-                            torch.cuda.synchronize()
+                            if(FLAGS['use_ddp'] == True):
+                                torch.distributed.all_reduce(criterion.weight_per_class, op = torch.distributed.ReduceOp.AVG)
+                                torch.cuda.synchronize()
                         
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
                         loss = criterion(outputs.to(device), tagsModified.to(device))
