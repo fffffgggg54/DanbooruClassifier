@@ -1327,6 +1327,10 @@ def PU_F_Metric(TP, FN, FP, TN, epsilon):
 # https://openreview.net/forum?id=2NU7a9AHo-6
 # AUL is a better optimization metric in PU learning
 # by Shangchuan Huang, Songtao Wang, Dan Li, Liwei Jiang
+# originally eqs 4.5 and 4.6 from
+# https://doi.org/10.51936/noqf3710
+# ROC Curve, Lift Chart and Calibration Plot
+# by Miha Vuk and Tomaz Curk (2006)
 def chart_inner(preds):
 
     # [K, B] <- [B, K]
@@ -1338,7 +1342,7 @@ def chart_inner(preds):
     # [K, B, B]
     return (sample1 == sample2).int() * 0.5 + (sample1 > sample2).int()
     
-def AUROC(TP, FN, FP, TN, epsilon):
+def AUROC(preds, targs, epsilon):
     # reconstruct preds
     # shape of [B, K]
     preds = FP + TP
