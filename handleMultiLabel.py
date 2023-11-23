@@ -1354,10 +1354,14 @@ def AUROC(preds, targs, epsilon):
 def AUL(preds, targs, epsilon = 1e-8):
     # [K] <- [B, K]
     num_pos = targs.sum(dim=0)
+    print(num_pos.shape)
     # [K]
     numel = targs.size(dim=0)
+    print(numel)
     # [K]
-    return chart_inner(preds).sum(dim=(1,2)) / (num_pos * numel + epsilon)
+    chartResult = chart_inner(preds).sum(dim=(1,2))
+    print(chartResult.shape)
+    return chartResult / (num_pos * numel + epsilon)
 
 # tracking for performance metrics that can be computed from confusion matrix
 class MetricTracker():
