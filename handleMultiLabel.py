@@ -1365,7 +1365,7 @@ def AUL(preds, targs, epsilon = 1e-8):
     # [K]
     chartResult = chart_inner(preds)
     #print(chartResult.shape)
-    return chartResult.sum(dim=(1,2)) / (num_pos * numel + epsilon)
+    return chartResult.mean(dim=(1,2)) / (num_pos * numel + epsilon)
 
 # tracking for performance metrics that can be computed from confusion matrix
 class MetricTracker():
