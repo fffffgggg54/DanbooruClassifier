@@ -1336,17 +1336,13 @@ def chart_inner(preds):
 
     # [K, B] <- [B, K]
     preds = preds.permute(1,0)
-    #print(preds.shape)
     # [K, B, 1]
     sample1 = preds.unsqueeze(2)
-    #print(sample1.shape)
     # [K, 1, B]
     sample2 = preds.unsqueeze(1)
-    #print(sample2.shape)
     # [K, B, B]
     #result = (sample1 == sample2).int() * 0.5 + (sample1 > sample2).int()
     result = (torch.special.logit(sample1) - torch.special.logit(sample2)).sigmoid()
-    #print(result.shape)
     return result
     
 def AUROC(preds, targs, epsilon):
@@ -1354,18 +1350,15 @@ def AUROC(preds, targs, epsilon):
     num_pos = targs.sum(dim=0)
     # [K]
     num_neg = targs.size(dim=0) - num_pos
-    
-    return (chart_inner(preds).sum(dim=(1,2)) / (num_pos * num_neg + epsilon)).sum()
+    # [K]
+    return (num_pos > 0).int() * chart_inner(preds).mean(dim=(1,2)) / (num_pos * num_neg + epsilon)
     
 def AUL(preds, targs, epsilon = 1e-8):
     # [K] <- [B, K]
     num_pos = targs.sum(dim=0)
-    #print(num_pos.shape)
     numel = targs.size(dim=0) # = K
     # [K]
-    chartResult = chart_inner(preds)
-    #print(chartResult.shape)
-    return (num_pos > 0).int() * chartResult.mean(dim=(1,2)) / (num_pos * numel + epsilon)
+    return (num_pos > 0).int() * chart_inner(preds).mean(dim=(1,2)) / (num_pos * numel + epsilon)
 
 # tracking for performance metrics that can be computed from confusion matrix
 class MetricTracker():
