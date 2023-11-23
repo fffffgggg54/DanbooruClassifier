@@ -1336,12 +1336,17 @@ def chart_inner(preds):
 
     # [K, B] <- [B, K]
     preds = preds.permute(0,1)
+    print(preds.shape)
     # [K, B, 1]
     sample1 = preds.unsqueeze(2)
+    print(sample1.shape)
     # [K, 1, B]
     sample2 = preds.unsqueeze(1)
+    print(sample2.shape)
     # [K, B, B]
-    return (sample1 == sample2).int() * 0.5 + (sample1 > sample2).int()
+    result = (sample1 == sample2).int() * 0.5 + (sample1 > sample2).int()
+    print(result.shape)
+    return result
     
 def AUROC(preds, targs, epsilon):
     # [K] <- [B, K]
