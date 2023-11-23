@@ -1108,7 +1108,7 @@ def trainCycle(image_datasets, model):
                                 torch.cuda.synchronize()
                         
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        #loss = criterion(outputs.to(device), tagsModified.to(device))
+                        loss = criterion(outputs.to(device), tagsModified.to(device))
                         #loss = criterion(outputs.to(device), tagsModified.to(device), ddp=FLAGS['use_ddp'])
                         #loss = criterion(outputs.to(device) - torch.special.logit(boundary), tagBatch.to(device))
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
@@ -1129,7 +1129,7 @@ def trainCycle(image_datasets, model):
                         #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).pow(2).sum()
                         #loss = (1 - multiAccuracy[:,8]).pow(2).sum()
                         #loss = -MLCSL.getSingleMetric(outputs.sigmoid(), tagsModified, MLCSL.PU_F_Metric).sum()
-                        loss = -MLCSL.AUL(outputs.sigmoid(), tagsModified).sum()
+                        #loss = -MLCSL.AUL(outputs.sigmoid(), tagsModified).sum()
                         #model.zero_grad()
                         
                         
