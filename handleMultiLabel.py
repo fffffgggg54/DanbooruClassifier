@@ -1355,9 +1355,7 @@ def AUL(preds, targs, epsilon = 1e-8):
     # [K] <- [B, K]
     num_pos = targs.sum(dim=0)
     print(num_pos.shape)
-    # [K]
-    numel = targs.size(dim=0)
-    print(numel.shape)
+    numel = targs.size(dim=0) # = K
     # [K]
     chartResult = chart_inner(preds)
     print(chartResult.shape)
