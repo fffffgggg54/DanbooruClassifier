@@ -1335,17 +1335,17 @@ def PU_F_Metric(TP, FN, FP, TN, epsilon):
 def chart_inner(preds):
 
     # [K, B] <- [B, K]
-    preds = preds.permute(0,1)
-    print(preds.shape)
+    preds = preds.permute(1,0)
+    #print(preds.shape)
     # [K, B, 1]
     sample1 = preds.unsqueeze(2)
-    print(sample1.shape)
+    #print(sample1.shape)
     # [K, 1, B]
     sample2 = preds.unsqueeze(1)
-    print(sample2.shape)
+    #print(sample2.shape)
     # [K, B, B]
     result = (sample1 == sample2).int() * 0.5 + (sample1 > sample2).int()
-    print(result.shape)
+    #print(result.shape)
     return result
     
 def AUROC(preds, targs, epsilon):
@@ -1359,11 +1359,11 @@ def AUROC(preds, targs, epsilon):
 def AUL(preds, targs, epsilon = 1e-8):
     # [K] <- [B, K]
     num_pos = targs.sum(dim=0)
-    print(num_pos.shape)
+    #print(num_pos.shape)
     numel = targs.size(dim=0) # = K
     # [K]
     chartResult = chart_inner(preds)
-    print(chartResult.shape)
+    #print(chartResult.shape)
     return chartResult.sum(dim=(1,2)) / (num_pos * numel + epsilon)
 
 # tracking for performance metrics that can be computed from confusion matrix
