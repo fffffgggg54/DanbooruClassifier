@@ -1295,6 +1295,7 @@ def Precall(TP, FN, FP, TN, epsilon):
     
 # specificity
 def Nrecall(TP, FN, FP, TN, epsilon):
+    zero_grad(FN)
     return TN / (TN + FP + epsilon)
 
 # precision
