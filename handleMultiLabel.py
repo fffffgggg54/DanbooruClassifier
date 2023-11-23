@@ -1323,7 +1323,7 @@ def F1(TP, FN, FP, TN, epsilon):
 # In Proceedings of the twentieth international conference on machine learning (pp. 448–455).
 def PU_F_Metric(TP, FN, FP, TN, epsilon):
     return (Precall(TP, FN, FP, TN, epsilon) ** 2) / (FP + TP + epsilon)
-'''
+
 # AUL and AUROC helper, implements shared portion of eqs 1 and 2 in paper
 # https://openreview.net/forum?id=2NU7a9AHo-6
 # AUL is a better optimization metric in PU learning
@@ -1344,12 +1344,21 @@ def chart_inner(preds):
     return (sample1 == sample2).int() * 0.5 + (sample1 > sample2).int()
     
 def AUROC(preds, targs, epsilon):
-    # reconstruct preds
-    # shape of [B, K]
-    preds = FP + TP
-    num_pos = 
-    return 
-'''
+    # [K] <- [B, K]
+    num_pos = targs.sum(dim=0)
+    # [K]
+    num_neg = targs.size(dim=0) - num_pos
+    
+    return (chart_inner(preds).sum(dim=(1,2)) / (num_pos * num_neg + epsilon)).sum()
+    
+def AUL(preds, targs, epsilon = 1e-8):
+    # [K] <- [B, K]
+    num_pos = targs.sum(dim=0)
+    # [K]
+    numel = targs.size(dim=0)
+    # [K]
+    return chart_inner(preds).sum(dim=(1,2)) / (num_pos * numel + epsilon)
+
 # tracking for performance metrics that can be computed from confusion matrix
 class MetricTracker():
     def __init__(self):
