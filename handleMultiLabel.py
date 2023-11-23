@@ -1344,7 +1344,8 @@ def chart_inner(preds):
     sample2 = preds.unsqueeze(1)
     #print(sample2.shape)
     # [K, B, B]
-    result = (sample1 == sample2).int() * 0.5 + (sample1 > sample2).int()
+    #result = (sample1 == sample2).int() * 0.5 + (sample1 > sample2).int()
+    result = (torch.special.logit(sample1) - torch.special.logit(sample2)).sigmoid()
     #print(result.shape)
     return result
     
