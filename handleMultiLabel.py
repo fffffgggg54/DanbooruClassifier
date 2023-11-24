@@ -1343,7 +1343,7 @@ def chart_inner(preds):
     sample2 = preds.unsqueeze(1)
     # [K, B, B]
     #result = (sample1 == sample2).int() * 0.5 + (sample1 > sample2).int()
-    result = (torch.special.logit(sample1) - torch.special.logit(sample2)).sigmoid()
+    result = (sample1 - sample2).sigmoid()
     return result
     
 def AUROC(preds, targs, epsilon):
