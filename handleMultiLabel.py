@@ -1363,7 +1363,7 @@ def AUL(preds, targs, epsilon = 1e-8):
     result = (num_pos > 0).int() * chart_inner(preds).sum(dim=(1,2)) / (num_pos * numel + epsilon)
     print(chart_inner(preds).sum(dim=(1,2)))
 
-    return result
+    return result - 0.5
 
 # tracking for performance metrics that can be computed from confusion matrix
 class MetricTracker():
