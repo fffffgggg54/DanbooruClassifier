@@ -1359,7 +1359,7 @@ def AUL(preds, targs, epsilon = 1e-8):
     num_pos = targs.sum(dim=0)
     numel = targs.size(dim=0) # = K
     # [K]
-    result = (num_pos > 0).int() * chart_inner(preds).mean(dim=(1,2)) / (num_pos * numel + epsilon)
+    result = (num_pos > 0).int() * chart_inner(preds).sum(dim=(1,2)) / (num_pos * numel + epsilon)
     print(result)
     return result
 
