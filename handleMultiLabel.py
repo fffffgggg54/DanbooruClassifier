@@ -1345,7 +1345,7 @@ def chart_inner(preds):
     #result = (sample1 == sample2).int() * 0.5 + (sample1 > sample2).int()
     result = (sample1 - sample2).sigmoid()
     #print(result)
-    return result
+    return result - 0.5
     
 def AUROC(preds, targs, epsilon):
     # [K] <- [B, K]
@@ -1363,7 +1363,7 @@ def AUL(preds, targs, epsilon = 1e-8):
     result = (num_pos > 0).int() * chart_inner(preds).sum(dim=(1,2)) / (num_pos * numel + epsilon)
     print(chart_inner(preds).sum(dim=(1,2)))
 
-    return result - 0.5
+    return result
 
 # tracking for performance metrics that can be computed from confusion matrix
 class MetricTracker():
