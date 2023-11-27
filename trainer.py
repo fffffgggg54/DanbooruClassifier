@@ -303,7 +303,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-Hill-T-F1-x+00e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-AUL-x+10e-1-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-Metric_Max-AUL-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-Metric_Max-AUROC-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-PU_F_Metric-x+40e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/eva02_large_patch14_224.mim_m38m-FT-ADA_WL_T-P4-x+160e-1-224-1588-10epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_224-gap-ASL_BCE_T-F1-x+00e-1-224-5500-50epoch/"
@@ -1129,7 +1129,8 @@ def trainCycle(image_datasets, model):
                         #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).pow(2).sum()
                         #loss = (1 - multiAccuracy[:,8]).pow(2).sum()
                         #loss = -MLCSL.getSingleMetric(outputs.sigmoid(), tagsModified, MLCSL.PU_F_Metric).sum()
-                        loss = -MLCSL.AUL(outputs.sigmoid(), tagsModified).sum()
+                        #loss = -MLCSL.AUL(outputs.sigmoid(), tagsModified).sum()
+                        loss = -MLCSL.AUROC(outputs.sigmoid(), tagsModified).sum()
                         #model.zero_grad()
                         
                         
