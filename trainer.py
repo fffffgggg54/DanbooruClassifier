@@ -614,61 +614,8 @@ def getData():
     image_datasets = {'train': trainSet, 'val' : testSet}   # put dataset into a list for easy handling
     return image_datasets
 
-class MLDecoder(nn.Module):
-    def __init__(self, num_classes, num_of_groups=-1, decoder_embedding=768, initial_num_features=2048):
-        super(MLDecoder, self).__init__()
-        embed_len_decoder = 100 if num_of_groups < 0 else num_of_groups
-        if embed_len_decoder > num_classes:
-            embed_len_decoder = num_classes
-
-        # switching to 768 initial embeddings
-        decoder_embedding = 768 if decoder_embedding < 0 else decoder_embedding
-        self.embed_standart = nn.Linear(initial_num_features, decoder_embedding)
-
-        # decoder
-        decoder_dropout = 0.1
-        num_layers_decoder = 1
-        dim_feedforward = 2048
-        layer_decode = TransformerDecoderLayerOptimal(d_model=decoder_embedding,
-                                                      dim_feedforward=dim_feedforward, dropout=decoder_dropout)
-        self.decoder = nn.TransformerDecoder(layer_decode, num_layers=num_layers_decoder)
-
-        # non-learnable queries
-        self.query_embed = nn.Embedding(embed_len_decoder, decoder_embedding)
-        self.query_embed.requires_grad_(False)
-
-        # group fully-connected
-        self.num_classes = num_classes
-        self.duplicate_factor = int(num_classes / embed_len_decoder + 0.999)
-        self.duplicate_pooling = torch.nn.Parameter(
-            torch.Tensor(embed_len_decoder, decoder_embedding, self.duplicate_factor))
-        self.duplicate_pooling_bias = torch.nn.Parameter(torch.Tensor(num_classes))
-        torch.nn.init.xavier_normal_(self.duplicate_pooling)
-        torch.nn.init.constant_(self.duplicate_pooling_bias, 0)
-        self.group_fc = GroupFC(embed_len_decoder)
-
-    def forward(self, x, **kwargs):
-        if len(x.shape) == 4:  # [bs,2048, 7,7]
-            embedding_spatial = x.flatten(2).transpose(1, 2)
-        else:  # [bs, 197,468]
-            embedding_spatial = x
-        embedding_spatial_786 = self.embed_standart(embedding_spatial)
-        embedding_spatial_786 = torch.nn.functional.relu(embedding_spatial_786, inplace=True)
-
-        bs = embedding_spatial_786.shape[0]
-        query_embed = self.query_embed.weight
-        # tgt = query_embed.unsqueeze(1).repeat(1, bs, 1)
-        tgt = query_embed.unsqueeze(1).expand(-1, bs, -1)  # no allocation of memory with expand
-        h = self.decoder(tgt, embedding_spatial_786.transpose(0, 1))  # [embed_len_decoder, batch, 768]
-        h = h.transpose(0, 1)
-
-        out_extrap = torch.zeros(h.shape[0], h.shape[1], self.duplicate_factor, device=h.device, dtype=h.dtype)
-        self.group_fc(h, self.duplicate_pooling, out_extrap)
-        h_out = out_extrap.flatten(1)[:, :self.num_classes]
-        h_out += self.duplicate_pooling_bias
-        logits = h_out
-        return logits
-
+import timm.layers.ml_decoder as ml_decoder
+MLDecoder = ml_decoder.MLDecoder
 
 def add_ml_decoder_head(model):
 
@@ -681,12 +628,13 @@ def add_ml_decoder_head(model):
         num_features = model.num_features
         model.fc = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
     #this is kinda ugly, can make general case?
+    '''
     elif 'RegNet' in model._get_name() or 'TResNet' in model._get_name():
         del model.head
         num_classes = model.num_classes
         num_features = model.num_features
         model.head = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
-
+    '''
     elif hasattr(model, 'head'):    # ClassifierHead and ConvNext
         if hasattr(model.head, 'flatten'):  # ConvNext case
             model.head.flatten = nn.Identity()
