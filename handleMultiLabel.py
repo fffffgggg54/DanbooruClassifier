@@ -1347,7 +1347,7 @@ def chart_inner(preds):
     #print(result)
     return result
     
-def AUROC(preds, targs, epsilon):
+def AUROC(preds, targs, epsilon = 1e-8):
     # [K] <- [B, K]
     num_pos = targs.sum(dim=0)
     # [K]
