@@ -627,14 +627,7 @@ def add_ml_decoder_head(model):
         num_classes = model.num_classes
         num_features = model.num_features
         model.fc = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
-    '''
-    #this is kinda ugly, can make general case?
-    elif 'RegNet' in model._get_name() or 'TResNet' in model._get_name():
-        del model.head
-        num_classes = model.num_classes
-        num_features = model.num_features
-        model.head = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
-    '''
+    
     elif hasattr(model, 'head'):    # ClassifierHead and ConvNext
         if hasattr(model.head, 'flatten'):  # ConvNext case
             model.head.flatten = nn.Identity()
