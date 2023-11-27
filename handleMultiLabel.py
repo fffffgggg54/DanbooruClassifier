@@ -1353,7 +1353,7 @@ def AUROC(preds, targs, epsilon):
     # [K]
     num_neg = targs.size(dim=0) - num_pos
     # [K]
-    return (num_pos > 0).int() * chart_inner(preds).mean(dim=(1,2)) / (num_pos * num_neg + epsilon)
+    return (num_pos > 0).int() * torch.tril(chart_inner(preds)).sum(dim=(1,2)) / (num_pos * num_neg + epsilon)
     
 def AUL(preds, targs, epsilon = 1e-8):
     # [K] <- [B, K]
