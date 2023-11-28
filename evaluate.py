@@ -516,6 +516,9 @@ def trainCycle(image_datasets, model):
                     
                     runningLabels += tagBatch
                     runningPreds += preds.detach()
+                    
+
+                    boundary = boundaryCalculator.thresholdPerClass.detach()
 
                     #predsModified=preds
                     #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
