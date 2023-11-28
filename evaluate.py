@@ -91,7 +91,7 @@ if currGPU == 'v100':
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convformer_s18-224-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tresnet_m-224-ASL_BCE_T-5500/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_GP0_GNADAPC_-224-1588-50epoch/'
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-F1-x+160e-1-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h_ml_decoder-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_224-gap-ASL_BCE_T-P4-x+80e-1-224-1588-300epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/caformer_s18-gap-ASL_BCE_T-P4-x+80e-1-224-1588-300epoch/"
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_GP1_GN5_CL005-224-1588-50epoch/'
@@ -211,6 +211,57 @@ def getData():
     image_datasets = {'val' : testSet}   # put dataset into a list for easy handling
     return image_datasets
 
+
+import timm.layers.ml_decoder as ml_decoder
+MLDecoder = ml_decoder.MLDecoder
+
+def add_ml_decoder_head(model):
+
+    # TODO levit, ViT
+
+    if hasattr(model, 'global_pool') and hasattr(model, 'fc'):  # most CNN models, like Resnet50
+        model.global_pool = nn.Identity()
+        del model.fc
+        num_classes = model.num_classes
+        num_features = model.num_features
+        model.fc = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
+    
+    elif hasattr(model, 'head'):    # ClassifierHead and ConvNext
+        if hasattr(model.head, 'flatten'):  # ConvNext case
+            model.head.flatten = nn.Identity()
+        model.head.global_pool = nn.Identity()
+        del model.head.fc
+        num_classes = model.num_classes
+        num_features = model.num_features
+        model.head.fc = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
+    
+    elif 'MobileNetV3' in model._get_name(): # mobilenetv3 - conflict with efficientnet
+        
+        model.flatten = nn.Identity()
+        del model.classifier
+        num_classes = model.num_classes
+        num_features = model.num_features
+        model.classifier = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
+
+    elif hasattr(model, 'global_pool') and hasattr(model, 'classifier'):  # EfficientNet
+        model.global_pool = nn.Identity()
+        del model.classifier
+        num_classes = model.num_classes
+        num_features = model.num_features
+        model.classifier = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
+
+    
+
+    
+    
+
+    else:
+        print("Model code-writing is not aligned currently with ml-decoder")
+        exit(-1)
+    if hasattr(model, 'drop_rate'):  # Ml-Decoder has inner dropout
+        model.drop_rate = 0
+    return model
+
 def modelSetup(classes):
     
     '''
@@ -322,7 +373,7 @@ def modelSetup(classes):
     
     '''
     
-    #model = add_ml_decoder_head(model)
+    model = add_ml_decoder_head(model)
     
 
     #model.train()
