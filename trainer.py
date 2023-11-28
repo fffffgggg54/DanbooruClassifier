@@ -303,7 +303,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-Hill-T-F1-x+00e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-AUL-x+10e-1-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h_ml_decoder-ASL_BCE-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h_ml_decoder-ADA_WL-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-PU_F_Metric-x+40e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/eva02_large_patch14_224.mim_m38m-FT-ADA_WL_T-P4-x+160e-1-224-1588-10epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_224-gap-ASL_BCE_T-F1-x+00e-1-224-5500-50epoch/"
@@ -872,8 +872,8 @@ def trainCycle(image_datasets, model):
     #criterion = MLCSL.Hill()
     #criterion = MLCSL.SPLC(gamma=2.0)
     #criterion = MLCSL.SPLCModified(gamma=2.0)
-    #criterion = MLCSL.AdaptiveWeightedLoss(initial_weight = 1.0, lr = 1e-4, weight_limit = 1e5)
-    criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
+    criterion = MLCSL.AdaptiveWeightedLoss(initial_weight = 1.0, lr = 1e-4, weight_limit = 1e5)
+    #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=5, gamma_pos=1, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False, adaptive = True, gap_target = 0.1, gamma_step = 0.001)
     #criterion = MLCSL.AsymmetricLossAdaptiveWorking(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.2)
@@ -1258,12 +1258,18 @@ def trainCycle(image_datasets, model):
                 
                 #torch.distributed.all_reduce(criterion.gamma_neg_per_class, op = torch.distributed.ReduceOp.AVG)
             if ((phase == 'val') and (FLAGS['skip_test_set'] == False or epoch == FLAGS['num_epochs'] - 1) and is_head_proc):
+                if(epoch == FLAGS['num_epochs'] - 1):
+                    print("saving eval data")
+                    modelOutputs = {'labels':torch.cat(targets_running).cpu(), 'preds':torch.cat(preds_running).cpu()}
+                    #print(modelOutputs)
+                    cachePath = FLAGS['modelDir'] + "evalOutputs.pkl.bz2"
+                    with bz2.BZ2File(cachePath, 'w') as cachedSample: cPickle.dump(modelOutputs, cachedSample)
                 #torch.set_printoptions(profile="full")
                 
                 #AvgAccuracy = torch.stack(AccuracyRunning)
                 #AvgAccuracy = AvgAccuracy.mean(dim=0)
                 AvgAccuracy = cm_tracker.get_full_metrics()
-                LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames, boundaryCalculator.thresholdPerClass.data, criterion.weight_per_class))
+                LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames, boundaryCalculator.thresholdPerClass.data))
                 LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[0][8], reverse=True)
                 
                 if(is_head_proc): print(*LabelledAccuracySorted, sep="\n")
@@ -1286,12 +1292,7 @@ def trainCycle(image_datasets, model):
                     if(is_head_proc): print(criterion.tau_per_class)
                 #print(boundaryCalculator.thresholdPerClass)
                 #print(criterion.weight_per_class)
-                if(epoch == FLAGS['num_epochs'] - 1):
-                    print("saving eval data")
-                    modelOutputs = {'labels':torch.cat(targets_running).cpu(), 'preds':torch.cat(preds_running).cpu()}
-                    #print(modelOutputs)
-                    cachePath = FLAGS['modelDir'] + "evalOutputs.pkl.bz2"
-                    with bz2.BZ2File(cachePath, 'w') as cachedSample: cPickle.dump(modelOutputs, cachedSample)
+                
             currPhase += 1
             optimizer.zero_grad(set_to_none=True)
             #mlr_act_opt.zero_grad(set_to_none=True)
