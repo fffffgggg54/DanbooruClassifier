@@ -1096,7 +1096,7 @@ def trainCycle(image_datasets, model):
                                 #targs = torch.where(preds > boundary.detach(), torch.tensor(1).to(preds), labels) # hard SPLC
                                 tagsModified = ((1 - tagsModified) * MLCSL.stepAtThreshold(preds, boundary) + tagsModified) # soft SPLC
                         if(phase == 'train' and hasattr(criterion, 'update')):
-                            criterion.update(outputs.to(device), tagsModified.to(device))
+                            criterion.update(outputs.detach(), tagsModified.to(device))
                                 
                             if(FLAGS['use_ddp'] == True):
                                 with torch.no_grad():
