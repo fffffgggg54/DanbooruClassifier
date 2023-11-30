@@ -1062,8 +1062,9 @@ def trainCycle(image_datasets, model):
                             boundary = boundaryCalculator(preds, tagBatch)
                             torch.cuda.synchronize()
                             if FLAGS['use_ddp'] == True:
-                                torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
-                                boundary = boundaryCalculator.thresholdPerClass.detach()
+                                with torch.no_grad():
+                                    torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
+                                    boundary = boundaryCalculator.thresholdPerClass.detach()
                         
                         
                         
@@ -1098,8 +1099,9 @@ def trainCycle(image_datasets, model):
                             criterion.update(outputs.to(device), tagsModified.to(device))
                                 
                             if(FLAGS['use_ddp'] == True):
-                                torch.distributed.all_reduce(criterion.weight_per_class, op = torch.distributed.ReduceOp.AVG)
-                                torch.cuda.synchronize()
+                                with torch.no_grad():
+                                    torch.distributed.all_reduce(criterion.weight_per_class, op = torch.distributed.ReduceOp.AVG)
+                                    torch.cuda.synchronize()
                         
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
                         loss = criterion(outputs.to(device), tagsModified.to(device))
