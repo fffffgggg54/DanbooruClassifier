@@ -303,7 +303,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-Hill-T-F1-x+00e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-AUL-x+10e-1-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h_ml_decoder-ADA_WL-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h_ml_decoder_legacy-ADA_WL_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-PU_F_Metric-x+40e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/eva02_large_patch14_224.mim_m38m-FT-ADA_WL_T-P4-x+160e-1-224-1588-10epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_224-gap-ASL_BCE_T-F1-x+00e-1-224-5500-50epoch/"
@@ -363,7 +363,7 @@ elif currGPU == 'v100':
     FLAGS['resume_epoch'] = 0
     
     FLAGS['threshold_loss'] = True
-    FLAGS['threshold_multiplier'] = 0.0
+    FLAGS['threshold_multiplier'] = 1.0
     FLAGS['splc'] = False
     FLAGS['splc_start_epoch'] = 1
 
@@ -614,55 +614,123 @@ def getData():
     image_datasets = {'train': trainSet, 'val' : testSet}   # put dataset into a list for easy handling
     return image_datasets
 
+from typing import Optional
+from functools import partial
+
+import torch
+from torch import nn
+from torch import nn, Tensor
+from torch.nn.modules.transformer import _get_activation_fn
 import timm.layers.ml_decoder as ml_decoder
-MLDecoder = ml_decoder.MLDecoder
+from timm.layers import NormMlpClassifierHead, ClassifierHead
+from timm.layers.classifier import _create_pool
+from timm.layers.adaptive_avgmax_pool import SelectAdaptivePool2d
+MLDecoder = partial(ml_decoder.MLDecoderLegacy, simple_group_fc = True)
+
+class MLDecoderHead(nn.Module):
+    """MLDecoder wrapper with forward compatible with ClassifierHead"""
+
+    def __init__(self, in_features, num_classes, pool_type='avg', use_conv=False, input_fmt='NCHW'):
+        super(MLDecoderHead, self).__init__()
+        self.in_features = in_features
+        self.use_conv = use_conv
+        self.input_fmt = input_fmt
+
+        self.global_pool, num_pooled_features = _create_pool(in_features, num_classes, pool_type, use_conv=use_conv, input_fmt=input_fmt)
+        self.head = MLDecoder(in_features=in_features, num_classes=num_classes)
+        self.flatten = nn.Flatten(1) if pool_type else nn.Identity()
+
+
+    def reset(self, num_classes, global_pool=None):
+        if global_pool is not None:
+            if global_pool != self.global_pool.pool_type:
+                self.global_pool, _ = _create_pool(self.in_features, num_classes, global_pool, use_conv=self.use_conv)
+            self.flatten = nn.Flatten(1) if self.use_conv and global_pool else nn.Identity()
+        num_pooled_features = self.in_features * self.global_pool.feat_mult()
+        self.head = MLDecoder(in_features=in_features, num_classes=num_classes)
+
+
+    def forward(self, x, pre_logits: bool = False):
+        # pool for compatibility with ClassifierHead
+        if self.input_fmt == 'NHWC':
+            x = x.permute(0, 3, 1, 2)
+        if pre_logits:
+            x = self.global_pool(x)
+            return x.flatten(1)
+        else:
+            x = self.head(x)
+            return self.flatten(x)
 
 def add_ml_decoder_head(model):
 
-    # TODO levit, ViT
+    # ignore CoaT, crossvit
+    # ignore distillation models: deit_distilled, efficientformer V2
+    num_classes = model.num_classes
+    num_features = model.num_features
+
+    assert num_classes > 0, "MLDecoder requires a model to have num_classes > 0"
 
     if hasattr(model, 'global_pool') and hasattr(model, 'fc'):  # most CNN models, like Resnet50
         model.global_pool = nn.Identity()
         del model.fc
-        num_classes = model.num_classes
-        num_features = model.num_features
-        model.fc = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
-    
-    elif hasattr(model, 'head'):    # ClassifierHead and ConvNext
+
+        model.fc = MLDecoder(num_classes=num_classes, in_features=num_features)
+
+    elif hasattr(model, 'fc_norm') or 'Cait' in model._get_name(): # ViT, BEiT, EVA
+        model.global_pool = None # disable any pooling, model instantiation leaves 1 norm layer after features, [B, n + K x K, C]
+        if hasattr(model, 'attn_pool'):
+            model.attn_pool = None
+        model.head_drop = nn.Identity()
+        model.head = MLDecoder(num_classes=num_classes, in_features=num_features)
+
+    elif 'MetaFormer' in model._get_name():
         if hasattr(model.head, 'flatten'):  # ConvNext case
             model.head.flatten = nn.Identity()
         model.head.global_pool = nn.Identity()
+        model.head.drop = nn.Identity()
         del model.head.fc
-        num_classes = model.num_classes
-        num_features = model.num_features
-        model.head.fc = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
-    
+        model.head.fc = MLDecoder(num_classes=num_classes, in_features=num_features)
+
+    # maybe  and isinstance(model.head, (NormMlpClassifierHead, ClassifierHead) ?
+    elif hasattr(model, 'head'):    # ClassifierHead, nn.Sequential
+        input_fmt = getattr(model.head, 'input_fmt', 'NCHW')
+        model.head = MLDecoderHead(num_features, num_classes)
+        if hasattr(model, 'global_pool'):
+            if(isinstance(model.global_pool, nn.Module)):
+                model.global_pool = nn.Identity()
+            else:
+                model.global_pool = None
+        if hasattr(model, 'head_drop'):
+            model.head_drop = nn.Identity()
+
     elif 'MobileNetV3' in model._get_name(): # mobilenetv3 - conflict with efficientnet
-        
+
         model.flatten = nn.Identity()
         del model.classifier
-        num_classes = model.num_classes
-        num_features = model.num_features
-        model.classifier = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
+        model.classifier = MLDecoder(num_classes=num_classes, in_features=num_features)
 
     elif hasattr(model, 'global_pool') and hasattr(model, 'classifier'):  # EfficientNet
         model.global_pool = nn.Identity()
         del model.classifier
-        num_classes = model.num_classes
-        num_features = model.num_features
-        model.classifier = MLDecoder(num_classes=num_classes, initial_num_features=num_features)
+        model.classifier = MLDecoder(num_classes=num_classes, in_features=num_features)
+    elif hasattr(model, 'global_pool') and hasattr(model, 'last_linear'):  # InceptionV4
+        model.global_pool = nn.Identity()
+        del model.last_linear
+        model.last_linear = MLDecoder(num_classes=num_classes, in_features=num_features)
 
-    
-
-    
-    
+    elif hasattr(model, 'global_pool') and hasattr(model, 'classif'):  # InceptionResnetV2
+        model.global_pool = nn.Identity()
+        del model.classif
+        model.classif = MLDecoder(num_classes=num_classes, in_features=num_features)
 
     else:
-        print("Model code-writing is not aligned currently with ml-decoder")
-        exit(-1)
+        raise Exception("Model code-writing is not aligned currently with ml-decoder")
+
+    # FIXME does not work
     if hasattr(model, 'drop_rate'):  # Ml-Decoder has inner dropout
         model.drop_rate = 0
     return model
+
 
 
 
