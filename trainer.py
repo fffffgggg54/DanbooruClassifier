@@ -626,7 +626,7 @@ from timm.layers import NormMlpClassifierHead, ClassifierHead
 from timm.layers.classifier import _create_pool
 from timm.layers.adaptive_avgmax_pool import SelectAdaptivePool2d
 #MLDecoder = partial(ml_decoder.MLDecoderLegacy, simple_group_fc = True)
-MLDecoder = partial(ml_decoder.MLDecoder, num_groups = len(classes))
+MLDecoder = ml_decoder.MLDecoder
 
 class MLDecoderHead(nn.Module):
     """MLDecoder wrapper with forward compatible with ClassifierHead"""
@@ -670,7 +670,9 @@ def add_ml_decoder_head(model):
     num_features = model.num_features
 
     assert num_classes > 0, "MLDecoder requires a model to have num_classes > 0"
-
+    
+    MLDecoder = partial(MLDecoder, num_groups = num_classes)
+    
     if hasattr(model, 'global_pool') and hasattr(model, 'fc'):  # most CNN models, like Resnet50
         model.global_pool = nn.Identity()
         del model.fc
