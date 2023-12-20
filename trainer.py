@@ -626,7 +626,7 @@ from timm.layers import NormMlpClassifierHead, ClassifierHead
 from timm.layers.classifier import _create_pool
 from timm.layers.adaptive_avgmax_pool import SelectAdaptivePool2d
 #MLDecoder = partial(ml_decoder.MLDecoderLegacy, simple_group_fc = True)
-#MLDecoder = ml_decoder.MLDecoder
+MLDecoder = ml_decoder.MLDecoder
 
 class MLDecoderHead(nn.Module):
     """MLDecoder wrapper with forward compatible with ClassifierHead"""
