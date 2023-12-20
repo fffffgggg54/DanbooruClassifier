@@ -638,7 +638,7 @@ class MLDecoderHead(nn.Module):
         self.input_fmt = input_fmt
 
         self.global_pool, num_pooled_features = _create_pool(in_features, num_classes, pool_type, use_conv=use_conv, input_fmt=input_fmt)
-        self.head = MLDecoder(in_features=in_features, num_classes=num_classes)
+        self.head = MLDecoder(in_features=in_features, num_classes=num_classes, num_groups=num_classes)
         self.flatten = nn.Flatten(1) if pool_type else nn.Identity()
 
 
@@ -670,9 +670,7 @@ def add_ml_decoder_head(model):
     num_features = model.num_features
 
     assert num_classes > 0, "MLDecoder requires a model to have num_classes > 0"
-    
-    MLDecoder = partial(ml_decoder.MLDecoder, num_groups = num_classes)
-    
+
     if hasattr(model, 'global_pool') and hasattr(model, 'fc'):  # most CNN models, like Resnet50
         model.global_pool = nn.Identity()
         del model.fc
