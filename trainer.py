@@ -303,7 +303,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-Hill-T-F1-x+00e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-AUL-x+10e-1-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h_ml_decoder_new_1_to_1-ADA_WL_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h_ml_decoder_new-MLR_NW-ADA_WL-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-PU_F_Metric-x+40e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/eva02_large_patch14_224.mim_m38m-FT-ADA_WL_T-P4-x+160e-1-224-1588-10epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_224-gap-ASL_BCE_T-F1-x+00e-1-224-5500-50epoch/"
@@ -350,8 +350,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 64
-    FLAGS['gradient_accumulation_iterations'] = 6
+    FLAGS['batch_size'] = 96
+    FLAGS['gradient_accumulation_iterations'] = 4
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -363,7 +363,7 @@ elif currGPU == 'v100':
     FLAGS['resume_epoch'] = 0
     
     FLAGS['threshold_loss'] = True
-    FLAGS['threshold_multiplier'] = 1.0
+    FLAGS['threshold_multiplier'] = 0.0
     FLAGS['splc'] = False
     FLAGS['splc_start_epoch'] = 1
 
@@ -638,7 +638,7 @@ class MLDecoderHead(nn.Module):
         self.input_fmt = input_fmt
 
         self.global_pool, num_pooled_features = _create_pool(in_features, num_classes, pool_type, use_conv=use_conv, input_fmt=input_fmt)
-        self.head = MLDecoder(in_features=in_features, num_classes=num_classes, num_groups=num_classes)
+        self.head = MLDecoder(in_features=in_features, num_classes=num_classes)
         self.flatten = nn.Flatten(1) if pool_type else nn.Identity()
 
 
@@ -857,7 +857,7 @@ def modelSetup(classes):
     
     # I mean it's really just an activation fn with trainable weights
     #mlr_act = MLCSL.ModifiedLogisticRegression(num_classes = len(classes), initial_weight = 1.0, initial_beta = 0.0, eps = 1e-8)
-    #mlr_act = MLCSL.ModifiedLogisticRegression_NoWeight(num_classes = len(classes), initial_beta = 0.0, eps = 1e-8)
+    mlr_act = MLCSL.ModifiedLogisticRegression_NoWeight(num_classes = len(classes), initial_beta = 0.0, eps = 1e-8)
     
     if FLAGS['finetune'] == True:
         for param in model.parameters():
@@ -868,7 +868,7 @@ def modelSetup(classes):
             for param in model.head_dist.parameters():
                 param.requires_grad = True
     
-    #model = nn.Sequential(model, mlr_act)
+    model = nn.Sequential(model, mlr_act)
     
     return model
     
@@ -1120,12 +1120,12 @@ def trainCycle(image_datasets, model):
                     
                     with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
                         
-                        outputs = model(imageBatch)
+                        #outputs = model(imageBatch)
                         #outputs = model(imageBatch).logits
-                        preds = torch.sigmoid(outputs)
+                        #preds = torch.sigmoid(outputs)
                         
-                        #preds = model(imageBatch)
-                        #outputs = torch.special.logit(preds)
+                        preds = model(imageBatch)
+                        outputs = torch.special.logit(preds)
                         
                         with torch.cuda.amp.autocast(enabled=False):
                             boundary = boundaryCalculator(preds, tagBatch)
