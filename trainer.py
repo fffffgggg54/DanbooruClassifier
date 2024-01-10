@@ -303,7 +303,8 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-Hill-T-F1-x+00e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-AUL-x+10e-1-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040_ml_decoder_new-MLR_NW-ADA_WL_T-PU_F_Metric-x+20e-1-224-1588-50epoch/"
+    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040_ml_decoder_new-MLR_NW-ADA_WL_T-PU_F_Metric-x+20e-1-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040_PyrH_ASL_BCE_T-PU_F_Metric-x+20e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-PU_F_Metric-x+40e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/eva02_large_patch14_224.mim_m38m-FT-ADA_WL_T-P4-x+160e-1-224-1588-10epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_224-gap-ASL_BCE_T-F1-x+00e-1-224-5500-50epoch/"
@@ -363,7 +364,7 @@ elif currGPU == 'v100':
     FLAGS['resume_epoch'] = 0
     
     FLAGS['threshold_loss'] = True
-    FLAGS['threshold_multiplier'] = 2.0
+    FLAGS['threshold_multiplier'] = 0.0
     FLAGS['splc'] = False
     FLAGS['splc_start_epoch'] = 1
 
@@ -732,7 +733,22 @@ def add_ml_decoder_head(model):
         model.drop_rate = 0
     return model
 
+class PyramidFeatureAggregationModel(nn.Module):
+    def __init__(
+        self,
+        model,
+        num_classes = 1000,
+    ):
+        super().__init__()
+        self.model = model
+        self.num_features = sum(model.feature_info.channels())
+        self.num_classes = num_classes
+        self.head = nn.Linear(self.num_features, self.num_classes)
 
+    def forward(self, x):
+        x=self.model(x)
+        x = torch.column_stack([out.mean((-2, -1)) for out in x]) # NCHW only for now
+        return self.head(x)
 
 
 def modelSetup(classes):
@@ -788,11 +804,14 @@ def modelSetup(classes):
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4, drop_rate = 0.05)
     #model = timm.create_model('regnetx_016', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_large_patch16_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.3)
-    model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
+    #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
     #model = timm.create_model('regnety_016', pretrained=False, num_classes=len(classes), drop_path_rate=0.1)
     #model = timm.create_model('ese_vovnet99b_iabn', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.02)
     #model = timm.create_model('tresnet_m', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('eva02_large_patch14_224.mim_m38m', pretrained=True, num_classes=len(classes))
+    
+    model = timm.create_model('regnetz_040', pretrained=False, features_only=True, drop_path_rate=0.15)
+    model = PyramidFeatureAggregationModel(model, len(classes))
     '''
     model = timm.create_model(
         'vit_base_patch16_224', 
@@ -847,7 +866,7 @@ def modelSetup(classes):
     
     '''
     
-    model = add_ml_decoder_head(model)
+    #model = add_ml_decoder_head(model)
     
 
     #model.train()
@@ -857,7 +876,7 @@ def modelSetup(classes):
     
     # I mean it's really just an activation fn with trainable weights
     #mlr_act = MLCSL.ModifiedLogisticRegression(num_classes = len(classes), initial_weight = 1.0, initial_beta = 0.0, eps = 1e-8)
-    mlr_act = MLCSL.ModifiedLogisticRegression_NoWeight(num_classes = len(classes), initial_beta = 0.0, eps = 1e-8)
+    #mlr_act = MLCSL.ModifiedLogisticRegression_NoWeight(num_classes = len(classes), initial_beta = 0.0, eps = 1e-8)
     
     if FLAGS['finetune'] == True:
         for param in model.parameters():
@@ -868,7 +887,7 @@ def modelSetup(classes):
             for param in model.head_dist.parameters():
                 param.requires_grad = True
     
-    model = nn.Sequential(model, mlr_act)
+    #model = nn.Sequential(model, mlr_act)
     
     return model
     
@@ -941,8 +960,8 @@ def trainCycle(image_datasets, model):
     #criterion = MLCSL.Hill()
     #criterion = MLCSL.SPLC(gamma=2.0)
     #criterion = MLCSL.SPLCModified(gamma=2.0)
-    criterion = MLCSL.AdaptiveWeightedLoss(initial_weight = 1.0, lr = 1e-4, weight_limit = 1e5)
-    #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
+    #criterion = MLCSL.AdaptiveWeightedLoss(initial_weight = 1.0, lr = 1e-4, weight_limit = 1e5)
+    criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=5, gamma_pos=1, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False, adaptive = True, gap_target = 0.1, gamma_step = 0.001)
     #criterion = MLCSL.AsymmetricLossAdaptiveWorking(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.2)
