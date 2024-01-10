@@ -1140,7 +1140,7 @@ def trainCycle(image_datasets, model):
                     with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
                         
                         outputs = model(imageBatch)
-                        outputs = model(imageBatch).logits
+                        #outputs = model(imageBatch).logits
                         preds = torch.sigmoid(outputs)
                         
                         #preds = model(imageBatch)
