@@ -747,7 +747,7 @@ class PyramidFeatureAggregationModel(nn.Module):
 
     def forward(self, x):
         x=self.model(x)
-        x = torch.column_stack([out.GELU().mean((-2, -1)) for out in x]) # NCHW only for now
+        x = torch.column_stack([nn.GELU(out).mean((-2, -1)) for out in x]) # NCHW only for now
         return self.head(x)
 
 
