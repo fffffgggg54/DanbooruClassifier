@@ -810,7 +810,7 @@ def modelSetup(classes):
     #model = timm.create_model('tresnet_m', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('eva02_large_patch14_224.mim_m38m', pretrained=True, num_classes=len(classes))
     
-    model = timm.create_model('resnet50', pretrained=False, features_only=True, drop_path_rate=0.15)
+    model = timm.create_model('regnetz_040', pretrained=False, features_only=True, drop_path_rate=0.15)
     model = PyramidFeatureAggregationModel(model, len(classes))
     '''
     model = timm.create_model(
@@ -1139,12 +1139,12 @@ def trainCycle(image_datasets, model):
                     
                     with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
                         
-                        #outputs = model(imageBatch)
-                        #outputs = model(imageBatch).logits
-                        #preds = torch.sigmoid(outputs)
+                        outputs = model(imageBatch)
+                        outputs = model(imageBatch).logits
+                        preds = torch.sigmoid(outputs)
                         
-                        preds = model(imageBatch)
-                        outputs = torch.special.logit(preds)
+                        #preds = model(imageBatch)
+                        #outputs = torch.special.logit(preds)
                         
                         with torch.cuda.amp.autocast(enabled=False):
                             boundary = boundaryCalculator(preds, tagBatch)
