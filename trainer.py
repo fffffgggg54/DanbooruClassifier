@@ -735,6 +735,30 @@ def add_ml_decoder_head(model):
         model.drop_rate = 0
     return model
 
+from timm.layers import create_norm_layer, GluMlp, Mlp, SelectAdaptivePool2d, get_act_layer, create_act_layer
+class StarAct(nn.Module):
+    """
+    StarAct: s * act(x) ** 2 + b
+    """
+
+    def __init__(
+            self,
+            act_fn='relu',
+            scale_value=1.0,
+            bias_value=0.0,
+            scale_learnable=True,
+            bias_learnable=True,
+            mode=None,
+            inplace=False
+    ):
+        super().__init__()
+        self.inplace = inplace
+        self.act = create_act_layer(act_fn, inplace=inplace)
+        self.scale = nn.Parameter(scale_value * torch.ones(1), requires_grad=scale_learnable)
+        self.bias = nn.Parameter(bias_value * torch.ones(1), requires_grad=bias_learnable)
+
+    def forward(self, x):
+        return self.scale * self.act(x) ** 2 + self.bias
 class PyramidFeatureAggregationModel(nn.Module):
     def __init__(
         self,
@@ -743,13 +767,28 @@ class PyramidFeatureAggregationModel(nn.Module):
     ):
         super().__init__()
         self.model = model
-        self.num_features = sum(model.feature_info.channels())
+
+        self.feature_dims = model.feature_info.channels()
+        self.num_features = sum(self.num_feature_dims)
+
+        self.norms = [create_norm_layer(dim) for dim in self.feature_dims]
+        self.pools = [SelectAdaptivePool2d(pool_type='fast_avg', flatten=True) for dim in self.feature_dims]
         self.num_classes = num_classes
-        self.head = nn.Linear(self.num_features, self.num_classes)
+        #self.head = nn.Linear(self.num_features, self.num_classes)
+        self.head = GluMlp(
+            in_features = self.num_features,
+            hidden_features = 2*2.5*self.num_features,
+            out_features = self.num_classes,
+            act_layer = get_act_layer('silu'),
+            norm_layer = None,
+        )
 
     def forward(self, x):
         x=self.model(x)
-        x = torch.column_stack([nn.functional.gelu(out).mean((-2, -1)) for out in x]) # NCHW only for now
+        #x = torch.column_stack([nn.functional.gelu(out).mean((-2, -1)) for out in x]) # NCHW only for now
+        #return self.head(x)
+
+        x = torch.column_stack([pool(norm(out)) for pool, norm, out in zip(self.pools, self.norms, x)])
         return self.head(x)
 
 
@@ -869,7 +908,7 @@ def modelSetup(classes):
     '''
     
     #model = add_ml_decoder_head(model)
-    
+    model = nn.Sequential(model)
 
     #model.train()
     
@@ -891,7 +930,7 @@ def modelSetup(classes):
 
     if FLAGS['use_mlr_act'] == True:
         mlr_act = MLCSL.ModifiedLogisticRegression_NoWeight(num_classes = len(classes), initial_beta = 0.0, eps = 1e-8)
-        model = nn.Sequential(model, mlr_act)
+        model += mlr_act
     
     return model
     
