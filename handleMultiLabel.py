@@ -300,7 +300,7 @@ class ModifiedLogisticRegression_NoWeight(nn.Module):
         
     def forward(self, x):
         #return (1 + self.beta_per_class.detach() ** 2) / (1 + (self.beta_per_class ** 2) + torch.exp(-x) + self.eps)
-
+        '''
         # P(s = 1 | x_bar) as per equation #4 and section 4.1 from paper
         # weight term handled in image backbone
         self.NtC_out = 1/(1 + (self.beta_per_class ** 2) + torch.exp(-x))
@@ -310,7 +310,8 @@ class ModifiedLogisticRegression_NoWeight(nn.Module):
         # P(y = 1 | x) as per section 4.2 from paper
         self.pred = self.NtC_out / (self.c_hat + self.eps)
         return self.pred
-        
+        '''
+        return (1 + self.beta_per_class.detach() ** 2) / (1 + (self.beta_per_class ** 2) + torch.exp(-x) + self.eps)
 
 def stepAtThreshold(x, threshold, k=5, base=10):
     return 1 / (1 + torch.pow(base, (0 - k) * (x - threshold)))
