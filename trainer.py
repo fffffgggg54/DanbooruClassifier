@@ -777,7 +777,7 @@ class PyramidFeatureAggregationModel(nn.Module):
         #self.head = nn.Linear(self.num_features, self.num_classes)
         self.head = GluMlp(
             in_features = self.num_features,
-            hidden_features = 2*2.5*self.num_features,
+            hidden_features = int(2*2.5*self.num_features),
             out_features = self.num_classes,
             act_layer = get_act_layer('silu'),
             norm_layer = None,
