@@ -771,7 +771,7 @@ class PyramidFeatureAggregationModel(nn.Module):
         self.feature_dims = model.feature_info.channels()
         self.num_features = sum(self.feature_dims)
 
-        self.norms = [create_norm_layer(dim) for dim in self.feature_dims]
+        self.norms = [create_norm_layer('layernorm2d', dim) for dim in self.feature_dims]
         self.pools = [SelectAdaptivePool2d(pool_type='fast_avg', flatten=True) for dim in self.feature_dims]
         self.num_classes = num_classes
         #self.head = nn.Linear(self.num_features, self.num_classes)
