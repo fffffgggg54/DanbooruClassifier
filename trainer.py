@@ -1305,7 +1305,7 @@ def trainCycle(image_datasets, model):
                         if(i==3):
                             if(is_head_proc):
                                 s = torch.cuda.memory._snapshot()
-                                with open(modelDir + "mem_snapshot.pickle", "wb") as f:
+                                with open(FLAGS['modelDir'] + "mem_snapshot.pickle", "wb") as f:
                                     dump(s, f)
                                 torch.cuda.memory._record_memory_history(enabled=None)
                         
