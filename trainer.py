@@ -353,7 +353,7 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 1
+    FLAGS['batch_size'] = 32
     FLAGS['gradient_accumulation_iterations'] = 1
 
     FLAGS['base_learning_rate'] = 3e-3
@@ -1302,7 +1302,7 @@ def trainCycle(image_datasets, model):
                             #ema.update(model)
                             #prior.update(outputs.to(device))
                             
-                        if(i==3):
+                        if(i==20):
                             if(is_head_proc):
                                 s = torch.cuda.memory._snapshot()
                                 with open(FLAGS['modelDir'] + "mem_snapshot.pickle", "wb") as f:
