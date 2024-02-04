@@ -320,7 +320,6 @@ elif currGPU == 'v100':
 
     FLAGS['chunkSize'] = 1000
     FLAGS['importerProcessCount'] = 10
-    if(torch.has_mps == True): FLAGS['importerProcessCount'] = 7
     FLAGS['stopReadingAt'] = 5000
 
     # dataset config
@@ -348,7 +347,6 @@ elif currGPU == 'v100':
 
     FLAGS['num_workers'] = 10
     FLAGS['postDataServerWorkerCount'] = 3
-    if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
     # training config
