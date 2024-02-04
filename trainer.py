@@ -366,10 +366,10 @@ elif currGPU == 'v100':
 
     FLAGS['resume_epoch'] = 0
     
-    FLAGS['use_mlr_act'] = True
+    FLAGS['use_mlr_act'] = False
 
     FLAGS['threshold_loss'] = False
-    FLAGS['threshold_multiplier'] = 2.0
+    FLAGS['threshold_multiplier'] = 0.0
     FLAGS['splc'] = False
     FLAGS['splc_start_epoch'] = 1
 
@@ -1209,7 +1209,7 @@ def trainCycle(image_datasets, model):
                         #predsModified=preds
                         #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
                         with torch.no_grad():
-                             
+                            multiAccuracy = cm_tracker.update((preds.detach() > boundary.detach()).float().to(device), tagBatch.to(device))
                             #multiAccuracy = cm_tracker.update(preds.detach().float().to(device), tagBatch.to(device))
                         
                         
