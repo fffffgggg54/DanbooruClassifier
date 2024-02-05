@@ -308,7 +308,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040_ml_decoder_new-MLR_NW-ADA_WL_T-PU_F_Metric-x+20e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-PU_F_Metric-x+40e-1-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MetricOPT-PU_F_Metric_T-PU_F_Metric-x+00e-1-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MetricOPT-P4_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/eva02_large_patch14_224.mim_m38m-FT-ADA_WL_T-P4-x+160e-1-224-1588-10epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_224-gap-ASL_BCE_T-F1-x+00e-1-224-5500-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/caformer_s18-gap-ASL_BCE_T-P4-x+80e-1-224-1588-300epoch/"
@@ -366,8 +366,8 @@ elif currGPU == 'v100':
     
     FLAGS['use_mlr_act'] = False
 
-    FLAGS['threshold_loss'] = False
-    FLAGS['threshold_multiplier'] = 0.0
+    FLAGS['threshold_loss'] = True
+    FLAGS['threshold_multiplier'] = 1.0
     FLAGS['splc'] = False
     FLAGS['splc_start_epoch'] = 1
 
@@ -1260,7 +1260,7 @@ def trainCycle(image_datasets, model):
                         #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).sum()
                         #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).pow(2).sum()
                         #loss = (1 - multiAccuracy[:,8]).pow(2).sum()
-                        loss = -MLCSL.getSingleMetric(outputs.sigmoid(), tagsModified, MLCSL.PU_F_Metric).sum()
+                        loss = -MLCSL.getSingleMetric(outputs.sigmoid(), tagsModified, MLCSL.P4).sum()
                         #loss = -MLCSL.AUL(outputs.sigmoid(), tagsModified).sum()
                         #loss = -MLCSL.AUROC(outputs.sigmoid(), tagsModified).sum()
                         #model.zero_grad()
