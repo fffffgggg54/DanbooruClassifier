@@ -302,11 +302,12 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tresnet_m-224-ASL_BCE_T-5500/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_GP0_GNADAPC_-224-1588-50epoch/'
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MLR_NW-ADA_WL_T-PU_F_metric-x+10e-1-224-1588-50epoch/"
+    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MLR_NW-ADA_WL_T-PU_F_metric-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-Hill-T-F1-x+00e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-AUL-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040_ml_decoder_new-MLR_NW-ADA_WL_T-PU_F_Metric-x+20e-1-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_224-ADA_WL_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-PU_F_Metric-x+40e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MetricOPT-P4_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
@@ -353,8 +354,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 96
-    FLAGS['gradient_accumulation_iterations'] = 4
+    FLAGS['batch_size'] = 128
+    FLAGS['gradient_accumulation_iterations'] = 3
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -365,7 +366,7 @@ elif currGPU == 'v100':
 
     FLAGS['resume_epoch'] = 0
     
-    FLAGS['use_mlr_act'] = True
+    FLAGS['use_mlr_act'] = False
 
     FLAGS['threshold_loss'] = True
     FLAGS['threshold_multiplier'] = 1.0
@@ -847,8 +848,8 @@ def modelSetup(classes):
     #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4, drop_rate = 0.05)
     #model = timm.create_model('regnetx_016', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_large_patch16_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.3)
-    model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
-    #model = timm.create_model('regnety_016', pretrained=False, num_classes=len(classes), drop_path_rate=0.1)
+    #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
+    model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4)
     #model = timm.create_model('ese_vovnet99b_iabn', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.02)
     #model = timm.create_model('tresnet_m', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('eva02_large_patch14_224.mim_m38m', pretrained=True, num_classes=len(classes))
@@ -910,6 +911,16 @@ def modelSetup(classes):
     '''
     
     #model = add_ml_decoder_head(model)
+    
+    if FLAGS['finetune'] == True:
+        for param in model.parameters():
+            param.requires_grad = False
+        for param in model.head.parameters():
+            param.requires_grad = True
+        if hasattr(model, "head_dist"):
+            for param in model.head_dist.parameters():
+                param.requires_grad = True
+    
     model = nn.Sequential(model)
 
     #model.train()
@@ -921,14 +932,7 @@ def modelSetup(classes):
     #mlr_act = MLCSL.ModifiedLogisticRegression(num_classes = len(classes), initial_weight = 1.0, initial_beta = 0.0, eps = 1e-8)
     
     
-    if FLAGS['finetune'] == True:
-        for param in model.parameters():
-            param.requires_grad = False
-        for param in model.head.parameters():
-            param.requires_grad = True
-        if hasattr(model, "head_dist"):
-            for param in model.head_dist.parameters():
-                param.requires_grad = True
+    
 
     if FLAGS['use_mlr_act'] == True:
         mlr_act = MLCSL.ModifiedLogisticRegression_NoWeight(num_classes = len(classes), initial_beta = 0.0, eps = 1e-8)
