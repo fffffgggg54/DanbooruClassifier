@@ -308,7 +308,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-AUL-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040_ml_decoder_new-MLR_NW-ADA_WL_T-PU_F_Metric-x+20e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_224-ADA_WL_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/ijepa_huge_patch14-FT-ADA_WL_T-PU_F_Metric-x+10e-1-224-1588-10epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-ADA_WL_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-PU_F_Metric-x+40e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MetricOPT-P4_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
@@ -361,9 +361,9 @@ elif currGPU == 'v100':
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
     FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
-    FLAGS['lr_warmup_epochs'] = 1
+    FLAGS['lr_warmup_epochs'] = 5
 
-    FLAGS['weight_decay'] = 1e-5
+    FLAGS['weight_decay'] = 2e-2
 
     FLAGS['resume_epoch'] = 0
     
@@ -374,7 +374,7 @@ elif currGPU == 'v100':
     FLAGS['splc'] = False
     FLAGS['splc_start_epoch'] = 1
 
-    FLAGS['finetune'] = True    #actually a linear probe of a frozen model
+    FLAGS['finetune'] = False    #actually a linear probe of a frozen model
     FLAGS['compile_model'] = False
     FLAGS['fast_norm'] = True
     FLAGS['channels_last'] = FLAGS['use_AMP']
@@ -846,12 +846,12 @@ def modelSetup(classes):
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4, drop_rate = 0.05)
+    model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('regnetx_016', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_large_patch16_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.3)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4)
-    model = timm.create_model('vit_huge_patch14_gap_224', pretrained=True, pretrained_cfg_overlay=dict(file="./jepa-latest.pth.tar"))
+    #model = timm.create_model('vit_huge_patch14_gap_224', pretrained=True, pretrained_cfg_overlay=dict(file="./jepa-latest.pth.tar"))
     #model = timm.create_model('ese_vovnet99b_iabn', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.02)
     #model = timm.create_model('tresnet_m', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('eva02_large_patch14_224.mim_m38m', pretrained=True, num_classes=len(classes))
@@ -915,7 +915,7 @@ def modelSetup(classes):
     #model = add_ml_decoder_head(model)
     
     if FLAGS['finetune'] == True:
-        model.reset_classifier(num_classes=len(classes))
+        model.reset_classifier(num_classes=len(classes)
         for param in model.parameters():
             param.requires_grad = False
         for param in model.head.parameters():
@@ -1116,14 +1116,14 @@ def trainCycle(image_datasets, model):
                     print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
                 
                 myDataset.transform = transforms.Compose([transforms.Resize(dynamicResizeDim),
-                                                          ##transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * FLAGS['progressiveAugRatio'])),
+                                                          transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * FLAGS['progressiveAugRatio'])),
                                                           #transforms.RandAugment(),
-                                                          ##transforms.RandomHorizontalFlip(),
+                                                          transforms.RandomHorizontalFlip(),
                                                           #transforms.TrivialAugmentWide(),
                                                           #danbooruDataset.CutoutPIL(cutout_factor=0.2),
                                                           
                                                           transforms.ToTensor(),
-                                                          ##RandomErasing(probability=0.3, mode='pixel', device='cpu'),
+                                                          RandomErasing(probability=0.3, mode='pixel', device='cpu'),
                                                           #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                                                           ])
                 
