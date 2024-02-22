@@ -1116,14 +1116,14 @@ def trainCycle(image_datasets, model):
                     print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
                 
                 myDataset.transform = transforms.Compose([transforms.Resize(dynamicResizeDim),
-                                                          transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * FLAGS['progressiveAugRatio'])),
+                                                          ##transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * FLAGS['progressiveAugRatio'])),
                                                           #transforms.RandAugment(),
-                                                          transforms.RandomHorizontalFlip(),
+                                                          ##transforms.RandomHorizontalFlip(),
                                                           #transforms.TrivialAugmentWide(),
                                                           #danbooruDataset.CutoutPIL(cutout_factor=0.2),
                                                           
                                                           transforms.ToTensor(),
-                                                          RandomErasing(probability=0.3, mode='pixel', device='cpu'),
+                                                          ##RandomErasing(probability=0.3, mode='pixel', device='cpu'),
                                                           #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                                                           ])
                 
