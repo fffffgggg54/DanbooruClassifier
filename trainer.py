@@ -915,7 +915,7 @@ def modelSetup(classes):
     #model = add_ml_decoder_head(model)
     
     if FLAGS['finetune'] == True: 
-        model.reset_classifier(num_classes=len(classes)
+        model.reset_classifier(num_classes=len(classes))
         for param in model.parameters():
             param.requires_grad = False
         for param in model.head.parameters():
