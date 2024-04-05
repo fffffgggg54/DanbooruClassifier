@@ -1212,7 +1212,7 @@ def trainCycle(image_datasets, model):
                                 if FLAGS['use_ddp'] == True:
                                     with torch.no_grad():
                                         torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
-                            boundary = boundaryCalculator.thresholdPerClass.detach()
+                            boundary = torch.Tensor([0.5]).to(device) if boundaryCalculator.needs_init else boundaryCalculator.thresholdPerClass.detach()
                         
                         
                         
