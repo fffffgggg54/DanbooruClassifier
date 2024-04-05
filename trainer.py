@@ -1205,12 +1205,14 @@ def trainCycle(image_datasets, model):
                             preds = torch.sigmoid(outputs)
                         
                         with torch.cuda.amp.autocast(enabled=False):
-                            boundary = boundaryCalculator(preds, tagBatch)
-                            torch.cuda.synchronize()
-                            if FLAGS['use_ddp'] == True:
-                                with torch.no_grad():
-                                    torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
-                                    boundary = boundaryCalculator.thresholdPerClass.detach()
+                            # update boundary only weight update step
+                            if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
+                                boundaryCalculator(preds, tagBatch)
+                                torch.cuda.synchronize()
+                                if FLAGS['use_ddp'] == True:
+                                    with torch.no_grad():
+                                        torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
+                            boundary = boundaryCalculator.thresholdPerClass.detach()
                         
                         
                         
