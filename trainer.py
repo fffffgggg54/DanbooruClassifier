@@ -1208,8 +1208,15 @@ def trainCycle(image_datasets, model):
                         
                         with torch.cuda.amp.autocast(enabled=False):
                             # update boundary only weight update step
+
+                            boundaryCalculator(
+                                preds, 
+                                tagBatch, 
+                                update=(phase == "train"), 
+                                step_opt=((i+1) % FLAGS['gradient_accumulation_iterations'] == 0)
+                            
+                            )
                             if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                boundaryCalculator(preds, tagBatch)
                                 torch.cuda.synchronize()
                                 if FLAGS['use_ddp'] == True:
                                     with torch.no_grad():

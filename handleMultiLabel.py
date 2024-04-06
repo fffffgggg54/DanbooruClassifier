@@ -332,7 +332,7 @@ def zero_grad(p, set_to_none=False):
 
 
 
-# gradient based boundary calculation
+# gradient based boundary calculation (not used rn xd)
 class getDecisionBoundary(nn.Module):
     def __init__(self, initial_threshold = 0.5, lr = 1e-3, threshold_min = 0.2, threshold_max = 0.8, num_classes = 1588):
         super().__init__()
@@ -396,7 +396,7 @@ class getDecisionBoundaryWorking(nn.Module):
         self.threshold_min = threshold_min
         self.threshold_max = threshold_max
         
-    def forward(self, preds, targs):
+    def forward(self, preds, targs, update=True, step_opt=True):
         # parameter initial_threshold
         # TODO clean this up and make it work consistently, use proper lazy init
         with torch.no_grad():
@@ -413,7 +413,7 @@ class getDecisionBoundaryWorking(nn.Module):
                 #self.criterion = AsymmetricLossOptimized(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
                 
         # update only when training
-        if preds.requires_grad:
+        if update:
             # ignore what happened before, only need values
             # stepping fn, currently steep version of logistic fn
             predsModified = stepAtThreshold(preds.detach(), self.thresholdPerClass)
@@ -422,10 +422,11 @@ class getDecisionBoundaryWorking(nn.Module):
             numToMax.backward()
             #loss = self.criterion(torch.special.logit(predsModified), targs)
             #loss.backward()
-            with torch.no_grad():
-                self.opt.step()
-                self.opt.zero_grad(set_to_none=True)
-                self.thresholdPerClass.data = self.thresholdPerClass.detach().clamp(min=self.threshold_min, max=self.threshold_max)
+            if step_opt:
+                with torch.no_grad():
+                    self.opt.step()
+                    self.opt.zero_grad(set_to_none=True)
+                    self.thresholdPerClass.data = self.thresholdPerClass.detach().clamp(min=self.threshold_min, max=self.threshold_max)
         
         ''' old code that uses manual optimization calls instead of an optimizer
         # need fp64
