@@ -6,6 +6,8 @@
 # https://github.com/Alibaba-MIIL/PartialLabelingCSL
 # https://github.com/Alibaba-MIIL/ASL
 
+# TODO make loss that multiplies loss or logit by tanh(-x) or sigmoid centered around threshold (intuition to not punish unlabeled positives)
+
 # not sure what this ModelEma function does
 # seems to be making a duplicate of the model with the weights set to running average of weights from the actual model
 # adds a decay to the weights(?) in order to empasize the current model weights over older ones
