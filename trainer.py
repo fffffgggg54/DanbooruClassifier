@@ -1216,22 +1216,23 @@ def trainCycle(image_datasets, model):
                             preds = torch.sigmoid(outputs)
                         
                         with torch.cuda.amp.autocast(enabled=False):
-                            # update boundary only weight update step
-
+                        
+                            # update boundary
                             boundaryCalculator(
-                                preds, 
-                                tagBatch, 
-                                update=(phase == "train"), 
+                                preds,
+                                tagBatch,
+                                update=(phase == "train"),
                                 step_opt=((i+1) % FLAGS['gradient_accumulation_iterations'] == 0)
-                            
                             )
+                            
+                            # allreduce boundary during boundary optimizer updates
                             if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                                 torch.cuda.synchronize()
                                 if FLAGS['use_ddp'] == True:
                                     with torch.no_grad():
                                         torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
-                            boundary = torch.Tensor([0.5]).to(device) if boundaryCalculator.needs_init else boundaryCalculator.thresholdPerClass.detach()
-                        
+                            #boundary = torch.Tensor([0.5]).to(device) if boundaryCalculator.needs_init else boundaryCalculator.thresholdPerClass.detach()
+                            boundary = boundaryCalculator.thresholdPerClass.detach()
                         
                         
                         #predsModified=preds
