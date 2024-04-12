@@ -310,8 +310,8 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_224_ml_decoder_new-ADA_WL_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-GLU_PyrH-ADA_WL-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/resnet50-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-MLP_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-MLP_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
+    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-PU_F_Metric-x+40e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MetricOPT-P4_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
@@ -867,10 +867,10 @@ def modelSetup(classes):
     #model = timm.create_model('ese_vovnet99b_iabn', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.02)
     #model = timm.create_model('tresnet_m', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('eva02_large_patch14_224.mim_m38m', pretrained=True, num_classes=len(classes))
-    model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, img_size=448)
+    #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, img_size=448)
     
-    #model = timm.create_model('davit_tiny', pretrained=False, features_only=True, drop_path_rate=0.2)
-    #model = PyramidFeatureAggregationModel(model, len(classes))
+    model = timm.create_model('davit_tiny', pretrained=False, features_only=True, drop_path_rate=0.2)
+    model = PyramidFeatureAggregationModel(model, len(classes))
     '''
     model = timm.create_model(
         'vit_base_patch16_224', 
@@ -1266,9 +1266,10 @@ def trainCycle(image_datasets, model):
                             criterion.update(outputs.detach(), tagsModified.to(device))
                                 
                             if(FLAGS['use_ddp'] == True):
+                                torch.cuda.synchronize()
                                 with torch.no_grad():
                                     torch.distributed.all_reduce(criterion.weight_per_class, op = torch.distributed.ReduceOp.AVG)
-                                    torch.cuda.synchronize()
+                                    
                         
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
                         loss = criterion(outputs.to(device), tagsModified.to(device))
@@ -1389,10 +1390,11 @@ def trainCycle(image_datasets, model):
                     cycleTime = time.time()
                     
                     if(FLAGS['use_ddp'] == True):
-                        imagesPerSecond = torch.Tensor([imagesPerSecond]).to(device)
-                        torch.distributed.all_reduce(imagesPerSecond, op = torch.distributed.ReduceOp.SUM)
-                        imagesPerSecond = imagesPerSecond.cpu()
-                        imagesPerSecond = imagesPerSecond.item()
+                        #imagesPerSecond = torch.Tensor([imagesPerSecond]).to(device)
+                        #torch.distributed.all_reduce(imagesPerSecond, op = torch.distributed.ReduceOp.SUM)
+                        #imagesPerSecond = imagesPerSecond.cpu()
+                        #imagesPerSecond = imagesPerSecond.item()
+                        imagesPerSecond = imagesPerSecond * dist.get_world_size()
                         
 
                     #currPostTags = []
@@ -1431,6 +1433,7 @@ def trainCycle(image_datasets, model):
                     
                     
             if FLAGS['use_ddp'] == True:
+                torch.cuda.synchronize()
                 torch.distributed.all_reduce(cm_tracker.running_confusion_matrix, op=torch.distributed.ReduceOp.AVG)
                 
                 #torch.distributed.all_reduce(criterion.gamma_neg_per_class, op = torch.distributed.ReduceOp.AVG)
