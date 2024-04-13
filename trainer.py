@@ -1500,7 +1500,7 @@ def trainCycle(image_datasets, model):
         if(is_head_proc): print(f'epoch {epoch} completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
         #print(best)
         epoch += 1
-        '''
+        
         if(is_head_proc):
             for obj in gc.get_objects():
                 try:
@@ -1509,8 +1509,10 @@ def trainCycle(image_datasets, model):
                         
                 except: pass
             print(torch.cuda.memory_summary(device = device))
-        '''
+        
         gc.collect()
+        torch.cuda.empty_cache()
+        torch.cuda.synchronize()
 
         if(is_head_proc): print()
             
