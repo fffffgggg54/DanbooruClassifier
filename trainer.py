@@ -1142,28 +1142,7 @@ def trainCycle(image_datasets, model):
                 
                 
             if phase == 'val':
-                
-                
-                if FLAGS['val'] == False and is_head_proc:
-                    modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
-                    state_dict = model.state_dict()
-                    
-                    out_dict={}
-                    for k, v in state_dict.items():
-                        k = k.replace('_orig_mod.', '')
-                        k = k.replace('module.', '')
-                        out_dict[k] = v
-                    
-                    torch.save(out_dict, modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
-                    #torch.save(mlr_act.state_dict(), modelDir + 'mlr_act_epoch_' + str(epoch) + '.pth')
-                    if(epoch > 0):
-                        os.remove(modelDir + 'saved_model_epoch_' + str(epoch - 1) + '.pth')
-                        #os.remove(modelDir + 'mlr_act_epoch_' + str(epoch - 1) + '.pth')
-                    torch.save(boundaryCalculator.thresholdPerClass, modelDir + 'thresholds.pth')
-                    torch.save(optimizer.state_dict(), modelDir + 'optimizer' + '.pth')
-                    pd.DataFrame(tagNames).to_pickle(modelDir + "tags.pkl")
-                
-                
+
                 model.eval()   # Set model to evaluate mode
                 #mlr_act.eval()
                 #boundaryCalculator.eval()
@@ -1191,21 +1170,15 @@ def trainCycle(image_datasets, model):
             loaderIterable = enumerate(dataloaders[phase])
             #if(is_head_proc): torch.cuda.memory._record_memory_history(enabled='all')
             for i, (images, tags) in loaderIterable:
-                
-
 
                 imageBatch = images.to(device, memory_format=memory_format, non_blocking=True)
                 tagBatch = tags.to(device, non_blocking=True)
-                
-                
-                
+
                 with torch.set_grad_enabled(phase == 'train'):
                     # TODO switch between using autocast and not using it
                     
                     with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
-                        
-                        
-                        
+
                         if FLAGS['use_mlr_act'] == True:   
                             preds = model(imageBatch)
                             outputs = torch.special.logit(preds)
@@ -1233,8 +1206,7 @@ def trainCycle(image_datasets, model):
                                         torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
                             #boundary = torch.Tensor([0.5]).to(device) if boundaryCalculator.needs_init else boundaryCalculator.thresholdPerClass.detach()
                             boundary = boundaryCalculator.thresholdPerClass.detach()
-                        
-                        
+                            
                         #predsModified=preds
                         #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
                         with torch.no_grad():
@@ -1494,8 +1466,26 @@ def trainCycle(image_datasets, model):
         
         
         
-    
-        
+        # save everything
+        if FLAGS['val'] == False and is_head_proc:
+            modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
+            state_dict = model.state_dict()
+            
+            out_dict={}
+            for k, v in state_dict.items():
+                k = k.replace('_orig_mod.', '')
+                k = k.replace('module.', '')
+                out_dict[k] = v
+            
+            torch.save(out_dict, modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
+            #torch.save(mlr_act.state_dict(), modelDir + 'mlr_act_epoch_' + str(epoch) + '.pth')
+            if(epoch > 0):
+                os.remove(modelDir + 'saved_model_epoch_' + str(epoch - 1) + '.pth')
+                #os.remove(modelDir + 'mlr_act_epoch_' + str(epoch - 1) + '.pth')
+            torch.save(boundaryCalculator.thresholdPerClass, modelDir + 'thresholds.pth')
+            torch.save(optimizer.state_dict(), modelDir + 'optimizer' + '.pth')
+            pd.DataFrame(tagNames).to_pickle(modelDir + "tags.pkl")
+            
         time_elapsed = time.time() - epochTime
         if(is_head_proc): print(f'epoch {epoch} completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
         #print(best)
