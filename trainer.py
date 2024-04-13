@@ -1192,7 +1192,7 @@ def trainCycle(image_datasets, model):
                         
                             # update boundary
                             boundaryCalculator(
-                                preds,
+                                preds.detach(),
                                 tagBatch,
                                 update=(phase == "train"),
                                 step_opt=((i+1) % FLAGS['gradient_accumulation_iterations'] == 0)
@@ -1211,7 +1211,7 @@ def trainCycle(image_datasets, model):
                         #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
                         with torch.no_grad():
                             #multiAccuracy = cm_tracker.update((preds.detach() > boundary.detach()).float().to(device), tagBatch.to(device))
-                            multiAccuracy = cm_tracker.update(preds.detach().float().to(device), tagBatch.to(device))
+                            multiAccuracy = cm_tracker.update(preds.detach(), tagBatch.to(device))
                         
                         
                         
@@ -1447,6 +1447,7 @@ def trainCycle(image_datasets, model):
                 
             currPhase += 1
             optimizer.zero_grad(set_to_none=True)
+            if(boundaryCalculator.opt): boundaryCalculator.zero_grad(set_to_none=True)
             #mlr_act_opt.zero_grad(set_to_none=True)
 
             '''

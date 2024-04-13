@@ -1412,26 +1412,27 @@ class MetricTracker():
         return self.get_full_metrics().mean(dim=0)
     
     def update(self, preds, targs):
-        self.sampleCount += targs.size(dim=0)
-        
-        targs_inv = 1 - targs
-        P = targs * preds
-        N = targs_inv * preds
-        
-        
-        TP = P.sum(dim=0)
-        FN = (targs - P).sum(dim=0)
-        FP = N.sum(dim=0)
-        TN = (targs_inv - N).sum(dim=0)
-        
-        output = torch.stack([TP, FN, FP, TN])
-        if self.running_confusion_matrix is None:
-            self.running_confusion_matrix = output
-        
-        else:
-            self.running_confusion_matrix += output
+        with torch.no_grad():
+            self.sampleCount += targs.size(dim=0)
             
-        return self.get_aggregate_metrics()
+            targs_inv = 1 - targs
+            P = targs * preds
+            N = targs_inv * preds
+            
+            
+            TP = P.sum(dim=0)
+            FN = (targs - P).sum(dim=0)
+            FP = N.sum(dim=0)
+            TN = (targs_inv - N).sum(dim=0)
+            
+            output = torch.stack([TP, FN, FP, TN])
+            if self.running_confusion_matrix is None:
+                self.running_confusion_matrix = output
+            
+            else:
+                self.running_confusion_matrix += output
+                
+            return self.get_aggregate_metrics()
         
 
 class AverageMeter(object):
