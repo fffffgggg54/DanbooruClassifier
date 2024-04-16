@@ -310,7 +310,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_224_ml_decoder_new-ADA_WL_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-GLU_PyrH-ADA_WL-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/resnet50-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-MLP_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-PU_F_Metric-x+40e-1-224-1588-50epoch/"
@@ -782,7 +782,7 @@ class PyramidFeatureAggregationModel(nn.Module):
         self.pools = nn.ModuleList([SelectAdaptivePool2d(pool_type='fast_avg', flatten=True) for dim in self.feature_dims])
         self.num_classes = num_classes
         self.head = nn.Linear(self.num_features, self.num_classes)
-        '''
+        
         self.head = GluMlp(
             in_features = self.num_features,
             hidden_features = int(2*2.5*self.num_features),
@@ -798,7 +798,7 @@ class PyramidFeatureAggregationModel(nn.Module):
             act_layer = get_act_layer('gelu'),
             norm_layer = None,
         )
-
+        '''
     def forward(self, x):
         x=self.model(x)
         #x = torch.column_stack([nn.functional.gelu(out).mean((-2, -1)) for out in x]) # NCHW only for now
@@ -1491,7 +1491,7 @@ def trainCycle(image_datasets, model):
         if(is_head_proc): print(f'epoch {epoch} completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
         #print(best)
         epoch += 1
-        
+        '''
         if(is_head_proc):
             for obj in gc.get_objects():
                 try:
@@ -1500,7 +1500,7 @@ def trainCycle(image_datasets, model):
                         
                 except: pass
             print(torch.cuda.memory_summary(device = device))
-        
+        '''
         gc.collect()
         torch.cuda.empty_cache()
         torch.cuda.synchronize()
