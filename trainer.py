@@ -1207,7 +1207,7 @@ def trainCycle(image_datasets, model):
                                     with torch.no_grad():
                                         torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
                             #boundary = torch.Tensor([0.5]).to(device) if boundaryCalculator.needs_init else boundaryCalculator.thresholdPerClass.detach()
-                            boundary = boundaryCalculator.thresholdPerClass.detach()
+                            
                             
                         #predsModified=preds
                         #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
@@ -1228,6 +1228,7 @@ def trainCycle(image_datasets, model):
                         
                         if FLAGS['threshold_loss']:
                             #outputs = outputs - torch.special.logit(boundary)
+                            boundary = boundaryCalculator.thresholdPerClass.detach()
                             outputs = outputs + FLAGS['threshold_multiplier'] * torch.special.logit(boundary)
                         
                         #outputs = outputs + offset
