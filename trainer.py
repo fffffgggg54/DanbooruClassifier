@@ -867,7 +867,7 @@ def modelSetup(classes):
     #model = timm.create_model('vit_huge_patch14_gap_224', pretrained=True, pretrained_cfg_overlay=dict(file="./jepa-latest.pth.tar"))
     #model = timm.create_model('ese_vovnet99b_iabn', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.02)
     #model = timm.create_model('tresnet_m', pretrained=False, num_classes=len(classes))
-    model = timm.create_model('efficientvit_b3', pretrained=False, num_classes=len(classes), drop_rate=0.05)
+    model = timm.create_model('efficientvit_b3', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('eva02_large_patch14_224.mim_m38m', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, img_size=448)
     
