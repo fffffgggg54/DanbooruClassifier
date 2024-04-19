@@ -294,7 +294,7 @@ elif currGPU == 'm40':
 elif currGPU == 'v100':
 
 
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/scratch/"
+    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/scratch/"
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
@@ -308,7 +308,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-AUL-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040_ml_decoder_new-MLR_NW-ADA_WL_T-PU_F_Metric-x+20e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_224_ml_decoder_new-ADA_WL_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-GLU_PyrH-ADA_WL-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/resnet50-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/efficientvit_b3-ASL_BCE-224-1588-50epoch/"
@@ -331,8 +331,8 @@ elif currGPU == 'v100':
 
     # dataset config
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 448
-    FLAGS['actual_image_size'] = 448
+    FLAGS['image_size'] = 224
+    FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 3.0
@@ -359,8 +359,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 96
-    FLAGS['gradient_accumulation_iterations'] = 4
+    FLAGS['batch_size'] = 128
+    FLAGS['gradient_accumulation_iterations'] = 3
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -859,7 +859,7 @@ def modelSetup(classes):
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
+    model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('regnetx_016', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_large_patch16_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.3)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
