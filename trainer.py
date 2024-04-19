@@ -359,8 +359,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 32
-    FLAGS['gradient_accumulation_iterations'] = 12
+    FLAGS['batch_size'] = 64
+    FLAGS['gradient_accumulation_iterations'] = 6
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -876,9 +876,9 @@ def modelSetup(classes):
     #model = PyramidFeatureAggregationModel(model, len(classes))
     
     model = timm.create_model(
-        'vit_large_patch16_224', 
+        'vit_base_patch16_224', 
         img_size = FLAGS['actual_image_size'], 
-        patch_size = 32, 
+        patch_size = 28, 
         global_pool='avg', 
         class_token = False, 
         qkv_bias=False, 
