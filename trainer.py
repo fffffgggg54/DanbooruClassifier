@@ -864,7 +864,7 @@ def modelSetup(classes):
     #model = timm.create_model('vit_large_patch16_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.3)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4)
-    model = timm.create_model('vit_large_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, patch_size=32, img_size=FLAGS['actual_image_size'])
+    #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, patch_size=32, img_size=FLAGS['actual_image_size'])
     #model = timm.create_model('vit_huge_patch14_gap_224', pretrained=True, pretrained_cfg_overlay=dict(file="./jepa-latest.pth.tar"))
     #model = timm.create_model('ese_vovnet99b_iabn', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.02)
     #model = timm.create_model('tresnet_m', pretrained=False, num_classes=len(classes))
@@ -874,11 +874,11 @@ def modelSetup(classes):
     
     #model = timm.create_model('davit_tiny', pretrained=False, features_only=True, drop_path_rate=0.2)
     #model = PyramidFeatureAggregationModel(model, len(classes))
-    '''
+    
     model = timm.create_model(
-        'vit_base_patch16_224', 
+        'vit_large_patch16_224', 
         img_size = FLAGS['actual_image_size'], 
-        patch_size = 16, 
+        patch_size = 32, 
         global_pool='avg', 
         class_token = False, 
         qkv_bias=False, 
@@ -889,7 +889,7 @@ def modelSetup(classes):
         drop_path_rate = 0.4, 
         drop_rate=0.02
     )
-    '''
+    
     
     # gap model
     '''
