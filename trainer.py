@@ -331,8 +331,8 @@ elif currGPU == 'v100':
 
     # dataset config
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 224
-    FLAGS['actual_image_size'] = 224
+    FLAGS['image_size'] = 448
+    FLAGS['actual_image_size'] = 448
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 3.0
@@ -863,7 +863,8 @@ def modelSetup(classes):
     #model = timm.create_model('regnetx_016', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_large_patch16_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.3)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
-    model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4)
+    #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4)
+    model = timm.create_model('vit_base_patch16_gap_224', pretrained=Fasle, num_classes=len(classes), drop_path_rate=0.4, patch_size=32, img_size=img_size = FLAGS['actual_image_size'])
     #model = timm.create_model('vit_huge_patch14_gap_224', pretrained=True, pretrained_cfg_overlay=dict(file="./jepa-latest.pth.tar"))
     #model = timm.create_model('ese_vovnet99b_iabn', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.02)
     #model = timm.create_model('tresnet_m', pretrained=False, num_classes=len(classes))
