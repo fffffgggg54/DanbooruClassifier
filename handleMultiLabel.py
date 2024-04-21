@@ -581,7 +581,8 @@ class AdaptiveWeightedLoss(nn.Module):
         
         return -(self.loss_neg + self.loss_pos * self.weight_per_class.detach()).sum()
     
-    def update(self, x, y):
+    def update(self, x, y, update=True, step_opt=True):
+        if not update: return None
         with torch.no_grad():
             # parameter initialization
             # TODO clean this up and make it work consistently, use proper lazy init
@@ -614,15 +615,16 @@ class AdaptiveWeightedLoss(nn.Module):
         numToMin = (self.weight_this_batch - self.weight_per_class) ** 2
         numToMin.mean().backward()
         
-        self.opt.step()
-        self.opt.zero_grad(set_to_none=True)
-        
-        # EMA
-        # TODO get this to work, currently collapsing to high false positive count (87ish %)
-        #self.weight_per_class.data = (1-self.lr) * self.weight_per_class.data + (self.lr) * self.weight_this_batch
-        with torch.no_grad():
-        
-            self.weight_per_class.data = self.weight_per_class.clamp(min=self.weight_limit_lower, max=self.weight_limit_upper)
+        if step_opt:
+            self.opt.step()
+            self.opt.zero_grad(set_to_none=True)
+            
+            # EMA
+            # TODO get this to work, currently collapsing to high false positive count (87ish %)
+            #self.weight_per_class.data = (1-self.lr) * self.weight_per_class.data + (self.lr) * self.weight_this_batch
+            with torch.no_grad():
+            
+                self.weight_per_class.data = self.weight_per_class.clamp(min=self.weight_limit_lower, max=self.weight_limit_upper)
 
             
         
