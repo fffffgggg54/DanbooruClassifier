@@ -373,7 +373,7 @@ elif currGPU == 'v100':
     
     FLAGS['use_mlr_act'] = False
 
-    FLAGS['threshold_loss'] = False
+    FLAGS['threshold_loss'] = True
     FLAGS['threshold_multiplier'] = 0.0
     FLAGS['splc'] = False
     FLAGS['splc_start_epoch'] = 1
@@ -1282,6 +1282,7 @@ def trainCycle(image_datasets, model):
                                 with model.no_sync():
                                     scaler.scale(loss).backward()
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
+                                    torch.cuda.synchronize()
                                     nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                     scaler.step(optimizer)
                                     scaler.update()
@@ -1296,6 +1297,7 @@ def trainCycle(image_datasets, model):
                                 with model.no_sync():
                                     loss.backward()
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
+                                    torch.cuda.synchronize()
                                     nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                     optimizer.step()
                                     optimizer.zero_grad(set_to_none=True)
