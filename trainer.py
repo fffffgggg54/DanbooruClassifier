@@ -481,7 +481,8 @@ workQueue = multiprocessing.Queue()
 '''
 
 def getSubsetByID(dataset, postData, lower, upper, div = 1000):
-    return torch.utils.data.Subset(dataset, postData[lower <= postData['id'] % 1000][upper > postData['id'] % 1000].index.tolist())
+    indices = postData[lower <= postData['id'] % 1000][upper > postData['id'] % 1000].index.tolist()
+    return torch.utils.data.Subset(dataset, indices)
 
 def getData():
     startTime = time.time()
