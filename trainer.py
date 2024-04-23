@@ -75,6 +75,7 @@ FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
 FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
 FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
 FLAGS['postDFPickleFilteredTrimmed'] = FLAGS['postMetaRoot'] + "postDataFilteredTrimmed.pkl"
+FLAGS['subsetPickle'] = FLAGS['postmetaRoot'] + "subsetIndices"
 
 '''
 if currGPU == '3090':
@@ -308,7 +309,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-AUL-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040_ml_decoder_new-MLR_NW-ADA_WL_T-PU_F_Metric-x+20e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_224_ml_decoder_new-ADA_WL_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040-ADA_WL-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040-ASL_BCE_T-PU_F_Metric-x-10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/resnet50-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/efficientvit_b3-ASL_BCE-224-1588-50epoch/"
@@ -374,7 +375,7 @@ elif currGPU == 'v100':
     FLAGS['use_mlr_act'] = False
 
     FLAGS['threshold_loss'] = True
-    FLAGS['threshold_multiplier'] = 0.0
+    FLAGS['threshold_multiplier'] = -1.0
     FLAGS['splc'] = False
     FLAGS['splc_start_epoch'] = 1
 
@@ -481,8 +482,17 @@ workQueue = multiprocessing.Queue()
 '''
 
 def getSubsetByID(dataset, postData, lower, upper, div = 1000):
-    indices = postData[lower <= postData['id'] % 1000][upper > postData['id'] % 1000].index.tolist()
-    return torch.utils.data.Subset(dataset, indices)
+    is_head_proc = not FLAGS['use_ddp'] or dist.get_rank() == 0
+    subsetName = FLAGS['subsetPickle'] + '-' + str(lower) + '-' + str(upper) + '.pkl'
+    try:
+        print("attempting to read pickled subset information at " + subsetName)
+        indices = pd.read_pickle(subsetName)
+    except:
+        indices = postData[lower <= postData['id'] % 1000][upper > postData['id'] % 1000].index
+        if is_head_proc:
+            print("saving subset pickled subset information to " + subsetName)
+            indices.to_pickle(subsetName)
+    return torch.utils.data.Subset(dataset, indices.tolist())
 
 def getData():
     startTime = time.time()
@@ -1029,8 +1039,8 @@ def trainCycle(image_datasets, model):
     #criterion = MLCSL.Hill()
     #criterion = MLCSL.SPLC(gamma=2.0)
     #criterion = MLCSL.SPLCModified(gamma=2.0)
-    criterion = MLCSL.AdaptiveWeightedLoss(initial_weight = 1.0, lr = 1e-4, weight_limit = 1e5)
-    #criterion = MLCSL.AsymmetricLoss(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
+    #criterion = MLCSL.AdaptiveWeightedLoss(initial_weight = 1.0, lr = 1e-4, weight_limit = 1e5)
+    criterion = MLCSL.AsymmetricLoss(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=5, gamma_pos=1, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False, adaptive = True, gap_target = 0.1, gamma_step = 0.001)
     #criterion = MLCSL.AsymmetricLossAdaptiveWorking(gamma_neg=1, gamma_pos=0, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.2)
