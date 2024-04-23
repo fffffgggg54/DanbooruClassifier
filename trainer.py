@@ -482,6 +482,7 @@ workQueue = multiprocessing.Queue()
 '''
 
 def getSubsetByID(dataset, postData, lower, upper, div = 1000):
+    '''
     is_head_proc = not FLAGS['use_ddp'] or dist.get_rank() == 0
     subsetName = FLAGS['subsetPickle'] + '-' + str(lower) + '-' + str(upper) + '.pkl'
     try:
@@ -492,7 +493,8 @@ def getSubsetByID(dataset, postData, lower, upper, div = 1000):
         if is_head_proc:
             print("saving subset pickled subset information to " + subsetName)
             indices.to_pickle(subsetName)
-    return torch.utils.data.Subset(dataset, indices.tolist())
+    '''
+    return torch.utils.data.Subset(dataset, postData[lower <= postData['id'] % 1000][upper > postData['id'] % 1000].index.tolist())
 
 def getData():
     startTime = time.time()
