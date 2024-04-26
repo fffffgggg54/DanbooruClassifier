@@ -1262,12 +1262,12 @@ def trainCycle(image_datasets, model):
                                     
                         
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        #loss = criterion(outputs.to(device), tagsModified.to(device))
+                        loss = criterion(outputs.to(device), tagsModified.to(device))
                         #loss = criterion(outputs.to(device), tagsModified.to(device), ddp=FLAGS['use_ddp'])
                         #loss = criterion(outputs.to(device) - torch.special.logit(boundary), tagBatch.to(device))
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
                         #loss, textOutput = criterion(outputs.to(device), tagBatch.to(device), updateAdaptive = (phase == 'train'), printAdaptive = ((i % stepsPerPrintout == 0) and is_head_proc))
-                        loss, textOutput = criterion(outputs.to(device), tagBatch.to(device), updateAdaptive = (phase == 'train'))
+                        #loss, textOutput = criterion(outputs.to(device), tagBatch.to(device), updateAdaptive = (phase == 'train'))
                         #loss = criterion(outputs.cpu(), tags.cpu())
                         
                         #loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([2,1,2,1]).to(device2)).sum()
