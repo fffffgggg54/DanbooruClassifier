@@ -314,7 +314,9 @@ class ModifiedLogisticRegression_NoWeight(nn.Module):
         return self.pred
         '''
         #with torch.no_grad():
-        c_hat = 1 / (1 + self.beta_per_class ** 2)
+        #c_hat = 1 / (1 + self.beta_per_class ** 2)
+        with torch.no_grad():
+            self.c_hat = 1 / (1 + self.beta_per_class.detach() ** 2)
         return c_hat / (1 + (self.beta_per_class ** 2) + torch.exp(-x) + self.eps)
 
 def stepAtThreshold(x, threshold, k=5, base=10):
