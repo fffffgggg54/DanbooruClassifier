@@ -890,7 +890,7 @@ def modelSetup(classes):
     #model = timm.create_model('eva02_large_patch14_224.mim_m38m', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, img_size=448)
     
-    model = timm.create_model('regnetz_040', pretrained=False, features_only=True, feature_cfg={feature_cls:'hook'}, drop_path_rate=0.15)
+    model = timm.create_model('regnetz_040', pretrained=False, features_only=True, feature_cfg=dict(feature_cls='hook'), drop_path_rate=0.15)
     model = PyramidFeatureAggregationModel(model, len(classes), head_type='fc')
     '''
     model = timm.create_model(
