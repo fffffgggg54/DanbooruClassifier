@@ -309,7 +309,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-AUL-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040_ml_decoder_new-MLR_NW-ADA_WL_T-PU_F_Metric-x+20e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_224_ml_decoder_new-ADA_WL_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040_ml_decoder_new-MLR_NW-ASL_BCE-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040-FC_PyrH-MLR_NW-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/resnet50-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/efficientvit_b3-ASL_BCE-224-1588-50epoch/"
@@ -785,6 +785,8 @@ class PyramidFeatureAggregationModel(nn.Module):
         self,
         model,
         num_classes = 1000,
+        head_type = "glu",
+        head_act = "silu",
     ):
         super().__init__()
         self.model = model
@@ -795,24 +797,27 @@ class PyramidFeatureAggregationModel(nn.Module):
         self.norms = nn.ModuleList([create_norm_layer('layernorm2d', dim) for dim in self.feature_dims])
         self.pools = nn.ModuleList([SelectAdaptivePool2d(pool_type='fast_avg', flatten=True) for dim in self.feature_dims])
         self.num_classes = num_classes
-        self.head = nn.Linear(self.num_features, self.num_classes)
+
+        if(head_type == "fc"):
+            self.head = nn.Linear(self.num_features, self.num_classes)
+        elif(head_type == "mlp"):
+            self.head = Mlp(
+                in_features = self.num_features,
+                hidden_features = int(4*self.num_features),
+                out_features = self.num_classes,
+                act_layer = get_act_layer(head_act),
+                norm_layer = None,
+            )
+        elif(head_type == "glu"):
+            self.head = GluMlp(
+                in_features = self.num_features,
+                hidden_features = int(2*2.5*self.num_features),
+                out_features = self.num_classes,
+                act_layer = get_act_layer(head_act),
+                norm_layer = None,
+            )
         
-        self.head = GluMlp(
-            in_features = self.num_features,
-            hidden_features = int(2*2.5*self.num_features),
-            out_features = self.num_classes,
-            act_layer = get_act_layer('silu'),
-            norm_layer = None,
-        )
-        '''
-        self.head = Mlp(
-            in_features = self.num_features,
-            hidden_features = int(4*self.num_features),
-            out_features = self.num_classes,
-            act_layer = get_act_layer('gelu'),
-            norm_layer = None,
-        )
-        '''
+        
     def forward(self, x):
         x=self.model(x)
         #x = torch.column_stack([nn.functional.gelu(out).mean((-2, -1)) for out in x]) # NCHW only for now
@@ -875,7 +880,7 @@ def modelSetup(classes):
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('regnetx_016', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_large_patch16_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.3)
-    model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
+    #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4)
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, patch_size=32, img_size=FLAGS['actual_image_size'])
     #model = timm.create_model('vit_huge_patch14_gap_224', pretrained=True, pretrained_cfg_overlay=dict(file="./jepa-latest.pth.tar"))
@@ -885,8 +890,8 @@ def modelSetup(classes):
     #model = timm.create_model('eva02_large_patch14_224.mim_m38m', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, img_size=448)
     
-    #model = timm.create_model('davit_tiny', pretrained=False, features_only=True, drop_path_rate=0.2)
-    #model = PyramidFeatureAggregationModel(model, len(classes))
+    model = timm.create_model('regnetz_040', pretrained=False, features_only=True, drop_path_rate=0.15)
+    model = PyramidFeatureAggregationModel(model, len(classes), head_type='fc')
     '''
     model = timm.create_model(
         'vit_base_patch16_224', 
@@ -941,7 +946,7 @@ def modelSetup(classes):
     
     '''
     
-    model = add_ml_decoder_head(model)
+    #model = add_ml_decoder_head(model)
     
     if FLAGS['finetune'] == True: 
         model.reset_classifier(num_classes=len(classes))
