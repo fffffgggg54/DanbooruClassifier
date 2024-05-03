@@ -892,7 +892,6 @@ def modelSetup(classes):
     
     model = timm.create_model('regnetz_040', pretrained=False, features_only=True, drop_path_rate=0.15)
     model = PyramidFeatureAggregationModel(model, len(classes), head_type='glu')
-    print(model)
     '''
     model = timm.create_model(
         'vit_base_patch16_224', 
