@@ -877,7 +877,7 @@ def modelSetup(classes):
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
+    model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('regnetx_016', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_large_patch16_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.3)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
@@ -890,8 +890,8 @@ def modelSetup(classes):
     #model = timm.create_model('eva02_large_patch14_224.mim_m38m', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, img_size=448)
     
-    model = timm.create_model('davit_tiny', pretrained=False, features_only=True, drop_path_rate=0.2)
-    model = PyramidFeatureAggregationModel(model, len(classes), head_type='fc')
+    #model = timm.create_model('davit_tiny', pretrained=False, features_only=True, drop_path_rate=0.2)
+    #model = PyramidFeatureAggregationModel(model, len(classes), head_type='fc')
     '''
     model = timm.create_model(
         'vit_base_patch16_224', 
