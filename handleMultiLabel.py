@@ -263,7 +263,7 @@ class SPLCModified(nn.Module):
 # Jaskie et. al., 2019
 # http://dx.doi.org/10.1109/IEEECONF44664.2019.9048765
 class ModifiedLogisticRegression(nn.Module):
-    def __init__(self, num_classes = 1588, initial_weight = 1.0, initial_beta = 0.0, eps = 1e-8):
+    def __init__(self, num_classes = 1588, initial_weight = 1.0, initial_beta = 1.0, eps = 1e-8):
         super().__init__()
         self.num_classes = num_classes
         self.weight_per_class = nn.Parameter(data=initial_weight * torch.ones(num_classes))
@@ -289,7 +289,7 @@ class ModifiedLogisticRegression(nn.Module):
 # rationale is that since this is going after the cls_head of an image backbone, the cls_head, where the linear layer already has a weight and bias term
 # is redundant with the weight term of the MLR algorithm, hence an implementation where it is removed from the actual algorithm and handled in the image backbone
 class ModifiedLogisticRegression_NoWeight(nn.Module):
-    def __init__(self, num_classes = 1588, initial_beta = 0.0, eps = 1e-8):
+    def __init__(self, num_classes = 1588, initial_beta = 1.0, eps = 1e-8):
         super().__init__()
         self.num_classes = num_classes
         self.beta_per_class = nn.Parameter(data=initial_beta * torch.ones(num_classes, dtype=torch.float64))
