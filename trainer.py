@@ -972,7 +972,7 @@ def modelSetup(classes):
     
 
     if FLAGS['use_mlr_act'] == True:
-        mlr_act = MLCSL.ModifiedLogisticRegression_NoWeight(num_classes = len(classes), initial_beta = 0.0, eps = 1e-8)
+        mlr_act = MLCSL.ModifiedLogisticRegression_NoWeight(num_classes = len(classes), initial_beta = 1.0, eps = 1e-8)
         model.append(mlr_act)
     
     return model
