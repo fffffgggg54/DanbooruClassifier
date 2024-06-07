@@ -539,9 +539,11 @@ def getData():
     '''
     if FLAGS['tagCount'] == 1588:
         tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
+        tagData.to_pickle(FLAGS['tagDFPickleFiltered'])
     elif FLAGS['tagCount'] == 5500:
         tagData = pd.read_csv(FLAGS['rootPath'] + 'selected_tags.csv')
     postData = pd.read_pickle(FLAGS['postDFPickleFilteredTrimmed'])
+    postData.to_pickle(FLAGS['postDFPickleFilteredTrimmed'])
     #print(postData.info())
     
     # get posts that are not banned
