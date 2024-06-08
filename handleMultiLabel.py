@@ -292,7 +292,7 @@ class ModifiedLogisticRegression_NoWeight(nn.Module):
     def __init__(self, num_classes = 1588, initial_beta = 1.0, eps = 1e-8):
         super().__init__()
         self.num_classes = num_classes
-        self.beta_per_class = nn.Parameter(data=initial_beta * torch.ones(num_classes, dtype=torch.float64))
+        self.beta_per_class = nn.Parameter(data=initial_beta * torch.ones(num_classes, dtype=torch.float32))
         self.eps = eps
         
         # store intermediate results as attributes to avoid memory realloc as per ASLOptimized
