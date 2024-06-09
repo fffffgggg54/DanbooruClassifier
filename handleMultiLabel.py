@@ -320,12 +320,12 @@ class ModifiedLogisticRegression_NoWeight(nn.Module):
             c_hat = 1 / (1 + self.beta_per_class.detach() ** 2)
         return c_hat / (1 + (self.beta_per_class ** 2) + torch.exp(-x) + self.eps)
 
-class DualLogisticRegression_Head(nn.Module):
-    def __init__(self, num_classes = 1, eps = 1e-8):
+class DualLogisticRegression(nn.Module):
+    def __init__(self, num_features, num_classes, eps = 1e-8):
         super().__init__()
         self.num_classes = num_classes
-        self.fc = nn.LazyLinear(num_classes)
-        self.estimator = nn.LazyLinear(num_classes)
+        self.fc = nn.Linear(num_features, num_classes)
+        self.estimator = nn.Linear(num_features, num_classes)
         self.eps = eps
 
     def forward(self, x):
