@@ -309,7 +309,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-AUL-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040_ml_decoder_new-MLR_NW-ADA_WL_T-PU_F_Metric-x+20e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_224_ml_decoder_new-ADA_WL_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-FC_PyrH-MLR_NW_b1-ASL_BCE-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-FC_PyrH-DLR-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/resnet50-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/efficientvit_b3-ASL_BCE-224-1588-50epoch/"
@@ -372,7 +372,7 @@ elif currGPU == 'v100':
 
     FLAGS['resume_epoch'] = 0
     
-    FLAGS['use_mlr_act'] = True
+    FLAGS['use_mlr_act'] = False
 
     FLAGS['threshold_loss'] = True
     FLAGS['threshold_multiplier'] = 0.0
@@ -818,6 +818,8 @@ class PyramidFeatureAggregationModel(nn.Module):
                 act_layer = get_act_layer(head_act),
                 norm_layer = None,
             )
+        elif(head_type == "dlr"):
+            self.head = MLCSL.DualLogisticRegression_Head(num_classes=self.num_classes)
         
         
     def forward(self, x):
@@ -893,7 +895,7 @@ def modelSetup(classes):
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, img_size=448)
     
     model = timm.create_model('davit_tiny', pretrained=False, features_only=True, drop_path_rate=0.2)
-    model = PyramidFeatureAggregationModel(model, len(classes), head_type='fc')
+    model = PyramidFeatureAggregationModel(model, len(classes), head_type='dlr')
     '''
     model = timm.create_model(
         'vit_base_patch16_224', 

@@ -320,6 +320,22 @@ class ModifiedLogisticRegression_NoWeight(nn.Module):
             c_hat = 1 / (1 + self.beta_per_class.detach() ** 2)
         return c_hat / (1 + (self.beta_per_class ** 2) + torch.exp(-x) + self.eps)
 
+class DualLogisticRegression_Head(nn.Module):
+    def __init__(self, num_classes = 1, eps = 1e-8):
+        super().__init__()
+        self.num_classes = num_classes
+        self.fc = nn.LazyLinear(num_classes)
+        self.estimator = nn.LazyLinear(num_classes)
+        self.eps = eps
+
+    def forward(self, x):
+
+        with torch.no_grad():
+            propensity = 1/ (1+(self.estimator(x.detach())**2) + self.eps)
+
+        #propensity = 1/ (1+(self.estimator(x)**2) + self.eps)
+        return torch.special.logit(propensity / (1+(self.estimator(x)**2) + torch.exp(-self.fc(x)) + self.eps))
+
 def stepAtThreshold(x, threshold, k=5, base=10):
     return 1 / (1 + torch.pow(base, (0 - k) * (x - threshold)))
 
