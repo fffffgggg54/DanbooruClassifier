@@ -329,11 +329,11 @@ class DualLogisticRegression(nn.Module):
         self.eps = eps
 
     def forward(self, x):
-
+        '''
         with torch.no_grad():
             propensity = 1/ (1+(self.estimator(x.detach())**2) + self.eps)
-
-        #propensity = 1/ (1+(self.estimator(x)**2) + self.eps)
+        '''
+        propensity = 1/ (1+(self.estimator(x)**2) + self.eps)
         return torch.special.logit(propensity / (1+(self.estimator(x)**2) + torch.exp(-self.fc(x)) + self.eps))
 
 def stepAtThreshold(x, threshold, k=5, base=10):
