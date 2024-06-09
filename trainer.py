@@ -819,7 +819,7 @@ class PyramidFeatureAggregationModel(nn.Module):
                 norm_layer = None,
             )
         elif(head_type == "dlr"):
-            self.head = MLCSL.DualLogisticRegression_Head(self.num_features, self.num_classes)
+            self.head = MLCSL.DualLogisticRegression(self.num_features, self.num_classes)
         
         
     def forward(self, x):
