@@ -333,8 +333,11 @@ class DualLogisticRegression(nn.Module):
         with torch.no_grad():
             propensity = 1/ (1+(self.estimator(x.detach())**2) + self.eps)
         '''
-        propensity = 1/ (1+(self.estimator(x.detach())**2))
-        return torch.special.logit(propensity / (1+(self.estimator(x)**2) + torch.exp(-self.fc(x)) + self.eps))
+        with torch.set_grad_enabled(False):
+            propensity = 1/ (1+(self.estimator(x.detach())**2))
+        with torch.set_grad_enabled(True):
+            x = torch.special.logit(propensity / (1+(self.estimator(x)**2) + torch.exp(-self.fc(x)) + self.eps))
+        return x
 
 def stepAtThreshold(x, threshold, k=5, base=10):
     return 1 / (1 + torch.pow(base, (0 - k) * (x - threshold)))
