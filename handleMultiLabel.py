@@ -337,7 +337,7 @@ class DualLogisticRegression(nn.Module):
             #propensity = 1/ (1+(self.estimator(x.detach())**2))
             #propensity = 1 / (1+(x.detach() @ self.estimator.weight.transpose(0, 1) + self.estimator.bias)**2)
             propensity = (x.detach() @ self.estimator.weight.transpose(0, 1) + self.estimator.bias).sigmoid()
-            print(propensity)
+            #print(propensity)
         with torch.set_grad_enabled(True):
             #x = torch.special.logit(propensity / (1+(self.estimator(x)**2) + torch.exp(-self.fc(x)) + self.eps))
             x = torch.special.logit(propensity / (1+torch.exp(-self.estimator(x)) + torch.exp(-self.fc(x)) + self.eps))
