@@ -333,22 +333,22 @@ class DualLogisticRegression(nn.Module):
         with torch.no_grad():
             propensity = 1/ (1+(self.estimator(x.detach())**2) + self.eps)
         '''
-        '''
+        
         with torch.set_grad_enabled(False):
             
-            #propensity = 1/ (1+(self.estimator(x.detach())**2))
+            propensity = 1/ (1+(self.estimator(x.detach())**2))
             #propensity = 1 / (1+(x.detach() @ self.estimator.weight.transpose(0, 1) + self.estimator.bias)**2)
-            propensity = (x.detach() @ self.estimator.weight.transpose(0, 1) + self.estimator.bias).sigmoid()
+            #propensity = (x.detach() @ self.estimator.weight.transpose(0, 1) + self.estimator.bias).sigmoid()
             #print(propensity)
-        '''
+        
         with torch.set_grad_enabled(True):
             #propensity = (x.detach() @ self.estimator.weight.transpose(0, 1) + self.estimator.bias).sigmoid()
         
-            #x = torch.special.logit(propensity / (1+(self.estimator(x.detach())**2) + torch.exp(-self.fc(x)) + self.eps))
+            x = torch.special.logit(propensity / (1+(self.estimator(x.detach())**2) + torch.exp(-self.fc(x)) + self.eps))
             #x = torch.special.logit(propensity / (1+torch.exp(-self.estimator(x.detach()).detach()) + torch.exp(-self.fc(x)) + self.eps))
             #x = torch.special.logit(propensity / (1+ torch.exp(-self.fc(x)-self.estimator(x)) + self.eps))
             
-            x = torch.special.logit(self.fc(x).sigmoid() * self.estimator(x.detach()).sigmoid())
+            #x = torch.special.logit(self.fc(x).sigmoid() * self.estimator(x.detach()).sigmoid())
         return x
 
 def stepAtThreshold(x, threshold, k=5, base=10):
