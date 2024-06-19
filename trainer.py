@@ -372,10 +372,10 @@ elif currGPU == 'v100':
 
     FLAGS['resume_epoch'] = 0
     
-    FLAGS['use_mlr_act'] = False
+    FLAGS['use_mlr_act'] = True
 
     FLAGS['threshold_loss'] = True
-    FLAGS['threshold_multiplier'] = 0.0
+    FLAGS['threshold_multiplier'] = 1.0
     FLAGS['splc'] = False
     FLAGS['splc_start_epoch'] = 1
 
@@ -895,7 +895,7 @@ def modelSetup(classes):
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, img_size=448)
     
     model = timm.create_model('davit_tiny', pretrained=False, features_only=True, drop_path_rate=0.2)
-    model = PyramidFeatureAggregationModel(model, len(classes), head_type='dlr')
+    model = PyramidFeatureAggregationModel(model, len(classes), head_type='fc')
     '''
     model = timm.create_model(
         'vit_base_patch16_224', 
