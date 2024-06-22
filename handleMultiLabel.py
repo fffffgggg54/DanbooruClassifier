@@ -324,8 +324,8 @@ class DualLogisticRegression(nn.Module):
     def __init__(self, num_features, num_classes, eps = 1e-8):
         super().__init__()
         self.num_classes = num_classes
-        self.fc = nn.Linear(num_features, num_classes)
-        self.estimator = nn.Linear(num_features, num_classes)
+        self.fc = nn.Linear(num_features, num_classes, dtype=torch.float64)
+        self.estimator = nn.Linear(num_features, num_classes, dtype=torch.float64)
         self.eps = eps
 
     def forward(self, x):
