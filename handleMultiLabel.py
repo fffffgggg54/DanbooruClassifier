@@ -335,15 +335,15 @@ class DualLogisticRegression(nn.Module):
         '''
         
         with torch.set_grad_enabled(False):
-            #propensity = 1 / (1+(x.to(torch.float64) @ self.estimator.weight.transpose(0, 1) + self.estimator.bias)**2)
-            propensity = (x.detach().to(torch.float64) @ self.estimator.weight.transpose(0, 1) + self.estimator.bias).sigmoid()
+            propensity = 1 / (1+(x.to(torch.float64) @ self.estimator.weight.transpose(0, 1) + self.estimator.bias)**2)
+            #propensity = (x.detach().to(torch.float64) @ self.estimator.weight.transpose(0, 1) + self.estimator.bias).sigmoid()
             #print(propensity)
         
         with torch.set_grad_enabled(True):
             #propensity = (x.detach() @ self.estimator.weight.transpose(0, 1) + self.estimator.bias).sigmoid()
         
-            #x = torch.special.logit(propensity / (1+(self.estimator(x.detach().to(torch.float64))**2) + torch.exp(-self.fc(x.to(torch.float64))) + self.eps))
-            x = torch.special.logit(propensity / (1+torch.exp(-self.estimator(x.to(torch.float64)).detach()) + torch.exp(-self.fc(x.to(torch.float64))) + self.eps))
+            x = torch.special.logit(propensity / (1+(self.estimator(x.detach().to(torch.float64))**2) + torch.exp(-self.fc(x.to(torch.float64))) + self.eps))
+            #x = torch.special.logit(propensity / (1+torch.exp(-self.estimator(x.to(torch.float64)).detach()) + torch.exp(-self.fc(x.to(torch.float64))) + self.eps))
             #x = torch.special.logit(propensity / (1+ torch.exp(-self.fc(x)-self.estimator(x)) + self.eps))
             
             #x = torch.special.logit(self.fc(x).sigmoid() * self.estimator(x.detach()).sigmoid())
