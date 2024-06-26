@@ -295,7 +295,7 @@ elif currGPU == 'm40':
 elif currGPU == 'v100':
 
 
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/scratch/"
+    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/scratch/"
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
@@ -312,7 +312,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-FC_PyrH-DLR-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/resnet50-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/efficientvit_b3-ASL_BCE-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_base-DLR_PyrH-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-PU_F_Metric-x+40e-1-224-1588-50epoch/"
@@ -894,7 +894,7 @@ def modelSetup(classes):
     #model = timm.create_model('eva02_large_patch14_224.mim_m38m', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, img_size=448)
     
-    model = timm.create_model('davit_tiny', pretrained=False, features_only=True, drop_path_rate=0.2)
+    model = timm.create_model('davit_base', pretrained=False, features_only=True, drop_path_rate=0.4)
     model = PyramidFeatureAggregationModel(model, len(classes), head_type='dlr')
     '''
     model = timm.create_model(
