@@ -360,8 +360,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 96
-    FLAGS['gradient_accumulation_iterations'] = 4
+    FLAGS['batch_size'] = 64
+    FLAGS['gradient_accumulation_iterations'] = 6
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -1330,7 +1330,6 @@ def trainCycle(image_datasets, model):
                         
                         
                             torch.cuda.synchronize()
-                            torch.cuda.empty_cache()
                         
                             #ema.update(model)
                             #prior.update(outputs.to(device))
