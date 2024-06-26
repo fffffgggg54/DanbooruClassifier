@@ -1330,6 +1330,7 @@ def trainCycle(image_datasets, model):
                         
                         
                             torch.cuda.synchronize()
+                            torch.cuda.empty_cache()
                         
                             #ema.update(model)
                             #prior.update(outputs.to(device))
