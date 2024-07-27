@@ -50,9 +50,9 @@ from pickle import dump
 #           CONFIGURATION OPTIONS
 # ================================================
 
-#currGPU = '3090'
+currGPU = '3090'
 #currGPU = 'm40'
-currGPU = 'v100'
+#currGPU = 'v100'
 #currGPU = 'none'
 
 
@@ -156,22 +156,22 @@ if currGPU == '3090':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_base-ASL_BCE_T-448-1588/'
-
-
+    FLAGS['modelDir'] = FLAGS['rootPath'] + "models/vit_small_patch16_224-ASL_BCE-224-1588-50epoch/"
+    
+    
     # post importer config
 
     FLAGS['chunkSize'] = 1000
     FLAGS['importerProcessCount'] = 10
-    if(torch.has_mps == True): FLAGS['importerProcessCount'] = 7
     FLAGS['stopReadingAt'] = 5000
 
     # dataset config
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 448
+    FLAGS['image_size'] = 224
+    FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
-    FLAGS['progressiveAugRatio'] = 1.6
+    FLAGS['progressiveAugRatio'] = 3.0
     FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
     #FLAGS['cacheRoot'] = None
 
@@ -180,28 +180,23 @@ if currGPU == '3090':
 
     # device config
 
-
-    FLAGS['ngpu'] = torch.cuda.is_available()
-    FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
-    FLAGS['device2'] = FLAGS['device']
-    if(torch.has_mps == True): FLAGS['device2'] = "cpu"
-    #FLAGS['use_AMP'] = True if FLAGS['device'] == 'cuda:0' else False
+    FLAGS['use_ddp'] = True
+    FLAGS['device'] = None 
     FLAGS['use_AMP'] = True
     FLAGS['use_scaler'] = FLAGS['use_AMP']
     #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
     # dataloader config
 
-    FLAGS['num_workers'] = 20
-    FLAGS['postDataServerWorkerCount'] = 3
-    if(torch.has_mps == True): FLAGS['num_workers'] = 2
+    FLAGS['num_workers'] = 32
+    FLAGS['postDataServerWorkerCount'] = 5
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
     # training config
 
-    FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 32
-    FLAGS['gradient_accumulation_iterations'] = 32
+    FLAGS['num_epochs'] = 50
+    FLAGS['batch_size'] = 192
+    FLAGS['gradient_accumulation_iterations'] = 16
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -210,16 +205,24 @@ if currGPU == '3090':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 4
+    FLAGS['resume_epoch'] = 0
+    
+    FLAGS['use_mlr_act'] = False
 
-    FLAGS['finetune'] = False
-    FLAGS['compile_model'] = True
+    FLAGS['threshold_loss'] = False
+    FLAGS['threshold_multiplier'] = 0.0
+    FLAGS['splc'] = False
+    FLAGS['splc_start_epoch'] = 1
+
+    FLAGS['finetune'] = False    #actually a linear probe of a frozen model
+    FLAGS['compile_model'] = False
+    FLAGS['fast_norm'] = False
     FLAGS['channels_last'] = FLAGS['use_AMP']
 
     # debugging config
 
     FLAGS['verbose_debug'] = False
-    FLAGS['skip_test_set'] = False
+    FLAGS['skip_test_set'] = True
     FLAGS['stepsPerPrintout'] = 50
     FLAGS['val'] = False
     
@@ -883,7 +886,7 @@ def modelSetup(classes):
     #model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('regnetx_016', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    #model = timm.create_model('vit_large_patch16_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.3)
+    model = timm.create_model('vit_small_patch16_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4)
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, patch_size=32, img_size=FLAGS['actual_image_size'])
@@ -894,8 +897,8 @@ def modelSetup(classes):
     #model = timm.create_model('eva02_large_patch14_224.mim_m38m', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, img_size=448)
     
-    model = timm.create_model('davit_base', pretrained=False, features_only=True, drop_path_rate=0.4)
-    model = PyramidFeatureAggregationModel(model, len(classes), head_type='dlr')
+    #model = timm.create_model('davit_tiny', pretrained=False, features_only=True, drop_path_rate=0.2)
+    #model = PyramidFeatureAggregationModel(model, len(classes), head_type='dlr')
     '''
     model = timm.create_model(
         'vit_base_patch16_224', 
