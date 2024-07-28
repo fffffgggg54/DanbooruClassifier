@@ -833,7 +833,18 @@ class PyramidFeatureAggregationModel(nn.Module):
         x = torch.column_stack([pool(norm(out)) for pool, norm, out in zip(self.pools, self.norms, x)])
         return self.head(x)
 
-
+class FeaturePyramid2Token(nn.Module):
+    def __ init__(
+        self,
+        model,
+    ):
+        super().__init__()
+        self.model = model
+        self.feature_dims = model.feature_info.channels()
+        self.norms = nn.ModuleList([create_norm_layer('layernorm2d', dim) for dim in self.feature_dims])
+        
+        
+        
 def modelSetup(classes):
     
     '''
