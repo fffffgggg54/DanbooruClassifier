@@ -953,7 +953,7 @@ def modelSetup(classes):
     
     '''
     
-    model = ml_decoder.add_ml_decoder_head(model, num_groups = len(classes))
+    #model = ml_decoder.add_ml_decoder_head(model, num_groups = len(classes))
     
     if FLAGS['finetune'] == True: 
         model.reset_classifier(num_classes=len(classes))
