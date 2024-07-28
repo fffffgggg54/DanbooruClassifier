@@ -834,7 +834,7 @@ class PyramidFeatureAggregationModel(nn.Module):
         return self.head(x)
 
 class FeaturePyramid2Token(nn.Module):
-    def __ init__(
+    def __init__(
         self,
         model,
     ):
