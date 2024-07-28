@@ -385,7 +385,7 @@ elif currGPU == 'v100':
     FLAGS['finetune'] = False    #actually a linear probe of a frozen model
     FLAGS['compile_model'] = False
     FLAGS['fast_norm'] = True
-    FLAGS['channels_last'] = FLAGS['use_AMP']
+    FLAGS['channels_last'] = False
 
     # debugging config
 
