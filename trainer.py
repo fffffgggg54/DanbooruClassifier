@@ -50,9 +50,9 @@ from pickle import dump
 #           CONFIGURATION OPTIONS
 # ================================================
 
-currGPU = '3090'
+#currGPU = '3090'
 #currGPU = 'm40'
-#currGPU = 'v100'
+currGPU = 'v100'
 #currGPU = 'none'
 
 
@@ -315,7 +315,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-FC_PyrH-DLR-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/resnet50-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_base-DLR_PyrH-ASL_BCE-448-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-ml_decoder-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-PU_F_Metric-x+40e-1-224-1588-50epoch/"
@@ -335,8 +335,8 @@ elif currGPU == 'v100':
 
     # dataset config
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 448
-    FLAGS['actual_image_size'] = 448
+    FLAGS['image_size'] = 224
+    FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 3.0
@@ -363,8 +363,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 16
-    FLAGS['gradient_accumulation_iterations'] = 24
+    FLAGS['batch_size'] = 96
+    FLAGS['gradient_accumulation_iterations'] = 4
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -373,12 +373,12 @@ elif currGPU == 'v100':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 4
+    FLAGS['resume_epoch'] = 0
     
     FLAGS['use_mlr_act'] = False
 
-    FLAGS['threshold_loss'] = False
-    FLAGS['threshold_multiplier'] = 1.0
+    FLAGS['threshold_loss'] = True
+    FLAGS['threshold_multiplier'] = 0.0
     FLAGS['splc'] = False
     FLAGS['splc_start_epoch'] = 1
 
@@ -884,9 +884,9 @@ def modelSetup(classes):
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
+    model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('regnetx_016', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('vit_small_patch16_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
+    #model = timm.create_model('vit_small_patch16_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4)
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, patch_size=32, img_size=FLAGS['actual_image_size'])
@@ -953,7 +953,7 @@ def modelSetup(classes):
     
     '''
     
-    #model = add_ml_decoder_head(model)
+    model = ml_decoder.add_ml_decoder_head(model, num_groups = len(classes))
     
     if FLAGS['finetune'] == True: 
         model.reset_classifier(num_classes=len(classes))
