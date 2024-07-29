@@ -315,7 +315,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-FC_PyrH-DLR-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/resnet50-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-ml_decoder_class_embed-ASL_BCE-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-ml_decoder_no_dupe-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-PU_F_Metric-x+40e-1-224-1588-50epoch/"
@@ -964,8 +964,8 @@ def modelSetup(classes):
     
     '''
     
-    #model = ml_decoder.add_ml_decoder_head(model, num_groups = 100)
-    model = ml_decoder.add_ml_decoder_head(model, num_groups = 100, class_embed = torch.load('./DanbooruWikiEmbeddings1588.pth', map_location='cpu'))
+    model = ml_decoder.add_ml_decoder_head(model, num_groups = 1588)
+    #model = ml_decoder.add_ml_decoder_head(model, num_groups = 1588, class_embed = torch.load('./DanbooruWikiEmbeddings1588.pth', map_location='cpu'))
     
     if FLAGS['finetune'] == True: 
         model.reset_classifier(num_classes=len(classes))
