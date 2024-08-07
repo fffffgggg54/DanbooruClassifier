@@ -583,6 +583,18 @@ class getDecisionBoundaryOld(nn.Module):
             
         return self.thresholdPerClass
 
+class DistributionLoss(nn.Module):
+    def __init__(
+        self,
+        alpha = 0.998,
+    ):
+        super().__init__()
+        self.neg_mean_running = None
+        self.pos_mean_running = None
+        self.neg_stdev_running = None
+        self.pos_stdev_running = None
+        
+
 class AdaptiveWeightedLoss(nn.Module):
     def __init__(self, initial_weight = 1.0, lr = 1e-3, weight_limit = 10.0, eps = 1e-8):
         super().__init__()
