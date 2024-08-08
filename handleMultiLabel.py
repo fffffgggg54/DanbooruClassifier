@@ -670,9 +670,9 @@ class DistributionTracker(nn.Module):
         deltaNeg = batchMeanNeg - self._neg_mean
         
         # [K]
-        self._pos_mean = self._pos_mean + classSizePos / ((classSizePos + self._pos_count) * deltaPos + self.eps)
+        self._pos_mean = self._pos_mean + classSizePos / ((classSizePos + self._pos_count) + self.eps) * deltaPos 
         #print(self._pos_mean)
-        self._neg_mean = self._neg_mean + classSizeNeg / ((classSizeNeg + self._neg_count) * deltaNeg + self.eps)
+        self._neg_mean = self._neg_mean + classSizeNeg / ((classSizeNeg + self._neg_count) + self.eps) * deltaNeg
         
         # [K]
         
