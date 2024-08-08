@@ -583,16 +583,74 @@ class getDecisionBoundaryOld(nn.Module):
             
         return self.thresholdPerClass
 
-class DistributionLoss(nn.Module):
+
+
+class DistributionTracker(nn.Module):
     def __init__(
         self,
-        alpha = 0.998,
     ):
         super().__init__()
-        self.neg_mean_running = None
-        self.pos_mean_running = None
-        self.neg_stdev_running = None
-        self.pos_stdev_running = None
+        self._pos_mean = 0
+        self._pos_count = 0
+        self._pos_M2 = 0
+        self._neg_mean = 0
+        self._neg_count = 0
+        self._neg_M2 = 0
+    
+    @property
+    def pos_mean(self): return self._pos_mean
+    
+    @property
+    def pos_count(self): return self._pos_count
+    
+    @property
+    def pos_var(self): return self._pos_M2/(self._pos_count - 1)
+    
+    @property
+    def pos_std(self): return self.pos_var ** 0.5
+    
+    @property
+    def neg_mean(self): return self._neg_mean
+    
+    @property
+    def neg_count(self): return self._neg_count
+    
+    @property
+    def neg_var(self): return self._neg_M2/(self._neg_count - 1)
+    
+    @property
+    def neg_std(self): return self.neg_var ** 0.5
+    
+    def forward(self, logits, labels):
+        # ([B, K], [B, K])
+        
+        # [K]
+        classSizePos = y.sum(dim=0)
+        classSizeNeg = (1-y).sum(dim=0)
+        
+        # [K]
+        batchMeanPos = logits.where(labels == 1, 0).sum(dim=0) / classSizePos
+        batchMeanNeg = logits.where(labels == 0, 0).sum(dim=0) / classSizeNeg
+        
+        # [K]
+        deltaPos = batchMeanPos - self._pos_mean
+        deltaNeg = batchMeanNeg - self._neg_mean
+        
+        # [K]
+        self._pos_mean = self._pos_mean + classSizePos / (classSizePos + self._pos_count) * deltaPos
+        self._neg_mean = self._neg_mean + classSizeNeg / (classSizeNeg + self._neg_count) * deltaNeg
+        
+        # [K]
+        self._pos_M2 = self._pos_M2 + ((logits.where(labels == 1, 0) - batchMeanPos) ** 2).sum(0)
+        self._pos_M2 = self._pos_M2 + (self._pos_count * classSizePos) / (self._pos_count + classSizePos) * deltaPos ** 2
+        self._neg_M2 = self._neg_M2 + ((logits.where(labels == 0, 0) - batchMeanNeg) ** 2).sum(0)
+        self._neg_M2 = self._neg_M2 + (self._neg_count * classSizeNeg) / (self._neg_count + classSizeNeg) * deltaNeg ** 2
+        
+        # [K]
+        self._pos_count = self._pos_count + classSizePos
+        self._neg_count = self._neg_count + classSizeNeg
+        
+        return self.pos_mean, self.pos_std, self.neg_mean, self.neg_std
         
 
 class AdaptiveWeightedLoss(nn.Module):
