@@ -640,8 +640,8 @@ class DistributionTracker(nn.Module):
         # ([B, K], [B, K])
         
         # [K]
-        classSizePos = y.sum(dim=0)
-        classSizeNeg = (1-y).sum(dim=0)
+        classSizePos = labels.sum(dim=0)
+        classSizeNeg = (1-labels).sum(dim=0)
         
         # [K]
         batchMeanPos = logits.where(labels == 1, 0).sum(dim=0) / classSizePos
