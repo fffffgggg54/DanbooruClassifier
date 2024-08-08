@@ -632,8 +632,8 @@ class DistributionTracker(nn.Module):
         self._pos_mean += dump[1] / ((dump[1] + self._pos_count) * deltaPos + self.eps)
         self._neg_mean += dump[4] / ((dump[4] + self._neg_count) * deltaNeg + self.eps)
         
-        self._pos_M2 += dump[2] + (dump[1] * self._pos_count) / ((dump[1] + self._pos_count) * deltaPos ** 2 + self.eps)
-        self._neg_M2 += dump[5] + (dump[4] * self._neg_count) / ((dump[4] + self._neg_count) * deltaNeg ** 2 + self.eps)
+        self._pos_M2 += dump[2] + (dump[1] * self._pos_count) / (dump[1] + self._pos_count + self.eps) * deltaPos ** 2
+        self._neg_M2 += dump[5] + (dump[4] * self._neg_count) / (dump[4] + self._neg_count + self.eps) * deltaNeg ** 2
         
         self._pos_count += dump[1]
         self._neg_count += dump[4]
@@ -665,10 +665,10 @@ class DistributionTracker(nn.Module):
         
         # [K]
         self._pos_M2 = self._pos_M2 + ((logits.where(labels == 1, 0) - batchMeanPos) ** 2).sum(0)
-        self._pos_M2 = self._pos_M2 + (self._pos_count * classSizePos) / ((self._pos_count + classSizePos) * deltaPos ** 2 + self.eps)
+        self._pos_M2 = self._pos_M2 + (self._pos_count * classSizePos) / (self._pos_count + classSizePos+ self.eps) * deltaPos ** 2 
         print(self._pos_M2)
         self._neg_M2 = self._neg_M2 + ((logits.where(labels == 0, 0) - batchMeanNeg) ** 2).sum(0)
-        self._neg_M2 = self._neg_M2 + (self._neg_count * classSizeNeg) / ((self._neg_count + classSizeNeg) * deltaNeg ** 2 + self.eps)
+        self._neg_M2 = self._neg_M2 + (self._neg_count * classSizeNeg) / (self._neg_count + classSizeNeg + self.eps) * deltaNeg ** 2
         
         # [K]
         self._pos_count = self._pos_count + classSizePos
