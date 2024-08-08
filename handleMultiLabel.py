@@ -656,22 +656,22 @@ class DistributionTracker(nn.Module):
         
         # [K]
         classSizePos = labels.sum(dim=0)
-        #print(classSizePos)
+        print(classSizePos)
         classSizeNeg = (1-labels).sum(dim=0)
         
         # [K]
         batchMeanPos = logits.where(labels == 1, 0).sum(dim=0) / (classSizePos + self.eps)
-        #print(batchMeanPos)
+        print(batchMeanPos)
         batchMeanNeg = logits.where(labels == 0, 0).sum(dim=0) / (classSizeNeg + self.eps)
         
         # [K]
         deltaPos = batchMeanPos - self._pos_mean
-        #print(deltaPos)
+        print(deltaPos)
         deltaNeg = batchMeanNeg - self._neg_mean
         
         # [K]
         self._pos_mean = self._pos_mean + classSizePos / ((classSizePos + self._pos_count) + self.eps) * deltaPos 
-        #print(self._pos_mean)
+        print(self._pos_mean)
         self._neg_mean = self._neg_mean + classSizeNeg / ((classSizeNeg + self._neg_count) + self.eps) * deltaNeg
         
         # [K]
