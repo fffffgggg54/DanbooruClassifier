@@ -1435,6 +1435,12 @@ def trainCycle(image_datasets, model):
                     torch.set_printoptions(linewidth = 200, sci_mode = False)
                     if(is_head_proc): print(f"[{epoch}/{FLAGS['num_epochs']}][{i}/{len(dataloaders[phase])}]\tLoss: {loss:.4f}\tImages/Second: {imagesPerSecond:.4f}\tAccuracy: {accuracy:.2f}\t {[f'{num:.4f}' for num in list((multiAccuracy * 100))]}\t{textOutput}")
                     torch.set_printoptions(profile='default')
+                    if is_head_proc:
+                        print(dist_tracker.dump())
+                        z_scores = (dist_tracker.pos_mean - dist_tracker.neg_mean) / (sqrt(dist_tracker.pos_var + dist_tracker.neg_car) + 1e-8)
+                        t_stat = (dist_tracker.pos_mean-dist_tracker.neg_mean)/((dist_tracker.pos_var/(dist_tracker.pos_count + 1e-8) + dist_tracker.neg_var/(dist_tracker.neg_count + 1e-8)) ** 0.5 + 1e-8)
+                        print(f't score mean: {t_stat.mean()} std: {t_stat.std()}')
+                        print(f'z score mean: {z_scores.mean()}, std: {z_scores.std()}')
                     #print(id[0])
                     #print(currPostTags)
                     #print(sorted(batchTagAccuracy, key = lambda x: x[1], reverse=True))
@@ -1455,10 +1461,7 @@ def trainCycle(image_datasets, model):
                 #print(device)
                 #if(FLAGS['ngpu'] > 0):
                     #torch.cuda.empty_cache()
-            if is_head_proc:
-                print(dist_tracker.dump())
-                t_stat = (dist_tracker.pos_mean-dist_tracker.neg_mean)/((dist_tracker.pos_var/(dist_tracker.pos_count + 1e-8) + dist_tracker.neg_var/(dist_tracker.neg_count + 1e-8)) ** 0.5 + 1e-8)
-                print(f't score mean: {t_stat.mean()} std: {t_stat.std()}')
+            
                     
             if FLAGS['use_ddp'] == True:
                 torch.cuda.synchronize()
