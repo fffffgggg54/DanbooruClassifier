@@ -1254,7 +1254,7 @@ def trainCycle(image_datasets, model):
                                 #multiAccuracy = cm_tracker.update((preds.detach() > boundary.detach()).float().to(device), tagBatch.to(device))
                                 multiAccuracy = cm_tracker.update(preds.detach(), tagBatch.to(device))
                                 dist_tracker(outputs.detach(), tagBatch.to(device))
-                                dist_trackers = [None for _ in dist.get_world_size()]
+                                dist_trackers = [None for _ in range(dist.get_world_size())]
                                 torch.distributed.all_gather_object(dist_trackers, dist_tracker)
                                 dist_trackers.pop(dist.get_rank())
                                 for curr_tracker in dist_trackers:
