@@ -1248,17 +1248,17 @@ def trainCycle(image_datasets, model):
                             #boundary = torch.Tensor([0.5]).to(device) if boundaryCalculator.needs_init else boundaryCalculator.thresholdPerClass.detach()
                             
                             
-                        #predsModified=preds
-                        #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
-                        with torch.no_grad():
-                            #multiAccuracy = cm_tracker.update((preds.detach() > boundary.detach()).float().to(device), tagBatch.to(device))
-                            multiAccuracy = cm_tracker.update(preds.detach(), tagBatch.to(device))
-                            dist_tracker(outputs.detach(), tagBatch.to(device))
-                            dist_trackers = []
-                            torch.distributed.all_gather_object(dist_trackers, dist_tracker)
-                            dist_trackers.pop(dist.get_rank())
-                            for curr_tracker in dist_trackers:
-                                dist_tracker += curr_tracker
+                            #predsModified=preds
+                            #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
+                            with torch.no_grad():
+                                #multiAccuracy = cm_tracker.update((preds.detach() > boundary.detach()).float().to(device), tagBatch.to(device))
+                                multiAccuracy = cm_tracker.update(preds.detach(), tagBatch.to(device))
+                                dist_tracker(outputs.detach(), tagBatch.to(device))
+                                dist_trackers = [None for _ in dist.get_world_size()]
+                                torch.distributed.all_gather_object(dist_trackers, dist_tracker)
+                                dist_trackers.pop(dist.get_rank())
+                                for curr_tracker in dist_trackers:
+                                    dist_tracker += curr_tracker
                             
                             
                         
