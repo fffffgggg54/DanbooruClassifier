@@ -1263,7 +1263,8 @@ def trainCycle(image_datasets, model):
                             
                             
                         
-                        
+                        if is_head_proc:
+                            print(dist_tracker.dump())
                         
                         outputs = outputs.float()
                         '''
