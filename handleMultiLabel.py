@@ -593,11 +593,11 @@ class DistributionTracker(nn.Module):
         self._pos_mean = 0
         self._pos_count = 0
         self._pos_M2 = 0
-        #self._pos_var = 0
+        self._pos_var = 0
         self._neg_mean = 0
         self._neg_count = 0
         self._neg_M2 = 0
-        #self._neg_var = 0
+        self._neg_var = 0
         self.eps = 1e-8
     
     @property
