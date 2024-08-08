@@ -1254,7 +1254,7 @@ def trainCycle(image_datasets, model):
                                 #multiAccuracy = cm_tracker.update((preds.detach() > boundary.detach()).float().to(device), tagBatch.to(device))
                                 multiAccuracy = cm_tracker.update(preds.detach(), tagBatch.to(device))
                                 
-                                all_logits = torch.zeros(dist.get_world_size() * outputs.shape[0], outputs.shape[1], device=outputs.device)
+                                all_logits = torch.zeros(dist.get_world_size() * outputs.shape[0], outputs.shape[1], device=outputs.device, dtype = outputs.dtype)
                                 torch.distributed.all_gather_into_tensor(all_logits, outputs)
                                 all_tags = torch.empty(dist.get_world_size() * tagBatch.shape[0], tagBatch.shape[1], device=outputs.device, dtype=tagBatch.dtype)
                                 torch.distributed.all_gather_into_tensor(all_tags, tagBatch)
