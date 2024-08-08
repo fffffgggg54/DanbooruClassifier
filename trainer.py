@@ -1457,7 +1457,7 @@ def trainCycle(image_datasets, model):
                 #if(FLAGS['ngpu'] > 0):
                     #torch.cuda.empty_cache()
             if is_head_proc:
-                t_stat = (dist_tracker.pos_mean-dist_tracker.neg_mean)/((dist_tracker.pos_var/dist_tracker.pos_count + dist_tracker.neg_var/dist_tracker.neg_count) ** 0.5 + 1e-8)
+                t_stat = (dist_tracker.pos_mean-dist_tracker.neg_mean)/((dist_tracker.pos_var/(dist_tracker.pos_count + 1e-8) + dist_tracker.neg_var/(dist_tracker.neg_count + 1e-8)) ** 0.5 + 1e-8)
                 print(f't score mean: {t_stat.mean()} std: {t_stat.std()}')
                     
             if FLAGS['use_ddp'] == True:
