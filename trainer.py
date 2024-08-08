@@ -298,7 +298,7 @@ elif currGPU == 'm40':
 elif currGPU == 'v100':
 
 
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/scratch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/scratch/"
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
@@ -315,7 +315,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-FC_PyrH-DLR-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/resnet50-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-ml_decoder_no_dupe_class_embed-ASL_BCE-224-1588-50epoch/"
+    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-ml_decoder_no_dupe_class_embed-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-PU_F_Metric-x+40e-1-224-1588-50epoch/"
@@ -965,7 +965,7 @@ def modelSetup(classes):
     '''
     
     #model = ml_decoder.add_ml_decoder_head(model, num_groups = 1588)
-    model = ml_decoder.add_ml_decoder_head(model, num_groups = 1588, class_embed = torch.load('./DanbooruWikiEmbeddings1588.pth', map_location='cpu'))
+    #model = ml_decoder.add_ml_decoder_head(model, num_groups = 1588, class_embed = torch.load('./DanbooruWikiEmbeddings1588.pth', map_location='cpu'))
     
     if FLAGS['finetune'] == True: 
         model.reset_classifier(num_classes=len(classes))
@@ -1149,6 +1149,7 @@ def trainCycle(image_datasets, model):
             phase = phases[currPhase]
             
             cm_tracker = MLCSL.MetricTracker()
+            dist_tracker = MLCSL.DistributionTracker()
 
             #try:
             if phase == 'train':
@@ -1252,6 +1253,14 @@ def trainCycle(image_datasets, model):
                         with torch.no_grad():
                             #multiAccuracy = cm_tracker.update((preds.detach() > boundary.detach()).float().to(device), tagBatch.to(device))
                             multiAccuracy = cm_tracker.update(preds.detach(), tagBatch.to(device))
+                            dist_tracker(outputs.detach(), tagBatch.to(device))
+                            dist_trackers = []
+                            torch.distributied.all_gather_object(dist_trackers, dist_tracker)
+                            dist_trackers.pop(dist.get_rank())
+                            for curr_tracker in dist_trackers:
+                                dist_tracker += curr_tracker
+                            
+                            
                         
                         
                         
@@ -1446,7 +1455,9 @@ def trainCycle(image_datasets, model):
                 #print(device)
                 #if(FLAGS['ngpu'] > 0):
                     #torch.cuda.empty_cache()
-                    
+            
+            t_stat = (dist_tracker.pos_mean-dist_tracker.neg_mean)/((dist_tracker.pos_var/dist_tracker.pos_count + dist_tracker.neg_var/dist_tracker.neg_count) ** 0.5)
+            print(f't score mean: {t_stat.mean()} std: {t_stat.std()}')
                     
             if FLAGS['use_ddp'] == True:
                 torch.cuda.synchronize()

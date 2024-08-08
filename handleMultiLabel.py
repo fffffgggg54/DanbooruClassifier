@@ -621,6 +621,21 @@ class DistributionTracker(nn.Module):
     @property
     def neg_std(self): return self.neg_var ** 0.5
     
+    def __add__(self, other):
+        deltaPos = other._pos_mean - self._pos_mean
+        deltaNeg = other._neg_mean - self._neg_mean
+        
+        self._pos_mean += other._pos_count / (other._pos_count + self._pos_count) * deltaPos
+        self._neg_mean += other._neg_count / (other._neg_count + self._neg_count) * deltaNeg
+        
+        self._pos_M2 += other._pos_M2 + (other._pos_count * self._pos_count) / (other._pos_count + self._pos_count) * deltaPos ** 2
+        self._neg_M2 += other._neg_M2 + (other._neg_count * self._neg_count) / (other._neg_count + self._neg_count) * deltaNeg ** 2
+        
+        self._pos_count += other._pos_count
+        self._neg_count += other._neg_count
+        
+
+    
     def forward(self, logits, labels):
         # ([B, K], [B, K])
         
