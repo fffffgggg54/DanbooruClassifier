@@ -622,7 +622,7 @@ class DistributionTracker(nn.Module):
     def neg_std(self): return self.neg_var ** 0.5
     
     def dump(self):
-        return torch.column_stack([self._pos_mean, self._pos_count, self._pos_M2, self._neg_mean, self._neg_count, self._neg_M2])
+        return torch.stack([self._pos_mean, self._pos_count, self._pos_M2, self._neg_mean, self._neg_count, self._neg_M2])
     
     def update(self, dump):
         deltaPos = dump[0] - self._pos_mean
