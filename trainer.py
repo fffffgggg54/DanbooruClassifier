@@ -1262,10 +1262,7 @@ def trainCycle(image_datasets, model):
                                 dist_tracker(all_logits.to(torch.float64), all_tags.to(torch.long))
 
                             
-                            
-                        
-                        if is_head_proc:
-                            print(dist_tracker.dump())
+
                         
                         outputs = outputs.float()
                         '''
