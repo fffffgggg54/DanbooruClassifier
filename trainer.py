@@ -1254,11 +1254,11 @@ def trainCycle(image_datasets, model):
                                 #multiAccuracy = cm_tracker.update((preds.detach() > boundary.detach()).float().to(device), tagBatch.to(device))
                                 multiAccuracy = cm_tracker.update(preds.detach(), tagBatch.to(device))
                                 dist_tracker(outputs.detach(), tagBatch.to(device))
-                                dist_trackers = [None for _ in range(dist.get_world_size())]
-                                torch.distributed.all_gather_object(dist_trackers, dist_tracker)
-                                dist_trackers.pop(dist.get_rank())
-                                for curr_tracker in dist_trackers:
-                                    dist_tracker += curr_tracker
+                                tracker_dumps = [None for _ in range(dist.get_world_size())]
+                                torch.distributed.all_gather_object(tracker_dumps, dist_tracker.dump())
+                                tracker_dumps.pop(dist.get_rank())
+                                for curr_dump in tracker_dumps
+                                    dist_tracker.update(curr_dump)
                             
                             
                         
