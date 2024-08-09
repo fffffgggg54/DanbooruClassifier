@@ -596,8 +596,8 @@ def adjust_labels(logits, labels, dist_tracker, clip = 0.3, eps=1e-8):
     logit_p_values = z_score_to_p_value(logit_z_scores)
     
     labels_new = (logit_p_values ** 2 * class_p_values ** 2)
-    labels_new = labels_new.where(labels_new >= clip, 0).where(labels == 0, 1)
     if(torch.distributed.get_rank() == 0): print((labels_new >= clip).float().sum())
+    labels_new = labels_new.where(labels_new >= clip, 0).where(labels == 0, 1)
     return labels_new
 
 
