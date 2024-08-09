@@ -1284,7 +1284,7 @@ def trainCycle(image_datasets, model):
                             with torch.no_grad():
                                 #targs = torch.where(preds > boundary.detach(), torch.tensor(1).to(preds), labels) # hard SPLC
                                 #tagsModified = ((1 - tagsModified) * MLCSL.stepAtThreshold(preds, boundary) + tagsModified) # soft SPLC
-                                tagsModified = MLCSL.adjust_labels(outputs, tagsModified, dist_tracker, clip=0.35)
+                                tagsModified = MLCSL.adjust_labels(outputs, tagsModified, dist_tracker)
                         if(phase == 'train' and hasattr(criterion, 'update')):
                             criterion.update(outputs.detach(), tagsModified.to(device), update=(phase == "train"),
                                 step_opt=((i+1) % FLAGS['gradient_accumulation_iterations'] == 0))
