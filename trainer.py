@@ -379,8 +379,8 @@ elif currGPU == 'v100':
 
     FLAGS['threshold_loss'] = True
     FLAGS['threshold_multiplier'] = 0.0
-    FLAGS['splc'] = False
-    FLAGS['splc_start_epoch'] = 1
+    FLAGS['splc'] = True
+    FLAGS['splc_start_epoch'] = 0
 
     FLAGS['finetune'] = False    #actually a linear probe of a frozen model
     FLAGS['compile_model'] = False
@@ -1283,7 +1283,8 @@ def trainCycle(image_datasets, model):
                         if FLAGS['splc'] and epoch >= FLAGS['splc_start_epoch']:
                             with torch.no_grad():
                                 #targs = torch.where(preds > boundary.detach(), torch.tensor(1).to(preds), labels) # hard SPLC
-                                tagsModified = ((1 - tagsModified) * MLCSL.stepAtThreshold(preds, boundary) + tagsModified) # soft SPLC
+                                #tagsModified = ((1 - tagsModified) * MLCSL.stepAtThreshold(preds, boundary) + tagsModified) # soft SPLC
+                                tagsModified = MLCSL.adjust_labels(outputs, tagsModified, dist_tracker, clip=0.35)
                         if(phase == 'train' and hasattr(criterion, 'update')):
                             criterion.update(outputs.detach(), tagsModified.to(device), update=(phase == "train"),
                                 step_opt=((i+1) % FLAGS['gradient_accumulation_iterations'] == 0))
@@ -1435,12 +1436,14 @@ def trainCycle(image_datasets, model):
                     torch.set_printoptions(linewidth = 200, sci_mode = False)
                     if(is_head_proc): print(f"[{epoch}/{FLAGS['num_epochs']}][{i}/{len(dataloaders[phase])}]\tLoss: {loss:.4f}\tImages/Second: {imagesPerSecond:.4f}\tAccuracy: {accuracy:.2f}\t {[f'{num:.4f}' for num in list((multiAccuracy * 100))]}\t{textOutput}")
                     torch.set_printoptions(profile='default')
+                    
                     if is_head_proc:
-                        print(dist_tracker.dump())
+                        #print(dist_tracker.dump())
                         z_scores = (dist_tracker.pos_mean - dist_tracker.neg_mean) / ((dist_tracker.pos_var + dist_tracker.neg_var) ** 0.5 + 1e-8)
-                        t_stat = (dist_tracker.pos_mean-dist_tracker.neg_mean)/((dist_tracker.pos_var/(dist_tracker.pos_count + 1e-8) + dist_tracker.neg_var/(dist_tracker.neg_count + 1e-8)) ** 0.5 + 1e-8)
-                        print(f't score mean: {t_stat.mean()} std: {t_stat.std()}')
+                        #t_stat = (dist_tracker.pos_mean-dist_tracker.neg_mean)/((dist_tracker.pos_var/(dist_tracker.pos_count + 1e-8) + dist_tracker.neg_var/(dist_tracker.neg_count + 1e-8)) ** 0.5 + 1e-8)
+                        #print(f't score mean: {t_stat.mean()} std: {t_stat.std()}')
                         print(f'z score mean: {z_scores.mean()}, std: {z_scores.std()}')
+                    
                     #print(id[0])
                     #print(currPostTags)
                     #print(sorted(batchTagAccuracy, key = lambda x: x[1], reverse=True))
