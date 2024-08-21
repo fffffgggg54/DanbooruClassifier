@@ -62,48 +62,46 @@ FLAGS = {}
 
 # path config for various directories and files
 # TODO replace string appending with os.path.join()
-FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
-if currGPU == 'v100': FLAGS['rootPath'] = "/media/fredo/SAMSUNG_500GB/danbooru2021/"
-if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
-FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
-FLAGS['imageRoot'] = FLAGS['rootPath'] + "original/"
+FLAGS['root_path'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
+if currGPU == 'v100': FLAGS['root_path'] = "/media/fredo/SAMSUNG_500GB/danbooru2021/"
+if(torch.has_mps == True): FLAGS['root_path'] = "/Users/fredoguan/Datasets/danbooru2021/"
+FLAGS['post_meta_root'] = FLAGS['root_path'] #+ "TenthMeta/"
+FLAGS['image_root'] = FLAGS['root_path'] + "original/"
 
-FLAGS['postListFile'] = FLAGS['postMetaRoot'] + "data_posts.json"
-FLAGS['tagListFile'] = FLAGS['postMetaRoot'] + "data_tags.json"
-FLAGS['postDFPickle'] = FLAGS['postMetaRoot'] + "postData.pkl"
-FLAGS['tagDFPickle'] = FLAGS['postMetaRoot'] + "tagData.pkl"
-FLAGS['postDFPickleFiltered'] = FLAGS['postMetaRoot'] + "postDataFiltered.pkl"
-FLAGS['tagDFPickleFiltered'] = FLAGS['postMetaRoot'] + "tagDataFiltered.pkl"
-FLAGS['postDFPickleFilteredTrimmed'] = FLAGS['postMetaRoot'] + "postDataFilteredTrimmed.pkl"
-FLAGS['subsetPickle'] = FLAGS['postMetaRoot'] + "subsetIndices"
+FLAGS['post_list_file'] = FLAGS['post_meta_root'] + "data_posts.json"
+FLAGS['tag_list_file'] = FLAGS['post_meta_root'] + "data_tags.json"
+FLAGS['post_df_pickle'] = FLAGS['post_meta_root'] + "postData.pkl"
+FLAGS['tag_df_pickle'] = FLAGS['post_meta_root'] + "tagData.pkl"
+FLAGS['post_df_pickle_filtered'] = FLAGS['post_meta_root'] + "postDataFiltered.pkl"
+FLAGS['tag_df_pickle_filtered'] = FLAGS['post_meta_root'] + "tagDataFiltered.pkl"
+FLAGS['post_df_pickle_filtered_trimmed'] = FLAGS['post_meta_root'] + "postDataFilteredTrimmed.pkl"
+FLAGS['subset_pickle'] = FLAGS['post_meta_root'] + "subsetIndices"
 
 '''
 if currGPU == '3090':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gernet_l-ASL-BCE/'
+    FLAGS['model_dir'] = FLAGS['root_path'] + 'models/gernet_l-ASL-BCE/'
 
 
     # post importer config
 
-    FLAGS['chunkSize'] = 1000
-    FLAGS['importerProcessCount'] = 10
-    if(torch.has_mps == True): FLAGS['importerProcessCount'] = 7
-    FLAGS['stopReadingAt'] = 5000
+    FLAGS['chunk_size'] = 1000
+    FLAGS['importer_process_count'] = 10
+    if(torch.has_mps == True): FLAGS['importer_process_count'] = 7
 
     # dataset config
-    #FLAGS['tagCount'] = 5500
-    FLAGS['tagCount'] = 1588
+    #FLAGS['tag_count'] = 5500
+    FLAGS['tag_count'] = 1588
     FLAGS['image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.7
     FLAGS['progressiveAugRatio'] = 1.8
-    FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
-    #FLAGS['cacheRoot'] = None
+    FLAGS['cache_root'] = FLAGS['root_path'] + "cache/"
+    #FLAGS['cache_root'] = None
 
-    FLAGS['workingSetSize'] = 1
-    FLAGS['trainSetSize'] = 0.8
+
 
     # device config
 
@@ -120,7 +118,7 @@ if currGPU == '3090':
     # dataloader config
 
     FLAGS['num_workers'] = 30
-    FLAGS['postDataServerWorkerCount'] = 3
+    FLAGS['post_data_server_worker_count'] = 3
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
@@ -147,7 +145,7 @@ if currGPU == '3090':
 
     FLAGS['verbose_debug'] = False
     FLAGS['skip_test_set'] = False
-    FLAGS['stepsPerPrintout'] = 50
+    FLAGS['steps_per_printout'] = 50
     FLAGS['val'] = False
 
 '''
@@ -156,27 +154,25 @@ if currGPU == '3090':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + "models/vit_small_patch16_224-ASL_BCE-224-1588-50epoch/"
+    FLAGS['model_dir'] = FLAGS['root_path'] + "models/vit_small_patch16_224-ASL_BCE-224-1588-50epoch/"
     
     
     # post importer config
 
-    FLAGS['chunkSize'] = 1000
-    FLAGS['importerProcessCount'] = 10
-    FLAGS['stopReadingAt'] = 5000
+    FLAGS['chunk_size'] = 1000
+    FLAGS['importer_process_count'] = 10
 
     # dataset config
-    FLAGS['tagCount'] = 1588
+    FLAGS['tag_count'] = 1588
     FLAGS['image_size'] = 224
     FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 3.0
-    FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
-    #FLAGS['cacheRoot'] = None
+    FLAGS['cache_root'] = FLAGS['root_path'] + "cache/"
+    #FLAGS['cache_root'] = None
 
-    FLAGS['workingSetSize'] = 1
-    FLAGS['trainSetSize'] = 0.8
+
 
     # device config
 
@@ -189,7 +185,7 @@ if currGPU == '3090':
     # dataloader config
 
     FLAGS['num_workers'] = 32
-    FLAGS['postDataServerWorkerCount'] = 5
+    FLAGS['post_data_server_worker_count'] = 5
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
     # training config
@@ -223,33 +219,31 @@ if currGPU == '3090':
 
     FLAGS['verbose_debug'] = False
     FLAGS['skip_test_set'] = True
-    FLAGS['stepsPerPrintout'] = 50
+    FLAGS['steps_per_printout'] = 50
     FLAGS['val'] = False
     
 elif currGPU == 'm40':
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/efficientformerv2_s0-ASL-BCE-T-5500/'
+    FLAGS['model_dir'] = FLAGS['root_path'] + 'models/efficientformerv2_s0-ASL-BCE-T-5500/'
 
 
     # post importer config
 
-    FLAGS['chunkSize'] = 1000
-    FLAGS['importerProcessCount'] = 10
-    if(torch.has_mps == True): FLAGS['importerProcessCount'] = 7
-    FLAGS['stopReadingAt'] = 5000
+    FLAGS['chunk_size'] = 1000
+    FLAGS['importer_process_count'] = 10
+    if(torch.has_mps == True): FLAGS['importer_process_count'] = 7
 
     # dataset config
-    FLAGS['tagCount'] = 5500
+    FLAGS['tag_count'] = 5500
     FLAGS['image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 3.0
-    FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
-    #FLAGS['cacheRoot'] = None
+    FLAGS['cache_root'] = FLAGS['root_path'] + "cache/"
+    #FLAGS['cache_root'] = None
 
-    FLAGS['workingSetSize'] = 1
-    FLAGS['trainSetSize'] = 0.8
+
 
     # device config
 
@@ -264,7 +258,7 @@ elif currGPU == 'm40':
     # dataloader config
 
     FLAGS['num_workers'] = 16
-    FLAGS['postDataServerWorkerCount'] = 2
+    FLAGS['post_data_server_worker_count'] = 2
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
@@ -292,59 +286,57 @@ elif currGPU == 'm40':
 
     FLAGS['verbose_debug'] = False
     FLAGS['skip_test_set'] = False
-    FLAGS['stepsPerPrintout'] = 50
+    FLAGS['steps_per_printout'] = 50
     FLAGS['val'] = False
 
 elif currGPU == 'v100':
 
 
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/scratch/"
-    #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
-    #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
-    #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
-    #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convformer_s18-224-ASL_BCE_T-1588/'
-    #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tresnet_m-224-ASL_BCE_T-5500/'
-    #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_GP0_GNADAPC_-224-1588-50epoch/'
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MLR_NW-ADA_WL_T-PU_F_metric-x+10e-1-224-1588-50epoch/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-Hill-T-F1-x+00e-1-224-1588-50epoch/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-AUL-x+10e-1-224-1588-50epoch/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040_ml_decoder_new-MLR_NW-ADA_WL_T-PU_F_Metric-x+20e-1-224-1588-50epoch/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_224_ml_decoder_new-ADA_WL_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-FC_PyrH-DLR-ASL_BCE-224-1588-50epoch/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/resnet50-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-ml_decoder_no_dupe_class_embed-ASL_BCE-224-1588-50epoch/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-224-1588-50epoch/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-PU_F_Metric-x+40e-1-224-1588-50epoch/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MetricOPT-P4_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/eva02_large_patch14_224.mim_m38m-FT-ADA_WL_T-P4-x+160e-1-224-1588-10epoch/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_224-gap-ASL_BCE_T-F1-x+00e-1-224-5500-50epoch/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/caformer_s18-gap-ASL_BCE_T-P4-x+80e-1-224-1588-300epoch/"
-    #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_GP1_GN5_CL005-224-1588-50epoch/'
-    #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_b16-ASL_BCE_-_T-224-1588/'
+    FLAGS['model_dir'] = "/media/fredo/Storage3/danbooru_models/scratch/"
+    #FLAGS['model_dir'] = FLAGS['root_path'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
+    #FLAGS['model_dir'] = FLAGS['root_path'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
+    #FLAGS['model_dir'] = FLAGS['root_path'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
+    #FLAGS['model_dir'] = FLAGS['root_path'] + 'models/convformer_s18-224-ASL_BCE_T-1588/'
+    #FLAGS['model_dir'] = FLAGS['root_path'] + 'models/tresnet_m-224-ASL_BCE_T-5500/'
+    #FLAGS['model_dir'] = FLAGS['root_path'] + 'models/regnetz_040h-ASL_GP0_GNADAPC_-224-1588-50epoch/'
+    #FLAGS['model_dir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
+    #FLAGS['model_dir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MLR_NW-ADA_WL_T-PU_F_metric-x+10e-1-224-1588-50epoch/"
+    #FLAGS['model_dir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-Hill-T-F1-x+00e-1-224-1588-50epoch/"
+    #FLAGS['model_dir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
+    #FLAGS['model_dir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-AUL-x+10e-1-224-1588-50epoch/"
+    #FLAGS['model_dir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040_ml_decoder_new-MLR_NW-ADA_WL_T-PU_F_Metric-x+20e-1-224-1588-50epoch/"
+    #FLAGS['model_dir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_224_ml_decoder_new-ADA_WL_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
+    #FLAGS['model_dir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-FC_PyrH-DLR-ASL_BCE-224-1588-50epoch/"
+    #FLAGS['model_dir'] = "/media/fredo/Storage3/danbooru_models/resnet50-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
+    #FLAGS['model_dir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
+    #FLAGS['model_dir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-ml_decoder_no_dupe_class_embed-ASL_BCE-224-1588-50epoch/"
+    #FLAGS['model_dir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ASL_BCE_T-PU_F_Metric-x+20e-1-448-1588-50epoch/"
+    #FLAGS['model_dir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040-GLU_PyrH-ASL_BCE_T-PU_F_Metric-x+20e-1-224-1588-50epoch/"
+    #FLAGS['model_dir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-PU_F_Metric-x+40e-1-224-1588-50epoch/"
+    #FLAGS['model_dir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MetricOPT-P4_T-PU_F_Metric-x+10e-1-224-1588-50epoch/"
+    #FLAGS['model_dir'] = "/media/fredo/Storage3/danbooru_models/eva02_large_patch14_224.mim_m38m-FT-ADA_WL_T-P4-x+160e-1-224-1588-10epoch/"
+    #FLAGS['model_dir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_224-gap-ASL_BCE_T-F1-x+00e-1-224-5500-50epoch/"
+    #FLAGS['model_dir'] = "/media/fredo/Storage3/danbooru_models/caformer_s18-gap-ASL_BCE_T-P4-x+80e-1-224-1588-300epoch/"
+    #FLAGS['model_dir'] = FLAGS['root_path'] + 'models/regnetz_040h-ASL_GP1_GN5_CL005-224-1588-50epoch/'
+    #FLAGS['model_dir'] = FLAGS['root_path'] + 'models/regnetz_b16-ASL_BCE_-_T-224-1588/'
     
     
     # post importer config
 
-    FLAGS['chunkSize'] = 1000
-    FLAGS['importerProcessCount'] = 10
-    FLAGS['stopReadingAt'] = 5000
+    FLAGS['chunk_size'] = 1000
+    FLAGS['importer_process_count'] = 10
 
     # dataset config
-    FLAGS['tagCount'] = 1588
+    FLAGS['tag_count'] = 1588
     FLAGS['image_size'] = 224
     FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 3.0
-    FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
-    #FLAGS['cacheRoot'] = None
+    FLAGS['cache_root'] = FLAGS['root_path'] + "cache/"
+    #FLAGS['cache_root'] = None
 
-    FLAGS['workingSetSize'] = 1
-    FLAGS['trainSetSize'] = 0.8
+
 
     # device config
 
@@ -357,10 +349,13 @@ elif currGPU == 'v100':
     # dataloader config
 
     FLAGS['num_workers'] = 10
-    FLAGS['postDataServerWorkerCount'] = 3
+    FLAGS['post_data_server_worker_count'] = 3
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
     # training config
+    
+    FLAGS['model_name'] = 'davit_tiny'
+    FLAGS['drop_path_rate'] = 0.2
 
     FLAGS['num_epochs'] = 50
     FLAGS['batch_size'] = 96
@@ -391,21 +386,20 @@ elif currGPU == 'v100':
 
     FLAGS['verbose_debug'] = False
     FLAGS['skip_test_set'] = True
-    FLAGS['stepsPerPrintout'] = 50
+    FLAGS['steps_per_printout'] = 50
     FLAGS['val'] = False
 
 elif currGPU == 'none':
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tf_efficientnetv2_s-ASL-BCE/'
+    FLAGS['model_dir'] = FLAGS['root_path'] + 'models/tf_efficientnetv2_s-ASL-BCE/'
 
 
     # post importer config
 
-    FLAGS['chunkSize'] = 1000
-    FLAGS['importerProcessCount'] = 10
-    if(torch.has_mps == True): FLAGS['importerProcessCount'] = 7
-    FLAGS['stopReadingAt'] = 5000
+    FLAGS['chunk_size'] = 1000
+    FLAGS['importer_process_count'] = 10
+    if(torch.has_mps == True): FLAGS['importer_process_count'] = 7
 
     # dataset config
 
@@ -413,11 +407,10 @@ elif currGPU == 'none':
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 3.0
-    FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
-    #FLAGS['cacheRoot'] = None
+    FLAGS['cache_root'] = FLAGS['root_path'] + "cache/"
+    #FLAGS['cache_root'] = None
 
-    FLAGS['workingSetSize'] = 1
-    FLAGS['trainSetSize'] = 0.8
+
 
     # device config
 
@@ -434,7 +427,7 @@ elif currGPU == 'none':
     # dataloader config
 
     FLAGS['num_workers'] = 1
-    FLAGS['postDataServerWorkerCount'] = 1
+    FLAGS['post_data_server_worker_count'] = 1
     if(torch.has_mps == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
@@ -461,7 +454,7 @@ elif currGPU == 'none':
 
     FLAGS['verbose_debug'] = False
     FLAGS['skip_test_set'] = False
-    FLAGS['stepsPerPrintout'] = 50
+    FLAGS['steps_per_printout'] = 50
     FLAGS['val'] = True
 
 classes = None
@@ -487,7 +480,7 @@ workQueue = multiprocessing.Queue()
 def getSubsetByID(dataset, postData, lower, upper, div = 1000):
     '''
     is_head_proc = not FLAGS['use_ddp'] or dist.get_rank() == 0
-    subsetName = FLAGS['subsetPickle'] + '-' + str(lower) + '-' + str(upper) + '.pkl'
+    subsetName = FLAGS['subset_pickle'] + '-' + str(lower) + '-' + str(upper) + '.pkl'
     try:
         print("attempting to read pickled subset information at " + subsetName)
         indices = pd.read_pickle(subsetName)
@@ -502,30 +495,30 @@ def getSubsetByID(dataset, postData, lower, upper, div = 1000):
 def getData():
     startTime = time.time()
 
-    #tagData = pd.read_pickle(FLAGS['tagDFPickle'])
-    #postData = pd.read_pickle(FLAGS['postDFPickle'])
+    #tagData = pd.read_pickle(FLAGS['tag_df_pickle'])
+    #postData = pd.read_pickle(FLAGS['post_df_pickle'])
     
     
     
     '''
     try:
-        print("attempting to read pickled post metadata file at " + FLAGS['tagDFPickle'])
-        tagData = pd.read_pickle(FLAGS['tagDFPickle'])
+        print("attempting to read pickled post metadata file at " + FLAGS['tag_df_pickle'])
+        tagData = pd.read_pickle(FLAGS['tag_df_pickle'])
     except:
-        print("pickled post metadata file at " + FLAGS['tagDFPickle'] + " not found")
-        tagData = parallelJsonReader.dataImporter(FLAGS['tagListFile'])   # read tags from json in parallel
-        print("saving pickled post metadata to " + FLAGS['tagDFPickle'])
-        tagData.to_pickle(FLAGS['tagDFPickle'])
+        print("pickled post metadata file at " + FLAGS['tag_df_pickle'] + " not found")
+        tagData = parallelJsonReader.dataImporter(FLAGS['tag_list_file'])   # read tags from json in parallel
+        print("saving pickled post metadata to " + FLAGS['tag_df_pickle'])
+        tagData.to_pickle(FLAGS['tag_df_pickle'])
     
     #postData = pd.concat(map(dataImporter, glob.iglob(postMetaDir + 'posts*')), ignore_index=True) # read all post metadata files in metadata dir
     try:
-        print("attempting to read pickled post metadata file at " + FLAGS['postDFPickle'])
-        postData = pd.read_pickle(FLAGS['postDFPickle'])
+        print("attempting to read pickled post metadata file at " + FLAGS['post_df_pickle'])
+        postData = pd.read_pickle(FLAGS['post_df_pickle'])
     except:
-        print("pickled post metadata file at " + FLAGS['postDFPickle'] + " not found")
-        postData = parallelJsonReader.dataImporter(FLAGS['postListFile'], keep = 1)    # read posts
-        print("saving pickled post metadata to " + FLAGS['postDFPickle'])
-        postData.to_pickle(FLAGS['postDFPickle'])
+        print("pickled post metadata file at " + FLAGS['post_df_pickle'] + " not found")
+        postData = parallelJsonReader.dataImporter(FLAGS['post_list_file'], keep = 1)    # read posts
+        print("saving pickled post metadata to " + FLAGS['post_df_pickle'])
+        postData.to_pickle(FLAGS['post_df_pickle'])
         
         
     
@@ -537,16 +530,16 @@ def getData():
     # TODO this filter process is slow, need to speed it up, currently only single threaded
     tagData, postData = danbooruDataset.filterDanbooruData(tagData, postData)   # apply various filters to preprocess data
     
-    tagData.to_pickle(FLAGS['tagDFPickleFiltered'])
-    postData.to_pickle(FLAGS['postDFPickleFiltered'])
+    tagData.to_pickle(FLAGS['tag_df_pickle_filtered'])
+    postData.to_pickle(FLAGS['post_df_pickle_filtered'])
     '''
-    if FLAGS['tagCount'] == 1588:
-        tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
-        #tagData.to_pickle(FLAGS['tagDFPickleFiltered'])
-    elif FLAGS['tagCount'] == 5500:
-        tagData = pd.read_csv(FLAGS['rootPath'] + 'selected_tags.csv')
-    postData = pd.read_pickle(FLAGS['postDFPickleFilteredTrimmed'])
-    #postData.to_pickle(FLAGS['postDFPickleFilteredTrimmed'])
+    if FLAGS['tag_count'] == 1588:
+        tagData = pd.read_pickle(FLAGS['tag_df_pickle_filtered'])
+        #tagData.to_pickle(FLAGS['tag_df_pickle_filtered'])
+    elif FLAGS['tag_count'] == 5500:
+        tagData = pd.read_csv(FLAGS['root_path'] + 'selected_tags.csv')
+    postData = pd.read_pickle(FLAGS['post_df_pickle_filtered_trimmed'])
+    #postData.to_pickle(FLAGS['post_df_pickle_filtered_trimmed'])
     #print(postData.info())
     
     # get posts that are not banned
@@ -561,7 +554,7 @@ def getData():
     #postData = postData[['id', 'tag_string', 'file_ext', 'file_url']]
     #postData = postData.convert_dtypes()
     #print(postData.info())
-    #postData.to_pickle(FLAGS['postDFPickleFilteredTrimmed'])
+    #postData.to_pickle(FLAGS['post_df_pickle_filtered_trimmed'])
     
     
 
@@ -569,13 +562,13 @@ def getData():
     print(f"got {len(postData)} posts with {len(tagData)} tags") #got 3821384 posts with 423 tags
     
     '''
-    for nthWorkerProcess in range(FLAGS['postDataServerWorkerCount']):
+    for nthWorkerProcess in range(FLAGS['post_data_server_worker_count']):
         currProcess = multiprocessing.Process(target=danbooruDataset.DFServerWorkerProcess,
                                               args=(workQueue,
                                                     postData.copy(deep=True),
                                                     pd.Series(tagData.name, dtype=pd.StringDtype()),
-                                                    FLAGS['imageRoot'],
-                                                    FLAGS['cacheRoot'],),
+                                                    FLAGS['image_root'],
+                                                    FLAGS['cache_root'],),
                                               daemon = True)
         currProcess.start()
         serverProcessPool.append(currProcess)
@@ -585,18 +578,18 @@ def getData():
     # TODO investigate ways to return full size images instead of crops
     # this should allow use of full sized images that vary in size, which can then be fed into a model that takes images of arbitrary resolution
     '''
-    myDataset = danbooruDataset.DanbooruDataset(FLAGS['imageRoot'], postData, tagData.name, transforms.Compose([
+    myDataset = danbooruDataset.DanbooruDataset(FLAGS['image_root'], postData, tagData.name, transforms.Compose([
         #transforms.Resize((224,224)),
         danbooruDataset.CutoutPIL(cutout_factor=0.5),
         transforms.RandAugment(),
         transforms.ToTensor(),
         #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ]),
-        cacheRoot = FLAGS['cacheRoot']
+        cache_root = FLAGS['cache_root']
         )
     '''
     '''
-    myDataset = danbooruDataset.DanbooruDatasetWithServer(FLAGS['imageRoot'],
+    myDataset = danbooruDataset.DanbooruDatasetWithServer(FLAGS['image_root'],
                                                           workQueue,
                                                           len(postData),
                                                           tagData.name,
@@ -606,7 +599,7 @@ def getData():
                                                                               transforms.ToTensor(),
                                                                               #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                                                                               ]),
-                                                          cacheRoot = FLAGS['cacheRoot'])
+                                                          cache_root = FLAGS['cache_root'])
     
     '''
     
@@ -616,10 +609,10 @@ def getData():
     myDataset = danbooruDataset.DanbooruDatasetWithServer(
         postData,
         tagData,
-        FLAGS['imageRoot'],
-        FLAGS['cacheRoot'],
+        FLAGS['image_root'],
+        FLAGS['cache_root'],
         FLAGS['image_size'],
-        FLAGS['postDataServerWorkerCount'])
+        FLAGS['post_data_server_worker_count'])
         
         
     '''
@@ -890,12 +883,14 @@ def modelSetup(classes):
     
     # regular timm models
     
+    model = timm.create_model(FLAGS['model_name'], num_classes=len(classes), drop_path_rate=FLAGS['drop_path_rate'])
+    
     #model = timm.create_model('efficientformerv2_s0', pretrained=False, num_classes=len(classes), drop_path_rate=0.05)
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
+    #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('vit_medium_shallow_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_small_patch16_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
@@ -1023,7 +1018,7 @@ def trainCycle(image_datasets, model):
     #mlr_act = mlr_act.to(device, memory_format = memory_format)
     
     if (FLAGS['resume_epoch'] > 0) and is_head_proc:
-        state_dict = torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth', map_location=torch.device('cpu'))
+        state_dict = torch.load(FLAGS['model_dir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth', map_location=torch.device('cpu'))
         #out_dict={}
         #for k, v in state_dict.items():
         #    k = k.replace('_orig_mod.', '')
@@ -1031,7 +1026,7 @@ def trainCycle(image_datasets, model):
         #    out_dict[k] = v
             
         model.load_state_dict(state_dict)
-        #mlr_act_state_dict = torch.load(FLAGS['modelDir'] + 'mlr_act_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth', map_location=torch.device('cpu'))
+        #mlr_act_state_dict = torch.load(FLAGS['model_dir'] + 'mlr_act_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth', map_location=torch.device('cpu'))
         #mlr_act.load_state_dict(mlr_act_state_dict)
     
     
@@ -1093,8 +1088,8 @@ def trainCycle(image_datasets, model):
     '''
 
     if (FLAGS['resume_epoch'] > 0):
-        boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth').to(device)
-        #optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth', map_location=torch.device(device)))
+        boundaryCalculator.thresholdPerClass = torch.load(FLAGS['model_dir'] + 'thresholds.pth').to(device)
+        #optimizer.load_state_dict(torch.load(FLAGS['model_dir'] + 'optimizer' + '.pth', map_location=torch.device(device)))
         
     
     if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
@@ -1113,7 +1108,7 @@ def trainCycle(image_datasets, model):
     
     startTime = time.time()
     cycleTime = time.time()
-    stepsPerPrintout = FLAGS['stepsPerPrintout']
+    steps_per_printout = FLAGS['steps_per_printout']
     torch.backends.cudnn.benchmark = True
     
     epoch = FLAGS['resume_epoch']
@@ -1300,7 +1295,7 @@ def trainCycle(image_datasets, model):
                         #loss = criterion(outputs.to(device), tagsModified.to(device), ddp=FLAGS['use_ddp'])
                         #loss = criterion(outputs.to(device) - torch.special.logit(boundary), tagBatch.to(device))
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
-                        #loss, textOutput = criterion(outputs.to(device), tagBatch.to(device), updateAdaptive = (phase == 'train'), printAdaptive = ((i % stepsPerPrintout == 0) and is_head_proc))
+                        #loss, textOutput = criterion(outputs.to(device), tagBatch.to(device), updateAdaptive = (phase == 'train'), printAdaptive = ((i % steps_per_printout == 0) and is_head_proc))
                         #loss, textOutput = criterion(outputs.to(device), tagBatch.to(device), updateAdaptive = (phase == 'train'))
                         #loss = criterion(outputs.cpu(), tags.cpu())
                         
@@ -1362,7 +1357,7 @@ def trainCycle(image_datasets, model):
                         if(i==20):
                             if(is_head_proc):
                                 s = torch.cuda.memory._snapshot()
-                                with open(FLAGS['modelDir'] + "mem_snapshot.pickle", "wb") as f:
+                                with open(FLAGS['model_dir'] + "mem_snapshot.pickle", "wb") as f:
                                     dump(s, f)
                                 torch.cuda.memory._record_memory_history(enabled=None)
                             exit()
@@ -1403,7 +1398,7 @@ def trainCycle(image_datasets, model):
                                 preds_all = None
                 
                 #print(device)
-                if i % stepsPerPrintout == 0:
+                if i % steps_per_printout == 0:
                     
                     if (phase == 'train'):
                         targets_batch = tags.numpy(force=True)
@@ -1412,7 +1407,7 @@ def trainCycle(image_datasets, model):
                         
                     
 
-                    imagesPerSecond = (dataloaders[phase].batch_size*stepsPerPrintout)/(time.time() - cycleTime)
+                    imagesPerSecond = (dataloaders[phase].batch_size*steps_per_printout)/(time.time() - cycleTime)
                     cycleTime = time.time()
                     
                     if(FLAGS['use_ddp'] == True):
@@ -1476,7 +1471,7 @@ def trainCycle(image_datasets, model):
                     print("saving eval data")
                     modelOutputs = {'labels':torch.cat(targets_running).cpu(), 'preds':torch.cat(preds_running).cpu()}
                     #print(modelOutputs)
-                    cachePath = FLAGS['modelDir'] + "evalOutputs.pkl.bz2"
+                    cachePath = FLAGS['model_dir'] + "evalOutputs.pkl.bz2"
                     with bz2.BZ2File(cachePath, 'w') as cachedSample: cPickle.dump(modelOutputs, cachedSample)
                 #torch.set_printoptions(profile="full")
                 
@@ -1531,7 +1526,7 @@ def trainCycle(image_datasets, model):
         
         # save everything
         if FLAGS['val'] == False and is_head_proc:
-            modelDir = danbooruDataset.create_dir(FLAGS['modelDir'])
+            model_dir = danbooruDataset.create_dir(FLAGS['model_dir'])
             state_dict = model.state_dict()
             
             out_dict={}
@@ -1540,14 +1535,14 @@ def trainCycle(image_datasets, model):
                 k = k.replace('module.', '')
                 out_dict[k] = v
             
-            torch.save(out_dict, modelDir + 'saved_model_epoch_' + str(epoch) + '.pth')
-            #torch.save(mlr_act.state_dict(), modelDir + 'mlr_act_epoch_' + str(epoch) + '.pth')
+            torch.save(out_dict, model_dir + 'saved_model_epoch_' + str(epoch) + '.pth')
+            #torch.save(mlr_act.state_dict(), model_dir + 'mlr_act_epoch_' + str(epoch) + '.pth')
             if(epoch > 0):
-                os.remove(modelDir + 'saved_model_epoch_' + str(epoch - 1) + '.pth')
-                #os.remove(modelDir + 'mlr_act_epoch_' + str(epoch - 1) + '.pth')
-            torch.save(boundaryCalculator.thresholdPerClass, modelDir + 'thresholds.pth')
-            torch.save(optimizer.state_dict(), modelDir + 'optimizer' + '.pth')
-            pd.DataFrame(tagNames).to_pickle(modelDir + "tags.pkl")
+                os.remove(model_dir + 'saved_model_epoch_' + str(epoch - 1) + '.pth')
+                #os.remove(model_dir + 'mlr_act_epoch_' + str(epoch - 1) + '.pth')
+            torch.save(boundaryCalculator.thresholdPerClass, model_dir + 'thresholds.pth')
+            torch.save(optimizer.state_dict(), model_dir + 'optimizer' + '.pth')
+            pd.DataFrame(tagNames).to_pickle(model_dir + "tags.pkl")
             
         time_elapsed = time.time() - epochTime
         if(is_head_proc): print(f'epoch {epoch} completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
