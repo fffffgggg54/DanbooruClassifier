@@ -155,7 +155,7 @@ def main():
         haveThresholds = False
     
     myDevice = 'cpu'
-    model = timm.create_model('davit_tiny', pretrained=True, num_classes=len(tagNames))
+    model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(tagNames))
     #model = timm.create_model('davit_base', num_classes=len(tagNames))
     #model = add_ml_decoder_head(model)
     #model = cvt.get_cls_model(len(tagNames), config=modelConfCust1)
