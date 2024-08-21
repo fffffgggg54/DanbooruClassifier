@@ -220,8 +220,12 @@ def main():
             trueTags = set(postData['tag_string'].split(" ")).intersection(tagNames)
             missingTags = trueTags.difference(predTags)
             newTags = predTags.difference(trueTags)
-            print(f"missing tags: {missingTags}")
-            print(f"newly detected tags: {newTags}")
+            missingTags = [(*x, thresholds[i]) for i, x in enumerate(currPostTags) if x[0] in missingTags]
+            newTags = [(*x, thresholds[i]) for i, x in enumerate(currPostTags) if x[0] in newTags]
+            print(f"\nMissing tags:\n")
+            print(*missingTags, sep="\n")
+            print(f"Newly detected tags:\n")
+            print(*newTags, sep="\n")
             
         else:
             print("not using thresholds")
