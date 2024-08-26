@@ -384,7 +384,7 @@ elif currGPU == 'v100':
     FLAGS['splc_start_epoch'] = 0
 
     FLAGS['finetune'] = False    #actually a linear probe of a frozen model
-    FLAGS['compile_model'] = True
+    FLAGS['compile_model'] = False
     FLAGS['fast_norm'] = True
     FLAGS['channels_last'] = True
 
