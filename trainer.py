@@ -215,7 +215,7 @@ if currGPU == '3090':
     FLAGS['splc_start_epoch'] = 1
 
     FLAGS['finetune'] = False    #actually a linear probe of a frozen model
-    FLAGS['compile_model'] = False
+    FLAGS['compile_model'] = True
     FLAGS['fast_norm'] = False
     FLAGS['channels_last'] = FLAGS['use_AMP']
 
