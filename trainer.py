@@ -378,13 +378,13 @@ elif currGPU == 'v100':
     
     FLAGS['use_mlr_act'] = False
 
-    FLAGS['threshold_loss'] = True
+    FLAGS['threshold_loss'] = False
     FLAGS['threshold_multiplier'] = 0.0
     FLAGS['splc'] = True
     FLAGS['splc_start_epoch'] = 0
 
     FLAGS['finetune'] = False    #actually a linear probe of a frozen model
-    FLAGS['compile_model'] = False
+    FLAGS['compile_model'] = True
     FLAGS['fast_norm'] = True
     FLAGS['channels_last'] = True
 
