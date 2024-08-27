@@ -45,6 +45,8 @@ import _pickle as cPickle
 
 from pickle import dump
 
+import scipy.stats
+
 
 # ================================================
 #           CONFIGURATION OPTIONS
@@ -305,7 +307,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convformer_s18-224-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tresnet_m-224-ASL_BCE_T-5500/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_GP0_GNADAPC_-224-1588-50epoch/'
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-PLScratch-ASL_BCE-448-1588-50epoch"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-PLScratch-ASL_BCE-224-1588-50epoch"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MLR_NW-ADA_WL_T-PU_F_metric-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-Hill-T-F1-x+00e-1-224-1588-50epoch/"
@@ -336,8 +338,8 @@ elif currGPU == 'v100':
 
     # dataset config
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 448
-    FLAGS['actual_image_size'] = 448
+    FLAGS['image_size'] = 224
+    FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 3.0
@@ -364,8 +366,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 48
-    FLAGS['gradient_accumulation_iterations'] = 8
+    FLAGS['batch_size'] = 96
+    FLAGS['gradient_accumulation_iterations'] = 4
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -1444,7 +1446,8 @@ def trainCycle(image_datasets, model):
                         z_scores = (dist_tracker.pos_mean - dist_tracker.neg_mean) / ((dist_tracker.pos_var + dist_tracker.neg_var) ** 0.5 + 1e-8)
                         #t_stat = (dist_tracker.pos_mean-dist_tracker.neg_mean)/((dist_tracker.pos_var/(dist_tracker.pos_count + 1e-8) + dist_tracker.neg_var/(dist_tracker.neg_count + 1e-8)) ** 0.5 + 1e-8)
                         #print(f't score mean: {t_stat.mean()} std: {t_stat.std()}')
-                        print(f'z score mean: {z_scores.mean()}, std: {z_scores.std()}')
+                        t_p_values = scipy.stats.ttest_ind_from_stats(dist_tracker.pos_mean, dist_tracker.pos_std, dist_tracker.pos_count, dist_tracker.neg_mean, dist_tracker.neg_std, dist_tracker.neg_count, equal_var=False, alternative="greater")
+                        print(f'z score mean: {z_scores.mean()}, std: {z_scores.std()}, t p-value mean: {t_p_values.mean()}, std: {t_p_values.std()}')
                     
                     #print(id[0])
                     #print(currPostTags)

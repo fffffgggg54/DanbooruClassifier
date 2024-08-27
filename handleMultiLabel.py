@@ -21,6 +21,7 @@ from copy import deepcopy
 import math
 
 import torch.distributed
+import scipy.stats
 
 
 
@@ -588,12 +589,16 @@ def z_score_to_p_value(x):
     return 0.5 * (1 + torch.erf(x/math.sqrt(2)))
 
 
-def adjust_labels(logits, labels, dist_tracker, clip_dist = 0.8, clip_logit = 0.65, eps=1e-8):
-    class_z_scores = (dist_tracker.pos_mean - dist_tracker.neg_mean) / ((dist_tracker.pos_var + dist_tracker.neg_var) ** 0.5 + eps)
-    class_p_values = z_score_to_p_value(class_z_scores)
+def adjust_labels(logits, labels, dist_tracker, clip_dist = 0.85, clip_logit = 0.7, eps=1e-8):
+    # use a z test
+    #class_z_scores = (dist_tracker.pos_mean - dist_tracker.neg_mean) / ((dist_tracker.pos_var + dist_tracker.neg_var) ** 0.5 + eps)
+    #class_p_values = z_score_to_p_value(class_z_scores)
 
     logit_z_scores = (logits - dist_tracker.pos_mean) / (dist_tracker.pos_std + eps)
     logit_p_values = z_score_to_p_value(logit_z_scores)
+    
+    # use t test
+    class_p_values = scipy.stats.ttest_ind_from_stats(dist_tracker.pos_mean, dist_tracker.pos_std, dist_tracker.pos_count, dist_tracker.neg_mean, dist_tracker.neg_std, dist_tracker.neg_count, equal_var=False, alternative="greater")
     
     labels_new = (logit_p_values)
     if(torch.distributed.get_rank() == 0):
