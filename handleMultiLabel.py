@@ -589,7 +589,8 @@ def z_score_to_p_value(x):
     return 0.5 * (1 + torch.erf(x/math.sqrt(2)))
 
 
-def adjust_labels(logits, labels, dist_tracker, clip_dist = 0.85, clip_logit = 0.7, eps=1e-8):
+
+def adjust_labels(logits, labels, dist_tracker, clip_dist = 0.65, clip_logit = 0.7, eps=1e-8):
     # use a z test
     #class_z_scores = (dist_tracker.pos_mean - dist_tracker.neg_mean) / ((dist_tracker.pos_var + dist_tracker.neg_var) ** 0.5 + eps)
     #class_p_values = z_score_to_p_value(class_z_scores)
@@ -598,7 +599,7 @@ def adjust_labels(logits, labels, dist_tracker, clip_dist = 0.85, clip_logit = 0
     logit_p_values = z_score_to_p_value(logit_z_scores)
     
     # use t test
-    class_p_values = torch.Tensor(scipy.stats.ttest_ind_from_stats(dist_tracker.pos_mean.cpu().numpy(), dist_tracker.pos_std.cpu().numpy(), dist_tracker.pos_count.cpu().numpy(), dist_tracker.neg_mean.cpu().numpy(), dist_tracker.neg_std.cpu().numpy(), dist_tracker.neg_count.cpu().numpy(), equal_var=False, alternative="less").pvalue).to(logits.device)
+    class_p_values = torch.Tensor(scipy.stats.ttest_ind_from_stats(dist_tracker.pos_mean.cpu().numpy(), dist_tracker.pos_std.cpu().numpy(), dist_tracker.pos_count.cpu().numpy(), dist_tracker.neg_mean.cpu().numpy(), dist_tracker.neg_std.cpu().numpy(), dist_tracker.neg_count.cpu().numpy(), equal_var=False, alternative="greater").pvalue).to(logits.device)
     
     labels_new = (logit_p_values)
     if(torch.distributed.get_rank() == 0):
