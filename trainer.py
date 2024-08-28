@@ -21,6 +21,7 @@ import time
 import glob
 import gc
 import os
+import argparse
 
 import torch_optimizer
 
@@ -456,6 +457,11 @@ elif currGPU == 'none':
     FLAGS['skip_test_set'] = False
     FLAGS['steps_per_printout'] = 50
     FLAGS['val'] = True
+
+
+parser = argparse.ArgumentParser(description='Training Config', add_help=False)
+group = parser.add_argument_group('Workspace parameters')
+parser.add_argument()
 
 classes = None
 myDataset = None
