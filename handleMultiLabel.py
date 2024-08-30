@@ -590,18 +590,19 @@ def z_score_to_p_value(x):
 
 
 
-def adjust_labels(logits, labels, dist_tracker, clip_dist = 0.85, clip_logit = 0.7, eps=1e-8):
+def adjust_labels(logits, labels, dist_tracker, clip_dist = 0.90, clip_logit = 0.8, eps=1e-8):
     # use a z test
-    #class_z_scores = (dist_tracker.pos_mean - dist_tracker.neg_mean) / ((dist_tracker.pos_var + dist_tracker.neg_var) ** 0.5 + eps)
-    #class_p_values = z_score_to_p_value(class_z_scores)
+    class_z_scores = (dist_tracker.pos_mean - dist_tracker.neg_mean) / ((dist_tracker.pos_var + dist_tracker.neg_var) ** 0.5 + eps)
+    class_p_values = z_score_to_p_value(class_z_scores)
 
     logit_z_scores = (logits - dist_tracker.pos_mean) / (dist_tracker.pos_std + eps)
     logit_p_values = z_score_to_p_value(logit_z_scores)
     
     # use t test
-    class_p_values = torch.Tensor(scipy.stats.ttest_ind_from_stats(dist_tracker.pos_mean.cpu().numpy(), dist_tracker.pos_std.cpu().numpy(), dist_tracker.pos_count.cpu().numpy(), dist_tracker.neg_mean.cpu().numpy(), dist_tracker.neg_std.cpu().numpy(), dist_tracker.neg_count.cpu().numpy(), equal_var=False, alternative="greater").pvalue).to(logits.device)
+    #class_p_values = torch.Tensor(scipy.stats.ttest_ind_from_stats(dist_tracker.pos_mean.cpu().numpy(), dist_tracker.pos_std.cpu().numpy(), dist_tracker.pos_count.cpu().numpy(), dist_tracker.neg_mean.cpu().numpy(), dist_tracker.neg_std.cpu().numpy(), dist_tracker.neg_count.cpu().numpy(), equal_var=False, alternative="greater").pvalue).to(logits.device)
     
-    labels_new = (logit_p_values)
+    #labels_new = (logit_p_values)
+    labels_new = 1-((1-logit_p_values) * (1-class_p_values))
     if(torch.distributed.get_rank() == 0):
         print(((logit_p_values > clip_logit).float() * (class_p_values > clip_dist).float()).sum())
     labels_new = labels_new.where(logit_p_values > clip_logit, 0).where(class_p_values > clip_dist, 0).where(labels == 0, 1)
