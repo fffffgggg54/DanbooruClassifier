@@ -590,7 +590,7 @@ def z_score_to_p_value(x):
 
 
 
-def adjust_labels(logits, labels, dist_tracker, clip_dist = 0.95, clip_logit = 0.85, eps=1e-8):
+def adjust_labels(logits, labels, dist_tracker, clip_dist = 0.95, clip_logit = 0.80, eps=1e-8):
     # use a z test
     class_z_scores = (dist_tracker.pos_mean - dist_tracker.neg_mean) / ((dist_tracker.pos_var + dist_tracker.neg_var) ** 0.5 + eps)
     class_p_values = z_score_to_p_value(class_z_scores)
