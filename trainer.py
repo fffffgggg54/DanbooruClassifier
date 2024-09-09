@@ -307,7 +307,8 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convformer_s18-224-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tresnet_m-224-ASL_BCE_T-5500/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_GP0_GNADAPC_-224-1588-50epoch/'
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-NormPL_D095_L065-ASL_BCE-224-1588-50epoch/"
+    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-NormPL_D095_L065-ASL_BCE-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-ASL_BCE_NormWL_D095_TPOnly-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-PLScratch-PowerGate-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MLR_NW-ADA_WL_T-PU_F_metric-x+10e-1-224-1588-50epoch/"
@@ -383,8 +384,9 @@ elif currGPU == 'v100':
 
     FLAGS['threshold_loss'] = False
     FLAGS['threshold_multiplier'] = 0.0
-    FLAGS['splc'] = True
+    FLAGS['splc'] = False
     FLAGS['splc_start_epoch'] = 0
+    FLAGS['norm_weighted_loss'] = True
 
     FLAGS['finetune'] = False    #actually a linear probe of a frozen model
     FLAGS['compile_model'] = False
@@ -1096,6 +1098,8 @@ def trainCycle(image_datasets, model):
             boundaryCalculator = module
             break
     '''
+    
+    #dist_tracker = MLCSL.DistributionTrackerEMA()
 
     if (FLAGS['resume_epoch'] > 0):
         boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth').to(device)
@@ -1290,6 +1294,9 @@ def trainCycle(image_datasets, model):
                                 #targs = torch.where(preds > boundary.detach(), torch.tensor(1).to(preds), labels) # hard SPLC
                                 #tagsModified = ((1 - tagsModified) * MLCSL.stepAtThreshold(preds, boundary) + tagsModified) # soft SPLC
                                 tagsModified = MLCSL.adjust_labels(outputs.detach(), tagsModified, dist_tracker)
+                        if FLAGS['norm_weighted_loss']:
+                            loss_weight = MLCSL.generate_loss_weights(outputs.detach(), tagBatch, dist_tracker)
+                        else: loss_weight = 1
                         if(phase == 'train' and hasattr(criterion, 'update')):
                             criterion.update(outputs.detach(), tagsModified.to(device), update=(phase == "train"),
                                 step_opt=((i+1) % FLAGS['gradient_accumulation_iterations'] == 0))
@@ -1301,7 +1308,8 @@ def trainCycle(image_datasets, model):
                                     
                         
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        loss = criterion(outputs.to(device), tagsModified.to(device))
+                        #loss = criterion(outputs.to(device), tagsModified.to(device))
+                        loss = criterion(outputs.to(device), tagsModified.to(device), weight = loss_weight)
                         #loss = criterion(outputs.to(device), tagsModified.to(device), ddp=FLAGS['use_ddp'])
                         #loss = criterion(outputs.to(device) - torch.special.logit(boundary), tagBatch.to(device))
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
