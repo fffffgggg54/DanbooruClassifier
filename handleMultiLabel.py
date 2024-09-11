@@ -668,12 +668,12 @@ class DistributionTracker(nn.Module):
         return torch.stack([self._pos_mean, self._pos_count, self._pos_var, self._neg_mean, self._neg_count, self._neg_var])
     
     def set_device(self, device):
-        self._pos_mean.to(device)
-        self._pos_count.to(device)
-        self._pos_var.to(device)
-        self._neg_mean.to(device)
-        self._neg_count.to(device)
-        self._neg_var.to(device)
+        self._pos_mean = self._pos_mean.to(device)
+        self._pos_count = self._pos_count.to(device)
+        self._pos_var = self._pos_var.to(device)
+        self._neg_mean = self._neg_mean.to(device)
+        self._neg_count = self._neg_count.to(device)
+        self._neg_var = self._neg_var.to(device)
     
     def forward(self, logits, labels):
         
