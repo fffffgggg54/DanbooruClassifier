@@ -308,7 +308,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tresnet_m-224-ASL_BCE_T-5500/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_GP0_GNADAPC_-224-1588-50epoch/'
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-NormPL_D095_L065-ASL_BCE-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-NormPL_D095_L065-ASL_BCE_NormWL_TPOnly-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-NormPL_D095_L065_ModUpdate-ASL_BCE_NormWL_TPOnly-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-PLScratch-PowerGate-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MLR_NW-ADA_WL_T-PU_F_metric-x+10e-1-224-1588-50epoch/"
@@ -1268,7 +1268,7 @@ def trainCycle(image_datasets, model):
                                 all_tags = torch.empty(dist.get_world_size() * tagBatch.shape[0], tagBatch.shape[1], device=outputs.device, dtype=tagBatch.dtype)
                                 torch.distributed.all_gather_into_tensor(all_tags, tagBatch)
 
-                                dist_tracker(all_logits.to(torch.float64), all_tags.to(torch.long))
+                                if not FLAGS['splc']: dist_tracker(all_logits.to(torch.float64), all_tags.to(torch.long))
 
                             
 
@@ -1294,6 +1294,7 @@ def trainCycle(image_datasets, model):
                                 #targs = torch.where(preds > boundary.detach(), torch.tensor(1).to(preds), labels) # hard SPLC
                                 #tagsModified = ((1 - tagsModified) * MLCSL.stepAtThreshold(preds, boundary) + tagsModified) # soft SPLC
                                 tagsModified = MLCSL.adjust_labels(outputs.detach(), tagsModified, dist_tracker)
+                                dist_tracker(all_logits.to(torch.float64), tagsModified.to(torch.long))
                         if FLAGS['norm_weighted_loss']:
                             loss_weight = MLCSL.generate_loss_weights(outputs.detach(), tagBatch, dist_tracker)
                         else: loss_weight = 1
