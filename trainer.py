@@ -1267,7 +1267,7 @@ def trainCycle(image_datasets, model):
                                 torch.distributed.all_gather_into_tensor(all_logits, outputs)
                                 all_tags = torch.empty(dist.get_world_size() * tagBatch.shape[0], tagBatch.shape[1], device=outputs.device, dtype=tagBatch.dtype)
                                 torch.distributed.all_gather_into_tensor(all_tags, tagBatch)
-
+                                dist_tracker.set_device(all_logits.device)
                                 if not FLAGS['splc']: dist_tracker(all_logits.to(torch.float64), all_tags.to(torch.long))
 
                             
