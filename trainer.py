@@ -1294,6 +1294,7 @@ def trainCycle(image_datasets, model):
                                 #targs = torch.where(preds > boundary.detach(), torch.tensor(1).to(preds), labels) # hard SPLC
                                 #tagsModified = ((1 - tagsModified) * MLCSL.stepAtThreshold(preds, boundary) + tagsModified) # soft SPLC
                                 tagsModified = MLCSL.adjust_labels(outputs.detach(), tagsModified, dist_tracker)
+                                torch.distributed.all_gather_into_tensor(all_tags, tagsModified)
                                 dist_tracker(all_logits.to(torch.float64), tagsModified.to(torch.long))
                         if FLAGS['norm_weighted_loss']:
                             loss_weight = MLCSL.generate_loss_weights(outputs.detach(), tagBatch, dist_tracker)
