@@ -300,7 +300,7 @@ elif currGPU == 'm40':
 elif currGPU == 'v100':
 
 
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/scratch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/scratch/"
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
@@ -308,7 +308,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tresnet_m-224-ASL_BCE_T-5500/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_GP0_GNADAPC_-224-1588-50epoch/'
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-NormPL_D095_L065-ASL_BCE-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-NormPL_D090_L065_ModUpdate-ASL_BCE-224-1588-50epoch/"
+    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-NormPL_D090_L065_ModUpdate-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-NormPL_D095_L060-ASL_BCE_NormWL_TPOnly-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-PLScratch-PowerGate-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
@@ -1300,7 +1300,7 @@ def trainCycle(image_datasets, model):
                                 all_tags = torch.empty(dist.get_world_size() * tagBatch.shape[0], tagBatch.shape[1], device=outputs.device, dtype=tagsModified.dtype)
 
                                 torch.distributed.all_gather_into_tensor(all_tags, tagsModified)
-                                dist_tracker(all_logits.to(torch.float64), all_tags.to(torch.long))
+                        dist_tracker(all_logits.to(torch.float64), all_tags.to(torch.long))
                         if FLAGS['norm_weighted_loss']:
                             loss_weight = MLCSL.generate_loss_weights(outputs.detach(), tagBatch, dist_tracker)
                         else: loss_weight = 1
@@ -1317,6 +1317,7 @@ def trainCycle(image_datasets, model):
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
                         #loss = criterion(outputs.to(device), tagsModified.to(device))
                         loss = criterion(outputs.to(device), tagsModified.to(device), weight = loss_weight)
+                        loss += (((dist_tracker.pos_mean + dist_tracker.neg_mean) / 2) ** 2).sum() + dist_tracker.pos_std + dist_tracker.neg_std
                         #loss = criterion(outputs.to(device), tagsModified.to(device), ddp=FLAGS['use_ddp'])
                         #loss = criterion(outputs.to(device) - torch.special.logit(boundary), tagBatch.to(device))
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
