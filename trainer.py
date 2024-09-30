@@ -1357,6 +1357,7 @@ def trainCycle(image_datasets, model):
                                     scaler.step(optimizer)
                                     scaler.update()
                                     optimizer.zero_grad(set_to_none=True)
+                                    dist_tracker._zero_grad()
                                     
                                     #nn.utils.clip_grad_norm_(mlr_act.parameters(), max_norm=1.0, norm_type=2)
                                     #scaler.step(mlr_act_opt)
