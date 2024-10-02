@@ -137,7 +137,7 @@ def main():
     # load json files
     
     #modelPath = rootPath + "models/davit_base_ml-decoder-ASL-BCE/"
-    modelPath = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ADA_WL_T-F1-x+120e-1-224-1588-50epoch/"
+    modelPath = "/media/fredo/Storage3/danbooru_models/scratch/"
     #modelPath = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE-224-1588-50epoch/"
     #modelPath = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_+_T-224-1588-50epoch/"
     tagPicklePath = modelPath + "tags.pkl"
@@ -155,7 +155,7 @@ def main():
         haveThresholds = False
     
     myDevice = 'cpu'
-    model = timm.create_model('regnetz_040_h', pretrained=True, num_classes=len(tagNames))
+    model = timm.create_model('davit_tiny', pretrained=True, num_classes=len(tagNames))
     #model = timm.create_model('davit_base', num_classes=len(tagNames))
     #model = add_ml_decoder_head(model)
     #model = cvt.get_cls_model(len(tagNames), config=modelConfCust1)
