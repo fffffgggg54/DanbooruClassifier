@@ -162,7 +162,7 @@ def main():
     #model.load_state_dict(torch.load("models/saved_model_epoch_4.pth", map_location=myDevice))
     #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(tagNames), ignore_mismatched_sizes=True)
     
-    model = nn.Sequential([model])
+    model = nn.Sequential(model)
     
     model.load_state_dict(torch.load(modelPath + "saved_model_epoch_49.pth", map_location=myDevice))
     model.eval()   # Set model to evaluate mode
