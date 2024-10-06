@@ -385,7 +385,7 @@ elif currGPU == 'v100':
 
     FLAGS['threshold_loss'] = False
     FLAGS['threshold_multiplier'] = 0.0
-    FLAGS['splc'] = True
+    FLAGS['splc'] = False
     FLAGS['splc_start_epoch'] = 0
     FLAGS['norm_weighted_loss'] = False
 
@@ -1272,7 +1272,7 @@ def trainCycle(image_datasets, model):
 
                             all_logits = [torch.ones_like(outputs) for _ in range(dist.get_world_size())]
                             torch.distributed.all_gather(all_logits, outputs)
-                            all_logits[dist.get_rank()] = outputs
+                            #all_logits[dist.get_rank()] = outputs
                             all_logits = torch.cat(all_logits)
                             dist_tracker.set_device(all_logits.device)
 
@@ -1318,7 +1318,7 @@ def trainCycle(image_datasets, model):
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
                         #loss = criterion(outputs.to(device), tagsModified.to(device))
                         loss = criterion(outputs.to(device), tagsModified.to(device), weight = loss_weight)
-                        loss += (((dist_tracker.pos_mean + dist_tracker.neg_mean) ** 2) ** 0.25).sum() #+ dist_tracker.pos_std.sum() + dist_tracker.neg_std.sum()
+                        #loss += (((dist_tracker.pos_mean + dist_tracker.neg_mean) ** 2) ** 0.25).sum() #+ dist_tracker.pos_std.sum() + dist_tracker.neg_std.sum()
                         #loss -= ((dist_tracker.pos_mean - dist_tracker.neg_mean) / ((dist_tracker.pos_var + dist_tracker.neg_var) ** 0.5 + 1e-8)).sum()
                         #loss = criterion(outputs.to(device), tagsModified.to(device), ddp=FLAGS['use_ddp'])
                         #loss = criterion(outputs.to(device) - torch.special.logit(boundary), tagBatch.to(device))
