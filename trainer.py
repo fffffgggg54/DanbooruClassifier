@@ -1260,6 +1260,11 @@ def trainCycle(image_datasets, model):
                             
                             #predsModified=preds
                             #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
+                            all_logits = [torch.ones_like(outputs) for _ in range(dist.get_world_size())]
+                            torch.distributed.all_gather(all_logits, outputs)
+                            #all_logits[dist.get_rank()] = outputs
+                            all_logits = torch.cat(all_logits)
+                            dist_tracker.set_device(all_logits.device)
                             with torch.no_grad():
                                 #multiAccuracy = cm_tracker.update((preds.detach() > boundary.detach()).float().to(device), tagBatch.to(device))
                                 multiAccuracy = cm_tracker.update(preds.detach(), tagBatch.to(device))
@@ -1270,11 +1275,7 @@ def trainCycle(image_datasets, model):
                                     torch.distributed.all_gather_into_tensor(all_tags, tagBatch)
                                     dist_tracker(all_logits.to(torch.float64), all_tags.to(torch.long))
 
-                            all_logits = [torch.ones_like(outputs) for _ in range(dist.get_world_size())]
-                            torch.distributed.all_gather(all_logits, outputs)
-                            #all_logits[dist.get_rank()] = outputs
-                            all_logits = torch.cat(all_logits)
-                            dist_tracker.set_device(all_logits.device)
+                            
 
                         
                         outputs = outputs.float()
