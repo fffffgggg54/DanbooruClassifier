@@ -1118,6 +1118,8 @@ class AsymmetricLossAdaptiveWorking(nn.Module):
         x: input logits
         y: targets (multi-label binarized vector)
         """
+        
+        output=""
 
         # Calculating Probabilities
         x_sigmoid = torch.sigmoid(x)
