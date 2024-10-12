@@ -601,8 +601,8 @@ def adjust_labels(logits, labels, dist_tracker, clip_dist = 0.90, clip_logit = 0
     # use t test
     #class_p_values = torch.Tensor(scipy.stats.ttest_ind_from_stats(dist_tracker.pos_mean.cpu().numpy(), dist_tracker.pos_std.cpu().numpy(), dist_tracker.pos_count.cpu().numpy(), dist_tracker.neg_mean.cpu().numpy(), dist_tracker.neg_std.cpu().numpy(), dist_tracker.neg_count.cpu().numpy(), equal_var=False, alternative="greater").pvalue).to(logits.device)
     
-    #labels_new = (logit_p_values)
-    labels_new = 1-((1-logit_p_values) * (1-class_p_values))
+    labels_new = torch.ones_like(labels)
+    #labels_new = 1-((1-logit_p_values) * (1-class_p_values))
     if(torch.distributed.get_rank() == 0):
         print(((logit_p_values > clip_logit).float() * (class_p_values > clip_dist).float()).sum())
     labels_new = labels_new.where(logit_p_values > clip_logit, 0).where(class_p_values > clip_dist, 0).where(labels == 0, 1)
