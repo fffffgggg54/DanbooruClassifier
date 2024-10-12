@@ -1301,7 +1301,8 @@ def trainCycle(image_datasets, model):
                                 tagsModified = MLCSL.adjust_labels(outputs.detach(), tagsModified, dist_tracker)
                                 all_tags = torch.empty(dist.get_world_size() * tagBatch.shape[0], tagBatch.shape[1], device=outputs.device, dtype=tagsModified.dtype)
 
-                                torch.distributed.all_gather_into_tensor(all_tags, tagsModified)
+                                #torch.distributed.all_gather_into_tensor(all_tags, tagsModified)
+                                torch.distrubuted.all_gather_into_tensor(all_tags, tagBatch)
                             dist_tracker(all_logits.to(torch.float64), all_tags.to(torch.long))
                         if FLAGS['norm_weighted_loss']:
                             loss_weight = MLCSL.generate_loss_weights(outputs.detach(), tagBatch, dist_tracker)
