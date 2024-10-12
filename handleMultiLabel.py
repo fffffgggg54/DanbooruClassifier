@@ -1026,7 +1026,7 @@ class AsymmetricLossAdaptive(nn.Module):
         y: targets (multi-label binarized vector)
         """
         
-        output = None
+        output = ""
         
         with torch.no_grad():
             if self.gamma_neg_per_class == None or self.gamma_pos_per_class == None:
