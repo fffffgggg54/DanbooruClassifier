@@ -1027,7 +1027,7 @@ class AsymmetricLossAdaptive(nn.Module):
         """
         
         output = ""
-        x = x.to(torch.float64())
+        x = x.to(torch.float64)
         
         with torch.no_grad():
             if self.gamma_neg_per_class == None or self.gamma_pos_per_class == None:
