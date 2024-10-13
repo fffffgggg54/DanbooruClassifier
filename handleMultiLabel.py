@@ -1027,14 +1027,15 @@ class AsymmetricLossAdaptive(nn.Module):
         """
         
         output = ""
+        x = x.to(torch.float64())
         
         with torch.no_grad():
             if self.gamma_neg_per_class == None or self.gamma_pos_per_class == None:
                 print("initializing loss values")
                 classCount = y.size(dim=1)
                 currDevice = y.device
-                self.gamma_neg_per_class = torch.ones(classCount, device=currDevice) * self.gamma_neg
-                self.gamma_pos_per_class = torch.ones(classCount, device=currDevice) * self.gamma_pos
+                self.gamma_neg_per_class = torch.ones(classCount, device=currDevice, dtype=torch.float64()) * self.gamma_neg
+                self.gamma_pos_per_class = torch.ones(classCount, device=currDevice, dtype=torch.float64()) * self.gamma_pos
 
         # Calculating Probabilities
         x_sigmoid = torch.sigmoid(x)
