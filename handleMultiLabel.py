@@ -1047,8 +1047,8 @@ class AsymmetricLossAdaptive(nn.Module):
             xs_neg = (xs_neg + self.clip).clamp(max=1)
 
         # Basic CE calculation
-        los_pos = y * torch.log(xs_pos.clamp(min=self.eps))
-        #los_pos = y * torch.log(xs_pos.clamp(min=self.eps)) * (self.gamma_neg_per_class ** 0.5)
+        #los_pos = y * torch.log(xs_pos.clamp(min=self.eps))
+        los_pos = y * torch.log(xs_pos.clamp(min=self.eps)) * (self.gamma_neg_per_class ** 0.5)
         los_neg = (1 - y) * torch.log(xs_neg.clamp(min=self.eps))
         loss = los_pos + los_neg
 
