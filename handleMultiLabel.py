@@ -1163,7 +1163,7 @@ class AsymmetricLossAdaptiveWorking(nn.Module):
                 torch.set_grad_enabled(True)
             loss *= one_sided_w
 
-        return -loss.sum(), output
+        return -loss.sum() + ((x-y) ** 2).sum(), output
 
 
 class GapWeightLoss(nn.Module):
