@@ -1165,6 +1165,49 @@ class AsymmetricLossAdaptiveWorking(nn.Module):
 
         return -loss.sum(), output
 
+
+class GapWeightLoss(nn.Module):
+    def __init__(self, initial_weight = 0., gap_target = 0.1, weight_step = 1e-3):
+        super().__init__()
+        self.initial_weight = initial_weight
+        self.eps = 1e-8
+        self.weight_per_class = None
+        self.gap_target = gap_target
+        self.weight_step = weight_step
+    
+    def forward(self, x, y, updateAdaptive = True, printAdaptive = False):
+        output = ""
+        if self.weight_per_class == None:
+            classCount = y.size(dim=1)
+            currDevice = y.device
+            self.weight_per_class = torch.ones(classCount, device=currDevice, dtype=torch.float64) * self.initial_weight
+            
+        # Calculating Probabilities
+        x_sigmoid = torch.sigmoid(x)
+        xs_pos = x_sigmoid
+        xs_neg = 1 - x_sigmoid
+
+        
+
+        los_pos = y * torch.log(xs_pos.clamp(min=self.eps))
+        los_neg = (1 - y) * torch.log(xs_neg.clamp(min=self.eps)) * (10 ** self.weight_per_class)
+        loss = los_pos + los_neg
+
+        with torch.no_grad():
+            pt0 = xs_pos * y
+            pt1 = xs_neg * (1 - y)  # pt = p if t > 0 else 1-p
+            gap = pt0.sum(dim=0) / (y.sum(dim=0) + self.eps) - pt1.sum(dim=0) / ((1 - y).sum(dim=0) + self.eps)
+
+            if updateAdaptive:
+                self.weight_per_class = self.weight_per_class - (self.weight_step) * (gap - self.gap_target)
+            if printAdaptive == True:
+                output = str(f'pos: {pt0.sum() / (y.sum() + self.eps):.4f},\tneg: {pt1.sum() / ((1 - y).sum() + self.eps):.4f},\tWPC: [{self.weight_per_class.min():.4f}, {self.weight_per_class.max():.4f}]')
+    
+        return -loss.sum(), output
+            
+        
+
+
 class ASLSingleLabel(nn.Module):
     '''
     This loss is intended for single-label classification problems
