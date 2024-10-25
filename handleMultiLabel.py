@@ -822,7 +822,7 @@ class DistributionTrackerEMA(nn.Module):
         return self.pos_mean, self.pos_std, self.neg_mean, self.neg_std
 
 class AdaptiveWeightedLoss(nn.Module):
-    def __init__(self, initial_weight = 1.0, lr = 1e-3, weight_limit = 10.0, eps = 1e-8):
+    def __init__(self, initial_weight = 0.0, lr = 1e-3, weight_limit = 10.0, eps = 1e-8):
         super().__init__()
         self.initial_weight = initial_weight
         self.weight_per_class = None
@@ -849,7 +849,7 @@ class AdaptiveWeightedLoss(nn.Module):
         self.loss_neg = self.anti_targets * torch.log(self.xs_neg)
         
         
-        return -(self.loss_neg + self.loss_pos * self.weight_per_class.detach()).sum()
+        return -(self.loss_neg + self.loss_pos * (10**self.weight_per_class.detach())).sum()
     
     def update(self, x, y, update=True, step_opt=True):
         if not update: return None
