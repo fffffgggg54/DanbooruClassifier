@@ -849,7 +849,7 @@ class AdaptiveWeightedLoss(nn.Module):
         self.loss_neg = self.anti_targets * torch.log(self.xs_neg)
         
         
-        return -(self.loss_neg + self.loss_pos * self.weight_per_class.exp().detach()).sum()
+        return -(self.loss_neg + self.loss_pos * self.weight_per_class.detach()).sum()
     
     def update(self, x, y, update=True, step_opt=True):
         if not update: return None
