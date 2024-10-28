@@ -211,8 +211,8 @@ if currGPU == '3090':
     
     FLAGS['use_mlr_act'] = False
 
-    FLAGS['threshold_loss'] = False
-    FLAGS['threshold_multiplier'] = 0.0
+    FLAGS['logit_offset'] = False
+    FLAGS['logit_offset_multiplier'] = 0.0
     FLAGS['splc'] = False
     FLAGS['splc_start_epoch'] = 1
 
@@ -383,8 +383,9 @@ elif currGPU == 'v100':
     
     FLAGS['use_mlr_act'] = False
 
-    FLAGS['threshold_loss'] = True
-    FLAGS['threshold_multiplier'] = 0.0
+    FLAGS['logit_offset'] = True
+    FLAGS['logit_offset_multiplier'] = 0.0
+    FLAGS['logit_offset_source'] = 'dist'
     FLAGS['opt_dist'] = False
     FLAGS['splc'] = True
     FLAGS['splc_start_epoch'] = 0
@@ -990,7 +991,7 @@ def modelSetup(classes):
     #model.train()
     
     # threshold as a neural network module, everything about its use needs to be handled manually, nested optimization loops are a headache
-    #threshold_penalty = MLCSL.thresholdPenalty(FLAGS['threshold_multiplier'], initial_threshold = 0.5, lr = 1e-5, threshold_min = 0.1, threshold_max = 0.9, num_classes = len(classes))
+    #threshold_penalty = MLCSL.thresholdPenalty(FLAGS['logit_offset_multiplier'], initial_threshold = 0.5, lr = 1e-5, threshold_min = 0.1, threshold_max = 0.9, num_classes = len(classes))
     
     # I mean it's really just an activation fn with trainable weights
     #mlr_act = MLCSL.ModifiedLogisticRegression(num_classes = len(classes), initial_weight = 1.0, initial_beta = 0.0, eps = 1e-8)
@@ -1069,11 +1070,11 @@ def trainCycle(image_datasets, model):
     #criterion = MLCSL.SPLC(gamma=2.0)
     #criterion = MLCSL.SPLCModified(gamma=2.0)
     #criterion = MLCSL.AdaptiveWeightedLoss(initial_weight = 0.0, lr = 1e-4, weight_limit = 1e5)
-    #criterion = MLCSL.AsymmetricLoss(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
+    criterion = MLCSL.AsymmetricLoss(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=5, gamma_pos=1, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
     #criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=1, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False, adaptive = True, gap_target = 0.1, gamma_step = 0.003)
     #criterion = MLCSL.AsymmetricLossAdaptiveWorking(gamma_neg=1, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.003)
-    criterion = MLCSL.GapWeightLoss(initial_weight=0., gap_target=0.1, weight_step=1e-3)
+    #criterion = MLCSL.GapWeightLoss(initial_weight=0., gap_target=0.1, weight_step=1e-3)
     #criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0.05, gamma_pos=1, gamma_neg=6, gamma_unann=4, alpha_pos=1, alpha_neg=1, alpha_unann=1)
     #parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
@@ -1257,7 +1258,7 @@ def trainCycle(image_datasets, model):
                                 if FLAGS['use_ddp'] == True:
                                     with torch.no_grad():
                                         torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
-                            #boundary = torch.Tensor([0.5]).to(device) if boundaryCalculator.needs_init else boundaryCalculator.thresholdPerClass.detach()
+                            #offset = torch.Tensor([0.5]).to(device) if boundaryCalculator.needs_init else boundaryCalculator.thresholdPerClass.detach()
                             
                             
                             #predsModified=preds
@@ -1268,7 +1269,7 @@ def trainCycle(image_datasets, model):
                             all_logits = torch.cat(all_logits)
                             dist_tracker.set_device(all_logits.device)
                             with torch.no_grad():
-                                #multiAccuracy = cm_tracker.update((preds.detach() > boundary.detach()).float().to(device), tagBatch.to(device))
+                                #multiAccuracy = cm_tracker.update((preds.detach() > offset.detach()).float().to(device), tagBatch.to(device))
                                 multiAccuracy = cm_tracker.update(preds.detach(), tagBatch.to(device))
                                 
                                 
@@ -1289,17 +1290,13 @@ def trainCycle(image_datasets, model):
                         #loss = criterion(outputs, tagBatch)
                         '''
                         
-                        if FLAGS['threshold_loss']:
-                            #outputs = outputs - torch.special.logit(boundary)
-                            boundary = boundaryCalculator.thresholdPerClass.detach()
-                            outputs = outputs + FLAGS['threshold_multiplier'] * torch.special.logit(boundary)
-                        
-                        #outputs = outputs + offset
+
+
                         tagsModified = tagBatch
                         if FLAGS['splc'] and epoch >= FLAGS['splc_start_epoch']:
                             with torch.no_grad():
-                                #targs = torch.where(preds > boundary.detach(), torch.tensor(1).to(preds), labels) # hard SPLC
-                                #tagsModified = ((1 - tagsModified) * MLCSL.stepAtThreshold(preds, boundary) + tagsModified) # soft SPLC
+                                #targs = torch.where(preds > offset.detach(), torch.tensor(1).to(preds), labels) # hard SPLC
+                                #tagsModified = ((1 - tagsModified) * MLCSL.stepAtThreshold(preds, offset) + tagsModified) # soft SPLC
                                 tagsModified = MLCSL.adjust_labels(outputs.detach(), tagsModified, dist_tracker)
                                 all_tags = torch.empty(dist.get_world_size() * tagBatch.shape[0], tagBatch.shape[1], device=outputs.device, dtype=tagsModified.dtype)
 
@@ -1319,15 +1316,24 @@ def trainCycle(image_datasets, model):
                                     torch.distributed.all_reduce(criterion.weight_per_class, op = torch.distributed.ReduceOp.AVG)
                                     
                         
+                        if FLAGS['logit_offset']:
+                            #outputs = outputs - torch.special.logit(offset)
+                            if FLAGS['logit_offset_source'] == 'dist':
+                                with torch.no_grad():
+                                    offset = (dist_tracker.pos_mean + dist_tracker.neg_mean) / 2
+                            else:
+                                offset = torch.special.logit(boundaryCalculator.thresholdPerClass.detach())
+                            outputs = outputs + FLAGS['logit_offset_multiplier'] * offset
+                        
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        #loss = criterion(outputs.to(device), tagsModified.to(device))
+                        loss = criterion(outputs.to(device), tagsModified.to(device))
                         #loss = criterion(outputs.to(device), tagsModified.to(device), weight = loss_weight)
                         #loss += (((dist_tracker.pos_mean + dist_tracker.neg_mean) ** 2) ** 0.25).sum() #+ dist_tracker.pos_std.sum() + dist_tracker.neg_std.sum()
                         #loss -= ((dist_tracker.pos_mean - dist_tracker.neg_mean) / ((dist_tracker.pos_var + dist_tracker.neg_var) ** 0.5 + 1e-8)).sum()
                         #loss = criterion(outputs.to(device), tagsModified.to(device), ddp=FLAGS['use_ddp'])
-                        #loss = criterion(outputs.to(device) - torch.special.logit(boundary), tagBatch.to(device))
+                        #loss = criterion(outputs.to(device) - torch.special.logit(offset), tagBatch.to(device))
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
-                        loss, textOutput = criterion(outputs.to(device), tagsModified.to(device), updateAdaptive = (phase == 'train'), printAdaptive = ((i % stepsPerPrintout == 0) and is_head_proc))
+                        #loss, textOutput = criterion(outputs.to(device), tagsModified.to(device), updateAdaptive = (phase == 'train'), printAdaptive = ((i % stepsPerPrintout == 0) and is_head_proc))
                         #loss, textOutput = criterion(outputs.to(device), tagBatch.to(device), updateAdaptive = (phase == 'train'))
                         #loss = criterion(outputs.cpu(), tags.cpu())
                         

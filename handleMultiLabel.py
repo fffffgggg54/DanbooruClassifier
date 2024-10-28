@@ -1189,7 +1189,7 @@ class GapWeightLoss(nn.Module):
 
         with torch.cuda.amp.autocast(enabled=False):
 
-            los_pos = y * torch.log(xs_pos.clamp(min=self.eps)) * (10 ** self.weight_per_class)
+            los_pos = y * torch.log(xs_pos.clamp(min=self.eps)) * (10 ** self.weight_per_class.detach())
             los_neg = (1 - y) * torch.log(xs_neg.clamp(min=self.eps))
             loss = los_pos + los_neg
 
