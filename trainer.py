@@ -383,7 +383,7 @@ elif currGPU == 'v100':
     
     FLAGS['use_mlr_act'] = False
 
-    FLAGS['threshold_loss'] = False
+    FLAGS['threshold_loss'] = True
     FLAGS['threshold_multiplier'] = 0.0
     FLAGS['opt_dist'] = False
     FLAGS['splc'] = True
