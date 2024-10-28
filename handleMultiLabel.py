@@ -1187,11 +1187,11 @@ class GapWeightLoss(nn.Module):
         xs_pos = x_sigmoid
         xs_neg = 1 - x_sigmoid
 
-        
+        with torch.cuda.amp.autocast(enabled=False):
 
-        los_pos = y * torch.log(xs_pos.clamp(min=self.eps)) * (10 ** self.weight_per_class)
-        los_neg = (1 - y) * torch.log(xs_neg.clamp(min=self.eps))
-        loss = los_pos + los_neg
+            los_pos = y * torch.log(xs_pos.clamp(min=self.eps)) * (10 ** self.weight_per_class)
+            los_neg = (1 - y) * torch.log(xs_neg.clamp(min=self.eps))
+            loss = los_pos + los_neg
 
         with torch.no_grad():
             pt0 = xs_pos * y
@@ -1200,6 +1200,7 @@ class GapWeightLoss(nn.Module):
 
             if updateAdaptive:
                 self.weight_per_class = self.weight_per_class - (self.weight_step) * (gap - self.gap_target)
+                self.weight_per_class = self.weight_per_class.clamp(min=-10, max=10)
             if printAdaptive == True:
                 output = str(f'pos: {pt0.sum() / (y.sum() + self.eps):.4f},\tneg: {pt1.sum() / ((1 - y).sum() + self.eps):.4f},\tWPC: [{self.weight_per_class.min():.4f}, {self.weight_per_class.max():.4f}]')
     
