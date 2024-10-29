@@ -381,7 +381,7 @@ elif currGPU == 'v100':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 17
+    FLAGS['resume_epoch'] = 29
     
     FLAGS['use_mlr_act'] = False
 
@@ -402,7 +402,7 @@ elif currGPU == 'v100':
 
     FLAGS['verbose_debug'] = False
     FLAGS['skip_test_set'] = True
-    FLAGS['stepsPerPrintout'] = 50
+    FLAGS['stepsPerPrintout'] = 250
     FLAGS['val'] = False
 
 elif currGPU == 'none':
@@ -1322,7 +1322,7 @@ def trainCycle(image_datasets, model):
                             #outputs = outputs - torch.special.logit(offset)
                             if FLAGS['logit_offset_source'] == 'dist':
                                 with torch.no_grad():
-                                    offset = (dist_tracker.pos_mean + dist_tracker.neg_mean) / 2
+                                    offset = (dist_tracker.pos_mean.detach() + dist_tracker.neg_mean.detach()) / 2
                             else:
                                 offset = torch.special.logit(boundaryCalculator.thresholdPerClass.detach())
                             outputs = outputs + FLAGS['logit_offset_multiplier'] * offset
@@ -1484,6 +1484,10 @@ def trainCycle(image_datasets, model):
                         plotext.hist(dist_tracker.neg_mean.detach().clamp(min=-15), bins, label='Neg means')
                         plotext.hist(dist_tracker.pos_mean.detach(), bins, label='Pos means')
                         plotext.title("Distributions of per-class means")
+                        plotext.show()
+                        plotext.clear_figure()
+                        plotext.hist(offset = (dist_tracker.pos_mean.detach() + dist_tracker.neg_mean.detach()) / 2, bins, label='Mean of means')
+                        plotext.title("Distributions of per-class mean of means")
                         plotext.show()
                         plotext.clear_figure()
                     
