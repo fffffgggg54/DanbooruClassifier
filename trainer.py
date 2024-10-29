@@ -381,7 +381,7 @@ elif currGPU == 'v100':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 29
+    FLAGS['resume_epoch'] = 0
     
     FLAGS['use_mlr_act'] = False
 
