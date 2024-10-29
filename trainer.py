@@ -47,6 +47,8 @@ from pickle import dump
 
 import scipy.stats
 
+import plotext
+
 
 # ================================================
 #           CONFIGURATION OPTIONS
@@ -1478,6 +1480,12 @@ def trainCycle(image_datasets, model):
                         #print(f't score mean: {t_stat.mean()} std: {t_stat.std()}')
                         #t_p_values = scipy.stats.ttest_ind_from_stats(dist_tracker.pos_mean.cpu().numpy(), dist_tracker.pos_std.cpu().numpy(), dist_tracker.pos_count.cpu().numpy(), dist_tracker.neg_mean.cpu().numpy(), dist_tracker.neg_std.cpu().numpy(), dist_tracker.neg_count.cpu().numpy(), equal_var=False, alternative="greater").pvalue
                         print(f'z score mean: {z_scores.mean()}, std: {z_scores.std()}, pos mean: {dist_tracker.pos_mean.detach().mean()}, neg mean: {dist_tracker.neg_mean.detach().mean()}')
+                        bins=100
+                        plotext.hist(dist_tracker.neg_mean.detach(), bins, label='Neg means')
+                        plotext.hist(dist_tracker.pos_mean.detach(), bins, label='Pos means')
+                        plotext.title("Distributions of per-class means")
+                        plotext.show()
+                        plotext.clear_figure()
                     
                     #print(id[0])
                     #print(currPostTags)
