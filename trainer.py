@@ -1486,7 +1486,7 @@ def trainCycle(image_datasets, model):
                         plotext.title("Distributions of per-class means")
                         plotext.show()
                         plotext.clear_figure()
-                        plotext.hist(offset = (dist_tracker.pos_mean.detach() + dist_tracker.neg_mean.detach()) / 2, bins, label='Mean of means')
+                        plotext.hist(((dist_tracker.pos_mean.detach() + dist_tracker.neg_mean.detach()) / 2).clamp(min=-10, max=10), bins, label='Mean of means')
                         plotext.title("Distributions of per-class mean of means")
                         plotext.show()
                         plotext.clear_figure()
