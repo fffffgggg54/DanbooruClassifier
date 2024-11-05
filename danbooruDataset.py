@@ -77,8 +77,7 @@ class CocoDataset(torchvision.datasets.coco.CocoDetection):
 
         if self.transform is not None:
             image = self.transform(image)
-        print(target.shape)
-        print(image.shape)
+
         
         return image, target
 
