@@ -313,7 +313,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_GP0_GNADAPC_-224-1588-50epoch/'
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-NormPL_D095_L065-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-ASL_BCE_T-dist_raw-x+20e-1-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/coco_models/davit_tiny-ASL_BCE-224-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/coco_models/davit_tiny-ASL_BCE-448-100epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-NormPL_D095_L060-ASL_BCE_NormWL_TPOnly-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-PLScratch-PowerGate-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
@@ -348,7 +348,7 @@ elif currGPU == 'v100':
     FLAGS['dataset'] = 'coco'
     FLAGS['tagCount'] = 1588
     FLAGS['image_size'] = 224
-    FLAGS['actual_image_size'] = 224
+    FLAGS['actual_image_size'] = 448
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 3.0
@@ -374,9 +374,9 @@ elif currGPU == 'v100':
 
     # training config
 
-    FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 96
-    FLAGS['gradient_accumulation_iterations'] = 1
+    FLAGS['num_epochs'] = 100
+    FLAGS['batch_size'] = 32
+    FLAGS['gradient_accumulation_iterations'] = 3
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
