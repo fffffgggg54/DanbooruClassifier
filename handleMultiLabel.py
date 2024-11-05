@@ -1702,7 +1702,7 @@ class MetricTracker():
         
     def get_full_metrics(self):
         with torch.no_grad():
-            TP, FN, FP, TN = self.running_confusion_matrix / self.sampleCount
+            TP, FN, FP, TN = self.running_confusion_matrix / (self.sampleCount + self.epsilon)
             
             #Precall = TP / (TP + FN + self.epsilon)
             #Nrecall = TN / (TN + FP + self.epsilon)
