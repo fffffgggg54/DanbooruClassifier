@@ -67,7 +67,9 @@ FLAGS = {}
 # path config for various directories and files
 # TODO replace string appending with os.path.join()
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
-if currGPU == 'v100': FLAGS['rootPath'] = "/media/fredo/SAMSUNG_500GB/danbooru2021/"
+if currGPU == 'v100':
+    FLAGS['rootPath'] = "/media/fredo/SAMSUNG_500GB/danbooru2021/"
+    FLAGS['cocoRoot'] = "/media/fredo/SAMSUNG_500GB/coco2014/"
 if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
 FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + "original/"
@@ -310,7 +312,8 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/tresnet_m-224-ASL_BCE_T-5500/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_GP0_GNADAPC_-224-1588-50epoch/'
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-NormPL_D095_L065-ASL_BCE-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-ASL_BCE_T-dist_raw-x+20e-1-224-1588-50epoch/"
+    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-ASL_BCE_T-dist_raw-x+20e-1-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/coco_models/davit_tiny-ASL_BCE-224-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-NormPL_D095_L060-ASL_BCE_NormWL_TPOnly-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-PLScratch-PowerGate-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
@@ -342,6 +345,7 @@ elif currGPU == 'v100':
     FLAGS['stopReadingAt'] = 5000
 
     # dataset config
+    FLAGS['dataset'] = 'coco'
     FLAGS['tagCount'] = 1588
     FLAGS['image_size'] = 224
     FLAGS['actual_image_size'] = 224
@@ -385,7 +389,7 @@ elif currGPU == 'v100':
     
     FLAGS['use_mlr_act'] = False
 
-    FLAGS['logit_offset'] = True
+    FLAGS['logit_offset'] = False
     FLAGS['logit_offset_multiplier'] = 2.0
     FLAGS['logit_offset_source'] = 'dist'
     FLAGS['opt_dist'] = False
@@ -511,145 +515,161 @@ def getSubsetByID(dataset, postData, lower, upper, div = 1000):
     return torch.utils.data.Subset(dataset, postData[lower <= postData['id'] % 1000][upper > postData['id'] % 1000].index.tolist())
 
 def getData():
-    startTime = time.time()
-
-    #tagData = pd.read_pickle(FLAGS['tagDFPickle'])
-    #postData = pd.read_pickle(FLAGS['postDFPickle'])
-    
-    
-    
-    '''
-    try:
-        print("attempting to read pickled post metadata file at " + FLAGS['tagDFPickle'])
-        tagData = pd.read_pickle(FLAGS['tagDFPickle'])
-    except:
-        print("pickled post metadata file at " + FLAGS['tagDFPickle'] + " not found")
-        tagData = parallelJsonReader.dataImporter(FLAGS['tagListFile'])   # read tags from json in parallel
-        print("saving pickled post metadata to " + FLAGS['tagDFPickle'])
-        tagData.to_pickle(FLAGS['tagDFPickle'])
-    
-    #postData = pd.concat(map(dataImporter, glob.iglob(postMetaDir + 'posts*')), ignore_index=True) # read all post metadata files in metadata dir
-    try:
-        print("attempting to read pickled post metadata file at " + FLAGS['postDFPickle'])
-        postData = pd.read_pickle(FLAGS['postDFPickle'])
-    except:
-        print("pickled post metadata file at " + FLAGS['postDFPickle'] + " not found")
-        postData = parallelJsonReader.dataImporter(FLAGS['postListFile'], keep = 1)    # read posts
-        print("saving pickled post metadata to " + FLAGS['postDFPickle'])
-        postData.to_pickle(FLAGS['postDFPickle'])
-        
-        
-    
-    print("got posts, time spent: " + str(time.time() - startTime))
-    
-    # filter data
-    startTime = time.time()
-    print("applying filters")
-    # TODO this filter process is slow, need to speed it up, currently only single threaded
-    tagData, postData = danbooruDataset.filterDanbooruData(tagData, postData)   # apply various filters to preprocess data
-    
-    tagData.to_pickle(FLAGS['tagDFPickleFiltered'])
-    postData.to_pickle(FLAGS['postDFPickleFiltered'])
-    '''
-    if FLAGS['tagCount'] == 1588:
-        tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
-        #tagData.to_pickle(FLAGS['tagDFPickleFiltered'])
-    elif FLAGS['tagCount'] == 5500:
-        tagData = pd.read_csv(FLAGS['rootPath'] + 'selected_tags.csv')
-    postData = pd.read_pickle(FLAGS['postDFPickleFilteredTrimmed'])
-    #postData.to_pickle(FLAGS['postDFPickleFilteredTrimmed'])
-    #print(postData.info())
-    
-    # get posts that are not banned
-    #queryStartTime = time.time()
-    #postData.query("is_banned == False", inplace = True)
-    #blockedIDs = [5190773, 5142098, 5210705, 5344403, 5237708, 5344394, 5190771, 5237705, 5174387, 5344400, 5344397, 5174384]
-    #for postID in blockedIDs: postData.query("id != @postID", inplace = True)
-    #print("banned post query time: " + str(time.time()-queryStartTime))
-    
-
-    
-    #postData = postData[['id', 'tag_string', 'file_ext', 'file_url']]
-    #postData = postData.convert_dtypes()
-    #print(postData.info())
-    #postData.to_pickle(FLAGS['postDFPickleFilteredTrimmed'])
-    
-    
-
-    print("finished preprocessing, time spent: " + str(time.time() - startTime))
-    print(f"got {len(postData)} posts with {len(tagData)} tags") #got 3821384 posts with 423 tags
-    
-    '''
-    for nthWorkerProcess in range(FLAGS['postDataServerWorkerCount']):
-        currProcess = multiprocessing.Process(target=danbooruDataset.DFServerWorkerProcess,
-                                              args=(workQueue,
-                                                    postData.copy(deep=True),
-                                                    pd.Series(tagData.name, dtype=pd.StringDtype()),
-                                                    FLAGS['imageRoot'],
-                                                    FLAGS['cacheRoot'],),
-                                              daemon = True)
-        currProcess.start()
-        serverProcessPool.append(currProcess)
-        
-    '''    
-    # TODO custom normalization values that fit the dataset better
-    # TODO investigate ways to return full size images instead of crops
-    # this should allow use of full sized images that vary in size, which can then be fed into a model that takes images of arbitrary resolution
-    '''
-    myDataset = danbooruDataset.DanbooruDataset(FLAGS['imageRoot'], postData, tagData.name, transforms.Compose([
-        #transforms.Resize((224,224)),
-        danbooruDataset.CutoutPIL(cutout_factor=0.5),
-        transforms.RandAugment(),
-        transforms.ToTensor(),
-        #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ]),
-        cacheRoot = FLAGS['cacheRoot']
-        )
-    '''
-    '''
-    myDataset = danbooruDataset.DanbooruDatasetWithServer(FLAGS['imageRoot'],
-                                                          workQueue,
-                                                          len(postData),
-                                                          tagData.name,
-                                                          transforms.Compose([#transforms.Resize((224,224)),
-                                                                              danbooruDataset.CutoutPIL(cutout_factor=0.5),
-                                                                              transforms.RandAugment(),
-                                                                              transforms.ToTensor(),
-                                                                              #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-                                                                              ]),
-                                                          cacheRoot = FLAGS['cacheRoot'])
-    
-    '''
-    
-    
-    
-    global myDataset
-    myDataset = danbooruDataset.DanbooruDatasetWithServer(
-        postData,
-        tagData,
-        FLAGS['imageRoot'],
-        FLAGS['cacheRoot'],
-        FLAGS['image_size'],
-        FLAGS['postDataServerWorkerCount'])
-        
-        
-    '''
-    myDataset = danbooruDataset.DanbooruDatasetWithServer(workQueue,
-                                                         len(postData),
-                                                         None)
-    '''                                                     
     global classes
-    classes = {classIndex : className for classIndex, className in enumerate(tagData.name)}
+    if FLAGS['dataset'] is 'danbooru':
+        startTime = time.time()
+        
+
+        #tagData = pd.read_pickle(FLAGS['tagDFPickle'])
+        #postData = pd.read_pickle(FLAGS['postDFPickle'])
+        
+        
+        
+        '''
+        try:
+            print("attempting to read pickled post metadata file at " + FLAGS['tagDFPickle'])
+            tagData = pd.read_pickle(FLAGS['tagDFPickle'])
+        except:
+            print("pickled post metadata file at " + FLAGS['tagDFPickle'] + " not found")
+            tagData = parallelJsonReader.dataImporter(FLAGS['tagListFile'])   # read tags from json in parallel
+            print("saving pickled post metadata to " + FLAGS['tagDFPickle'])
+            tagData.to_pickle(FLAGS['tagDFPickle'])
+        
+        #postData = pd.concat(map(dataImporter, glob.iglob(postMetaDir + 'posts*')), ignore_index=True) # read all post metadata files in metadata dir
+        try:
+            print("attempting to read pickled post metadata file at " + FLAGS['postDFPickle'])
+            postData = pd.read_pickle(FLAGS['postDFPickle'])
+        except:
+            print("pickled post metadata file at " + FLAGS['postDFPickle'] + " not found")
+            postData = parallelJsonReader.dataImporter(FLAGS['postListFile'], keep = 1)    # read posts
+            print("saving pickled post metadata to " + FLAGS['postDFPickle'])
+            postData.to_pickle(FLAGS['postDFPickle'])
+            
+            
+        
+        print("got posts, time spent: " + str(time.time() - startTime))
+        
+        # filter data
+        startTime = time.time()
+        print("applying filters")
+        # TODO this filter process is slow, need to speed it up, currently only single threaded
+        tagData, postData = danbooruDataset.filterDanbooruData(tagData, postData)   # apply various filters to preprocess data
+        
+        tagData.to_pickle(FLAGS['tagDFPickleFiltered'])
+        postData.to_pickle(FLAGS['postDFPickleFiltered'])
+        '''
+        if FLAGS['tagCount'] == 1588:
+            tagData = pd.read_pickle(FLAGS['tagDFPickleFiltered'])
+            #tagData.to_pickle(FLAGS['tagDFPickleFiltered'])
+        elif FLAGS['tagCount'] == 5500:
+            tagData = pd.read_csv(FLAGS['rootPath'] + 'selected_tags.csv')
+        postData = pd.read_pickle(FLAGS['postDFPickleFilteredTrimmed'])
+        #postData.to_pickle(FLAGS['postDFPickleFilteredTrimmed'])
+        #print(postData.info())
+        
+        # get posts that are not banned
+        #queryStartTime = time.time()
+        #postData.query("is_banned == False", inplace = True)
+        #blockedIDs = [5190773, 5142098, 5210705, 5344403, 5237708, 5344394, 5190771, 5237705, 5174387, 5344400, 5344397, 5174384]
+        #for postID in blockedIDs: postData.query("id != @postID", inplace = True)
+        #print("banned post query time: " + str(time.time()-queryStartTime))
+        
+
+        
+        #postData = postData[['id', 'tag_string', 'file_ext', 'file_url']]
+        #postData = postData.convert_dtypes()
+        #print(postData.info())
+        #postData.to_pickle(FLAGS['postDFPickleFilteredTrimmed'])
+        
+        
+
+        print("finished preprocessing, time spent: " + str(time.time() - startTime))
+        print(f"got {len(postData)} posts with {len(tagData)} tags") #got 3821384 posts with 423 tags
+        
+        '''
+        for nthWorkerProcess in range(FLAGS['postDataServerWorkerCount']):
+            currProcess = multiprocessing.Process(target=danbooruDataset.DFServerWorkerProcess,
+                                                  args=(workQueue,
+                                                        postData.copy(deep=True),
+                                                        pd.Series(tagData.name, dtype=pd.StringDtype()),
+                                                        FLAGS['imageRoot'],
+                                                        FLAGS['cacheRoot'],),
+                                                  daemon = True)
+            currProcess.start()
+            serverProcessPool.append(currProcess)
+            
+        '''    
+        # TODO custom normalization values that fit the dataset better
+        # TODO investigate ways to return full size images instead of crops
+        # this should allow use of full sized images that vary in size, which can then be fed into a model that takes images of arbitrary resolution
+        '''
+        myDataset = danbooruDataset.DanbooruDataset(FLAGS['imageRoot'], postData, tagData.name, transforms.Compose([
+            #transforms.Resize((224,224)),
+            danbooruDataset.CutoutPIL(cutout_factor=0.5),
+            transforms.RandAugment(),
+            transforms.ToTensor(),
+            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ]),
+            cacheRoot = FLAGS['cacheRoot']
+            )
+        '''
+        '''
+        myDataset = danbooruDataset.DanbooruDatasetWithServer(FLAGS['imageRoot'],
+                                                              workQueue,
+                                                              len(postData),
+                                                              tagData.name,
+                                                              transforms.Compose([#transforms.Resize((224,224)),
+                                                                                  danbooruDataset.CutoutPIL(cutout_factor=0.5),
+                                                                                  transforms.RandAugment(),
+                                                                                  transforms.ToTensor(),
+                                                                                  #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+                                                                                  ]),
+                                                              cacheRoot = FLAGS['cacheRoot'])
+        
+        '''
+        
+        
+        
+        global myDataset
     
-    #classes = {classIndex : className for classIndex, className in enumerate(tagData.name)}
-    #trimmedSet, _ = torch.utils.data.random_split(myDataset, [int(FLAGS['workingSetSize'] * len(myDataset)), len(myDataset) - int(FLAGS['workingSetSize'] * len(myDataset))], generator=torch.Generator().manual_seed(42)) # discard part of dataset if desired
-    
-    # TODO implement modulo-based subsets for splits to standardize train/test sets and potentially a future val set for thresholding or wtv
-    
-    #trainSet, testSet = torch.utils.data.random_split(trimmedSet, [int(FLAGS['trainSetSize'] * len(trimmedSet)), len(trimmedSet) - int(FLAGS['trainSetSize'] * len(trimmedSet))], generator=torch.Generator().manual_seed(42)) # split dataset
-    
-    trainSet = getSubsetByID(myDataset, postData, 0, 900)
-    testSet = getSubsetByID(myDataset, postData, 900, 930)
+        myDataset = danbooruDataset.DanbooruDatasetWithServer(
+            postData,
+            tagData,
+            FLAGS['imageRoot'],
+            FLAGS['cacheRoot'],
+            FLAGS['image_size'],
+            FLAGS['postDataServerWorkerCount'])
+        
+            
+            
+            
+        '''
+        myDataset = danbooruDataset.DanbooruDatasetWithServer(workQueue,
+                                                             len(postData),
+                                                             None)
+        '''                                                     
+        
+        classes = {classIndex : className for classIndex, className in enumerate(tagData.name)}
+        
+        #classes = {classIndex : className for classIndex, className in enumerate(tagData.name)}
+        #trimmedSet, _ = torch.utils.data.random_split(myDataset, [int(FLAGS['workingSetSize'] * len(myDataset)), len(myDataset) - int(FLAGS['workingSetSize'] * len(myDataset))], generator=torch.Generator().manual_seed(42)) # discard part of dataset if desired
+        
+        # TODO implement modulo-based subsets for splits to standardize train/test sets and potentially a future val set for thresholding or wtv
+        
+        #trainSet, testSet = torch.utils.data.random_split(trimmedSet, [int(FLAGS['trainSetSize'] * len(trimmedSet)), len(trimmedSet) - int(FLAGS['trainSetSize'] * len(trimmedSet))], generator=torch.Generator().manual_seed(42)) # split dataset
+        
+        trainSet = getSubsetByID(myDataset, postData, 0, 900)
+        testSet = getSubsetByID(myDataset, postData, 900, 930)
+    elif FLAGS['dataset'] is 'coco':
+        trainSet = danbooruDataset.CocoDataset(
+            FLAGS['cocoRoot']+'train2014/',
+            FLAGS['cocoRoot']+'annotations/instances_train2014.json'
+        )
+        testSet = danbooruDataset.CocoDataset(
+            FLAGS['cocoRoot']+'val2014/',
+            FLAGS['cocoRoot']+'annotations/instances_val2014.json'
+        )
+        classes = classes = {classIndex : className for classIndex, className in enumerate(trainSet.classes)}
     
     image_datasets = {'train': trainSet, 'val' : testSet}   # put dataset into a list for easy handling
     return image_datasets
