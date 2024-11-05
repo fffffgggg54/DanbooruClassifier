@@ -1161,7 +1161,7 @@ def trainCycle(image_datasets, model):
         
         dataloaders = {x: getDataLoader(image_datasets[x], FLAGS['batch_size'], epoch) for x in image_datasets} # set up dataloaders
         print(dataloaders['train'])
-        print(dir(dataloaders['train'])
+        print(dir(dataloaders['train']))
         
         scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
         scheduler.last_epoch = len(dataloaders['train'])*epoch
