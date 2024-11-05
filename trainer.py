@@ -516,7 +516,7 @@ def getSubsetByID(dataset, postData, lower, upper, div = 1000):
 
 def getData():
     global classes
-    if FLAGS['dataset'] is 'danbooru':
+    if FLAGS['dataset'] == 'danbooru':
         startTime = time.time()
         
 
@@ -660,7 +660,7 @@ def getData():
         
         trainSet = getSubsetByID(myDataset, postData, 0, 900)
         testSet = getSubsetByID(myDataset, postData, 900, 930)
-    elif FLAGS['dataset'] is 'coco':
+    elif FLAGS['dataset'] == 'coco':
         trainSet = danbooruDataset.CocoDataset(
             FLAGS['cocoRoot']+'train2014/',
             FLAGS['cocoRoot']+'annotations/instances_train2014.json'
