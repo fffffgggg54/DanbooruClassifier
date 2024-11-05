@@ -1234,7 +1234,7 @@ def trainCycle(image_datasets, model):
                                                           ])
             
             #myDataset.transform = newTransform
-            dataloader[phase].dataset.transform = newTransform
+            dataloaders[phase].dataset.transform = newTransform
             
             # For each batch in the dataloader
             '''
