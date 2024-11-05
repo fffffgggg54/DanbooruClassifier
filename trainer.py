@@ -1160,8 +1160,7 @@ def trainCycle(image_datasets, model):
         epochTime = time.time()
         
         dataloaders = {x: getDataLoader(image_datasets[x], FLAGS['batch_size'], epoch) for x in image_datasets} # set up dataloaders
-        print(dataloaders['train'])
-        print(dir(dataloaders['train']))
+
         
         scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
         scheduler.last_epoch = len(dataloaders['train'])*epoch
@@ -1206,7 +1205,7 @@ def trainCycle(image_datasets, model):
                 if(is_head_proc):
                     print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
                 
-                myDataset.transform = transforms.Compose([transforms.Resize(dynamicResizeDim),
+                newTransform = transforms.Compose([transforms.Resize(dynamicResizeDim),
                                                           transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * FLAGS['progressiveAugRatio'])),
                                                           #transforms.RandAugment(),
                                                           transforms.RandomHorizontalFlip(),
@@ -1229,10 +1228,13 @@ def trainCycle(image_datasets, model):
                     print("skipping...")
                     break;
                 
-                myDataset.transform = transforms.Compose([#transforms.Resize((224,224)),
+                newTransform = transforms.Compose([#transforms.Resize((224,224)),
                                                           transforms.ToTensor(),
                                                           #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                                                           ])
+            
+            #myDataset.transform = newTransform
+            dataloader[phase].dataset.transform = newTransform
             
             # For each batch in the dataloader
             '''
