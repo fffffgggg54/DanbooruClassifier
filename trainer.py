@@ -1205,7 +1205,7 @@ def trainCycle(image_datasets, model):
                 if(is_head_proc):
                     print(f'Using image size of {dynamicResizeDim}x{dynamicResizeDim}')
                 
-                newTransform = transforms.Compose([transforms.Resize(dynamicResizeDim),
+                newTransform = transforms.Compose([transforms.Resize((dynamicResizeDim, dynamicResizeDim),
                                                           transforms.RandAugment(magnitude = epoch, num_magnitude_bins = int(FLAGS['num_epochs'] * FLAGS['progressiveAugRatio'])),
                                                           #transforms.RandAugment(),
                                                           transforms.RandomHorizontalFlip(),
