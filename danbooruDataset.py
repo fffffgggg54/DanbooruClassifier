@@ -44,21 +44,19 @@ class CocoDataset(torchvision.datasets.coco.CocoDetection):
         self,
         root,
         annFile,
-        transform = None,
-        target_transform = None,
-        transforms = None,
     ):
         super().__init__(
             root, 
             annFile, 
-            transform=transform,
-            target_transform=target_transform,
-            transforms=transforms
+            transform=None,
+            target_transform=None,
+            transforms=None
         )
         # plaintext names of each class
         self.classes = [x['name'] for x in self.coco.cats.values()]
         # lookup for coco category id to index of class
         self.id_to_idx = {x : idx for idx, x in enumerate(list(self.coco.cats.keys()))}
+        self.transform = None
         
         
     def __getitem__(self, index):
@@ -77,8 +75,8 @@ class CocoDataset(torchvision.datasets.coco.CocoDetection):
             new_target[idx] +=1
         target = (new_target > 0).to(torch.long)
 
-        if self.transforms is not None:
-            image, target = self.transforms(image, target)
+        if self.transform is not None:
+            image = self.transform(image)
 
         return image, target
 
