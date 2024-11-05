@@ -39,12 +39,44 @@ def create_dir(dir):
         print("Created Directory : ", dir)
     return dir
 	
-# TODO migrate to general data instead of danbo specific data
+class CocoDataset(torchvision.datasets.coco.CocoDetection):
+    def __init__(
+        self,
+        root,
+        annFile,
+        transform = None,
+        target_transform = None,
+        transforms = None,
+    ):
+        super().__init__(
+            root, 
+            annFile, 
+            transform=transform,
+            target_transform=target_transform,
+            transforms=transforms
+        )
+        self.classes = [x['name'] for x in self.coco.cats.values()]
+        self.id_to_idx = {x['id'] : idx for idx, x in enumerate(self.coco.cats.keys())}
+        
+        
+    def __getitem__(self, index):
 
+        if not isinstance(index, int):
+            raise ValueError(f"Index must be of type integer, got {type(index)} instead.")
 
-# TODO migrate to datapipes when mature
+        id = self.ids[index]
+        image = self._load_image(id)
+        target = self._load_target(id)
+        new_target = torch.zeros(80, dtype=torch.long)
+        indices = [self.id_to_idx[instance['category_id']] for instance in target]
+        for idx in indices:
+            new_target[idx] +=1
+        target = (new_target > 0).to(torch.long)
 
+        if self.transforms is not None:
+            image, target = self.transforms(image, target)
 
+        return image, target
 
 class DanbooruDataset(torch.utils.data.Dataset):
 
