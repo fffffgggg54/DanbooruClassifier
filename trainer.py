@@ -313,7 +313,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/regnetz_040h-ASL_GP0_GNADAPC_-224-1588-50epoch/'
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-NormPL_D095_L065-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-ASL_BCE_T-dist_raw-x+20e-1-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/coco_models/vit_large_patch16_gap_448-ASL_adaptivePC-448-100epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/coco_models/vit_large_patch24_gap_448-ASL_adaptivePC-448-100epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-NormPL_D095_L060-ASL_BCE_NormWL_TPOnly-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-PLScratch-PowerGate-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
@@ -963,7 +963,7 @@ def modelSetup(classes):
     
     model = timm.models.VisionTransformer(
         img_size = FLAGS['actual_image_size'], 
-        patch_size = 16, 
+        patch_size = 24, 
         num_classes = len(classes), 
         embed_dim=1024, 
         depth=16, 
