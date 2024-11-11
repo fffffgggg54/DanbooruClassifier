@@ -1237,7 +1237,11 @@ def trainCycle(image_datasets, model):
                                                           ])
             
             #myDataset.transform = newTransform
-            dataloaders[phase].dataset.transform = newTransform
+            if hasattr(dataloaders[phase].dataset, 'dataset'):
+                # modify original dataset if using a subset
+                dataloaders[phase].dataset.dataset.transform = newTransform
+            else:
+                dataloaders[phase].dataset.transform = newTransform
             
             # For each batch in the dataloader
             '''
