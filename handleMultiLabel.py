@@ -322,6 +322,25 @@ class ModifiedLogisticRegression_NoWeight(nn.Module):
             c_hat = 1 / (1 + self.beta_per_class.detach() ** 2)
         return c_hat / (1 + (self.beta_per_class ** 2) + torch.exp(-x) + self.eps)
 
+class ModifiedLogisticRegression_Head(nn.Module):
+    def __init__(self, num_features, num_classes = 1588, bias = True, initial_beta = 1.0, eps = 1e-8):
+        super().__init__()
+        self.num_classes = num_classes
+        self.num_features = num_features
+        self.fc = nn.Linear(num_features, num_classes, bias=bias)
+        self.beta_per_class = nn.Parameter(data=initial_beta * torch.ones(num_classes, dtype=torch.float64))
+        self.eps = eps
+        
+        # store intermediate results as attributes to avoid memory realloc as per ASLOptimized
+        self.NtC_out = None
+        self.c_hat = None
+        self.pred = None
+        
+    def forward(self, x):     
+        with torch.no_grad():
+            c_hat = 1 / (1 + self.beta_per_class.detach() ** 2)
+        return c_hat / (1 + (self.beta_per_class ** 2) + torch.exp(-self.fc(x)) + self.eps)
+
 class DualLogisticRegression(nn.Module):
     def __init__(self, num_features, num_classes, eps = 1e-8):
         super().__init__()
