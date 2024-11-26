@@ -337,11 +337,16 @@ class ModifiedLogisticRegression_Head(nn.Module):
         self.pred = None
         
     def forward(self, x):
-        if self.is_training():
+        '''
+        if self.training:
             c_hat = 1
         else:
             with torch.no_grad():
                 c_hat = 1 / (1 + self.beta_per_class.detach() ** 2)
+        '''
+
+        with torch.no_grad():
+            c_hat = 1 / (1 + self.beta_per_class.detach() ** 2)
         return c_hat / (1 + (self.beta_per_class ** 2) + torch.exp(-self.fc(x)) + self.eps)
 
 class DualLogisticRegression(nn.Module):
