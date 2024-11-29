@@ -342,7 +342,7 @@ class ModifiedLogisticRegression_Head(nn.Module):
             c_hat = 1
         else:
             with torch.no_grad():
-                c_hat = 1 / (1 + self.beta_per_class.detach() ** 2)
+                c_hat = 1 / (1 + self.beta_per_class.detach() ** 2 + self.eps)
         
         '''
         with torch.no_grad():
