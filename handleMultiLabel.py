@@ -362,6 +362,7 @@ class DualLogisticRegression_Head(nn.Module):
         
     def forward(self, x):
         with torch.amp.autocast("cuda", enabled=False):
+            x = x.to(torch.float64)
             if self.training:
                 propensity = 1
             else:
