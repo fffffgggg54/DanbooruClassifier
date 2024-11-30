@@ -1033,7 +1033,7 @@ def modelSetup(classes):
         #mlr_act = MLCSL.ModifiedLogisticRegression_NoWeight(num_classes = len(classes), initial_beta = 1.0, eps = 1e-8)
         #model.append(mlr_act)
         #mlr_head = MLCSL.ModifiedLogisticRegression_Head(num_features, num_classes = len(classes), bias=True, initial_beta = 1.0, eps = 1e-8)
-        mlr_head = MLCSL.DualLogisticRegression_Head(num_features, num_classes=len(classes, bias=True, eps=1e-8)
+        mlr_head = MLCSL.DualLogisticRegression_Head(num_features, num_classes=len(classes), bias=True, eps=1e-8)
         model.append(mlr_head)
     
     return model
