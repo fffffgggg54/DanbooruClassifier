@@ -351,11 +351,11 @@ class ModifiedLogisticRegression_Head(nn.Module):
         return c_hat / (1 + (self.beta_per_class ** 2) + torch.exp(-self.fc(x)) + self.eps)
 
 class DualLogisticRegression_Head(nn.Module):
-    def __init__(self, num_features, num_classes = 1588, bias = True, eps = 1e-8):
+    def __init__(self, num_features, num_classes = 1588, bias_fc = True, bias_estimator = False, eps = 1e-8):
         super().__init__()
         self.num_classes = num_classes
         self.num_features = num_features
-        self.fc = nn.Linear(num_features, num_classes, dtype=torch.float64)
+        self.fc = nn.Linear(num_features, num_classes, bias = bias_fc, dtype=torch.float64)
         self.estimator = nn.Linear(num_features, num_classes, dtype=torch.float64)
         self.eps = eps
         
@@ -373,7 +373,7 @@ class DualLogisticRegression_Head(nn.Module):
             with torch.no_grad():
                 c_hat = 1 / (1 + self.beta_per_class.detach() ** 2)
             '''
-            return propensity / (1 + self.estimator(x) ** 2 + torch.exp(-self.fc(x)) + self.eps)
+            return propensity / (1 + self.estimator(x.detach()) ** 2 + torch.exp(-self.fc(x)) + self.eps)
 
 class DualLogisticRegression(nn.Module):
     def __init__(self, num_features, num_classes, eps = 1e-8):
