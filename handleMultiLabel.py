@@ -367,13 +367,16 @@ class DualLogisticRegression_Head(nn.Module):
                 propensity = 1
             else:
                 with torch.no_grad():
-                    propensity = 1 / (1 + self.estimator(x.detach()) ** 2 + self.eps)
+                    #propensity = 1 / (1 + self.estimator(x.detach()) ** 2 + self.eps)
+                    propensity = 1 / (1 + torch.exp(-self.estimator(x.detach())) + self.eps)
             
             '''
             with torch.no_grad():
                 c_hat = 1 / (1 + self.beta_per_class.detach() ** 2)
             '''
-            return propensity / (1 + self.estimator(x.detach()) ** 2 + torch.exp(-self.fc(x)) + self.eps)
+            #return propensity / (1 + self.estimator(x.detach()) ** 2 + torch.exp(-self.fc(x)) + self.eps)
+            return propensity / (1 + torch.exp(-self.estimator(x.detach())) + torch.exp(-self.fc(x)) + self.eps)
+
 
 class DualLogisticRegression(nn.Module):
     def __init__(self, num_features, num_classes, eps = 1e-8):
