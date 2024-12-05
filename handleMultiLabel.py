@@ -356,7 +356,7 @@ class DualLogisticRegression_Head(nn.Module):
         self.num_classes = num_classes
         self.num_features = num_features
         self.fc = nn.Linear(num_features, num_classes, bias = bias_fc, dtype=torch.float64)
-        self.estimator = nn.Linear(num_features, num_classes, dtype=torch.float64)
+        self.estimator = nn.Linear(num_features, num_classes, bias = bias_estimator, dtype=torch.float64)
         self.eps = eps
         
         
