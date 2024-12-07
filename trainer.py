@@ -317,7 +317,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-NormPL_D095_L060-ASL_BCE_NormWL_TPOnly-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-PLScratch-PowerGate-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_large_patch24_gap_448-NormPL_D095_L065_ModUpdate_HardMod-ASL_BCE-448-1588-100epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-DLRHead_NoBiasFC_BiasEstimator_LogisticEstimator-ASL_BCE-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-DLRHead_BiasFC_NoBiasEstimator_LogisticEstimator-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MLR_NW-ADA_WL_T-PU_F_metric-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-Hill-T-F1-x+00e-1-224-1588-50epoch/"
@@ -1033,7 +1033,7 @@ def modelSetup(classes):
         #mlr_act = MLCSL.ModifiedLogisticRegression_NoWeight(num_classes = len(classes), initial_beta = 1.0, eps = 1e-8)
         #model.append(mlr_act)
         #mlr_head = MLCSL.ModifiedLogisticRegression_Head(num_features, num_classes = len(classes), bias=True, initial_beta = 1.0, eps = 1e-8)
-        mlr_head = MLCSL.DualLogisticRegression_Head(num_features, num_classes=len(classes), bias_fc=False, bias_estimator=True, eps=1e-8)
+        mlr_head = MLCSL.DualLogisticRegression_Head(num_features, num_classes=len(classes), bias_fc=True, bias_estimator=False, eps=1e-8)
         model.append(mlr_head)
     
     return model
