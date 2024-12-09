@@ -339,16 +339,16 @@ class ModifiedLogisticRegression_Head(nn.Module):
     def forward(self, x):
         
         if self.training:
-            c_hat = 1
+            c_hat_inv = 1
         else:
             with torch.no_grad():
-                c_hat = 1 / (1 + self.beta_per_class.detach() ** 2 + self.eps)
+                c_hat_inv = 1 + self.beta_per_class.detach() ** 2 + self.eps
         
         '''
         with torch.no_grad():
-            c_hat = 1 / (1 + self.beta_per_class.detach() ** 2)
+            c_hat_inv = 1 + self.beta_per_class.detach() ** 2 + self.eps
         '''
-        return c_hat / (1 + (self.beta_per_class ** 2) + torch.exp(-self.fc(x)) + self.eps)
+        return c_hat_inv / (1 + (self.beta_per_class ** 2) + torch.exp(-self.fc(x)) + self.eps)
 
 class DualLogisticRegression_Head(nn.Module):
     def __init__(self, num_features, num_classes = 1588, bias_fc = True, bias_estimator = False, eps = 1e-8):
@@ -365,19 +365,19 @@ class DualLogisticRegression_Head(nn.Module):
             x = x.to(torch.float64)
             '''
             if self.training:
-                propensity = 1
+                propensity_inv = 1
             else:
                 with torch.no_grad():
-                    #propensity = 1 / (1 + self.estimator(x.detach()) ** 2 + self.eps)
-                    propensity = 1 / (1 + torch.exp(-self.estimator(x.detach())) + self.eps)
+                    #propensity_inv = 1 + self.estimator(x.detach()) ** 2 + self.eps
+                    propensity_inv = 1 + torch.exp(-self.estimator(x.detach())) + self.eps
             
             '''
             with torch.no_grad():
-                #propensity = 1 / (1 + torch.exp(-self.estimator(x.detach())) + self.eps)
-                propensity = 1 / (1 + self.estimator(x.detach()) ** 2 + self.eps)
+                #propensity_inv = 1 + torch.exp(-self.estimator(x.detach())) + self.eps
+                propensity_inv = 1 + self.estimator(x.detach()) ** 2 + self.eps
             
-            return propensity / (1 + self.estimator(x.detach()) ** 2 + torch.exp(-self.fc(x)) + self.eps)
-            #return propensity / (1 + torch.exp(-self.estimator(x.detach())) + torch.exp(-self.fc(x)) + self.eps)
+            return propensity_inv / (1 + self.estimator(x.detach()) ** 2 + torch.exp(-self.fc(x)) + self.eps)
+            #return propensity_inv / (1 + torch.exp(-self.estimator(x.detach())) + torch.exp(-self.fc(x)) + self.eps)
 
 
 class DualLogisticRegression(nn.Module):
