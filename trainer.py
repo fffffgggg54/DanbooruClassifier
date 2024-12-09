@@ -407,7 +407,7 @@ elif currGPU == 'v100':
     # debugging config
 
     FLAGS['verbose_debug'] = False
-    FLAGS['skip_test_set'] = True
+    FLAGS['skip_test_set'] = False
     FLAGS['stepsPerPrintout'] = 25
     FLAGS['val'] = False
 
@@ -1578,6 +1578,16 @@ def trainCycle(image_datasets, model):
                 MeanStackedAccuracy = cm_tracker.get_aggregate_metrics()
                 MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
                 if(is_head_proc): print((MeanStackedAccuracy*100).tolist())
+                
+                plotext.hist(dist_tracker.neg_mean.detach().clamp(min=-15), bins, label='Neg means')
+                plotext.hist(dist_tracker.pos_mean.detach(), bins, label='Pos means')
+                plotext.title("Distributions of per-class means")
+                plotext.show()
+                plotext.clear_figure()
+                plotext.hist(((dist_tracker.pos_mean.detach() + dist_tracker.neg_mean.detach()) / 2).clamp(min=-10, max=10), bins, label='Mean of means')
+                plotext.title("Distributions of per-class mean of means")
+                plotext.show()
+                plotext.clear_figure()
                 
                 
                 #prior.save_prior()
