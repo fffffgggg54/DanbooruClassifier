@@ -363,19 +363,19 @@ class DualLogisticRegression_Head(nn.Module):
     def forward(self, x):
         with torch.amp.autocast("cuda", enabled=False):
             x = x.to(torch.float64)
-            '''
+            
             if self.training:
                 propensity_inv = 1
             else:
                 with torch.no_grad():
-                    #propensity_inv = 1 + self.estimator(x.detach()) ** 2 + self.eps
-                    propensity_inv = 1 + torch.exp(-self.estimator(x.detach())) + self.eps
+                    propensity_inv = 1 + self.estimator(x.detach()) ** 2 + self.eps
+                    #propensity_inv = 1 + torch.exp(-self.estimator(x.detach())) + self.eps
             
             '''
             with torch.no_grad():
                 #propensity_inv = 1 + torch.exp(-self.estimator(x.detach())) + self.eps
                 propensity_inv = 1 + self.estimator(x.detach()) ** 2 + self.eps
-            
+            '''
             return propensity_inv / (1 + self.estimator(x.detach()) ** 2 + torch.exp(-self.fc(x)) + self.eps)
             #return propensity_inv / (1 + torch.exp(-self.estimator(x.detach())) + torch.exp(-self.fc(x)) + self.eps)
 
