@@ -317,7 +317,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-NormPL_D095_L060-ASL_BCE_NormWL_TPOnly-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-PLScratch-PowerGate-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_large_patch24_gap_448-NormPL_D095_L065_ModUpdate_HardMod-ASL_BCE-448-1588-100epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-DLRHead_BiasFC_BiasEstimator_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-DLRHead_BiasFC_BiasEstimator_LogisticEstimator_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MLR_NW-ADA_WL_T-PU_F_metric-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-Hill-T-F1-x+00e-1-224-1588-50epoch/"
@@ -1151,7 +1151,8 @@ def trainCycle(image_datasets, model):
     best = None
     tagNames = list(classes.values())
     
-    
+    # histogram bins
+    bins=100
     
     MeanStackedAccuracyStored = torch.Tensor([2,1,2,1])
     if(is_head_proc):
@@ -1519,7 +1520,7 @@ def trainCycle(image_datasets, model):
                         #print(f't score mean: {t_stat.mean()} std: {t_stat.std()}')
                         #t_p_values = scipy.stats.ttest_ind_from_stats(dist_tracker.pos_mean.cpu().numpy(), dist_tracker.pos_std.cpu().numpy(), dist_tracker.pos_count.cpu().numpy(), dist_tracker.neg_mean.cpu().numpy(), dist_tracker.neg_std.cpu().numpy(), dist_tracker.neg_count.cpu().numpy(), equal_var=False, alternative="greater").pvalue
                         print(f'z score mean: {z_scores.mean()}, std: {z_scores.std()}, pos mean: {dist_tracker.pos_mean.detach().mean()}, neg mean: {dist_tracker.neg_mean.detach().mean()}')
-                        bins=100
+                        
                         '''
                         plotext.hist(dist_tracker.neg_mean.detach().clamp(min=-15), bins, label='Neg means')
                         plotext.hist(dist_tracker.pos_mean.detach(), bins, label='Pos means')
@@ -1586,6 +1587,11 @@ def trainCycle(image_datasets, model):
                 plotext.clear_figure()
                 plotext.hist(((dist_tracker.pos_mean.detach() + dist_tracker.neg_mean.detach()) / 2).clamp(min=-10, max=10), bins, label='Mean of means')
                 plotext.title("Distributions of per-class mean of means")
+                plotext.show()
+                plotext.clear_figure()
+                z_scores = (dist_tracker.pos_mean.detach() - dist_tracker.neg_mean.detach()) / ((dist_tracker.pos_var.detach() + dist_tracker.neg_var.detach()) ** 0.5 + 1e-8)
+                plotext.hist(z_scores.clamp(min=-10, max=10), bins, label='z-score')
+                plotext.title("Distributions of per-class z-score")
                 plotext.show()
                 plotext.clear_figure()
                 
