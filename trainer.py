@@ -1580,20 +1580,23 @@ def trainCycle(image_datasets, model):
                 MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
                 if(is_head_proc): print((MeanStackedAccuracy*100).tolist())
                 
-                plotext.hist(dist_tracker.neg_mean.detach().clamp(min=-15), bins, label='Neg means')
-                plotext.hist(dist_tracker.pos_mean.detach(), bins, label='Pos means')
-                plotext.title("Distributions of per-class means")
-                plotext.show()
-                plotext.clear_figure()
-                plotext.hist(((dist_tracker.pos_mean.detach() + dist_tracker.neg_mean.detach()) / 2).clamp(min=-10, max=10), bins, label='Mean of means')
-                plotext.title("Distributions of per-class mean of means")
-                plotext.show()
-                plotext.clear_figure()
-                z_scores = (dist_tracker.pos_mean.detach() - dist_tracker.neg_mean.detach()) / ((dist_tracker.pos_var.detach() + dist_tracker.neg_var.detach()) ** 0.5 + 1e-8)
-                plotext.hist(z_scores.clamp(min=-10, max=10), bins, label='z-score')
-                plotext.title("Distributions of per-class z-score")
-                plotext.show()
-                plotext.clear_figure()
+                if dist_tracker.neg_mean.is_nan() == False:
+                    plotext.hist(dist_tracker.neg_mean.detach().clamp(min=-15), bins, label='Neg means')
+                    plotext.hist(dist_tracker.pos_mean.detach(), bins, label='Pos means')
+                    plotext.title("Distributions of per-class means")
+                    plotext.show()
+                    plotext.clear_figure()
+                    if dist_tracker.pos_mean.is_nam() == False:
+                        plotext.hist(((dist_tracker.pos_mean.detach() + dist_tracker.neg_mean.detach()) / 2).clamp(min=-10, max=10), bins, label='Mean of means')
+                        plotext.title("Distributions of per-class mean of means")
+                        plotext.show()
+                        plotext.clear_figure()
+                
+                        z_scores = (dist_tracker.pos_mean.detach() - dist_tracker.neg_mean.detach()) / ((dist_tracker.pos_var.detach() + dist_tracker.neg_var.detach()) ** 0.5 + 1e-8)
+                        plotext.hist(z_scores.clamp(min=-10, max=10), bins, label='z-score')
+                        plotext.title("Distributions of per-class z-score")
+                        plotext.show()
+                        plotext.clear_figure()
                 
                 
                 #prior.save_prior()
