@@ -1580,13 +1580,13 @@ def trainCycle(image_datasets, model):
                 MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
                 if(is_head_proc): print((MeanStackedAccuracy*100).tolist())
                 
-                if dist_tracker.neg_mean.is_nan() == False:
+                if dist_tracker.neg_mean.isnan() == False:
                     plotext.hist(dist_tracker.neg_mean.detach().clamp(min=-15), bins, label='Neg means')
                     plotext.hist(dist_tracker.pos_mean.detach(), bins, label='Pos means')
                     plotext.title("Distributions of per-class means")
                     plotext.show()
                     plotext.clear_figure()
-                    if dist_tracker.pos_mean.is_nam() == False:
+                    if dist_tracker.pos_mean.isnan() == False:
                         plotext.hist(((dist_tracker.pos_mean.detach() + dist_tracker.neg_mean.detach()) / 2).clamp(min=-10, max=10), bins, label='Mean of means')
                         plotext.title("Distributions of per-class mean of means")
                         plotext.show()
