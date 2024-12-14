@@ -215,21 +215,25 @@ def main():
         
         currPostTags = []
         #print(outputs.tolist())
-        currPostTags = list(zip(tagNames, outputs.tolist()[0]))
+        currPostTags = list(zip(tagNames, outputs.tolist()[0], thresholds))
         currPostTags.sort(key=lambda y: y[1])
         
         #print(*currPostTags, sep="\n")
         
         if haveThresholds:
-            tagsThresholded = [(*x, thresholds[i]) for i, x in enumerate(currPostTags) if x[1] > thresholds[i]]
+            tagsThresholded = [x for i, x in enumerate(currPostTags) if x[1] > thresholds[i]]
             print("\nTags filtered using threshold:\n")
             print(*tagsThresholded, sep="\n")
             predTags = {tag[0] for tag in tagsThresholded}
             trueTags = set(postData['tag_string'].split(" ")).intersection(tagNames)
             missingTags = trueTags.difference(predTags)
+            missingTags = [x for x in currPostTags if x[0] in missingTags]
             newTags = predTags.difference(trueTags)
-            print(f"missing tags: {missingTags}")
-            print(f"newly detected tags: {newTags}")
+            newTags = [x for x in currPostTags if x[0] in newTags]
+            print(f"missing tags:")
+            print(*missingTags, sep="\n")
+            print(f"newly detected tags:")
+            print(*newTags, sep="\n")
             
         else:
             print("not using thresholds")
