@@ -359,13 +359,13 @@ class DualLogisticRegression_Head(nn.Module):
         self.estimator = nn.Linear(num_features, num_classes, bias = bias_estimator, dtype=torch.float64)
         self.eps = eps
         
-        
+    @torch.compile.disable() # don't compile for now, type mismatch error in torch 2.3.1
     def forward(self, x):
         with torch.amp.autocast("cuda", enabled=False):
             x = x.to(torch.float64)
             
             if self.training:
-                propensity_inv = torch.Tensor([1], device=x.device)
+                propensity_inv = 1
             else:
                 with torch.no_grad():
                     propensity_inv = 1 + self.estimator(x.detach()) ** 2 + self.eps
