@@ -365,7 +365,7 @@ class DualLogisticRegression_Head(nn.Module):
             x = x.to(torch.float64)
             
             if self.training:
-                propensity_inv = 1
+                propensity_inv = torch.Tensor([1], device=x.device)
             else:
                 with torch.no_grad():
                     propensity_inv = 1 + self.estimator(x.detach()) ** 2 + self.eps
