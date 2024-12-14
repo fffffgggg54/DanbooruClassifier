@@ -173,6 +173,7 @@ def main():
     model.load_state_dict(torch.load(modelPath + "saved_model_epoch_49.pth", map_location=myDevice))
     model.eval()   # Set model to evaluate mode
     model = torch.compile(model)
+    model(torch.randn(1,3,288,288))
     model = model.to(myDevice)
     
     while(True):
