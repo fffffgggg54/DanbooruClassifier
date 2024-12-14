@@ -351,12 +351,27 @@ class ModifiedLogisticRegression_Head(nn.Module):
         return c_hat_inv / (1 + (self.beta_per_class ** 2) + torch.exp(-self.fc(x)) + self.eps)
 
 class DualLogisticRegression_Head(nn.Module):
-    def __init__(self, num_features, num_classes = 1588, bias_fc = True, bias_estimator = False, eps = 1e-8):
+    def __init__(self, num_features, num_classes = 1588, fc_type='linear', estimator_type='linear', bias_fc = True, bias_estimator = False, eps = 1e-8):
         super().__init__()
         self.num_classes = num_classes
         self.num_features = num_features
-        self.fc = nn.Linear(num_features, num_classes, bias = bias_fc, dtype=torch.float64)
-        self.estimator = nn.Linear(num_features, num_classes, bias = bias_estimator, dtype=torch.float64)
+        
+        if(fc_type == "linear"):
+            self.fc = nn.Linear(num_features, num_classes, bias = bias_fc, dtype=torch.float64)
+        elif(fc_type == "mlp"):
+            self.fc = nn.Sequential(
+                    nn.Linear(num_features, int(num_features * 4), bias = bias_fc, dtype=torch.float64),
+                    nn.GELU(),
+                    nn.Linear(int(num_features * 4), num_classes, bias = bias_fc, dtype=torch.float64))
+                
+        if(estimator_type == "linear"):
+            self.estimator = nn.Linear(num_features, num_classes, bias = bias_estimator, dtype=torch.float64)
+        elif(estimator_type == "mlp"):
+            self.estimator = nn.Sequential(
+                    nn.Linear(num_features, int(num_features * 4), bias = bias_estimator, dtype=torch.float64),
+                    nn.GELU(),
+                    nn.Linear(int(num_features * 4), num_classes, bias = bias_estimator, dtype=torch.float64))
+            
         self.eps = eps
         
         
@@ -376,7 +391,7 @@ class DualLogisticRegression_Head(nn.Module):
                 #propensity_inv = 1 + torch.exp(-self.estimator(x.detach())) + self.eps
                 propensity_inv = 1 + self.estimator(x.detach()) ** 2 + self.eps
             '''
-            return propensity_inv / (1 + self.estimator(x) ** 2 + torch.exp(-self.fc(x)) + self.eps)
+            return propensity_inv / (1 + self.estimator(x.detach()) ** 2 + torch.exp(-self.fc(x)) + self.eps)
             #return propensity_inv / (1 + torch.exp(-self.estimator(x.detach())) + torch.exp(-self.fc(x)) + self.eps)
 
 
