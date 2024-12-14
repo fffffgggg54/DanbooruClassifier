@@ -133,6 +133,7 @@ def getPost(postID):
     return Image.open(BytesIO(response.content)), postData
 
 def main():
+    myDevice = 'cpu'
     #gc.set_debug(gc.DEBUG_LEAK)
     # load json files
     
@@ -149,12 +150,12 @@ def main():
     thresholdsPath = modelPath + "thresholds.pth"
     
     try:
-        thresholds = torch.load(thresholdsPath)
+        thresholds = torch.load(thresholdsPath, map_location=myDevice)
         haveThresholds = True
     except:
         haveThresholds = False
     
-    myDevice = 'cpu'
+    
     model = timm.create_model('davit_tiny', pretrained=True, num_classes=len(tagNames))
     #model = timm.create_model('davit_base', num_classes=len(tagNames))
     #model = add_ml_decoder_head(model)
