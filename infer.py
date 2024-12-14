@@ -171,8 +171,7 @@ def main():
     
     model.load_state_dict(torch.load(modelPath + "saved_model_epoch_49.pth", map_location=myDevice))
     model.eval()   # Set model to evaluate mode
-    model = torch.jit.script(model)
-    model = torch.jit.optimize_for_inference(model)
+    model = torch.compile(model)
     model = model.to(myDevice)
     
     while(True):
