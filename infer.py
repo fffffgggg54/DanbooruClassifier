@@ -166,7 +166,7 @@ def main():
     num_features = model.num_features
     
     model = nn.Sequential(model)
-    mlr_head = MLCSL.DualLogisticRegression_Head(num_features, num_classes=len(classes), bias_fc=True, bias_estimator=True, eps=1e-8)
+    mlr_head = MLCSL.DualLogisticRegression_Head(num_features, num_classes=len(tagNames), bias_fc=True, bias_estimator=True, eps=1e-8)
     model.append(mlr_head)
     
     model.load_state_dict(torch.load(modelPath + "saved_model_epoch_49.pth", map_location=myDevice))
