@@ -137,7 +137,7 @@ def main():
     # load json files
     
     #modelPath = rootPath + "models/davit_base_ml-decoder-ASL-BCE/"
-    modelPath = "/media/fredo/Storage3/danbooru_models/scratch/"
+    modelPath = "/media/fredo/Storage3/danbooru_models/davit_tiny-DLRHead_BiasFC_BiasEstimator_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
     #modelPath = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE-224-1588-50epoch/"
     #modelPath = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_+_T-224-1588-50epoch/"
     tagPicklePath = modelPath + "tags.pkl"
@@ -162,7 +162,12 @@ def main():
     #model.load_state_dict(torch.load("models/saved_model_epoch_4.pth", map_location=myDevice))
     #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(tagNames), ignore_mismatched_sizes=True)
     
+    model.reset_classifier(0)
+    num_features = model.num_features
+    
     model = nn.Sequential(model)
+    mlr_head = MLCSL.DualLogisticRegression_Head(num_features, num_classes=len(classes), bias_fc=True, bias_estimator=True, eps=1e-8)
+    model.append(mlr_head)
     
     model.load_state_dict(torch.load(modelPath + "saved_model_epoch_49.pth", map_location=myDevice))
     model.eval()   # Set model to evaluate mode
@@ -193,7 +198,7 @@ def main():
         
 
         transform = transforms.Compose([
-            transforms.Resize((384, 384)),
+            transforms.Resize((288,288)),
             transforms.ToTensor(),
             #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
             ])
@@ -202,7 +207,8 @@ def main():
         
         startTime = time.time()
         #outputs = model(image.unsqueeze(0)).logits.sigmoid()
-        outputs = model(image.unsqueeze(0)).sigmoid()
+        #outputs = model(image.unsqueeze(0)).sigmoid()
+        outputs = model(image.unsqueeze(0))
         predTime = time.time() - startTime
         
         print(f"preprocessing time: {processingTime} infer time: {predTime}")
