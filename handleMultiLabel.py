@@ -359,7 +359,7 @@ class DualLogisticRegression_Head(nn.Module):
         self.estimator = nn.Linear(num_features, num_classes, bias = bias_estimator, dtype=torch.float64)
         self.eps = eps
         
-    @torch.compiler.disable(recursive=False) # don't compile for now, type mismatch error in torch 2.3.1 in if-else statement
+    @torch.compiler.disable(recursive=True) # don't compile for now, type mismatch error in torch 2.3.1 in if-else statement
     def forward(self, x):
         with torch.amp.autocast("cuda", enabled=False):
             x = x.to(torch.float64)
