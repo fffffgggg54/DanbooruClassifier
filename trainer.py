@@ -1036,7 +1036,7 @@ def modelSetup(classes):
         mlr_head = MLCSL.DualLogisticRegression_Head(
                 num_features,
                 num_classes=len(classes),
-                fc_type='fc',
+                fc_type='linear',
                 estimator_type='mlp',
                 bias_fc=True,
                 bias_estimator=True,
