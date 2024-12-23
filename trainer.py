@@ -401,7 +401,7 @@ elif currGPU == 'v100':
     FLAGS['norm_weighted_loss'] = False
 
     FLAGS['finetune'] = False    #actually a linear probe of a frozen model
-    FLAGS['compile_model'] = False
+    FLAGS['compile_model'] = True
     FLAGS['fast_norm'] = True
     FLAGS['channels_last'] = True
 
