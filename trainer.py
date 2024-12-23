@@ -402,7 +402,7 @@ elif currGPU == 'v100':
 
     FLAGS['finetune'] = False    #actually a linear probe of a frozen model
     FLAGS['compile_model'] = True
-    FLAGS['fast_norm'] = True
+    FLAGS['fast_norm'] = False
     FLAGS['channels_last'] = True
 
     # debugging config
@@ -1413,10 +1413,6 @@ def trainCycle(image_datasets, model):
                             if (FLAGS['use_scaler'] == True):   # cuda gpu case
                                 with model.no_sync():
                                     scaler.scale(loss).backward()
-                                    for p in optimizer.param_groups[0]['params']:
-                                        print(p.grad)
-                                    for p in model.parameters():
-                                        print(p.grad)
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                                     torch.cuda.synchronize()
                                     nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
