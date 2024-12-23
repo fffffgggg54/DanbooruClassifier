@@ -304,7 +304,7 @@ elif currGPU == 'm40':
 elif currGPU == 'v100':
 
 
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/scratch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/scratch/"
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
@@ -318,7 +318,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-PLScratch-PowerGate-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_large_patch24_gap_448-NormPL_D095_L065_ModUpdate_HardMod-ASL_BCE-448-1588-100epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-DLRHead_MlpFC_MlpEstimator_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_base-MLRHead_ExplicitTrain-ASL_BCE-448-1588-100epoch/"
+    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_base-MLRHead_ExplicitTrain-ASL_BCE-448-1588-100epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MLR_NW-ADA_WL_T-PU_F_metric-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-Hill-T-F1-x+00e-1-224-1588-50epoch/"
@@ -1413,10 +1413,6 @@ def trainCycle(image_datasets, model):
                             if (FLAGS['use_scaler'] == True):   # cuda gpu case
                                 with model.no_sync():
                                     scaler.scale(loss).backward()
-                                    for p in optimizer.param_groups[0]['params']:
-                                        print(p.grad)
-                                    for p in model.parameters():
-                                        print(p.grad)
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                                     torch.cuda.synchronize()
                                     nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
