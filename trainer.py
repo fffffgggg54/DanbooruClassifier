@@ -402,7 +402,7 @@ elif currGPU == 'v100':
 
     FLAGS['finetune'] = False    #actually a linear probe of a frozen model
     FLAGS['compile_model'] = True
-    FLAGS['fast_norm'] = False
+    FLAGS['fast_norm'] = True
     FLAGS['channels_last'] = True
 
     # debugging config
@@ -927,8 +927,8 @@ def modelSetup(classes):
     #model = timm.create_model('efficientformerv2_s0', pretrained=False, num_classes=len(classes), drop_path_rate=0.05)
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
-    #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
+    model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
+    #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('vit_medium_shallow_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_large_patch16_448', pretrained=False, num_classes=len(classes), drop_path_rate = 0.5)
@@ -1413,6 +1413,10 @@ def trainCycle(image_datasets, model):
                             if (FLAGS['use_scaler'] == True):   # cuda gpu case
                                 with model.no_sync():
                                     scaler.scale(loss).backward()
+                                    for p in optimizer.param_groups[0]['params']:
+                                        print(p.grad)
+                                    for p in model.parameters():
+                                        print(p.grad)
                                 if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                                     torch.cuda.synchronize()
                                     nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
