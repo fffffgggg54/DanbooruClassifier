@@ -1131,7 +1131,7 @@ def trainCycle(image_datasets, model):
         #mlr_act = DDP(mlr_act, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
         
     if(FLAGS['compile_model'] == True):
-        model = torch.compile(model)
+        model.compile()
     
     #mlr_act_opt = timm.optim.Adan(mlr_act.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     
