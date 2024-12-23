@@ -70,7 +70,7 @@ FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
 if currGPU == 'v100':
     FLAGS['rootPath'] = "/media/fredo/SAMSUNG_500GB/danbooru2021/"
     FLAGS['cocoRoot'] = "/media/fredo/SAMSUNG_500GB/coco2014/"
-if(torch.has_mps == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
+if(torch.backends.mps.is_built() == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
 FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + "original/"
 
@@ -95,7 +95,7 @@ if currGPU == '3090':
 
     FLAGS['chunkSize'] = 1000
     FLAGS['importerProcessCount'] = 10
-    if(torch.has_mps == True): FLAGS['importerProcessCount'] = 7
+    if(torch.backends.mps.is_built() == True): FLAGS['importerProcessCount'] = 7
     FLAGS['stopReadingAt'] = 5000
 
     # dataset config
@@ -115,9 +115,9 @@ if currGPU == '3090':
 
 
     FLAGS['ngpu'] = torch.cuda.is_available()
-    FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.has_mps == True) else "cpu")
+    FLAGS['device'] = torch.device("cuda:0" if (torch.cuda.is_available() and FLAGS['ngpu'] > 0) else "mps" if (torch.backends.mps.is_built() == True) else "cpu")
     FLAGS['device2'] = FLAGS['device']
-    if(torch.has_mps == True): FLAGS['device2'] = "cpu"
+    if(torch.backends.mps.is_built() == True): FLAGS['device2'] = "cpu"
     #FLAGS['use_AMP'] = True if FLAGS['device'] == 'cuda:0' else False
     FLAGS['use_AMP'] = True
     FLAGS['use_scaler'] = FLAGS['use_AMP']
@@ -127,7 +127,7 @@ if currGPU == '3090':
 
     FLAGS['num_workers'] = 30
     FLAGS['postDataServerWorkerCount'] = 3
-    if(torch.has_mps == True): FLAGS['num_workers'] = 2
+    if(torch.backends.mps.is_built() == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
     # training config
@@ -242,7 +242,7 @@ elif currGPU == 'm40':
 
     FLAGS['chunkSize'] = 1000
     FLAGS['importerProcessCount'] = 10
-    if(torch.has_mps == True): FLAGS['importerProcessCount'] = 7
+    if(torch.backends.mps.is_built() == True): FLAGS['importerProcessCount'] = 7
     FLAGS['stopReadingAt'] = 5000
 
     # dataset config
@@ -271,7 +271,7 @@ elif currGPU == 'm40':
 
     FLAGS['num_workers'] = 16
     FLAGS['postDataServerWorkerCount'] = 2
-    if(torch.has_mps == True): FLAGS['num_workers'] = 2
+    if(torch.backends.mps.is_built() == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
     # training config
@@ -422,7 +422,7 @@ elif currGPU == 'none':
 
     FLAGS['chunkSize'] = 1000
     FLAGS['importerProcessCount'] = 10
-    if(torch.has_mps == True): FLAGS['importerProcessCount'] = 7
+    if(torch.backends.mps.is_built() == True): FLAGS['importerProcessCount'] = 7
     FLAGS['stopReadingAt'] = 5000
 
     # dataset config
@@ -443,7 +443,7 @@ elif currGPU == 'none':
     FLAGS['ngpu'] = torch.cuda.is_available()
     FLAGS['device'] = torch.device("cpu")
     FLAGS['device2'] = FLAGS['device']
-    if(torch.has_mps == True): FLAGS['device2'] = "cpu"
+    if(torch.backends.mps.is_built() == True): FLAGS['device2'] = "cpu"
     #FLAGS['use_AMP'] = True if FLAGS['device'] == 'cuda:0' else False
     FLAGS['use_AMP'] = False
     FLAGS['use_scaler'] = FLAGS['use_AMP']
@@ -453,7 +453,7 @@ elif currGPU == 'none':
 
     FLAGS['num_workers'] = 1
     FLAGS['postDataServerWorkerCount'] = 1
-    if(torch.has_mps == True): FLAGS['num_workers'] = 2
+    if(torch.backends.mps.is_built() == True): FLAGS['num_workers'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
     # training config
