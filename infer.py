@@ -164,9 +164,9 @@ def main():
     #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(tagNames), ignore_mismatched_sizes=True)
     
     model = timm.models.VisionTransformer(
-        img_size = FLAGS['actual_image_size'], 
+        img_size = 448, 
         patch_size = 16,
-        num_classes = len(classes), 
+        num_classes = len(tagNames), 
         embed_dim=768, 
         depth=12, 
         num_heads=12, 
