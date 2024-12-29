@@ -1,7 +1,6 @@
 import torch
 import torch.cuda.amp
 import torch.distributed as dist
-from torch.distributed.optim import ZeroRedundancyOptimizer
 import torch.nn as nn
 import torch.nn.parallel
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -1008,14 +1007,14 @@ def modelSetup(classes):
     model = ml_decoder.add_ml_decoder_head(
         model, 
         num_groups = 1588, 
-        class_embed = torch.load('./DanbooruWikiEmbeddings1588.pth', map_location='cpu'),
+        class_embed = torch.load('./DanbooruWikiEmbeddings1588.pth', map_location='cpu', weights_only=True),
         class_embed_merge = 'concat',)
     '''
     # ml_decoder_no_dupe_class_embed_add_LearnableQueryEmbed_sharedFC
     model = ml_decoder.add_ml_decoder_head(
         model, 
         num_groups = 0, 
-        class_embed = torch.load('./DanbooruWikiEmbeddings1588.pth', map_location='cpu'),
+        class_embed = torch.load('./DanbooruWikiEmbeddings1588.pth', map_location='cpu', weights_only=True),
         class_embed_merge = 'add',
         learnable_embed = True,
         shared_fc = True,)
@@ -1092,7 +1091,7 @@ def trainCycle(image_datasets, model):
     #mlr_act = mlr_act.to(device, memory_format = memory_format)
     
     if (FLAGS['resume_epoch'] > 0) and is_head_proc:
-        state_dict = torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth', map_location=torch.device('cpu'))
+        state_dict = torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth', map_location=torch.device('cpu'), weights_only=True)
         #out_dict={}
         #for k, v in state_dict.items():
         #    k = k.replace('_orig_mod.', '')
@@ -1166,11 +1165,11 @@ def trainCycle(image_datasets, model):
     #dist_tracker = MLCSL.DistributionTrackerEMA()
 
     if (FLAGS['resume_epoch'] > 0):
-        boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth').to(device)
+        boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth', weights_only=True).to(device)
         #optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth', map_location=torch.device(device)))
         
     
-    if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
+    if (FLAGS['use_scaler'] == True): scaler = torch.amp.GradScaler('cuda')
     
     # end MLCSL code
     
@@ -1300,7 +1299,7 @@ def trainCycle(image_datasets, model):
                 with torch.set_grad_enabled(phase == 'train'):
                     # TODO switch between using autocast and not using it
                     
-                    with torch.cuda.amp.autocast(enabled=FLAGS['use_AMP']):
+                    with torch.amp.autocast('cuda', enabled=FLAGS['use_AMP']):
 
                         if FLAGS['use_mlr_act'] == True:   
                             preds = model(imageBatch)
@@ -1311,7 +1310,7 @@ def trainCycle(image_datasets, model):
                             #outputs = model(imageBatch).logits
                             preds = torch.sigmoid(outputs)
                         
-                        with torch.cuda.amp.autocast(enabled=False):
+                        with torch.amp.autocast('cuda', enabled=False):
                         
                             # update boundary
                             boundaryCalculator(
@@ -1425,86 +1424,87 @@ def trainCycle(image_datasets, model):
                         
                         
                         
-                        # backward + optimize only if in training phase
-                        if phase == 'train' and (loss.isnan() == False):
-                            if (FLAGS['use_scaler'] == True):   # cuda gpu case
-                                with model.no_sync():
-                                    scaler.scale(loss).backward()
-                                if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                    torch.cuda.synchronize()
-                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
-                                    scaler.step(optimizer)
-                                    scaler.update()
-                                    optimizer.zero_grad(set_to_none=True)
-                                    dist_tracker._zero_grad()
-                                    
-                                    #nn.utils.clip_grad_norm_(mlr_act.parameters(), max_norm=1.0, norm_type=2)
-                                    #scaler.step(mlr_act_opt)
-                                    #scaler.update()
-                                    #mlr_act_opt.zero_grad(set_to_none=True)
-                                    
-                            else:                               # apple gpu/cpu case
-                                with model.no_sync():
-                                    loss.backward()
-                                if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                    torch.cuda.synchronize()
-                                    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
-                                    optimizer.step()
-                                    optimizer.zero_grad(set_to_none=True)
-                                    
-                                    #nn.utils.clip_grad_norm_(mlr_act.parameters(), max_norm=1.0, norm_type=2)
-                                    #lr_act_opt.step()
-                                    #mlr_act_opt.zero_grad(set_to_none=True)
-                        
-                        
-                            torch.cuda.synchronize()
-                        
-                            #ema.update(model)
-                            #prior.update(outputs.to(device))
-                        '''    
-                        if(i==20):
+                    # backward + optimize only if in training phase
+                    if phase == 'train' and (loss.isnan() == False):
+                        if (FLAGS['use_scaler'] == True):   # cuda gpu case
+                            with model.no_sync():
+                                scaler.scale(loss).backward()
+                            if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
+                                torch.cuda.synchronize()
+                                scaler.unscale_(optimizer)
+                                nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                scaler.step(optimizer)
+                                scaler.update()
+                                optimizer.zero_grad(set_to_none=True)
+                                dist_tracker._zero_grad()
+                                
+                                #nn.utils.clip_grad_norm_(mlr_act.parameters(), max_norm=1.0, norm_type=2)
+                                #scaler.step(mlr_act_opt)
+                                #scaler.update()
+                                #mlr_act_opt.zero_grad(set_to_none=True)
+                                
+                        else:                               # apple gpu/cpu case
+                            with model.no_sync():
+                                loss.backward()
+                            if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
+                                torch.cuda.synchronize()
+                                nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                optimizer.step()
+                                optimizer.zero_grad(set_to_none=True)
+                                
+                                #nn.utils.clip_grad_norm_(mlr_act.parameters(), max_norm=1.0, norm_type=2)
+                                #lr_act_opt.step()
+                                #mlr_act_opt.zero_grad(set_to_none=True)
+                    
+                    
+                        torch.cuda.synchronize()
+                    
+                        #ema.update(model)
+                        #prior.update(outputs.to(device))
+                    '''    
+                    if(i==20):
+                        if(is_head_proc):
+                            s = torch.cuda.memory._snapshot()
+                            with open(FLAGS['modelDir'] + "mem_snapshot.pickle", "wb") as f:
+                                dump(s, f)
+                            torch.cuda.memory._record_memory_history(enabled=None)
+                        exit()
+                    '''
+                    if (phase == 'val'):
+                        # for mAP calculation
+                        # FIXME this is super slow and bottlenecked, figure out a faster way to do validation with correctly calculated metrics
+                        if(FLAGS['use_ddp'] == True):
+                            targets_all = None
+                            preds_all = None
                             if(is_head_proc):
-                                s = torch.cuda.memory._snapshot()
-                                with open(FLAGS['modelDir'] + "mem_snapshot.pickle", "wb") as f:
-                                    dump(s, f)
-                                torch.cuda.memory._record_memory_history(enabled=None)
-                            exit()
-                        '''
-                        if (phase == 'val'):
-                            # for mAP calculation
-                            # FIXME this is super slow and bottlenecked, figure out a faster way to do validation with correctly calculated metrics
-                            if(FLAGS['use_ddp'] == True):
-                                targets_all = None
-                                preds_all = None
-                                if(is_head_proc):
-                                    targets_all = [torch.zeros_like(tagBatch) for _ in range(dist.get_world_size())]
-                                    preds_all = [torch.zeros_like(preds) for _ in range(dist.get_world_size())]
-                                torch.distributed.gather(tagBatch, gather_list = targets_all, async_op=True)
-                                torch.distributed.gather(preds, gather_list = preds_all, async_op=True)
-                                if(is_head_proc):
-                                    targets_all = torch.cat(targets_all).detach().cpu()
-                                    preds_all = torch.cat(preds_all).detach().cpu()
-                            else:
-                                targets_all = tags
-                                preds_all = preds.detach().cpu()
+                                targets_all = [torch.zeros_like(tagBatch) for _ in range(dist.get_world_size())]
+                                preds_all = [torch.zeros_like(preds) for _ in range(dist.get_world_size())]
+                            torch.distributed.gather(tagBatch, gather_list = targets_all, async_op=True)
+                            torch.distributed.gather(preds, gather_list = preds_all, async_op=True)
+                            if(is_head_proc):
+                                targets_all = torch.cat(targets_all).detach().cpu()
+                                preds_all = torch.cat(preds_all).detach().cpu()
+                        else:
+                            targets_all = tags
+                            preds_all = preds.detach().cpu()
+                        
+                        if is_head_proc:
+                            targets = targets_all.numpy(force=True)
+                            preds_regular = preds_all.numpy(force=True)
+                            #preds_ema = output_ema.cpu().detach().numpy()
+                            accuracy = MLCSL.mAP(targets, preds_regular)
+                            #AP_regular.append(accuracy)
                             
-                            if is_head_proc:
-                                targets = targets_all.numpy(force=True)
-                                preds_regular = preds_all.numpy(force=True)
-                                #preds_ema = output_ema.cpu().detach().numpy()
-                                accuracy = MLCSL.mAP(targets, preds_regular)
-                                #AP_regular.append(accuracy)
-                                
-                                
-                                
-                                targets_running.append(targets_all.detach().clone())
-                                preds_running.append(preds_all.detach().clone())
-                                
-                                #AP_ema.append(MLCSL.mAP(targets, preds_ema))
-                                #AccuracyRunning.append(multiAccuracy)
-                                targets_all = None
-                                preds_all = None
-                
+                            
+                            
+                            targets_running.append(targets_all.detach().clone())
+                            preds_running.append(preds_all.detach().clone())
+                            
+                            #AP_ema.append(MLCSL.mAP(targets, preds_ema))
+                            #AccuracyRunning.append(multiAccuracy)
+                            targets_all = None
+                            preds_all = None
+            
                 #print(device)
                 if i % stepsPerPrintout == 0:
                     
