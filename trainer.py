@@ -319,7 +319,8 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_large_patch24_gap_448-NormPL_D095_L065_ModUpdate_HardMod-ASL_BCE-448-1588-100epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-DLRHead_MlpFC_MlpEstimator_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/convformer_b36-MLRHead_ExplicitTrain-ASL_BCE-224-1588-100epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-MLRHead_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
+    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-MLRHead_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-ml_decoder_no_dupe_class_embed_add_LearnableQueryEmbed_sharedFC-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MLR_NW-ADA_WL_T-PU_F_metric-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-Hill-T-F1-x+00e-1-224-1588-50epoch/"
@@ -351,8 +352,8 @@ elif currGPU == 'v100':
     # dataset config
     FLAGS['dataset'] = 'danbooru'#'coco'
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 448
-    FLAGS['actual_image_size'] = 448
+    FLAGS['image_size'] = 224
+    FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 3.0
@@ -379,8 +380,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 32
-    FLAGS['gradient_accumulation_iterations'] = 12
+    FLAGS['batch_size'] = 96
+    FLAGS['gradient_accumulation_iterations'] = 4
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -391,7 +392,7 @@ elif currGPU == 'v100':
 
     FLAGS['resume_epoch'] = 0
     
-    FLAGS['use_mlr_act'] = True
+    FLAGS['use_mlr_act'] = False
 
     FLAGS['logit_offset'] = False
     FLAGS['logit_offset_multiplier'] = 2.0
@@ -1003,7 +1004,21 @@ def modelSetup(classes):
     '''
     
     #model = ml_decoder.add_ml_decoder_head(model, num_groups = 1588)
-    #model = ml_decoder.add_ml_decoder_head(model, num_groups = 1588, class_embed = torch.load('./DanbooruWikiEmbeddings1588.pth', map_location='cpu'))
+    '''
+    model = ml_decoder.add_ml_decoder_head(
+        model, 
+        num_groups = 1588, 
+        class_embed = torch.load('./DanbooruWikiEmbeddings1588.pth', map_location='cpu')),
+        class_embed_merge = 'concat',)
+    '''
+    # ml_decoder_no_dupe_class_embed_add_LearnableQueryEmbed_sharedFC
+    model = ml_decoder.add_ml_decoder_head(
+        model, 
+        num_groups = 0, 
+        class_embed = torch.load('./DanbooruWikiEmbeddings1588.pth', map_location='cpu')),
+        class_embed_merge = 'add',
+        learnable_embed = True,
+        shared_fc = True,)
     
     if FLAGS['finetune'] == True: 
         model.reset_classifier(num_classes=len(classes))
