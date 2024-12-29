@@ -1008,14 +1008,14 @@ def modelSetup(classes):
     model = ml_decoder.add_ml_decoder_head(
         model, 
         num_groups = 1588, 
-        class_embed = torch.load('./DanbooruWikiEmbeddings1588.pth', map_location='cpu')),
+        class_embed = torch.load('./DanbooruWikiEmbeddings1588.pth', map_location='cpu'),
         class_embed_merge = 'concat',)
     '''
     # ml_decoder_no_dupe_class_embed_add_LearnableQueryEmbed_sharedFC
     model = ml_decoder.add_ml_decoder_head(
         model, 
         num_groups = 0, 
-        class_embed = torch.load('./DanbooruWikiEmbeddings1588.pth', map_location='cpu')),
+        class_embed = torch.load('./DanbooruWikiEmbeddings1588.pth', map_location='cpu'),
         class_embed_merge = 'add',
         learnable_embed = True,
         shared_fc = True,)
