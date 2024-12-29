@@ -138,7 +138,7 @@ def main():
     # load json files
     
     #modelPath = rootPath + "models/davit_base_ml-decoder-ASL-BCE/"
-    modelPath = "/media/fredo/Storage3/danbooru_models/davit_tiny-DLRHead_BiasFC_BiasEstimator_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
+    modelPath = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-MLRHead_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
     #modelPath = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE-224-1588-50epoch/"
     #modelPath = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_+_T-224-1588-50epoch/"
     tagPicklePath = modelPath + "tags.pkl"
