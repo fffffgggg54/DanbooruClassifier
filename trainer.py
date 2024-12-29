@@ -931,7 +931,7 @@ def modelSetup(classes):
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('convformer_b36', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
-    #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
+    model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('vit_medium_shallow_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_large_patch16_448', pretrained=False, num_classes=len(classes), drop_path_rate = 0.5)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
@@ -966,7 +966,7 @@ def modelSetup(classes):
     # gap model
     # vit_large_patch16_gap_448: p16 d1024 L24 nh16
     # vit_base_patch16_gap_448: p16 d768 L12 nh12
-    
+    '''
     model = timm.models.VisionTransformer(
         img_size = FLAGS['actual_image_size'], 
         patch_size = 16,
@@ -980,7 +980,7 @@ def modelSetup(classes):
         init_values=1e-6, 
         fc_norm=False,
         drop_path_rate=0.3)
-    
+    '''
     # cvt
     
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
