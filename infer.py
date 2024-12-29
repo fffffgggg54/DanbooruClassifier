@@ -156,24 +156,39 @@ def main():
         haveThresholds = False
     
     
-    model = timm.create_model('davit_tiny', pretrained=True, num_classes=len(tagNames))
+    #model = timm.create_model('davit_tiny', pretrained=True, num_classes=len(tagNames))
     #model = timm.create_model('davit_base', num_classes=len(tagNames))
     #model = add_ml_decoder_head(model)
     #model = cvt.get_cls_model(len(tagNames), config=modelConfCust1)
     #model.load_state_dict(torch.load("models/saved_model_epoch_4.pth", map_location=myDevice))
     #model = transformers.AutoModelForImageClassification.from_pretrained("facebook/levit-256", num_labels=len(tagNames), ignore_mismatched_sizes=True)
     
+    model = timm.models.VisionTransformer(
+        img_size = FLAGS['actual_image_size'], 
+        patch_size = 16,
+        num_classes = len(classes), 
+        embed_dim=768, 
+        depth=12, 
+        num_heads=12, 
+        global_pool='avg', 
+        class_token = False, 
+        qkv_bias=False, 
+        init_values=1e-6, 
+        fc_norm=False,
+        drop_path_rate=0.3)
+    
     model.reset_classifier(0)
     num_features = model.num_features
     
     model = nn.Sequential(model)
-    mlr_head = MLCSL.DualLogisticRegression_Head(num_features, num_classes=len(tagNames), bias_fc=True, bias_estimator=True, eps=1e-8)
+    #mlr_head = MLCSL.DualLogisticRegression_Head(num_features, num_classes=len(tagNames), bias_fc=True, bias_estimator=True, eps=1e-8)
+    mlr_head = MLCSL.ModifiedLogisticRegression_Head(num_features, num_classes = len(tagNames), bias=True, initial_beta = 1.0, eps = 1e-8)
     model.append(mlr_head)
     
     model.load_state_dict(torch.load(modelPath + "saved_model_epoch_49.pth", map_location=myDevice))
     model.eval()   # Set model to evaluate mode
     model = torch.compile(model)
-    model(torch.randn(1,3,288,288))
+    model(torch.randn(1,3,448,448).to(myDevice))
     model = model.to(myDevice)
     
     while(True):
@@ -199,7 +214,7 @@ def main():
         
 
         transform = transforms.Compose([
-            transforms.Resize((288,288)),
+            transforms.Resize((448,448)),
             transforms.ToTensor(),
             #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
             ])
