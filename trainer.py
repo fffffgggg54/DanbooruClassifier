@@ -1719,6 +1719,8 @@ def main():
     image_datasets = getData()
     model = modelSetup(classes)
     trainCycle(image_datasets, model)
+    if FLAGS['use_ddp']:
+        dist.destroy_process_group()
 
 
 if __name__ == '__main__':
