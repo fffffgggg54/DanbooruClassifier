@@ -409,7 +409,7 @@ elif currGPU == 'v100':
     # debugging config
 
     FLAGS['verbose_debug'] = False
-    FLAGS['skip_test_set'] = False
+    FLAGS['skip_test_set'] = True
     FLAGS['stepsPerPrintout'] = 25
     FLAGS['val'] = False
 
