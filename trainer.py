@@ -1002,7 +1002,7 @@ def modelSetup(classes):
     
     '''
     
-    #model = torch.compile(model, options={'max_autotune': True, 'epilogue_fusion': True})
+    model = torch.compile(model, options={'max_autotune': True, 'epilogue_fusion': True})
 
     #model = ml_decoder.add_ml_decoder_head(model, num_groups = 1588)
     '''
