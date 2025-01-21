@@ -320,7 +320,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/convformer_b36-MLRHead_ExplicitTrain-ASL_BCE-224-1588-100epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-MLRHead_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/convformer_s18-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/convformer_s18-DLRHead-ASL_BCE-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/convformer_s18-DLRHead-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MLR_NW-ADA_WL_T-PU_F_metric-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-Hill-T-F1-x+00e-1-224-1588-50epoch/"
@@ -380,8 +380,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 128
-    FLAGS['gradient_accumulation_iterations'] = 3
+    FLAGS['batch_size'] = 384
+    FLAGS['gradient_accumulation_iterations'] = 1
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -1003,7 +1003,6 @@ def modelSetup(classes):
     
     '''
     
-    model = torch.compile(model, options={'max_autotune': True, 'epilogue_fusion': True})
 
     #model = ml_decoder.add_ml_decoder_head(model, num_groups = 1588)
     '''
@@ -1075,6 +1074,9 @@ def modelSetup(classes):
                 eps=1e-8)
         
         model.append(mlr_head)
+    
+    model = torch.compile(model, options={'max_autotune': True, 'epilogue_fusion': True})
+
     
     return model
     
