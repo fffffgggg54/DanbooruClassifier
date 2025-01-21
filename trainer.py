@@ -319,7 +319,8 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-DLRHead_MlpFC_MlpEstimator_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/convformer_b36-MLRHead_ExplicitTrain-ASL_BCE-224-1588-100epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-MLRHead_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/convformer_s18-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE-224-1588-50epoch/"
+    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/convformer_s18-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/convformer_s18-DLRHead-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MLR_NW-ADA_WL_T-PU_F_metric-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-Hill-T-F1-x+00e-1-224-1588-50epoch/"
@@ -1022,6 +1023,7 @@ def modelSetup(classes):
         learnable_embed = True,
         shared_fc = True,)
     '''
+    '''
     model = ml_decoder.add_ml_decoder_head(
         model,
         num_groups = 0,
@@ -1029,7 +1031,7 @@ def modelSetup(classes):
         class_embed_merge = '',
         shared_fc = True
     )
-    
+    '''
     if FLAGS['finetune'] == True: 
         model.reset_classifier(num_classes=len(classes))
         for param in model.parameters():
@@ -1060,17 +1062,18 @@ def modelSetup(classes):
     if FLAGS['use_mlr_act'] == True:
         #mlr_act = MLCSL.ModifiedLogisticRegression_NoWeight(num_classes = len(classes), initial_beta = 1.0, eps = 1e-8)
         #model.append(mlr_act)
+        '''
         mlr_head = MLCSL.ModifiedLogisticRegression_Head(num_features, num_classes = len(classes), bias=True, initial_beta = 1.0, eps = 1e-8)
         '''
         mlr_head = MLCSL.DualLogisticRegression_Head(
                 num_features,
                 num_classes=len(classes),
-                fc_type='mlp',
-                estimator_type='mlp',
+                fc_type='linear',
+                estimator_type='linear',
                 bias_fc=True,
                 bias_estimator=True,
                 eps=1e-8)
-        '''
+        
         model.append(mlr_head)
     
     return model
