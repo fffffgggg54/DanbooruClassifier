@@ -50,9 +50,9 @@ from pickle import dump
 #           CONFIGURATION OPTIONS
 # ================================================
 
-#currGPU = '3090'
+currGPU = '3090'
 #currGPU = 'm40'
-currGPU = 'v100'
+#currGPU = 'v100'
 #currGPU = 'none'
 
 
@@ -154,10 +154,10 @@ if currGPU == '3090':
 
 if currGPU == '3090':
 
+    FLAGS['modelDir'] = FLAGS['rootPath'] + "models/scratch/"
 
-
-    FLAGS['modelDir'] = FLAGS['rootPath'] + "models/vit_small_patch16_224-ASL_BCE-224-1588-50epoch/"
-    
+    #FLAGS['modelDir'] = FLAGS['rootPath'] + "models/vit_small_patch16_224-ASL_BCE-224-1588-50epoch/"
+    #FLAGS['modelDir'] = FLAGS['rootPath'] + "models/vit_medium_shallow_patch24_rope_reg4_gap_216-ASL_BCE-216-1588-50epoch/"
     
     # post importer config
 
@@ -195,8 +195,8 @@ if currGPU == '3090':
     # training config
 
     FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 192
-    FLAGS['gradient_accumulation_iterations'] = 16
+    FLAGS['batch_size'] = 768
+    FLAGS['gradient_accumulation_iterations'] = 4
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -217,7 +217,7 @@ if currGPU == '3090':
     FLAGS['finetune'] = False    #actually a linear probe of a frozen model
     FLAGS['compile_model'] = False
     FLAGS['fast_norm'] = False
-    FLAGS['channels_last'] = FLAGS['use_AMP']
+    FLAGS['channels_last'] = True
 
     # debugging config
 
@@ -893,13 +893,13 @@ def modelSetup(classes):
     #model = timm.create_model('efficientformerv2_s0', pretrained=False, num_classes=len(classes), drop_path_rate=0.05)
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
-    #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    #model = timm.create_model('convnext_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
+    #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate=0.05)
+    model = timm.create_model('regnetx_002', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
+    #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('vit_medium_shallow_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_small_patch16_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
-    #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4)
+    #model = timm.create_model('efficientvit_l1', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, patch_size=32, img_size=FLAGS['actual_image_size'])
     #model = timm.create_model('vit_huge_patch14_gap_224', pretrained=True, pretrained_cfg_overlay=dict(file="./jepa-latest.pth.tar"))
     #model = timm.create_model('ese_vovnet99b_iabn', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.02)
@@ -908,6 +908,8 @@ def modelSetup(classes):
     #model = timm.create_model('eva02_large_patch14_224.mim_m38m', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, img_size=448)
     
+    #model = timm.create_model('vit_medium_patch16_rope_reg1_gap_256', pretrained=False, num_classes=len(classes), img_size=216, embed_dim=512, depth=8, patch_size=24, num_reg_tokens=4)
+
     #model = timm.create_model('davit_tiny', pretrained=False, features_only=True, drop_path_rate=0.2)
     #model = PyramidFeatureAggregationModel(model, len(classes), head_type='dlr')
     '''
@@ -999,7 +1001,7 @@ def modelSetup(classes):
 def getDataLoader(dataset, batch_size, epoch):
     distSampler = DistributedSampler(dataset=dataset, seed=17, drop_last=True)
     distSampler.set_epoch(epoch)
-    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, sampler=distSampler, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=2, pin_memory = True, generator=torch.Generator().manual_seed(41))
+    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, sampler=distSampler, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=1, pin_memory = True, generator=torch.Generator().manual_seed(41))
 
 def trainCycle(image_datasets, model):
     #print("starting training")
@@ -1094,7 +1096,7 @@ def trainCycle(image_datasets, model):
 
     if (FLAGS['resume_epoch'] > 0):
         boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth').to(device)
-        #optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth', map_location=torch.device(device)))
+        optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth', map_location=torch.device(device)))
         
     
     if (FLAGS['use_scaler'] == True): scaler = torch.cuda.amp.GradScaler()
