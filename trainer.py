@@ -411,7 +411,7 @@ elif currGPU == 'v100':
 
     FLAGS['verbose_debug'] = False
     FLAGS['skip_test_set'] = False
-    FLAGS['stepsPerPrintout'] = 25
+    FLAGS['stepsPerPrintout'] = 50
     FLAGS['val'] = False
 
 elif currGPU == 'none':
