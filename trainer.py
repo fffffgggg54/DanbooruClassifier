@@ -303,7 +303,7 @@ elif currGPU == 'm40':
 elif currGPU == 'v100':
 
 
-    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/scratch/"
+    #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/scratch/"
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
@@ -319,8 +319,8 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-DLRHead_MlpFC_MlpEstimator_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/convformer_b36-MLRHead_ExplicitTrain-ASL_BCE-224-1588-100epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-MLRHead_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE-448-1588-100epoch/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/convformer_s18-DLRHead-ASL_BCE-224-1588-50epoch/"
+    #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE-448-1588-100epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MLR_NW-ADA_WL_T-PU_F_metric-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-Hill-T-F1-x+00e-1-224-1588-50epoch/"
@@ -352,8 +352,8 @@ elif currGPU == 'v100':
     # dataset config
     FLAGS['dataset'] = 'danbooru'#'coco'
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 448
-    FLAGS['actual_image_size'] = 448
+    FLAGS['image_size'] = 224
+    FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 3.0
@@ -380,8 +380,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 24
-    FLAGS['gradient_accumulation_iterations'] = 16
+    FLAGS['batch_size'] = 96
+    FLAGS['gradient_accumulation_iterations'] = 4
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -394,8 +394,8 @@ elif currGPU == 'v100':
     
     FLAGS['use_mlr_act'] = False
 
-    FLAGS['logit_offset'] = False
-    FLAGS['logit_offset_multiplier'] = 2.0
+    FLAGS['logit_offset'] = True
+    FLAGS['logit_offset_multiplier'] = 1.0
     FLAGS['logit_offset_source'] = 'dist'
     FLAGS['opt_dist'] = False
     FLAGS['splc'] = False
@@ -493,7 +493,7 @@ timm.layers.fast_norm.set_fast_norm(enable=FLAGS['fast_norm'])
 
 # The flag below controls whether to allow TF32 on matmul. This flag defaults to False
 # in PyTorch 1.12 and later.
-torch.backends.cuda.matmul.allow_tf32 = True if FLAGS['device'] == 'cuda:0' else False
+torch.backends.cuda.matmul.allow_tf32 = True
 
 # The flag below controls whether to allow TF32 on cuDNN. This flag defaults to True.
 torch.backends.cudnn.allow_tf32 = True
@@ -931,7 +931,7 @@ def modelSetup(classes):
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('convformer_b36', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
-    #model = timm.create_model('convformer_s18', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
+    model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('vit_medium_shallow_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_large_patch16_448', pretrained=False, num_classes=len(classes), drop_path_rate = 0.5)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
@@ -966,7 +966,7 @@ def modelSetup(classes):
     # gap model
     # vit_large_patch16_gap_448: p16 d1024 L24 nh16
     # vit_base_patch16_gap_448: p16 d768 L12 nh12
-    
+    '''
     model = timm.models.VisionTransformer(
         img_size = FLAGS['actual_image_size'], 
         patch_size = 16,
@@ -980,7 +980,7 @@ def modelSetup(classes):
         init_values=1e-6, 
         fc_norm=False,
         drop_path_rate=0.3)
-    
+    '''
     # cvt
     
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
@@ -1022,7 +1022,7 @@ def modelSetup(classes):
         learnable_embed = True,
         shared_fc = True,)
     '''
-    
+    '''
     model = ml_decoder.add_ml_decoder_head(
         model,
         num_groups = 0,
@@ -1030,7 +1030,7 @@ def modelSetup(classes):
         class_embed_merge = '',
         shared_fc = True
     )
-    
+    '''
     if FLAGS['finetune'] == True: 
         model.reset_classifier(num_classes=len(classes))
         for param in model.parameters():
@@ -1404,10 +1404,12 @@ def trainCycle(image_datasets, model):
                             #outputs = outputs - torch.special.logit(offset)
                             if FLAGS['logit_offset_source'] == 'dist':
                                 with torch.no_grad():
-                                    offset = (dist_tracker.pos_mean.detach() + dist_tracker.neg_mean.detach()) / 2
+                                    #offset = (dist_tracker.pos_mean.detach() + dist_tracker.neg_mean.detach()) / 2
+                                    # use log odds
+                                    offset = dist_tracker.log_odds.detach()
                             else:
                                 offset = torch.special.logit(boundaryCalculator.thresholdPerClass.detach())
-                            outputs = outputs + FLAGS['logit_offset_multiplier'] * offset
+                                outputs = outputs + FLAGS['logit_offset_multiplier'] * offset
                         
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
                         loss = criterion(outputs.to(device), tagsModified.to(device))

@@ -734,6 +734,9 @@ class DistributionTracker(nn.Module):
     
     @property
     def neg_std(self): return self.neg_var ** 0.5
+
+    @property
+    def log_odds(self): return torch.special.logit(self._pos_count / (self._pos_count + self._neg_count + self.eps))
     
     def dump(self):
         #return torch.stack([self._pos_mean, self._pos_count, self._pos_M2, self._neg_mean, self._neg_count, self._neg_M2])
