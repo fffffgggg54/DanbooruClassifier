@@ -1409,7 +1409,7 @@ def trainCycle(image_datasets, model):
                                     offset = dist_tracker.log_odds.detach()
                             else:
                                 offset = torch.special.logit(boundaryCalculator.thresholdPerClass.detach())
-                                outputs = outputs + FLAGS['logit_offset_multiplier'] * offset
+                            outputs = outputs + FLAGS['logit_offset_multiplier'] * offset
                         
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
                         loss = criterion(outputs.to(device), tagsModified.to(device))
@@ -1631,6 +1631,12 @@ def trainCycle(image_datasets, model):
                     plotext.title("Distributions of per-class means")
                     plotext.show()
                     plotext.clear_figure()
+
+                    plotext.hist(dist_tracker.log_odds.detach().clamp(min=-15, max=15), bins, label='Log odds')
+                    plotext.title("Distributions of per-class log odds ratio")
+                    plotext.show()
+                    plotext.clear_figure()
+
                     if dist_tracker.pos_mean.sum().isnan() == False:
                         plotext.hist(((dist_tracker.pos_mean.detach() + dist_tracker.neg_mean.detach()) / 2).clamp(min=-10, max=10), bins, label='Mean of means')
                         plotext.title("Distributions of per-class mean of means")
