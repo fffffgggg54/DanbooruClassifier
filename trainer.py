@@ -303,7 +303,7 @@ elif currGPU == 'm40':
 elif currGPU == 'v100':
 
 
-    #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/scratch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/scratch/"
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
@@ -321,7 +321,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-MLRHead_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE-448-1588-100epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-NormPL_D095_L095_ModUpdate_HardMod-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage1/coco_models/davit_tiny-NormPL_D095_L095_ModUpdate_HardMod-ASL_BCE_T-dist_log_odds-224-coco-300epoch/"
+    #FLAGS['modelDir'] = "/media/fredo/Storage1/coco_models/davit_tiny-NormPL_D095_L095_ModUpdate_HardMod-ASL_BCE_T-dist_log_odds-224-coco-300epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MLR_NW-ADA_WL_T-PU_F_metric-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-Hill-T-F1-x+00e-1-224-1588-50epoch/"
@@ -351,8 +351,8 @@ elif currGPU == 'v100':
     FLAGS['stopReadingAt'] = 5000
 
     # dataset config
-    #FLAGS['dataset'] = 'danbooru'
-    FLAGS['dataset'] = 'coco'
+    FLAGS['dataset'] = 'danbooru'
+    #FLAGS['dataset'] = 'coco'
     FLAGS['tagCount'] = 1588
     FLAGS['image_size'] = 224
     FLAGS['actual_image_size'] = 224
@@ -381,7 +381,7 @@ elif currGPU == 'v100':
 
     # training config
 
-    FLAGS['num_epochs'] = 300
+    FLAGS['num_epochs'] = 50
     FLAGS['batch_size'] = 192
     FLAGS['gradient_accumulation_iterations'] = 2
 
@@ -1229,8 +1229,10 @@ def trainCycle(image_datasets, model):
         AP_ema = []
         targets_running = None
         preds_running = None
+        latent_features_running = None
         targets_running = []
         preds_running = []
+        latent_features_running = []
         textOutput = None
         #lastPrior = None
         
@@ -1324,7 +1326,11 @@ def trainCycle(image_datasets, model):
                             outputs = torch.special.logit(preds)
 
                         else:
-                            outputs = model(imageBatch)
+                            if(phase == 'val'):
+                                latent_features = model.forward_features(imagebatch)
+                                outputs = model.forward_head(latent_features)
+                            else:
+                                outputs = model(imageBatch)
                             #outputs = model(imageBatch).logits
                             preds = torch.sigmoid(outputs)
                         
@@ -1496,17 +1502,22 @@ def trainCycle(image_datasets, model):
                         if(FLAGS['use_ddp'] == True):
                             targets_all = None
                             preds_all = None
+                            latent_features_all = None
                             if(is_head_proc):
                                 targets_all = [torch.zeros_like(tagBatch) for _ in range(dist.get_world_size())]
                                 preds_all = [torch.zeros_like(preds) for _ in range(dist.get_world_size())]
+                                latent_features_all = [torch.zeros_like(latent_features) for _ in range(dist.get_world_size())]
                             torch.distributed.gather(tagBatch, gather_list = targets_all, async_op=True)
                             torch.distributed.gather(preds, gather_list = preds_all, async_op=True)
+                            torch.distributed.gather(latent_features, gather_list = latent_features_all, async_op=True)
                             if(is_head_proc):
                                 targets_all = torch.cat(targets_all).detach().cpu()
                                 preds_all = torch.cat(preds_all).detach().cpu()
+                                latent_features_all = torch.cat(latent_features_all).detach().cpu()
                         else:
                             targets_all = tags
                             preds_all = preds.detach().cpu()
+                            latent_features_all = latent_features.detach().cpu()
                         
                         if is_head_proc:
                             targets = targets_all.numpy(force=True)
@@ -1519,11 +1530,13 @@ def trainCycle(image_datasets, model):
                             
                             targets_running.append(targets_all.detach().clone())
                             preds_running.append(preds_all.detach().clone())
+                            latent_features_running.append(latent_features_all.detach().clone())
                             
                             #AP_ema.append(MLCSL.mAP(targets, preds_ema))
                             #AccuracyRunning.append(multiAccuracy)
                             targets_all = None
                             preds_all = None
+                            latent_features_all = None
             
                 #print(device)
                 if i % stepsPerPrintout == 0:
@@ -1609,7 +1622,7 @@ def trainCycle(image_datasets, model):
             if ((phase == 'val') and (FLAGS['skip_test_set'] == False or epoch == FLAGS['num_epochs'] - 1) and is_head_proc):
                 if(epoch == FLAGS['num_epochs'] - 1):
                     print("saving eval data")
-                    modelOutputs = {'labels':torch.cat(targets_running).cpu(), 'preds':torch.cat(preds_running).cpu()}
+                    modelOutputs = {'labels':torch.cat(targets_running).cpu(), 'preds':torch.cat(preds_running).cpu(), 'latent_features':torch.cat(latent_features_running).cpu()}
                     #print(modelOutputs)
                     cachePath = FLAGS['modelDir'] + "evalOutputs.pkl.bz2"
                     with bz2.BZ2File(cachePath, 'w') as cachedSample: cPickle.dump(modelOutputs, cachedSample)
