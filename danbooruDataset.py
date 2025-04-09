@@ -68,7 +68,7 @@ class CocoDataset(torchvision.datasets.coco.CocoDetection):
             raise ValueError(f"Index must be of type integer, got {type(index)} instead.")
 
         id = self.ids[index]
-        image = self._load_image(id).load()
+        image = self._load_image(id)
         target = self._load_target(id)
         
         # onehot vector
