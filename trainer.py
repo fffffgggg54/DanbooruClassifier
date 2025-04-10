@@ -1162,6 +1162,7 @@ def trainCycle(image_datasets, model):
     
     if (FLAGS['use_ddp'] == True):
         model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
+        print(dir(model))
         #mlr_act = DDP(mlr_act, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
         
     if(FLAGS['compile_model'] == True):
