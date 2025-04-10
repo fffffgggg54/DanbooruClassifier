@@ -1162,7 +1162,6 @@ def trainCycle(image_datasets, model):
     
     if (FLAGS['use_ddp'] == True):
         model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
-        print(dir(model))
         #mlr_act = DDP(mlr_act, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
         
     if(FLAGS['compile_model'] == True):
@@ -1328,8 +1327,8 @@ def trainCycle(image_datasets, model):
 
                         else:
                             if(phase == 'val'):
-                                latent_features = model.forward_features(imagebatch)
-                                outputs = model.forward_head(latent_features)
+                                latent_features = model[0].forward_features(imagebatch)
+                                outputs = model[0].forward_head(latent_features)
                             else:
                                 outputs = model(imageBatch)
                             #outputs = model(imageBatch).logits
