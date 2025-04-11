@@ -1327,8 +1327,8 @@ def trainCycle(image_datasets, model):
 
                         else:
                             if(phase == 'val'):
-                                latent_features = model[0].forward_features(imagebatch)
-                                outputs = model[0].forward_head(latent_features)
+                                latent_features = model.module[0].forward_features(imagebatch)
+                                outputs = model.module[0].forward_head(latent_features)
                             else:
                                 outputs = model(imageBatch)
                             #outputs = model(imageBatch).logits
