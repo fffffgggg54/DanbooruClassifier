@@ -1622,7 +1622,7 @@ def trainCycle(image_datasets, model):
             if ((phase == 'val') and (FLAGS['skip_test_set'] == False or epoch == FLAGS['num_epochs'] - 1) and is_head_proc):
                 if(epoch == FLAGS['num_epochs'] - 1):
                     print("saving eval data")
-                    modelOutputs = {'labels':torch.cat(targets_running).cpu(), 'preds':torch.cat(preds_running).cpu(), 'latent_features':torch.cat(latent_features_running).cpu()}
+                    modelOutputs = {'labels':torch.cat(targets_running).cpu(), 'preds':torch.cat(preds_running).cpu()}
                     #print(modelOutputs)
                     cachePath = FLAGS['modelDir'] + "evalOutputs.pkl.bz2"
                     with bz2.BZ2File(cachePath, 'w') as cachedSample: cPickle.dump(modelOutputs, cachedSample)
@@ -1721,6 +1721,8 @@ def trainCycle(image_datasets, model):
             torch.save(boundaryCalculator.thresholdPerClass, modelDir + 'thresholds.pth')
             torch.save(optimizer.state_dict(), modelDir + 'optimizer' + '.pth')
             pd.DataFrame(tagNames).to_pickle(modelDir + "tags.pkl")
+
+            torch.save(torch.cat(latent_features_running).cpu(), modeldir + 'eval_embeds.pth')
             
         time_elapsed = time.time() - epochTime
         if(is_head_proc): print(f'epoch {epoch} completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
