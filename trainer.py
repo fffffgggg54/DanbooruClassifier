@@ -1332,7 +1332,7 @@ def trainCycle(image_datasets, model):
                         elif FLAGS['use_matryoshka_head'] == True:
                             latent_features = model.module[0](imageBatch)
                             outputs_all = model.module[1](latent_features)
-                            outputs_all = outputs_all.unsqueeze(0).float()
+                            outputs_all = outputs_all.float()
                             outputs = outputs_all[0]
                             preds = torch.sigmoid(outputs)
                         else:
