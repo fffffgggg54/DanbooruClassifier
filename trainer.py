@@ -1433,10 +1433,10 @@ def trainCycle(image_datasets, model):
                                     offset = dist_tracker.log_odds.detach()
                             else:
                                 offset = torch.special.logit(boundaryCalculator.thresholdPerClass.detach())
-                            outputs = outputs + FLAGS['logit_offset_multiplier'] * offset
+                            outputs_all = outputs_all + FLAGS['logit_offset_multiplier'] * offset
                         
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        loss = criterion(outputs.to(device), tagsModified.to(device))
+                        loss = criterion(outputs_all.to(device), tagsModified.to(device))
                         #loss = criterion(outputs.to(device), tagsModified.to(device), weight = loss_weight)
                         #loss += (((dist_tracker.pos_mean + dist_tracker.neg_mean) ** 2) ** 0.25).sum() #+ dist_tracker.pos_std.sum() + dist_tracker.neg_std.sum()
                         #loss -= ((dist_tracker.pos_mean - dist_tracker.neg_mean) / ((dist_tracker.pos_var + dist_tracker.neg_var) ** 0.5 + 1e-8)).sum()
