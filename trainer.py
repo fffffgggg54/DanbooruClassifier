@@ -1722,7 +1722,7 @@ def trainCycle(image_datasets, model):
             torch.save(optimizer.state_dict(), modelDir + 'optimizer' + '.pth')
             pd.DataFrame(tagNames).to_pickle(modelDir + "tags.pkl")
 
-            torch.save(torch.cat(latent_features_running).cpu(), modeldir + 'eval_embeds.pth')
+            torch.save(torch.cat(latent_features_running).cpu(), modelDir + 'eval_embeds.pth')
             
         time_elapsed = time.time() - epochTime
         if(is_head_proc): print(f'epoch {epoch} completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
