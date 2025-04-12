@@ -395,6 +395,7 @@ elif currGPU == 'v100':
     FLAGS['resume_epoch'] = 0
     
     FLAGS['use_mlr_act'] = False
+    FLAGS['use_matryoshka_head'] = True
 
     FLAGS['logit_offset'] = True
     FLAGS['logit_offset_multiplier'] = 1.0
@@ -1043,11 +1044,14 @@ def modelSetup(classes):
             for param in model.head_dist.parameters():
                 param.requires_grad = True
     
-    if FLAGS['use_mlr_act'] == True:
+    num_features = model.num_features
+
+    if FLAGS['use_mlr_act'] == True or FLAGS['use_matryoshka_head'] == True:
         model.reset_classifier(0)
-        num_features = model.num_features
+        
     
     model = nn.Sequential(model)
+    
 
     #model.train()
     
@@ -1076,7 +1080,8 @@ def modelSetup(classes):
                 eps=1e-8)
         
         model.append(mlr_head)
-    
+    elif FLAGS['use_matryoshka_head'] == True:
+        model.append(nn.Linear(num_features, len(classes)))
     #model = torch.compile(model, options={'max_autotune': True, 'epilogue_fusion': True})
 
     
@@ -1324,14 +1329,21 @@ def trainCycle(image_datasets, model):
                         if FLAGS['use_mlr_act'] == True:   
                             preds = model(imageBatch)
                             outputs = torch.special.logit(preds)
-
+                        elif FLAGS['use_matryoshka_head'] == True:
+                            latent_features = model.module[0](imageBatch)
+                            outputs_all = model.module[1](latent_features)
+                            outputs_all = outputs_all.unsqueeze(0).float()
+                            outputs = outputs_all[0]
                         else:
                             if(phase == 'val'):
                                 latent_features = model.module[0].forward_features(imageBatch)
                                 outputs = model.module[0].forward_head(latent_features)
+                                #latent_features = model.module[0](imageBatch)
+                                #outputs = model.module[1](latent_features)
                             else:
-                                outputs = model(imageBatch)
+                                outputs = model(imageBatch).float()
                             #outputs = model(imageBatch).logits
+                            outputs_all = outputs
                             preds = torch.sigmoid(outputs)
                         
                         with torch.amp.autocast('cuda', enabled=False):
@@ -1352,7 +1364,7 @@ def trainCycle(image_datasets, model):
                                         torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
                             #offset = torch.Tensor([0.5]).to(device) if boundaryCalculator.needs_init else boundaryCalculator.thresholdPerClass.detach()
                             
-                            
+                            # performance metric tracking
                             #predsModified=preds
                             #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
                             all_logits = [torch.ones_like(outputs) for _ in range(dist.get_world_size())]
@@ -1385,6 +1397,7 @@ def trainCycle(image_datasets, model):
 
 
                         tagsModified = tagBatch
+                        # target modifications
                         if FLAGS['splc'] and epoch >= FLAGS['splc_start_epoch']:
                             with torch.no_grad():
                                 #targs = torch.where(preds > offset.detach(), torch.tensor(1).to(preds), labels) # hard SPLC
@@ -1395,6 +1408,8 @@ def trainCycle(image_datasets, model):
                                 torch.distributed.all_gather_into_tensor(all_tags, tagsModified)
                                 #torch.distrubuted.all_gather_into_tensor(all_tags, tagBatch)
                         dist_tracker(all_logits.to(torch.float64), all_tags.to(torch.long))
+                        
+                        # loss weighing
                         if FLAGS['norm_weighted_loss']:
                             loss_weight = MLCSL.generate_loss_weights(outputs.detach(), tagBatch, dist_tracker)
                         else: loss_weight = 1
@@ -1407,7 +1422,7 @@ def trainCycle(image_datasets, model):
                                 with torch.no_grad():
                                     torch.distributed.all_reduce(criterion.weight_per_class, op = torch.distributed.ReduceOp.AVG)
                                     
-                        
+                        # logit offset
                         if FLAGS['logit_offset']:
                             #outputs = outputs - torch.special.logit(offset)
                             if FLAGS['logit_offset_source'] == 'dist':
