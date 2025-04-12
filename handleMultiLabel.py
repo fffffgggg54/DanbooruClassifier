@@ -424,6 +424,26 @@ class DualLogisticRegression(nn.Module):
             #x = torch.special.logit(self.fc(x).sigmoid() * self.estimator(x.detach()).sigmoid())
         return x
 
+class MatryoshkaClassificationHead(nn.Module):
+    def __init__(self, num_features, num_classes, k=6):
+        super().__init__()
+        self.num_subsets = k
+        self.feature_subsets = [int(num_features // (2 ** i)) for i in range(k)]
+        self.feature_subsets_ = torch.Tensor(self.feature_subsets).reshape(k, 1, 1)
+        self.mask = torch.arange(num_features).unsqueeze(0).repeat(self.num_subsets, 1, 1) < self.feature_subsets_
+        self.head = nn.Linear(num_features, num_classes)
+
+    def forward(self, x):
+        self.mask = self.mask.to(x)
+        x = x.repeat(self.num_subsets, 1, 1)
+        x = x * self.mask
+        x = self.head(x)
+        return x
+
+
+
+
+
 def stepAtThreshold(x, threshold, k=5, base=10):
     return 1 / (1 + torch.pow(base, (0 - k) * (x - threshold)))
 

@@ -1081,7 +1081,7 @@ def modelSetup(classes):
         
         model.append(mlr_head)
     elif FLAGS['use_matryoshka_head'] == True:
-        model.append(nn.Linear(num_features, len(classes)))
+        model.append(MLCSL.MatryoshkaClassificationHead(num_features, len(classes), k=6))
     #model = torch.compile(model, options={'max_autotune': True, 'epilogue_fusion': True})
 
     
