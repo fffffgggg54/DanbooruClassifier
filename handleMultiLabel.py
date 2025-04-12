@@ -1042,7 +1042,6 @@ class AsymmetricLoss(nn.Module):
             loss *= one_sided_w
         
         loss *= weight
-        print(loss.shape)
         return -loss.sum()
 
 
