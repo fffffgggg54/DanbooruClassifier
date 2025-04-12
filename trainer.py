@@ -1334,7 +1334,7 @@ def trainCycle(image_datasets, model):
                             outputs_all = model.module[1](latent_features)
                             outputs_all = outputs_all.float()
                             outputs = outputs_all[0]
-                            preds = torch.sigmoid(outputs_all)
+                            preds = torch.sigmoid(outputs)
                         else:
                             if(phase == 'val'):
                                 latent_features = model.module[0].forward_features(imageBatch)
