@@ -303,7 +303,7 @@ elif currGPU == 'm40':
 elif currGPU == 'v100':
 
 
-    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/scratch/"
+    #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/scratch/"
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
@@ -320,7 +320,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/convformer_b36-MLRHead_ExplicitTrain-ASL_BCE-224-1588-100epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-MLRHead_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE-448-1588-100epoch/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-NormPL_D095_L095_ModUpdate_HardMod-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-NormPL_D095_L065_ModUpdate_HardMod-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/coco_models/davit_tiny-NormPL_D095_L095_ModUpdate_HardMod-ASL_BCE_T-dist_log_odds-224-coco-300epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MLR_NW-ADA_WL_T-PU_F_metric-x+10e-1-224-1588-50epoch/"
@@ -1403,7 +1403,7 @@ def trainCycle(image_datasets, model):
                             with torch.no_grad():
                                 #targs = torch.where(preds > offset.detach(), torch.tensor(1).to(preds), labels) # hard SPLC
                                 #tagsModified = ((1 - tagsModified) * MLCSL.stepAtThreshold(preds, offset) + tagsModified) # soft SPLC
-                                tagsModified = MLCSL.adjust_labels(outputs.detach(), tagsModified, dist_tracker)
+                                tagsModified = MLCSL.adjust_labels(outputs.detach(), tagsModified, dist_tracker, clip_dist = 0.95, clip_logit = 0.65)
                                 all_tags = torch.empty(dist.get_world_size() * tagBatch.shape[0], tagBatch.shape[1], device=outputs.device, dtype=tagsModified.dtype)
 
                                 torch.distributed.all_gather_into_tensor(all_tags, tagsModified)
