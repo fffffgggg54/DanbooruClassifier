@@ -321,7 +321,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-MLRHead_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE-448-1588-100epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-MatryoshkaHead_K4-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-MatryoshkaHead_K4_full_embedding_half_weight-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/coco_models/davit_tiny-NormPL_D095_L095_ModUpdate_HardMod-ASL_BCE_T-dist_log_odds-224-coco-300epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MLR_NW-ADA_WL_T-PU_F_metric-x+10e-1-224-1588-50epoch/"
@@ -1336,6 +1336,8 @@ def trainCycle(image_datasets, model):
                             outputs_all = outputs_all.float()
                             outputs = outputs_all[0]
                             preds = torch.sigmoid(outputs)
+                            matryoshka_loss_weights = x.ones_like(outputs_all, requires_grad=False)
+                            matryoshka_loss_weights[0] = outputs_all.shape[0] - 1
                         else:
                             if(phase == 'val'):
                                 latent_features = model.module[0].forward_features(imageBatch)
@@ -1435,9 +1437,10 @@ def trainCycle(image_datasets, model):
                             else:
                                 offset = torch.special.logit(boundaryCalculator.thresholdPerClass.detach())
                             outputs_all = outputs_all + FLAGS['logit_offset_multiplier'] * offset
+
                         
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        loss = criterion(outputs_all.to(device), tagsModified.to(device))
+                        loss = criterion(outputs_all.to(device), tagsModified.to(device), weight = matryoshka_loss_weights)
                         #loss = criterion(outputs.to(device), tagsModified.to(device), weight = loss_weight)
                         #loss += (((dist_tracker.pos_mean + dist_tracker.neg_mean) ** 2) ** 0.25).sum() #+ dist_tracker.pos_std.sum() + dist_tracker.neg_std.sum()
                         #loss -= ((dist_tracker.pos_mean - dist_tracker.neg_mean) / ((dist_tracker.pos_var + dist_tracker.neg_var) ** 0.5 + 1e-8)).sum()

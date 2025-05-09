@@ -427,8 +427,13 @@ class DualLogisticRegression(nn.Module):
 class MatryoshkaClassificationHead(nn.Module):
     def __init__(self, num_features, num_classes, k=6):
         super().__init__()
-        self.num_subsets = k
-        self.feature_subsets = [int(num_features // (2 ** i)) for i in range(k)]
+        if isinstance(k, list):
+            self.num_subsets = len(k)
+            self.feature_subsets = K
+        else:
+            self.num_subsets = k
+            self.feature_subsets = [int(num_features // (2 ** i)) for i in range(k)]
+            
         self.feature_subsets_ = torch.Tensor(self.feature_subsets).reshape(k, 1, 1)
         self.mask = torch.arange(num_features).unsqueeze(0).repeat(self.num_subsets, 1, 1) < self.feature_subsets_
         self.head = nn.Linear(num_features, num_classes)
