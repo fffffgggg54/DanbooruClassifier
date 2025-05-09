@@ -1336,7 +1336,7 @@ def trainCycle(image_datasets, model):
                             outputs_all = outputs_all.float()
                             outputs = outputs_all[0]
                             preds = torch.sigmoid(outputs)
-                            matryoshka_loss_weights = x.ones_like(outputs_all, requires_grad=False)
+                            matryoshka_loss_weights = torch.ones_like(outputs_all, requires_grad=False)
                             matryoshka_loss_weights[0] = outputs_all.shape[0] - 1
                         else:
                             if(phase == 'val'):
