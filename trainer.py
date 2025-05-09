@@ -320,7 +320,8 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/convformer_b36-MLRHead_ExplicitTrain-ASL_BCE-224-1588-100epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-MLRHead_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE-448-1588-100epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-MatryoshkaHead_K4-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/coco_models/davit_tiny-NormPL_D095_L095_ModUpdate_HardMod-ASL_BCE_T-dist_log_odds-224-coco-300epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MLR_NW-ADA_WL_T-PU_F_metric-x+10e-1-224-1588-50epoch/"
@@ -382,8 +383,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 96
-    FLAGS['gradient_accumulation_iterations'] = 4
+    FLAGS['batch_size'] = 192
+    FLAGS['gradient_accumulation_iterations'] = 2
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -395,7 +396,7 @@ elif currGPU == 'v100':
     FLAGS['resume_epoch'] = 0
     
     FLAGS['use_mlr_act'] = False
-    FLAGS['use_matryoshka_head'] = False
+    FLAGS['use_matryoshka_head'] = True
 
     FLAGS['logit_offset'] = True
     FLAGS['logit_offset_multiplier'] = 1.0
@@ -1025,7 +1026,7 @@ def modelSetup(classes):
         learnable_embed = True,
         shared_fc = True,)
     '''
-    
+    '''
     model = ml_decoder.add_ml_decoder_head(
         model,
         num_groups = 0,
@@ -1033,7 +1034,7 @@ def modelSetup(classes):
         class_embed_merge = '',
         shared_fc = True
     )
-    
+    '''
     if FLAGS['finetune'] == True: 
         model.reset_classifier(num_classes=len(classes))
         for param in model.parameters():
@@ -1081,7 +1082,7 @@ def modelSetup(classes):
         
         model.append(mlr_head)
     elif FLAGS['use_matryoshka_head'] == True:
-        model.append(MLCSL.MatryoshkaClassificationHead(num_features, len(classes), k=6))
+        model.append(MLCSL.MatryoshkaClassificationHead(num_features, len(classes), k=4))
     #model = torch.compile(model, options={'max_autotune': True, 'epilogue_fusion': True})
 
     
@@ -1642,16 +1643,16 @@ def trainCycle(image_datasets, model):
                     #print(modelOutputs)
                     cachePath = FLAGS['modelDir'] + "evalOutputs.pkl.bz2"
                     with bz2.BZ2File(cachePath, 'w') as cachedSample: cPickle.dump(modelOutputs, cachedSample)
-                #torch.set_printoptions(profile="full")
-                
-                #AvgAccuracy = torch.stack(AccuracyRunning)
-                #AvgAccuracy = AvgAccuracy.mean(dim=0)
-                AvgAccuracy = cm_tracker.get_full_metrics()
-                LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames, boundaryCalculator.thresholdPerClass.data))
-                LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[0][8], reverse=True)
-                
-                if(is_head_proc): print(*LabelledAccuracySorted, sep="\n")
-                #torch.set_printoptions(profile="default")
+                    #torch.set_printoptions(profile="full")
+                    
+                    #AvgAccuracy = torch.stack(AccuracyRunning)
+                    #AvgAccuracy = AvgAccuracy.mean(dim=0)
+                    AvgAccuracy = cm_tracker.get_full_metrics()
+                    LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames, boundaryCalculator.thresholdPerClass.data))
+                    LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[0][8], reverse=True)
+                    
+                    if(is_head_proc): print(*LabelledAccuracySorted, sep="\n")
+                    #torch.set_printoptions(profile="default")
                 MeanStackedAccuracy = cm_tracker.get_aggregate_metrics()
                 MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
                 if(is_head_proc): print((MeanStackedAccuracy*100).tolist())
