@@ -1338,7 +1338,6 @@ def trainCycle(image_datasets, model):
                             preds = torch.sigmoid(outputs)
                             matryoshka_loss_weights = torch.ones_like(outputs_all, requires_grad=False)
                             matryoshka_loss_weights[0] = outputs_all.shape[0] - 1
-                            print(matryoshka_loss_weights)
                         else:
                             if(phase == 'val'):
                                 latent_features = model.module[0].forward_features(imageBatch)
