@@ -1347,7 +1347,7 @@ def trainCycle(image_datasets, model):
                             matryoshka_loss_weights[0] = outputs_all.shape[0] - 1
                         elif FLAGS['use_class_embed_head'] == True:
                             latent_features = model.module[0](imageBatch)
-                            outputs_all = model.module[1](imageBatch)
+                            outputs_all = model.module[1](latent_features)
                             outputs_all = outputs_all.float()
                             outputs = outputs_all
                             preds = torch.sigmoid(outputs)
