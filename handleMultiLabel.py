@@ -460,7 +460,7 @@ class ClassEmbedClassifierHead(nn.Module):
         self.num_classes = num_classes
         self.embed_dim = class_embed.shape[1]
         
-        self.embed_proj = nn.Linear(embed_dim, num_features + 1)
+        self.embed_proj = nn.Linear(self.embed_dim, num_features + 1)
         assert len(class_embed) == num_classes, 'ClassEmbedClassifierHead got class_embed where dim 0 != num_classes'
         class_embed = class_embed.clone().detach() # copy instead of reference, detach gradient flow
         self.register_buffer("class_embed", class_embed)
