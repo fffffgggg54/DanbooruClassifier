@@ -452,7 +452,7 @@ class ClassEmbedClassifierHead(nn.Module):
         num_classes, 
         class_embed, 
         embed_drop=0.1, 
-        embed_norm=False,
+        embed_norm=True,
         norm_layer: nn.Module = nn.LayerNorm,
     ):
         super().__init__()
@@ -466,10 +466,10 @@ class ClassEmbedClassifierHead(nn.Module):
         self.register_buffer("class_embed", class_embed)
 
         self.embed_drop = nn.Dropout(embed_drop)
-        self.embed_norm = norm_layer(self.embed_dim) if embed_norm else nn.Identity()
+        self.embed_norm = norm_layer(num_features + 1) if embed_norm else nn.Identity()
 
     def forward(self, x, q=None):
-        proj = self.embed_proj(self.embed_drop(self.embed_norm(q or self.class_embed))).transpose(0,1)
+        proj = self.embed_drop(self.embed_norm(self.embed_proj(q or self.class_embed))).transpose(0,1)
         x = x @ proj[:-1] + proj[-1]
         return x
 
