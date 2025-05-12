@@ -1048,7 +1048,7 @@ def modelSetup(classes):
     
     num_features = model.num_features
 
-    if FLAGS['use_mlr_act'] == True or FLAGS['use_matryoshka_head'] == True:
+    if FLAGS['use_mlr_act'] == True or FLAGS['use_matryoshka_head'] == True or FLAGS['use_class_embed_head'] == True:
         model.reset_classifier(0)
         
     
