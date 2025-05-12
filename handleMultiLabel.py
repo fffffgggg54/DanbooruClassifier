@@ -433,7 +433,7 @@ class MatryoshkaClassificationHead(nn.Module):
         else:
             self.num_subsets = k
             self.feature_subsets = [int(num_features // (2 ** i)) for i in range(k)]
-            
+
         self.feature_subsets_ = torch.Tensor(self.feature_subsets).reshape(k, 1, 1)
         self.mask = torch.arange(num_features).unsqueeze(0).repeat(self.num_subsets, 1, 1) < self.feature_subsets_
         self.head = nn.Linear(num_features, num_classes)
@@ -445,6 +445,33 @@ class MatryoshkaClassificationHead(nn.Module):
         x = self.head(x)
         return x
 
+class ClassEmbedClassifierHead(nn.Module):
+    def __init__(
+        self,
+        num_features, 
+        num_classes, 
+        class_embed, 
+        embed_drop=0.1, 
+        embed_norm=False,
+        norm_layer: nn.Module = nn.LayerNorm,
+    ):
+        super().__init__()
+        self.num_features = num_features
+        self.num_classes = num_classes
+        self.embed_dim = class_embed.shape[1]
+        
+        self.embed_proj = nn.Linear(embed_dim, num_features + 1)
+        assert len(class_embed) == num_classes, 'ClassEmbedClassifierHead got class_embed where dim 0 != num_classes'
+        class_embed = class_embed.clone().detach() # copy instead of reference, detach gradient flow
+        self.register_buffer("class_embed", class_embed)
+
+        self.embed_drop = nn.Dropout(embed_drop)
+        self.embed_norm = norm_layer(self.embed_dim) if embed_norm else nn.Identity()
+
+    def forward(self, x, q=None):
+        proj = self.embed_proj(self.embed_drop(self.embed_norm(q or self.class_embed))).transpose(0,1)
+        x = x @ proj[:-1] + proj[-1]
+        return x
 
 
 
