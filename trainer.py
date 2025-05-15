@@ -1097,7 +1097,7 @@ def modelSetup(classes):
         ))
     #model = torch.compile(model, options={'max_autotune': True, 'epilogue_fusion': True})
 
-    print(model)
+    
     return model
     
 def getDataLoader(dataset, batch_size, epoch):
@@ -1125,6 +1125,9 @@ def trainCycle(image_datasets, model):
     model = model.to(device, memory_format=memory_format)
     #mlr_act = MLCSL.ModifiedLogisticRegression_NoWeight(num_classes = len(classes), initial_beta = 0.0, eps = 1e-8)
     #mlr_act = mlr_act.to(device, memory_format = memory_format)
+
+    if is_head_proc:
+        print(model)
     
     if (FLAGS['resume_epoch'] > 0) and is_head_proc:
         state_dict = torch.load(FLAGS['modelDir'] + 'saved_model_epoch_' + str(FLAGS['resume_epoch'] - 1) + '.pth', map_location=torch.device('cpu'), weights_only=True)
