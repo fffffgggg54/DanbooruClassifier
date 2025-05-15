@@ -1097,7 +1097,7 @@ def modelSetup(classes):
         ))
     #model = torch.compile(model, options={'max_autotune': True, 'epilogue_fusion': True})
 
-    
+    print(model)
     return model
     
 def getDataLoader(dataset, batch_size, epoch):
