@@ -1036,6 +1036,7 @@ def modelSetup(classes):
         class_embed_merge = '',
         shared_fc = True,
         pool_input = True,
+        use_input_norm = True,
         post_input_proj_act = True,
         use_input_proj = False,
         attn_out_proj = False,
