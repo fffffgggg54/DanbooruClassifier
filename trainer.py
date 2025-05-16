@@ -980,7 +980,7 @@ def modelSetup(classes):
         num_classes = len(classes), 
         embed_dim=512, 
         depth=12, 
-        num_heads=12, 
+        num_heads=8, 
         global_pool='avg', 
         class_token = False, 
         qkv_bias=False, 
