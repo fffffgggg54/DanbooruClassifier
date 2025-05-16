@@ -321,7 +321,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-MLRHead_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE-448-1588-100epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-ml_decoder_PooledInput_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/vit_medium_patch16_gap_224-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-MatryoshkaHead_K6_full_embedding_half_weight-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/coco_models/davit_tiny-NormPL_D095_L095_ModUpdate_HardMod-ASL_BCE_T-dist_log_odds-224-coco-300epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
@@ -937,7 +937,7 @@ def modelSetup(classes):
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('convformer_b36', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
-    model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
+    #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('vit_medium_shallow_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_large_patch16_448', pretrained=False, num_classes=len(classes), drop_path_rate = 0.5)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
@@ -972,12 +972,13 @@ def modelSetup(classes):
     # gap model
     # vit_large_patch16_gap_448: p16 d1024 L24 nh16
     # vit_base_patch16_gap_448: p16 d768 L12 nh12
-    '''
+    # vit_medium_patch16_gap_224: p16 d512 L12 nh8
+    
     model = timm.models.VisionTransformer(
         img_size = FLAGS['actual_image_size'], 
         patch_size = 16,
         num_classes = len(classes), 
-        embed_dim=768, 
+        embed_dim=512, 
         depth=12, 
         num_heads=12, 
         global_pool='avg', 
@@ -985,8 +986,8 @@ def modelSetup(classes):
         qkv_bias=False, 
         init_values=1e-6, 
         fc_norm=False,
-        drop_path_rate=0.3)
-    '''
+        drop_path_rate=0.2)
+    
     # cvt
     
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
@@ -1035,8 +1036,6 @@ def modelSetup(classes):
         class_embed = torch.load('./DanbooruWikiEmbeddings1588_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
         class_embed_merge = '',
         shared_fc = True,
-        pool_input = True,
-        use_input_norm = True,
         post_input_proj_act = True,
         use_input_proj = False,
         attn_out_proj = False,
