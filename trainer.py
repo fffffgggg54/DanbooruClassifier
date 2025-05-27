@@ -321,7 +321,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-MLRHead_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE-448-1588-100epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/vit_large_patch32_gap_448-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-448-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/vit_base_patch16_siglip_gap_224.v2_webli_probe-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-448-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-MatryoshkaHead_K6_full_embedding_half_weight-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/coco_models/davit_tiny-NormPL_D095_L095_ModUpdate_HardMod-ASL_BCE_T-dist_log_odds-224-coco-300epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
@@ -356,8 +356,8 @@ elif currGPU == 'v100':
     FLAGS['dataset'] = 'danbooru'
     #FLAGS['dataset'] = 'coco'
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 448
-    FLAGS['actual_image_size'] = 448
+    FLAGS['image_size'] = 224
+    FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 3.0
@@ -384,8 +384,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 24
-    FLAGS['gradient_accumulation_iterations'] = 16
+    FLAGS['batch_size'] = 128
+    FLAGS['gradient_accumulation_iterations'] = 3
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -408,7 +408,7 @@ elif currGPU == 'v100':
     FLAGS['splc_start_epoch'] = 0
     FLAGS['norm_weighted_loss'] = False
 
-    FLAGS['finetune'] = False    #actually a linear probe of a frozen model
+    FLAGS['finetune'] = True    #actually a linear probe of a frozen model
     FLAGS['compile_model'] = False
     FLAGS['fast_norm'] = True
     FLAGS['channels_last'] = True
@@ -939,7 +939,7 @@ def modelSetup(classes):
     #model = timm.create_model('davit_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.3)
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('vit_medium_shallow_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    #model = timm.create_model('vit_large_patch16_448', pretrained=False, num_classes=len(classes), drop_path_rate = 0.5)
+    model = timm.create_model('vit_base_patch16_siglip_gap_224.v2_webli', pretrained=True, num_classes=len(classes), drop_path_rate = 0.3)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4)
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, patch_size=32, img_size=FLAGS['actual_image_size'])
@@ -973,7 +973,7 @@ def modelSetup(classes):
     # vit_large_patch16_gap_448: p16 d1024 L24 nh16
     # vit_base_patch16_gap_448: p16 d768 L12 nh12
     # vit_medium_patch16_gap_224: p16 d512 L12 nh8
-    
+    '''
     model = timm.models.VisionTransformer(
         img_size = FLAGS['actual_image_size'], 
         patch_size = 32,
@@ -987,7 +987,7 @@ def modelSetup(classes):
         init_values=1e-6, 
         fc_norm=False,
         drop_path_rate=0.4)
-    
+    '''
     # cvt
     
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
@@ -1043,7 +1043,7 @@ def modelSetup(classes):
     )
     
     if FLAGS['finetune'] == True: 
-        model.reset_classifier(num_classes=len(classes))
+        #model.reset_classifier(num_classes=len(classes))
         for param in model.parameters():
             param.requires_grad = False
         for param in model.head.parameters():
