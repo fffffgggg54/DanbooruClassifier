@@ -387,10 +387,11 @@ elif currGPU == 'v100':
     FLAGS['batch_size'] = 64
     FLAGS['gradient_accumulation_iterations'] = 6
 
-    FLAGS['base_learning_rate'] = 3e-3
+    FLAGS['base_learning_rate'] = 1e-4
     FLAGS['base_batch_size'] = 2048
     FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
-    FLAGS['lr_warmup_epochs'] = 2
+    FLAGS['lr_warmup_epochs'] = 5
+    FLAGS['use_lr_scheduler'] = False
 
     FLAGS['weight_decay'] = 1e-5
 
@@ -1239,9 +1240,9 @@ def trainCycle(image_datasets, model):
         
         dataloaders = {x: getDataLoader(image_datasets[x], FLAGS['batch_size'], epoch) for x in image_datasets} # set up dataloaders
 
-        
-        scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
-        scheduler.last_epoch = len(dataloaders['train'])*epoch
+        if FLAGS['use_lr_scheduler']:
+            scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
+            scheduler.last_epoch = len(dataloaders['train'])*epoch
 
         
         if(is_head_proc):
@@ -1649,7 +1650,7 @@ def trainCycle(image_datasets, model):
                         best = (float(loss), epoch, i, accuracy.item())
                         print(f"NEW BEST: {best}!")
                 '''
-                if phase == 'train':
+                if phase == 'train' and FLAGS['use_lr_scheduler']:
                     scheduler.step()
                 
                 #print(device)
