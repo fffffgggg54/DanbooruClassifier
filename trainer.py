@@ -321,9 +321,9 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-MLRHead_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE-448-1588-100epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/vit_base_patch16_gap_224-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-10epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-MatryoshkaHead_K6_full_embedding_half_weight-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage1/coco_models/davit_tiny-ASL_BCE_T-dist_log_odds-448-coco-300epoch/"
+    #FLAGS['modelDir'] = "/media/fredo/Storage1/coco_models/davit_tiny-ASL_BCE_T-dist_log_odds-448-coco-300epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-MLR_NW-ADA_WL_T-PU_F_metric-x+10e-1-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-Hill-T-F1-x+00e-1-224-1588-50epoch/"
@@ -353,11 +353,11 @@ elif currGPU == 'v100':
     FLAGS['stopReadingAt'] = 5000
 
     # dataset config
-    #FLAGS['dataset'] = 'danbooru'
-    FLAGS['dataset'] = 'coco'
-    FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 448
-    FLAGS['actual_image_size'] = 448
+    FLAGS['dataset'] = 'danbooru'
+    #FLAGS['dataset'] = 'coco'
+    FLAGS['tagCount'] = 5500
+    FLAGS['image_size'] = 224
+    FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 3.0
@@ -383,9 +383,9 @@ elif currGPU == 'v100':
 
     # training config
 
-    FLAGS['num_epochs'] = 300
-    FLAGS['batch_size'] = 48
-    FLAGS['gradient_accumulation_iterations'] = 8
+    FLAGS['num_epochs'] = 50
+    FLAGS['batch_size'] = 128
+    FLAGS['gradient_accumulation_iterations'] = 3
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -1030,12 +1030,12 @@ def modelSetup(classes):
         learnable_embed = True,
         shared_fc = True,)
     '''
-    '''
+    
     # ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC
     model = ml_decoder.add_ml_decoder_head(
         model,
         num_groups = 0,
-        class_embed = torch.load('./DanbooruWikiEmbeddings1588_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
+        class_embed = torch.load('./DanbooruWikiEmbeddings5500_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
         class_embed_merge = '',
         shared_fc = True,
         post_input_proj_act = True,
@@ -1043,7 +1043,7 @@ def modelSetup(classes):
         attn_out_proj = False,
         use_mlp = False,
     )
-    '''
+    
     if FLAGS['finetune'] == True: 
         #model.reset_classifier(num_classes=len(classes))
         for param in model.parameters():
