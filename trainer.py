@@ -355,7 +355,7 @@ elif currGPU == 'v100':
     # dataset config
     FLAGS['dataset'] = 'danbooru'
     #FLAGS['dataset'] = 'coco'
-    FLAGS['tagCount'] = 5500
+    FLAGS['tagCount'] = 1588
     FLAGS['image_size'] = 224
     FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
@@ -384,8 +384,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 96
-    FLAGS['gradient_accumulation_iterations'] = 4
+    FLAGS['batch_size'] = 128
+    FLAGS['gradient_accumulation_iterations'] = 3
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -1035,7 +1035,7 @@ def modelSetup(classes):
     model = ml_decoder.add_ml_decoder_head(
         model,
         num_groups = 0,
-        class_embed = torch.load('./DanbooruWikiEmbeddings5500_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
+        class_embed = torch.load('./DanbooruWikiEmbeddings1588_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
         class_embed_merge = '',
         shared_fc = True,
         post_input_proj_act = True,
