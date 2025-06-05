@@ -1598,8 +1598,8 @@ def trainCycle(image_datasets, model):
                         preds_regular_batch = preds.detach().numpy(force=True)
                         accuracy = MLCSL.mAP(targets_batch, preds_regular_batch)
                     else:
-                        targets = targets_all.numpy(force=True)
-                        preds_regular = preds_all.numpy(force=True)
+                        targets = targets_running.numpy(force=True)
+                        preds_regular = preds_running.numpy(force=True)
                         #preds_ema = output_ema.cpu().detach().numpy()
                         accuracy = MLCSL.mAP(targets, preds_regular)
                         
