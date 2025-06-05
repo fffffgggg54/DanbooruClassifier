@@ -395,7 +395,7 @@ elif currGPU == 'v100':
     FLAGS['lr_warmup_epochs'] = 5
     FLAGS['use_lr_scheduler'] = False
 
-    FLAGS['weight_decay'] = 2e-2
+    FLAGS['weight_decay'] = 1e-4
 
     FLAGS['resume_epoch'] = 0
     
