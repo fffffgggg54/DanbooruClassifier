@@ -1592,18 +1592,6 @@ def trainCycle(image_datasets, model):
                 #print(device)
                 if i % stepsPerPrintout == 0:
                     torch.cuda.synchronize()
-                    
-                    if (phase == 'train'):
-                        targets_batch = tags.numpy(force=True)
-                        preds_regular_batch = preds.detach().numpy(force=True)
-                        accuracy = MLCSL.mAP(targets_batch, preds_regular_batch)
-                    else:
-                        targets = torch.cat(targets_running).numpy(force=True)
-                        preds_regular = torch.cat(preds_running).numpy(force=True)
-                        #preds_ema = output_ema.cpu().detach().numpy()
-                        accuracy = MLCSL.mAP(targets, preds_regular)
-                        
-                    
 
                     imagesPerSecond = (dataloaders[phase].batch_size*stepsPerPrintout)/(time.time() - cycleTime)
                     cycleTime = time.time()
@@ -1626,11 +1614,20 @@ def trainCycle(image_datasets, model):
                     
                    
                     #print('[%d/%d][%d/%d]\tLoss: %.4f\tImages/Second: %.4f\tAccuracy: %.2f\tP4: %.2f\t%s' % (epoch, FLAGS['num_epochs'], i, len(dataloaders[phase]), loss, imagesPerSecond, accuracy, multiAccuracy.mean(dim=0) * 100, textOutput))
-                    torch.set_printoptions(linewidth = 200, sci_mode = False)
-                    if(is_head_proc): print(f"[{epoch}/{FLAGS['num_epochs']}][{i}/{len(dataloaders[phase])}]\tLoss: {loss:.4f}\tImages/Second: {imagesPerSecond:.4f}\tAccuracy: {accuracy:.2f}\t {[f'{num:.4f}' for num in list((multiAccuracy * 100))]}\t{textOutput}")
-                    torch.set_printoptions(profile='default')
                     
                     if is_head_proc:
+                        if (phase == 'train'):
+                            targets_batch = tags.numpy(force=True)
+                            preds_regular_batch = preds.detach().numpy(force=True)
+                            accuracy = MLCSL.mAP(targets_batch, preds_regular_batch)
+                        else:
+                            targets = torch.cat(targets_running).numpy(force=True)
+                            preds_regular = torch.cat(preds_running).numpy(force=True)
+                            #preds_ema = output_ema.cpu().detach().numpy()
+                            accuracy = MLCSL.mAP(targets, preds_regular)
+                        torch.set_printoptions(linewidth = 200, sci_mode = False)
+                        print(f"[{epoch}/{FLAGS['num_epochs']}][{i}/{len(dataloaders[phase])}]\tLoss: {loss:.4f}\tImages/Second: {imagesPerSecond:.4f}\tAccuracy: {accuracy:.2f}\t {[f'{num:.4f}' for num in list((multiAccuracy * 100))]}\t{textOutput}")
+                        torch.set_printoptions(profile='default')
                         #print(dist_tracker.dump())
                         z_scores = (dist_tracker.pos_mean - dist_tracker.neg_mean) / ((dist_tracker.pos_var + dist_tracker.neg_var) ** 0.5 + 1e-8)
                         #t_stat = (dist_tracker.pos_mean-dist_tracker.neg_mean)/((dist_tracker.pos_var/(dist_tracker.pos_count + 1e-8) + dist_tracker.neg_var/(dist_tracker.neg_count + 1e-8)) ** 0.5 + 1e-8)
