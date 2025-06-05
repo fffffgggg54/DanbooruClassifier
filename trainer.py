@@ -48,6 +48,8 @@ import scipy.stats
 
 import plotext
 
+import re
+
 
 # ================================================
 #           CONFIGURATION OPTIONS
@@ -993,9 +995,10 @@ def modelSetup(classes):
     state_dict = torch.load('/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE-448-1588-100epoch/saved_model_epoch_99.pth', map_location=torch.device('cpu'), weights_only=True)
     out_dict = {}
     for k, v in state_dict.items():
+        k = re.sub(r"^0\.", "", k)
         if "head" not in k:
             out_dict[k] = v
-    model.load_state_dict(state_dict)
+    model.load_state_dict(out_dict)
     model.reset_classifier(len(classes))
     
     # cvt
