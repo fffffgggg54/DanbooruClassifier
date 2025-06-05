@@ -420,6 +420,7 @@ elif currGPU == 'v100':
 
     FLAGS['verbose_debug'] = False
     FLAGS['skip_test_set'] = False
+    FLAGS['store_latents'] = False
     FLAGS['stepsPerPrintout'] = 50
     FLAGS['val'] = False
 
@@ -1560,41 +1561,33 @@ def trainCycle(image_datasets, model):
                         if(FLAGS['use_ddp'] == True):
                             targets_all = None
                             preds_all = None
-                            latent_features_all = None
+                            if FLAGS['store_latents']: latent_features_all = None
                             if(is_head_proc):
                                 targets_all = [torch.zeros_like(tagBatch) for _ in range(dist.get_world_size())]
                                 preds_all = [torch.zeros_like(preds) for _ in range(dist.get_world_size())]
-                                latent_features_all = [torch.zeros_like(latent_features) for _ in range(dist.get_world_size())]
+                                if FLAGS['store_latents']: latent_features_all = [torch.zeros_like(latent_features) for _ in range(dist.get_world_size())]
                             torch.distributed.gather(tagBatch, gather_list = targets_all, async_op=True)
                             torch.distributed.gather(preds, gather_list = preds_all, async_op=True)
-                            torch.distributed.gather(latent_features, gather_list = latent_features_all, async_op=True)
+                            if FLAGS['store_latents']: torch.distributed.gather(latent_features, gather_list = latent_features_all, async_op=True)
                             if(is_head_proc):
                                 targets_all = torch.cat(targets_all).detach().cpu()
                                 preds_all = torch.cat(preds_all).detach().cpu()
-                                latent_features_all = torch.cat(latent_features_all).detach().cpu()
+                                if FLAGS['store_latents']: latent_features_all = torch.cat(latent_features_all).detach().cpu()
                         else:
                             targets_all = tags
                             preds_all = preds.detach().cpu()
-                            latent_features_all = latent_features.detach().cpu()
+                            if FLAGS['store_latents']: latent_features_all = latent_features.detach().cpu()
                         
                         if is_head_proc:
-                            targets = targets_all.numpy(force=True)
-                            preds_regular = preds_all.numpy(force=True)
-                            #preds_ema = output_ema.cpu().detach().numpy()
-                            accuracy = MLCSL.mAP(targets, preds_regular)
-                            #AP_regular.append(accuracy)
-                            
-                            
-                            
                             targets_running.append(targets_all.detach().clone())
                             preds_running.append(preds_all.detach().clone())
-                            latent_features_running.append(latent_features_all.detach().clone())
+                            if FLAGS['store_latents']: latent_features_running.append(latent_features_all.detach().clone())
                             
                             #AP_ema.append(MLCSL.mAP(targets, preds_ema))
                             #AccuracyRunning.append(multiAccuracy)
                             targets_all = None
                             preds_all = None
-                            latent_features_all = None
+                            if FLAGS['store_latents']: latent_features_all = None
             
                 #print(device)
                 if i % stepsPerPrintout == 0:
@@ -1603,6 +1596,11 @@ def trainCycle(image_datasets, model):
                         targets_batch = tags.numpy(force=True)
                         preds_regular_batch = preds.detach().numpy(force=True)
                         accuracy = MLCSL.mAP(targets_batch, preds_regular_batch)
+                    else:
+                        targets = targets_all.numpy(force=True)
+                        preds_regular = preds_all.numpy(force=True)
+                        #preds_ema = output_ema.cpu().detach().numpy()
+                        accuracy = MLCSL.mAP(targets, preds_regular)
                         
                     
 
@@ -1780,7 +1778,7 @@ def trainCycle(image_datasets, model):
             torch.save(optimizer.state_dict(), modelDir + 'optimizer' + '.pth')
             pd.DataFrame(tagNames).to_pickle(modelDir + "tags.pkl")
 
-            torch.save(torch.cat(latent_features_running).cpu(), modelDir + 'eval_embeds.pth')
+            if FLAGS['store_latents']: torch.save(torch.cat(latent_features_running).cpu(), modelDir + 'eval_embeds.pth')
             
         time_elapsed = time.time() - epochTime
         if(is_head_proc): print(f'epoch {epoch} completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
