@@ -996,6 +996,7 @@ def modelSetup(classes):
         if "head" not in k:
             out_dict[k] = v
     model.load_state_dict(state_dict)
+    model.reset_classifier(len(classes))
     
     # cvt
     
