@@ -323,7 +323,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-MLRHead_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE-448-1588-100epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/vit_base_patch16_gap_448-probe-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-448-1588-10epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/vit_base_patch16_gap_448-finetune-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-448-1588-10epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-MatryoshkaHead_K6_full_embedding_half_weight-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/coco_models/davit_tiny-ASL_BCE_T-dist_log_odds-448-coco-300epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
@@ -386,8 +386,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 10
-    FLAGS['batch_size'] = 64
-    FLAGS['gradient_accumulation_iterations'] = 8
+    FLAGS['batch_size'] = 32
+    FLAGS['gradient_accumulation_iterations'] = 12
 
     FLAGS['base_learning_rate'] = 5e-5
     FLAGS['base_batch_size'] = 2048
@@ -411,7 +411,7 @@ elif currGPU == 'v100':
     FLAGS['splc_start_epoch'] = 0
     FLAGS['norm_weighted_loss'] = False
 
-    FLAGS['finetune'] = True    #actually a linear probe of a frozen model
+    FLAGS['finetune'] = False    #actually a linear probe of a frozen model
     FLAGS['compile_model'] = False
     FLAGS['fast_norm'] = True
     FLAGS['channels_last'] = True
