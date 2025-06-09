@@ -323,7 +323,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-MLRHead_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE-448-1588-100epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/vit_base_patch16_gap_448-finetune-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-448-1588-10epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/vit_base_patch16_reg4_gap_224-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-MatryoshkaHead_K6_full_embedding_half_weight-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/coco_models/davit_tiny-ASL_BCE_T-dist_log_odds-448-coco-300epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
@@ -358,8 +358,8 @@ elif currGPU == 'v100':
     FLAGS['dataset'] = 'danbooru'
     #FLAGS['dataset'] = 'coco'
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 448
-    FLAGS['actual_image_size'] = 448
+    FLAGS['image_size'] = 224
+    FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 3.0
@@ -385,17 +385,17 @@ elif currGPU == 'v100':
 
     # training config
 
-    FLAGS['num_epochs'] = 10
-    FLAGS['batch_size'] = 24
-    FLAGS['gradient_accumulation_iterations'] = 16
+    FLAGS['num_epochs'] = 50
+    FLAGS['batch_size'] = 64
+    FLAGS['gradient_accumulation_iterations'] = 6
 
-    FLAGS['base_learning_rate'] = 5e-5
+    FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
     FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
     FLAGS['lr_warmup_epochs'] = 5
-    FLAGS['use_lr_scheduler'] = False
+    FLAGS['use_lr_scheduler'] = True
 
-    FLAGS['weight_decay'] = 1e-4
+    FLAGS['weight_decay'] = 2e-2
 
     FLAGS['resume_epoch'] = 0
     
@@ -986,12 +986,14 @@ def modelSetup(classes):
         depth=12, 
         num_heads=12, 
         global_pool='avg', 
-        class_token = False, 
+        class_token = False,
+        reg_tokens=4,
+        no_embed_class=True, 
         qkv_bias=False, 
         init_values=1e-6, 
         fc_norm=False,
         drop_path_rate=0.3)
-
+    '''
     model.reset_classifier(0)
     state_dict = torch.load('/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE-448-1588-100epoch/saved_model_epoch_99.pth', map_location=torch.device('cpu'), weights_only=True)
     out_dict = {}
@@ -1001,7 +1003,7 @@ def modelSetup(classes):
             out_dict[k] = v
     model.load_state_dict(out_dict)
     model.reset_classifier(len(classes))
-    
+    '''
     # cvt
     
     #model = transformers.CvtForImageClassification.from_pretrained('microsoft/cvt-13')
