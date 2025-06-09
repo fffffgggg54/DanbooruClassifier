@@ -993,8 +993,8 @@ def modelSetup(classes):
         init_values=1e-6, 
         fc_norm=False,
         drop_path_rate=0.3)
-    
-    '''
+
+    r'''
     model.reset_classifier(0)
     state_dict = torch.load('/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE-448-1588-100epoch/saved_model_epoch_99.pth', map_location=torch.device('cpu'), weights_only=True)
     out_dict = {}
