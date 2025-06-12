@@ -1054,7 +1054,7 @@ def modelSetup(classes):
         learnable_embed = True,
         shared_fc = True,)
     '''
-    r'''
+    
     # ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC
     model = ml_decoder.add_ml_decoder_head(
         model,
@@ -1067,7 +1067,7 @@ def modelSetup(classes):
         attn_out_proj = False,
         use_mlp = False,
     )
-    '''
+    
     
     
     num_features = model.num_features
