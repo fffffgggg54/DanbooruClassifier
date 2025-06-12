@@ -319,7 +319,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-PLScratch-PowerGate-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_large_patch24_gap_448-NormPL_D095_L065_ModUpdate_HardMod-ASL_BCE-448-1588-100epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/davit_tiny-DLRHead_MlpFC_MlpEstimator_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/vit_base_patch16_reg4_gap_224-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/regnetz_040_224-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-MLRHead_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE-448-1588-100epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
@@ -944,7 +944,7 @@ def modelSetup(classes):
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('vit_medium_shallow_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_base_patch16_siglip_gap_224.v2_webli', pretrained=True, num_classes=len(classes), drop_path_rate = 0.3)
-    #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
+    model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4)
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, patch_size=32, img_size=FLAGS['actual_image_size'])
     #model = timm.create_model('vit_huge_patch14_gap_224', pretrained=True, pretrained_cfg_overlay=dict(file="./jepa-latest.pth.tar"))
@@ -977,7 +977,7 @@ def modelSetup(classes):
     # vit_large_patch16_gap_448: p16 d1024 L24 nh16
     # vit_base_patch16_gap_448: p16 d768 L12 nh12
     # vit_medium_patch16_gap_224: p16 d512 L12 nh8
-    
+    r'''
     model = timm.models.VisionTransformer(
         img_size = FLAGS['actual_image_size'], 
         patch_size = 16,
@@ -993,7 +993,7 @@ def modelSetup(classes):
         init_values=1e-6, 
         fc_norm=False,
         drop_path_rate=0.3)
-
+    '''
     r'''
     model.reset_classifier(0)
     state_dict = torch.load('/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE-448-1588-100epoch/saved_model_epoch_99.pth', map_location=torch.device('cpu'), weights_only=True)
