@@ -1145,6 +1145,8 @@ def trainCycle(image_datasets, model):
     #mlr_act = MLCSL.ModifiedLogisticRegression_NoWeight(num_classes = len(classes), initial_beta = 0.0, eps = 1e-8)
     #mlr_act = mlr_act.to(device, memory_format = memory_format)
 
+    torch.cuda.empty_cache()
+
     if is_head_proc:
         print(model)
     
@@ -1161,7 +1163,7 @@ def trainCycle(image_datasets, model):
         #mlr_act.load_state_dict(mlr_act_state_dict)
     
     
-    
+    torch.cuda.empty_cache()
 
         
     
@@ -1202,11 +1204,15 @@ def trainCycle(image_datasets, model):
 
     if (FLAGS['resume_epoch'] > 0):
         optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth', map_location=torch.device("cpu"), weights_only=True))
+
+    torch.cuda.empty_cache()
     
     if (FLAGS['use_ddp'] == True):
         model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
         #mlr_act = DDP(mlr_act, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
         
+    torch.cuda.empty_cache()
+
     if(FLAGS['compile_model'] == True):
         model.compile()
     
