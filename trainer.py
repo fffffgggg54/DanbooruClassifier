@@ -385,7 +385,7 @@ elif currGPU == 'v100':
 
     # training config
 
-    FLAGS['num_epochs'] = 50
+    FLAGS['num_epochs'] = 100
     FLAGS['batch_size'] = 24
     FLAGS['gradient_accumulation_iterations'] = 16
 
