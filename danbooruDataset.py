@@ -79,10 +79,10 @@ class CocoDataset(torchvision.datasets.coco.CocoDetection):
         target = (new_target > 0).to(torch.long)
 
         if self.transform is not None:
-            image = self.transform(image)
+            image_out = self.transform(image)
 
-        
-        return image, target
+        image.close()
+        return image_out, target
 
 class DanbooruDataset(torch.utils.data.Dataset):
 
