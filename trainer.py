@@ -1201,7 +1201,7 @@ def trainCycle(image_datasets, model):
     optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
 
     if (FLAGS['resume_epoch'] > 0):
-        optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth', map_location=torch.device("cpu")))
+        optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth', map_location=torch.device("cpu"), weights_only=True))
     
     if (FLAGS['use_ddp'] == True):
         model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
