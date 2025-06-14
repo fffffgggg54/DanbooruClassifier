@@ -386,8 +386,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 24
-    FLAGS['gradient_accumulation_iterations'] = 16
+    FLAGS['batch_size'] = 16
+    FLAGS['gradient_accumulation_iterations'] = 24
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -1145,8 +1145,6 @@ def trainCycle(image_datasets, model):
     #mlr_act = MLCSL.ModifiedLogisticRegression_NoWeight(num_classes = len(classes), initial_beta = 0.0, eps = 1e-8)
     #mlr_act = mlr_act.to(device, memory_format = memory_format)
 
-    torch.cuda.empty_cache()
-
     if is_head_proc:
         print(model)
     
@@ -1163,7 +1161,7 @@ def trainCycle(image_datasets, model):
         #mlr_act.load_state_dict(mlr_act_state_dict)
     
     
-    torch.cuda.empty_cache()
+    
 
         
     
@@ -1202,18 +1200,12 @@ def trainCycle(image_datasets, model):
     #optimizer = pytorch_optimizer.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
 
-    need_optim_state_load = False
-    if (FLAGS['resume_epoch'] > 0):
-        need_optim_state_load = True
-
-    torch.cuda.empty_cache()
+    
     
     if (FLAGS['use_ddp'] == True):
         model = DDP(model, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
         #mlr_act = DDP(mlr_act, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
         
-    torch.cuda.empty_cache()
-
     if(FLAGS['compile_model'] == True):
         model.compile()
     
@@ -1234,6 +1226,9 @@ def trainCycle(image_datasets, model):
 
     if (FLAGS['resume_epoch'] > 0):
         boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth', weights_only=True).to(device)
+    
+    if (FLAGS['resume_epoch'] > 0):
+        optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth', map_location=torch.device("cpu"), weights_only=True))
         
     
     if (FLAGS['use_scaler'] == True): scaler = torch.amp.GradScaler('cuda')
@@ -1525,7 +1520,6 @@ def trainCycle(image_datasets, model):
                         if (FLAGS['use_scaler'] == True):   # cuda gpu case
                             with model.no_sync():
                                 scaler.scale(loss).backward()
-                                if need_optim_state_load: optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth', map_location=torch.device("cpu"), weights_only=True))
                             if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                                 torch.cuda.synchronize()
                                 scaler.unscale_(optimizer)
@@ -1543,8 +1537,6 @@ def trainCycle(image_datasets, model):
                         else:                               # apple gpu/cpu case
                             with model.no_sync():
                                 loss.backward()
-                                if need_optim_state_load: optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth', map_location=torch.device("cpu"), weights_only=True))
-
                             if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                                 torch.cuda.synchronize()
                                 nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
