@@ -55,8 +55,6 @@ import re
 #           CONFIGURATION OPTIONS
 # ================================================
 
-os.environ['PYTORCH_CUDA_ALLOC_CONF']='expandable_segments:True'
-
 #currGPU = '3090'
 #currGPU = 'm40'
 currGPU = 'v100'
