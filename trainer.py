@@ -1204,8 +1204,9 @@ def trainCycle(image_datasets, model):
     #optimizer = pytorch_optimizer.Lamb(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     optimizer = timm.optim.Adan(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
 
+    need_optim_state_load = False
     if (FLAGS['resume_epoch'] > 0):
-        optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth', map_location=torch.device("cpu"), weights_only=True))
+        need_optim_state_load = True
 
     torch.cuda.empty_cache()
     
@@ -1526,6 +1527,7 @@ def trainCycle(image_datasets, model):
                         if (FLAGS['use_scaler'] == True):   # cuda gpu case
                             with model.no_sync():
                                 scaler.scale(loss).backward()
+                                if need_optim_state_load: optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth', map_location=torch.device("cpu"), weights_only=True))
                             if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                                 torch.cuda.synchronize()
                                 scaler.unscale_(optimizer)
@@ -1543,6 +1545,8 @@ def trainCycle(image_datasets, model):
                         else:                               # apple gpu/cpu case
                             with model.no_sync():
                                 loss.backward()
+                                if need_optim_state_load: optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth', map_location=torch.device("cpu"), weights_only=True))
+
                             if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                                 torch.cuda.synchronize()
                                 nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
