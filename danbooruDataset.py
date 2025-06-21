@@ -226,9 +226,10 @@ class DanbooruDataset(torch.utils.data.Dataset):
         
 
 def DFServerWorkerProcess(workQueue, myDF, tagList, imageRoot, imageCacheRoot, tagCacheRoot):
+    locator = myDF.loc
     while(1):
         (index, returnConnection) = workQueue.get()
-        returnConnection.send((myDF.loc[index].copy(deep=True), tagList, imageRoot, imageCacheRoot, tagCacheRoot))
+        returnConnection.send((locator[index].copy(deep=True), tagList, imageRoot, imageCacheRoot, tagCacheRoot))
         returnConnection.close()
 
 class DanbooruDatasetWithServer(torch.utils.data.Dataset):
