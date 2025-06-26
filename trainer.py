@@ -471,8 +471,8 @@ elif currGPU == 'sol_gh200':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 384
-    FLAGS['gradient_accumulation_iterations'] = 8
+    FLAGS['batch_size'] = 128
+    FLAGS['gradient_accumulation_iterations'] = 24
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
