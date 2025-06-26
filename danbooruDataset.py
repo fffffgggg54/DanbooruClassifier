@@ -54,6 +54,7 @@ class TarReader:
         self.open()
     
     def _build_index(self):
+        self._tar_file = tarfile.open(self.tar_path, 'r:')
         index_path = self.tar_path + '.TARINFO.pkl.bz2'
         if os.path.exists(index_path):
             cached_index = bz2.BZ2File(index_path, 'rb')
@@ -62,8 +63,6 @@ class TarReader:
         else:
             print(f"Building index for {self.tar_path}. This may take a while...")
             start_time = time.time()
-            
-            self._tar_file = tarfile.open(self.tar_path, 'r:')
             
             for member in self._tar_file.getmembers():
                 if member.isfile():
