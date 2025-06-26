@@ -55,6 +55,7 @@ class TarReader:
     def __init__(self, tar_path):
         self.tar_path = tar_path
         self._index = {}
+        self._tar_file = None
         
         self._build_index()
     
@@ -90,9 +91,9 @@ class TarReader:
         if not member_info:
             print(f"Warning: File '{file_path}' not found in the archive index.")
             return None
-        
-        tar_file = tarfile.open(self.tar_path, 'r:')
-        extracted_file = tar_file.extractfile(member_info)
+        if self._tar_file is None:
+            self._tar_file = tarfile.open(self.tar_path, 'r:')
+        extracted_file = self._tar_file.extractfile(member_info)
         
         if extracted_file:
             content = extracted_file.read()
@@ -559,7 +560,7 @@ class DanbooruDatasetWithServerAndReader(torch.utils.data.Dataset):
             image_bytes = self.imageReader.read_file(imagePath)           
             image = Image.open(BytesIO(image_bytes))    #check if file exists
             image.load()
-                        
+
         except Exception as e:
             print(e)
             imageURL = postData.loc["file_url"]
