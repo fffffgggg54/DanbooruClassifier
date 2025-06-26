@@ -54,13 +54,12 @@ class FileReader:
 class TarReader:
     def __init__(self, tar_path):
         self.tar_path = tar_path
-        self._tar_file = None
         self._index = {}
         
-        self.open()
+        self._build_index()
     
     def _build_index(self):
-        self._tar_file = tarfile.open(self.tar_path, 'r:')
+        
         index_path = self.tar_path + '.TARINFO.pkl.bz2'
         if os.path.exists(index_path):
             gc.disable()
@@ -71,8 +70,8 @@ class TarReader:
         else:
             print(f"Building index for {self.tar_path}. This may take a while...")
             start_time = time.time()
-            
-            for member in self._tar_file.getmembers():
+            tar_file = tarfile.open(self.tar_path, 'r:')
+            for member in tar_file.getmembers():
                 if member.isfile():
                     self._index[member.name] = member
             
@@ -80,31 +79,6 @@ class TarReader:
 
             end_time = time.time()
             print(f"Index built for {len(self._index)} files in {end_time - start_time:.2f} seconds.")
-
-    def open(self):
-        """Opens the tar file and builds the index."""
-        if not self._tar_file:
-            self._build_index()
-
-    def close(self):
-        """Closes the tar file if it's open."""
-        if self._tar_file:
-            self._tar_file.close()
-            self._tar_file = None
-            print(f"Tar file {self.tar_path} closed.")
-
-    def __enter__(self):
-        """Context manager entry."""
-        self.open()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit."""
-        self.close()
-
-    def list_files(self):
-        """Returns a list of all file paths in the archive."""
-        return list(self._index.keys())
 
     def read_file(self, file_path):
         """
@@ -117,9 +91,8 @@ class TarReader:
             print(f"Warning: File '{file_path}' not found in the archive index.")
             return None
         
-        # Use extractfile with the TarInfo object. This is the key to speed,
-        # as it uses the offset information from the object directly.
-        extracted_file = self._tar_file.extractfile(member_info)
+        tar_file = tarfile.open(self.tar_path, 'r:')
+        extracted_file = tar_file.extractfile(member_info)
         
         if extracted_file:
             content = extracted_file.read()
