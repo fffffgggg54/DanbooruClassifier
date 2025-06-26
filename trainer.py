@@ -57,7 +57,8 @@ import re
 
 #currGPU = '3090'
 #currGPU = 'm40'
-currGPU = 'v100'
+#currGPU = 'v100'
+currGPU = 'sol_gh200'
 #currGPU = 'none'
 
 
@@ -71,6 +72,8 @@ FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
 if currGPU == 'v100':
     FLAGS['rootPath'] = "/media/fredo/SAMSUNG_500GB/danbooru2021/"
     FLAGS['cocoRoot'] = "/media/fredo/SAMSUNG_500GB/coco2014/"
+elif currGPU == 'sol_gh200':
+    FLAGS['rootPath'] = "/scratch/fyguan/danbooru"
 if(torch.backends.mps.is_built() == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
 FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + "original/"
@@ -398,6 +401,85 @@ elif currGPU == 'v100':
     FLAGS['weight_decay'] = 2e-2
 
     FLAGS['resume_epoch'] = 54
+    
+    FLAGS['use_mlr_act'] = False
+    FLAGS['use_matryoshka_head'] = False
+    FLAGS['use_class_embed_head'] = False
+
+    FLAGS['logit_offset'] = True
+    FLAGS['logit_offset_multiplier'] = 1.0
+    FLAGS['logit_offset_source'] = 'dist'
+    FLAGS['opt_dist'] = False
+    FLAGS['splc'] = False
+    FLAGS['splc_start_epoch'] = 0
+    FLAGS['norm_weighted_loss'] = False
+
+    FLAGS['finetune'] = False    #actually a linear probe of a frozen model
+    FLAGS['compile_model'] = False
+    FLAGS['fast_norm'] = True
+    FLAGS['channels_last'] = True
+
+    # debugging config
+
+    FLAGS['verbose_debug'] = False
+    FLAGS['skip_test_set'] = False
+    FLAGS['store_latents'] = False
+    FLAGS['stepsPerPrintout'] = 50
+    FLAGS['val'] = False
+
+elif currGPU == 'sol_gh200':
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/vit_base_patch16_gap_448-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-448-1588-100epoch/"
+
+    # post importer config
+
+    FLAGS['chunkSize'] = 1000
+    FLAGS['importerProcessCount'] = 10
+    FLAGS['stopReadingAt'] = 5000
+
+    # dataset config
+    FLAGS['dataset'] = 'danbooru'
+    #FLAGS['dataset'] = 'coco'
+    FLAGS['tagCount'] = 1588
+    FLAGS['image_size'] = 448
+    FLAGS['actual_image_size'] = 448
+    FLAGS['progressiveImageSize'] = False
+    FLAGS['progressiveSizeStart'] = 0.5
+    FLAGS['progressiveAugRatio'] = 3.0
+    FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
+    #FLAGS['cacheRoot'] = None
+
+    FLAGS['workingSetSize'] = 1
+    FLAGS['trainSetSize'] = 0.8
+
+    # device config
+
+    FLAGS['use_ddp'] = True
+    FLAGS['device'] = None 
+    FLAGS['use_AMP'] = True
+    FLAGS['use_scaler'] = FLAGS['use_AMP']
+    #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
+
+    # dataloader config
+
+    FLAGS['num_workers'] = 20
+    FLAGS['postDataServerWorkerCount'] = 5
+    if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
+
+    # training config
+
+    FLAGS['num_epochs'] = 100
+    FLAGS['batch_size'] = 384
+    FLAGS['gradient_accumulation_iterations'] = 8
+
+    FLAGS['base_learning_rate'] = 3e-3
+    FLAGS['base_batch_size'] = 2048
+    FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
+    FLAGS['lr_warmup_epochs'] = 5
+    FLAGS['use_lr_scheduler'] = True
+
+    FLAGS['weight_decay'] = 2e-2
+
+    FLAGS['resume_epoch'] = 0
     
     FLAGS['use_mlr_act'] = False
     FLAGS['use_matryoshka_head'] = False
