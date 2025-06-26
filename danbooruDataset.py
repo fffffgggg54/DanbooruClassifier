@@ -559,7 +559,7 @@ class DanbooruDatasetWithServerAndReader(torch.utils.data.Dataset):
 
         try:
             tag_path = str(self.num_tags) + '/' + str(postID % 1000).zfill(4) + "/" + str(postID) + ".pkl.bz2"
-            tag_bytes = self.tagReader(tag_path)
+            tag_bytes = self.tagReader.read_file(tag_path)
             with bz2.BZ2File(BytesIO(tag_bytes), 'rb') as cachedTags:
                 postTags = cPickle.load(cachedTags)
         
@@ -583,7 +583,7 @@ class DanbooruDatasetWithServerAndReader(torch.utils.data.Dataset):
 
         try:
             imagePath = str(self.size) + '/' + str(postID % 1000).zfill(4) + "/" + str(postID) + ".jpeg"
-            image_bytes = self.imageReader(imagePath)           
+            image_bytes = self.imageReader.read_file(imagePath)           
             image = Image.open(BytesIO(image_bytes))    #check if file exists
             image.load()
             
