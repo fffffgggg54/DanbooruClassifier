@@ -26,7 +26,7 @@ import os
 import multiprocessing
 
 import timm
-import transformers
+#import transformers
 
 import timm.layers.ml_decoder as ml_decoder
 from timm.data.mixup import FastCollateMixup, Mixup
@@ -46,7 +46,7 @@ from pickle import dump
 
 import scipy.stats
 
-import plotext
+#import plotext
 
 import re
 
