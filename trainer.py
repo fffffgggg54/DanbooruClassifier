@@ -744,7 +744,7 @@ def getData():
             danbooruDataset.TarReader(FLAGS['rootPath'] + '/' + 'danbooru2021_' + str(FLAGS['image_size']) + '.tar'),
             danbooruDataset.TarReader(FLAGS['rootPath'] + '/' + 'tags.tar'),
             FLAGS['image_size'],
-            FLAGS['postDataServerWorkerCount'])
+            FLAGS['postDataServerWorkerCount']
         )
             
             
