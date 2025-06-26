@@ -46,8 +46,11 @@ from pickle import dump
 
 import scipy.stats
 
-#import plotext
-
+try:
+    import plotext
+    do_plot = True
+except:
+    do_plot = False
 import re
 
 
@@ -1791,7 +1794,7 @@ def trainCycle(image_datasets, model):
                 MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
                 if(is_head_proc): print((MeanStackedAccuracy*100).tolist())
                 
-                if dist_tracker.neg_mean.sum().isnan() == False:
+                if dist_tracker.neg_mean.sum().isnan() == False and do_plot:
                     plotext.hist(dist_tracker.neg_mean.detach().clamp(min=-15), bins, label='Neg means')
                     plotext.hist(dist_tracker.pos_mean.detach(), bins, label='Pos means')
                     plotext.title("Distributions of per-class means")
