@@ -54,7 +54,7 @@ class TarReader:
         self.open()
     
     def _build_index(self):
-        index_path = tar_path + '.TARINFO.pkl.bz2'
+        index_path = self.tar_path + '.TARINFO.pkl.bz2'
         if os.path.exists(index_path):
             cached_index = bz2.BZ2File(index_path, 'rb')
             self._index = cPickle.load(cached_index)
