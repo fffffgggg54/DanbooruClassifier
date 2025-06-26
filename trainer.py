@@ -728,7 +728,7 @@ def getData():
         
         
         global myDataset
-    
+        '''
         myDataset = danbooruDataset.DanbooruDatasetWithServer(
             postData,
             tagData,
@@ -736,7 +736,16 @@ def getData():
             FLAGS['cacheRoot'],
             FLAGS['image_size'],
             FLAGS['postDataServerWorkerCount'])
-        
+        '''
+
+        myDataset = danbooruDataset.DanbooruDatasetWithServerAndReader(
+            postData,
+            tagData,
+            danbooruDataset.TarReader(FLAGS['rootPath'] + '/' + 'danbooru2021_' + str(FLAGS['image_size']) + '.tar'),
+            danbooruDataset.TarReader(FLAGS['rootPath'] + '/' + 'tags.tar'),
+            FLAGS['image_size'],
+            FLAGS['postDataServerWorkerCount'])
+        )
             
             
             

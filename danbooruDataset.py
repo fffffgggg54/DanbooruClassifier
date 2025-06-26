@@ -44,6 +44,12 @@ def create_dir(dir):
         print("Created Directory : ", dir)
     return dir
 
+class FileReader:
+    def __init__(self, rootPath):
+        self.rootPath = rootPath
+    def read_file(self, file_path):
+        with open(rootPath + file_path, 'rb') as f:
+            return f.read()
 
 class TarReader:
     def __init__(self, tar_path):
@@ -501,6 +507,101 @@ class DanbooruDatasetWithServer(torch.utils.data.Dataset):
         del postData
         # if(torch.utils.data.get_worker_info().id == 1):objgraph.show_growth() 
 
+
+        return image, postTags
+
+
+class DanbooruDatasetWithServerAndReader(torch.utils.data.Dataset):
+
+
+    def __init__(self, postData, tagData, imageReader, tagReader, size, serverWorkerCount, transform=None):
+        super().__init__()
+        self.imageReader = imageReader
+        self.tagReader = tagReader
+        self.postListLength = len(postData)
+        self.transform = transform  #transform, callable?
+        self.size = size
+        self.num_tags = len(tagData)
+        self.serverWorkerCount = serverWorkerCount
+        self.serverProcessPool = []
+        self.workQueue = multiprocessing.Queue()
+        for nthWorkerProcess in range(self.serverWorkerCount):
+            currProcess = multiprocessing.Process(target=DFServerWorkerProcess,
+                args=(self.workQueue,
+                    postData.copy(deep=True),
+                    pd.Series(tagData.name.copy(deep=True), dtype=pd.StringDtype()),
+                    None,
+                    None,
+                    None,),
+                daemon = True)
+            currProcess.start()
+            self.serverProcessPool.append(currProcess)
+
+    def __len__(self):
+        return self.postListLength
+
+    # TODO profile and optimize
+    def __getitem__(self, index):
+        if torch.is_tensor(index):
+            index = index.item()
+
+        recvConn, sendConn = multiprocessing.Pipe()
+
+        self.workQueue.put((index, sendConn))
+
+        (postData, tagList, imageRoot, imageCacheRoot, tagCacheRoot) = recvConn.recv()
+
+        postID = int(postData.loc["id"])
+        image = torch.Tensor()
+        postTags = torch.Tensor()
+
+        try:
+            tag_path = str(self.num_tags) + '/' + str(postID % 1000).zfill(4) + "/" + str(postID) + ".pkl.bz2"
+            tag_bytes = self.tagReader(tag_path)
+            with bz2.BZ2File(BytesIO(tag_bytes), 'rb') as cachedTags:
+                postTags = cPickle.load(cachedTags)
+        
+        except Exception as e:
+            #print(e)
+            print("cached file not found, running tag encode")
+            postTagList = set(postData.loc["tag_string"].split()).intersection(set(tagList.to_list()))
+
+            # one-hot encode the tags of a given post
+            # TODO find better way to find matching tags
+            postTags = []
+            for key in list(tagList.to_list()):
+                match = False
+                for tag in postTagList:
+                    if tag == key:
+                        match = True
+
+                postTags.append(int(match))
+            
+            postTags = torch.Tensor(postTags)
+
+        try:
+            imagePath = str(self.size) + '/' + str(postID % 1000).zfill(4) + "/" + str(postID) + ".jpeg"
+            image_bytes = self.imageReader(imagePath)           
+            image = Image.open(BytesIO(image_bytes))    #check if file exists
+            image.load()
+            
+        except Exception as e:
+            imageURL = postData.loc["file_url"]
+            print("Getting image from " + imageURL)
+            response = requests.get(imageURL)
+            image = Image.open(BytesIO(response.content))
+            image = transforms.functional.resize(image, (self.size, self.size))
+            image = image.convert("RGBA")
+
+            color = (255,255,255)
+
+            background = Image.new('RGB', image.size, color)
+            background.paste(image, mask=image.split()[3])
+            image = background
+
+        if self.transform: image = self.transform(image)
+
+        del postData
 
         return image, postTags
 
