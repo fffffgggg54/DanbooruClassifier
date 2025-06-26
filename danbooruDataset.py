@@ -559,8 +559,7 @@ class DanbooruDatasetWithServerAndReader(torch.utils.data.Dataset):
             image_bytes = self.imageReader.read_file(imagePath)           
             image = Image.open(BytesIO(image_bytes))    #check if file exists
             image.load()
-            print("good image")
-            
+                        
         except Exception as e:
             print(e)
             imageURL = postData.loc["file_url"]
