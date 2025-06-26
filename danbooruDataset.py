@@ -63,8 +63,10 @@ class TarReader:
         self._tar_file = tarfile.open(self.tar_path, 'r:')
         index_path = self.tar_path + '.TARINFO.pkl.bz2'
         if os.path.exists(index_path):
+            gc.disable()
             cached_index = bz2.BZ2File(index_path, 'rb')
             self._index = cPickle.load(cached_index)
+            gc.enable()
             cached_index.close()
         else:
             print(f"Building index for {self.tar_path}. This may take a while...")
@@ -557,7 +559,9 @@ class DanbooruDatasetWithServerAndReader(torch.utils.data.Dataset):
 
         try:
             tag_path = str(self.num_tags) + '/' + str(postID % 1000).zfill(4) + "/" + str(postID) + ".pkl.bz2"
+            print(tag_path)
             tag_bytes = self.tagReader(tag_path)
+            print("got tag bytes")
             with bz2.BZ2File(BytesIO(tag_bytes), 'rb') as cachedTags:
                 postTags = cPickle.load(cachedTags)
         
