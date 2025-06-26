@@ -73,7 +73,7 @@ if currGPU == 'v100':
     FLAGS['rootPath'] = "/media/fredo/SAMSUNG_500GB/danbooru2021/"
     FLAGS['cocoRoot'] = "/media/fredo/SAMSUNG_500GB/coco2014/"
 elif currGPU == 'sol_gh200':
-    FLAGS['rootPath'] = "/scratch/fyguan/danbooru"
+    FLAGS['rootPath'] = "/scratch/fyguan/danbooru/"
 if(torch.backends.mps.is_built() == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
 FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
 FLAGS['imageRoot'] = FLAGS['rootPath'] + "original/"
