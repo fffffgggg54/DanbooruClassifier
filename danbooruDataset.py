@@ -25,6 +25,8 @@ import gc
 
 import multiprocessing
 
+import tarfile
+
 
 
 from PIL import PngImagePlugin
@@ -41,7 +43,84 @@ def create_dir(dir):
         os.makedirs(dir)
         print("Created Directory : ", dir)
     return dir
-	
+
+
+class TarReader:
+    def __init__(self, tar_path):
+        self.tar_path = tar_path
+        self._tar_file = None
+        self._index = {}
+        
+        self.open()
+    
+    def _build_index(self):
+        index_path = tar_path + '.TARINFO.pkl.bz2'
+        if os.path.exists(index_path):
+            cached_index = bz2.BZ2File(index_path, 'rb')
+            self._index = cPickle.load(cached_index)
+            cached_index.close()
+        else:
+            print(f"Building index for {self.tar_path}. This may take a while...")
+            start_time = time.time()
+            
+            self._tar_file = tarfile.open(self.tar_path, 'r:')
+            
+            for member in self._tar_file.getmembers():
+                if member.isfile():
+                    self._index[member.name] = member
+            
+            with bz2.BZ2File(index_path, 'w') as cached_index: cPickle.dump(self._index, cached_index)
+
+            end_time = time.time()
+            print(f"Index built for {len(self._index)} files in {end_time - start_time:.2f} seconds.")
+
+    def open(self):
+        """Opens the tar file and builds the index."""
+        if not self._tar_file:
+            self._build_index()
+
+    def close(self):
+        """Closes the tar file if it's open."""
+        if self._tar_file:
+            self._tar_file.close()
+            self._tar_file = None
+            print(f"Tar file {self.tar_path} closed.")
+
+    def __enter__(self):
+        """Context manager entry."""
+        self.open()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit."""
+        self.close()
+
+    def list_files(self):
+        """Returns a list of all file paths in the archive."""
+        return list(self._index.keys())
+
+    def read_file(self, file_path):
+        """
+        Reads a single file from the archive using the index for fast access.
+        Returns the file content as bytes, or None if not found.
+        """
+        member_info = self._index.get(file_path)
+        
+        if not member_info:
+            print(f"Warning: File '{file_path}' not found in the archive index.")
+            return None
+        
+        # Use extractfile with the TarInfo object. This is the key to speed,
+        # as it uses the offset information from the object directly.
+        extracted_file = self._tar_file.extractfile(member_info)
+        
+        if extracted_file:
+            content = extracted_file.read()
+            extracted_file.close()
+            return content
+        return None
+
+
 class CocoDataset(torchvision.datasets.coco.CocoDetection):
     def __init__(
         self,
