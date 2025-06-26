@@ -471,8 +471,8 @@ elif currGPU == 'sol_gh200':
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 128
-    FLAGS['gradient_accumulation_iterations'] = 24
+    FLAGS['batch_size'] = 192
+    FLAGS['gradient_accumulation_iterations'] = 16
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -1457,7 +1457,7 @@ def trainCycle(image_datasets, model):
                 with torch.set_grad_enabled(phase == 'train'):
                     # TODO switch between using autocast and not using it
                     
-                    with torch.amp.autocast('cuda', enabled=FLAGS['use_AMP']):
+                    with torch.amp.autocast('cuda', enabled=FLAGS['use_AMP'], dtype = torch.float16 if currGPU == 'v100' else torch.bfloat16):
 
                         if FLAGS['use_mlr_act'] == True:   
                             preds = model(imageBatch)
