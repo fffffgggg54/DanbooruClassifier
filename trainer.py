@@ -431,7 +431,8 @@ elif currGPU == 'v100':
     FLAGS['val'] = False
 
 elif currGPU == 'sol_gh200':
-    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/vit_base_patch16_gap_448-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-448-1588-100epoch/"
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch"
+    #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/vit_base_patch16_gap_448-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-448-1588-100epoch/"
 
     # post importer config
 
@@ -443,8 +444,8 @@ elif currGPU == 'sol_gh200':
     FLAGS['dataset'] = 'danbooru'
     #FLAGS['dataset'] = 'coco'
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 448
-    FLAGS['actual_image_size'] = 448
+    FLAGS['image_size'] = 224
+    FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 3.0
@@ -464,15 +465,15 @@ elif currGPU == 'sol_gh200':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 20
-    FLAGS['postDataServerWorkerCount'] = 5
+    FLAGS['num_workers'] = 35
+    FLAGS['postDataServerWorkerCount'] = 10
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
     # training config
 
     FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 192
-    FLAGS['gradient_accumulation_iterations'] = 16
+    FLAGS['batch_size'] = 1024
+    FLAGS['gradient_accumulation_iterations'] = 3
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -1034,7 +1035,7 @@ def modelSetup(classes):
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    #model = timm.create_model('davit_base', pretrained=False, num_classes=len(classes), drop_path_rate = 0.4)
+    model = timm.create_model('efficientvit_b2', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15)
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('vit_medium_shallow_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_base_patch16_siglip_gap_224.v2_webli', pretrained=True, num_classes=len(classes), drop_path_rate = 0.3)
@@ -1071,7 +1072,7 @@ def modelSetup(classes):
     # vit_large_patch16_gap_448: p16 d1024 L24 nh16
     # vit_base_patch16_gap_448: p16 d768 L12 nh12
     # vit_medium_patch16_gap_224: p16 d512 L12 nh8
-    
+    '''
     model = timm.models.VisionTransformer(
         img_size = FLAGS['actual_image_size'], 
         patch_size = 16,
@@ -1086,7 +1087,7 @@ def modelSetup(classes):
         init_values=1e-6, 
         fc_norm=False,
         drop_path_rate=0.3)
-    
+    '''
     r'''
     model.reset_classifier(0)
     state_dict = torch.load('/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE-448-1588-100epoch/saved_model_epoch_99.pth', map_location=torch.device('cpu'), weights_only=True)
@@ -1148,7 +1149,7 @@ def modelSetup(classes):
         learnable_embed = True,
         shared_fc = True,)
     '''
-    
+    '''
     # ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC
     model = ml_decoder.add_ml_decoder_head(
         model,
@@ -1161,7 +1162,7 @@ def modelSetup(classes):
         attn_out_proj = False,
         use_mlp = False,
     )
-    
+    '''
     
     
     num_features = model.num_features
