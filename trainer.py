@@ -60,8 +60,8 @@ import re
 
 #currGPU = '3090'
 #currGPU = 'm40'
-#currGPU = 'v100'
-currGPU = 'sol_gh200'
+currGPU = 'v100'
+#currGPU = 'sol_gh200'
 #currGPU = 'none'
 
 
@@ -328,8 +328,8 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/regnetz_040_224-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-MLRHead_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE-448-1588-100epoch/"
-    #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/vit_base_patch16_gap_448-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-448-1588-100epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/vit_base_patch16_gap_448-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-448-1588-100epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-MatryoshkaHead_K6_full_embedding_half_weight-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/coco_models/davit_tiny-ASL_BCE_T-dist_log_odds-448-coco-300epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/regnetz_040h-ASL_BCE_T-F1-x+80e-1-224-1588-50epoch-RawEval/"
@@ -364,8 +364,8 @@ elif currGPU == 'v100':
     FLAGS['dataset'] = 'danbooru'
     #FLAGS['dataset'] = 'coco'
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 448
-    FLAGS['actual_image_size'] = 448
+    FLAGS['image_size'] = 224
+    FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 3.0
@@ -391,9 +391,9 @@ elif currGPU == 'v100':
 
     # training config
 
-    FLAGS['num_epochs'] = 100
-    FLAGS['batch_size'] = 16
-    FLAGS['gradient_accumulation_iterations'] = 24
+    FLAGS['num_epochs'] = 50
+    FLAGS['batch_size'] = 128
+    FLAGS['gradient_accumulation_iterations'] = 3
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -403,7 +403,7 @@ elif currGPU == 'v100':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 54
+    FLAGS['resume_epoch'] = 0
     
     FLAGS['use_mlr_act'] = False
     FLAGS['use_matryoshka_head'] = False
@@ -732,24 +732,24 @@ def getData():
         
         
         global myDataset
-        '''
-        myDataset = danbooruDataset.DanbooruDatasetWithServer(
-            postData,
-            tagData,
-            FLAGS['imageRoot'],
-            FLAGS['cacheRoot'],
-            FLAGS['image_size'],
-            FLAGS['postDataServerWorkerCount'])
-        '''
-
-        myDataset = danbooruDataset.DanbooruDatasetWithServerAndReader(
-            postData,
-            tagData,
-            danbooruDataset.TarReader(FLAGS['rootPath'] + '/' + 'danbooru2021_' + str(FLAGS['image_size']) + '.tar'),
-            danbooruDataset.TarReader(FLAGS['rootPath'] + '/' + 'tags.tar'),
-            FLAGS['image_size'],
-            FLAGS['postDataServerWorkerCount']
-        )
+        if currGPU == 'v100':
+            myDataset = danbooruDataset.DanbooruDatasetWithServer(
+                postData,
+                tagData,
+                FLAGS['imageRoot'],
+                FLAGS['cacheRoot'],
+                FLAGS['image_size'],
+                FLAGS['postDataServerWorkerCount'])
+        
+        else:
+            myDataset = danbooruDataset.DanbooruDatasetWithServerAndReader(
+                postData,
+                tagData,
+                danbooruDataset.TarReader(FLAGS['rootPath'] + '/' + 'danbooru2021_' + str(FLAGS['image_size']) + '.tar'),
+                danbooruDataset.TarReader(FLAGS['rootPath'] + '/' + 'tags.tar'),
+                FLAGS['image_size'],
+                FLAGS['postDataServerWorkerCount']
+            )
             
             
             
@@ -1035,8 +1035,8 @@ def modelSetup(classes):
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
     #model = timm.create_model('resnet50', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
-    model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15)
-    #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
+    #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15)
+    model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('vit_medium_shallow_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_base_patch16_siglip_gap_224.v2_webli', pretrained=True, num_classes=len(classes), drop_path_rate = 0.3)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
