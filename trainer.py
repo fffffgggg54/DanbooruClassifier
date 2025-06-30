@@ -1367,7 +1367,7 @@ def trainCycle(image_datasets, model):
         #prior = MLCSL.ComputePrior(classes, device)
         epochTime = time.time()
         
-        dataloaders = {x: getDataLoader(image_datasets[x], FLAGS['batch_size'], epoch) for x in image_datasets} # set up dataloaders
+        dataloaders = {x: getDataLoader(image_datasets[x], FLAGS['batch_size'], epoch, FLAGS['use_ddp']) for x in image_datasets} # set up dataloaders
 
         if FLAGS['use_lr_scheduler']:
             scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=FLAGS['learning_rate'], steps_per_epoch=len(dataloaders['train']), epochs=FLAGS['num_epochs'], pct_start=FLAGS['lr_warmup_epochs']/FLAGS['num_epochs'])
