@@ -499,7 +499,7 @@ elif currGPU == 'sol_gh200':
 
     FLAGS['finetune'] = False    #actually a linear probe of a frozen model
     FLAGS['compile_model'] = False
-    FLAGS['fast_norm'] = True
+    FLAGS['fast_norm'] = False
     FLAGS['channels_last'] = True
 
     # debugging config
