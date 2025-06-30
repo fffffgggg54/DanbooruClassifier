@@ -105,7 +105,7 @@ class TarReader:
             print(f"Warning: File '{file_path}' not found in the archive index.")
             return None
         if self._tar_file is None:
-            self._tar_file = tarfile.open(self.tar_bytesio, mode='r:')
+            self._tar_file = tarfile.open(self._tar_bytesio, mode='r:')
         extracted_file = self._tar_file.extractfile(member_info)
         
         if extracted_file:
