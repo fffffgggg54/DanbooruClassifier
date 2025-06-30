@@ -1528,11 +1528,11 @@ def trainCycle(image_datasets, model):
                             if FLAGS['use_ddp']:
                                 all_logits = [torch.ones_like(outputs) for _ in range(dist.get_world_size())]
                                 torch.distributed.all_gather(all_logits, outputs)
+                                if(FLAGS['opt_dist']): all_logits[dist.get_rank()] = outputs
+                                all_logits = torch.cat(all_logits)
                             else:
                                 all_logits = outputs
-                            
-                            if(FLAGS['opt_dist']): all_logits[dist.get_rank()] = outputs
-                            all_logits = torch.cat(all_logits)
+
                             dist_tracker.set_device(all_logits.device)
                             with torch.no_grad():
                                 #multiAccuracy = cm_tracker.update((preds.detach() > offset.detach()).float().to(device), tagBatch.to(device))
