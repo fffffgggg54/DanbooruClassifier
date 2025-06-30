@@ -64,7 +64,8 @@ class TarReader:
         start_time = time.time()
         with open(self.tar_path, 'rb') as f:
             self._tar_data = f.read()
-            #self._tar_bytesio=io.BytesIO(self._tar_data)
+            self._tar_bytesio=io.BytesIO(self._tar_data)
+        self._tar_file = tarfile.open(fileobj=tar_bytesio, mode='r:')
         end_time = time.time()
         print(f"Loaded {len(self._tar_data) / (1024*1024):.2f} MB in {end_time - start_time:.2f} seconds.")
 
@@ -82,13 +83,18 @@ class TarReader:
         else:
             print(f"Building index for {self.tar_path}. This may take a while...")
             start_time = time.time()
+            '''
             tar_file = tarfile.open(self.tar_path, 'r:')
             # Open the tar file from the in-memory buffer
             with tarfile.open(self._tar_bytesio, mode='r:') as tar_obj:
                 for member in tar_obj.getmembers():
                     if member.isfile():
                         self._index[member.name] = member
-            
+            '''
+            for member in self._tar_file.getmembers():
+                if member.isfile():
+                    self._index[member.name] = member
+
             with bz2.BZ2File(index_path, 'w') as cached_index: cPickle.dump(self._index, cached_index)
 
             end_time = time.time()
@@ -104,8 +110,7 @@ class TarReader:
         if not member_info:
             print(f"Warning: File '{file_path}' not found in the archive index.")
             return None
-        if self._tar_file is None:
-            self._tar_file = tarfile.open(self._tar_data, mode='r:')
+            
         extracted_file = self._tar_file.extractfile(member_info)
         
         if extracted_file:
