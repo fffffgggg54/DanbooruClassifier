@@ -457,7 +457,7 @@ elif currGPU == 'sol_gh200':
 
     # device config
 
-    FLAGS['use_ddp'] = True
+    FLAGS['use_ddp'] = False
     FLAGS['device'] = None 
     FLAGS['use_AMP'] = True
     FLAGS['use_scaler'] = FLAGS['use_AMP']
