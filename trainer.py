@@ -1527,9 +1527,10 @@ def trainCycle(image_datasets, model):
                             #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
                             if FLAGS['use_ddp']:
                                 all_logits = [torch.ones_like(outputs) for _ in range(dist.get_world_size())]
+                                torch.distributed.all_gather(all_logits, outputs)
                             else:
                                 all_logits = outputs
-                            torch.distributed.all_gather(all_logits, outputs)
+                            
                             if(FLAGS['opt_dist']): all_logits[dist.get_rank()] = outputs
                             all_logits = torch.cat(all_logits)
                             dist_tracker.set_device(all_logits.device)
