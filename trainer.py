@@ -60,8 +60,8 @@ import re
 
 #currGPU = '3090'
 #currGPU = 'm40'
-currGPU = 'v100'
-#currGPU = 'sol_gh200'
+#currGPU = 'v100'
+currGPU = 'sol_gh200'
 #currGPU = 'none'
 
 
@@ -432,7 +432,7 @@ elif currGPU == 'v100':
 
 elif currGPU == 'sol_gh200':
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch"
-    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-ml_decoder_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-ml_decoder_NoPostInProjAct_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
 
     # post importer config
 
@@ -1170,10 +1170,10 @@ def modelSetup(classes):
         class_embed = torch.load('./DanbooruWikiEmbeddings1588_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
         class_embed_merge = '',
         shared_fc = True,
-        post_input_proj_act = True,
+        post_input_proj_act = False,
         use_input_proj = True,
         attn_out_proj = True,
-        use_mlp = False,
+        use_mlp = True,
     )
     
     num_features = model.num_features
