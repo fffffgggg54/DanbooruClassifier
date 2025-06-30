@@ -1346,6 +1346,8 @@ def trainCycle(image_datasets, model):
     losses = []
     best = None
     tagNames = list(classes.values())
+
+    world_size = dist.get_world_size if FLAGS['use_ddp'] else 1
     
     # histogram bins
     bins=100
@@ -1523,7 +1525,10 @@ def trainCycle(image_datasets, model):
                             # performance metric tracking
                             #predsModified=preds
                             #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
-                            all_logits = [torch.ones_like(outputs) for _ in range(dist.get_world_size())]
+                            if FLAGS['use_ddp']:
+                                all_logits = [torch.ones_like(outputs) for _ in range(dist.get_world_size())]
+                            else:
+                                all_logits = outputs
                             torch.distributed.all_gather(all_logits, outputs)
                             if(FLAGS['opt_dist']): all_logits[dist.get_rank()] = outputs
                             all_logits = torch.cat(all_logits)
@@ -1534,9 +1539,13 @@ def trainCycle(image_datasets, model):
                                 
                                 
                                 if not FLAGS['splc']:
-                                    all_tags = torch.empty(dist.get_world_size() * tagBatch.shape[0], tagBatch.shape[1], device=outputs.device, dtype=tagBatch.dtype)
-                                    torch.distributed.all_gather_into_tensor(all_tags, tagBatch)
+                                    if FLAGS['use_ddp']:
+                                        all_tags = torch.empty(dist.get_world_size() * tagBatch.shape[0], tagBatch.shape[1], device=outputs.device, dtype=tagBatch.dtype)
+                                        torch.distributed.all_gather_into_tensor(all_tags, tagBatch)
+                                    else:
+                                        all_tags = tagBatch
                                     #dist_tracker(all_logits.to(torch.float64), all_tags.to(torch.long))
+                                    
 
                             
 
@@ -1556,13 +1565,17 @@ def trainCycle(image_datasets, model):
                         # target modifications
                         if FLAGS['splc'] and epoch >= FLAGS['splc_start_epoch']:
                             with torch.no_grad():
+                                
                                 #targs = torch.where(preds > offset.detach(), torch.tensor(1).to(preds), labels) # hard SPLC
                                 #tagsModified = ((1 - tagsModified) * MLCSL.stepAtThreshold(preds, offset) + tagsModified) # soft SPLC
                                 tagsModified = MLCSL.adjust_labels(outputs.detach(), tagsModified, dist_tracker, clip_dist = 0.95, clip_logit = 0.65)
-                                all_tags = torch.empty(dist.get_world_size() * tagBatch.shape[0], tagBatch.shape[1], device=outputs.device, dtype=tagsModified.dtype)
+                                if FLAGS['use_ddp']:
+                                    all_tags = torch.empty(dist.get_world_size() * tagBatch.shape[0], tagBatch.shape[1], device=outputs.device, dtype=tagsModified.dtype)
 
-                                torch.distributed.all_gather_into_tensor(all_tags, tagsModified)
-                                #torch.distrubuted.all_gather_into_tensor(all_tags, tagBatch)
+                                    torch.distributed.all_gather_into_tensor(all_tags, tagsModified)
+                                    #torch.distrubuted.all_gather_into_tensor(all_tags, tagBatch)
+                                else:
+                                    all_tags = tagsModified
                         dist_tracker(all_logits.to(torch.float64), all_tags.to(torch.long))
                         
                         # loss weighing
@@ -1715,7 +1728,7 @@ def trainCycle(image_datasets, model):
                         #torch.distributed.all_reduce(imagesPerSecond, op = torch.distributed.ReduceOp.SUM)
                         #imagesPerSecond = imagesPerSecond.cpu()
                         #imagesPerSecond = imagesPerSecond.item()
-                        imagesPerSecond = imagesPerSecond * dist.get_world_size()
+                        imagesPerSecond = imagesPerSecond * world_size
                         
 
                     #currPostTags = []
