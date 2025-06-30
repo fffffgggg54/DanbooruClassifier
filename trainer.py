@@ -1225,9 +1225,11 @@ def modelSetup(classes):
     
     return model
     
-def getDataLoader(dataset, batch_size, epoch):
-    distSampler = DistributedSampler(dataset=dataset, shuffle=True, seed=17, drop_last=True)
-    distSampler.set_epoch(epoch)
+def getDataLoader(dataset, batch_size, epoch, use_dist_sampler):
+    distSampler = None
+    if(use_dist_sampler):
+        distSampler = DistributedSampler(dataset=dataset, shuffle=True, seed=17, drop_last=True)
+        distSampler.set_epoch(epoch)
     return torch.utils.data.DataLoader(dataset, batch_size = batch_size, sampler=distSampler, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=3, pin_memory = True, generator=torch.Generator().manual_seed(41))
 
 def trainCycle(image_datasets, model):
