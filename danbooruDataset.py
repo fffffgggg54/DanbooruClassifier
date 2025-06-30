@@ -64,7 +64,7 @@ class TarReader:
         start_time = time.time()
         with open(self.tar_path, 'rb') as f:
             self._tar_data = f.read()
-            self._tar_bytesio=io.BytesIO(self._tar_data)
+            #self._tar_bytesio=io.BytesIO(self._tar_data)
         end_time = time.time()
         print(f"Loaded {len(self._tar_data) / (1024*1024):.2f} MB in {end_time - start_time:.2f} seconds.")
 
@@ -105,7 +105,7 @@ class TarReader:
             print(f"Warning: File '{file_path}' not found in the archive index.")
             return None
         if self._tar_file is None:
-            self._tar_file = tarfile.open(self._tar_bytesio, mode='r:')
+            self._tar_file = tarfile.open(self._tar_data, mode='r:')
         extracted_file = self._tar_file.extractfile(member_info)
         
         if extracted_file:
