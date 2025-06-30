@@ -110,7 +110,7 @@ class TarReader:
         if not member_info:
             print(f"Warning: File '{file_path}' not found in the archive index.")
             return None
-
+        '''
         extracted_file = self._tar_file.extractfile(member_info)
         
         if extracted_file:
@@ -118,7 +118,13 @@ class TarReader:
             extracted_file.close()
             return content
         return None
-
+        '''
+        start_offset = member_info.offset_data
+        file_size = member_info.size
+        end_offset = start_offset + file_size
+        
+        # Perform a direct, highly efficient slice on the in-memory bytes.
+        return self._tar_data[start_offset:end_offset]
 
 class CocoDataset(torchvision.datasets.coco.CocoDetection):
     def __init__(
