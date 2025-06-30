@@ -21,6 +21,8 @@ import glob
 import gc
 import os
 
+import contextlib
+
 #import pytorch_optimizer
 
 import multiprocessing
@@ -458,7 +460,7 @@ elif currGPU == 'sol_gh200':
     # device config
 
     FLAGS['use_ddp'] = False
-    FLAGS['device'] = None 
+    FLAGS['device'] = "cuda"
     FLAGS['use_AMP'] = True
     FLAGS['use_scaler'] = FLAGS['use_AMP']
     #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
@@ -1640,7 +1642,7 @@ def trainCycle(image_datasets, model):
                     # backward + optimize only if in training phase
                     if phase == 'train' and (loss.isnan() == False):
                         if (FLAGS['use_scaler'] == True):   # cuda gpu case
-                            with model.no_sync():
+                            with model.no_sync() if FLAGS['use_ddp'] else contextlib.nullcontext():
                                 scaler.scale(loss).backward()
                             if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                                 torch.cuda.synchronize()
@@ -1657,7 +1659,7 @@ def trainCycle(image_datasets, model):
                                 #mlr_act_opt.zero_grad(set_to_none=True)
                                 
                         else:                               # apple gpu/cpu case
-                            with model.no_sync():
+                            with model.no_sync() if FLAGS['use_ddp'] else contextlib.nullcontext():
                                 loss.backward()
                             if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                                 torch.cuda.synchronize()
