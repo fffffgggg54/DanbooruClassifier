@@ -1354,6 +1354,8 @@ def trainCycle(image_datasets, model):
     
     # histogram bins
     bins=100
+
+    firstLoop = True
     
     MeanStackedAccuracyStored = torch.Tensor([2,1,2,1])
     if(is_head_proc):
@@ -1467,6 +1469,7 @@ def trainCycle(image_datasets, model):
             '''
             
             loaderIterable = enumerate(dataloaders[phase])
+            if(firstLoop): print("got loader iterable")
             #if(is_head_proc): torch.cuda.memory._record_memory_history(enabled='all')
             for i, (images, tags) in loaderIterable:
 
@@ -1518,7 +1521,9 @@ def trainCycle(image_datasets, model):
                             #outputs = model(imageBatch).logits
                             outputs_all = outputs.float()
                             preds = torch.sigmoid(outputs).float()
-                        
+
+                        if(firstLoop): print("got fwd pass")
+
                         with torch.amp.autocast('cuda', enabled=False):
                         
                             # update boundary
@@ -1528,6 +1533,7 @@ def trainCycle(image_datasets, model):
                                 update=(phase == "train"),
                                 step_opt=((i+1) % FLAGS['gradient_accumulation_iterations'] == 0)
                             )
+                            if(firstLoop): print("got boundary update")
                             
                             # allreduce boundary during boundary optimizer updates
                             if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
@@ -1552,6 +1558,7 @@ def trainCycle(image_datasets, model):
                             with torch.no_grad():
                                 #multiAccuracy = cm_tracker.update((preds.detach() > offset.detach()).float().to(device), tagBatch.to(device))
                                 multiAccuracy = cm_tracker.update(preds.detach(), tagBatch.to(device))
+                                if(firstLoop): print("got CM update")
                                 
                                 
                                 if not FLAGS['splc']:
@@ -1561,11 +1568,7 @@ def trainCycle(image_datasets, model):
                                     else:
                                         all_tags = tagBatch
                                     #dist_tracker(all_logits.to(torch.float64), all_tags.to(torch.long))
-                                    
 
-                            
-
-                        
                         outputs = outputs.float()
                         '''
                         if phase == 'val':
@@ -1593,6 +1596,7 @@ def trainCycle(image_datasets, model):
                                 else:
                                     all_tags = tagsModified
                         dist_tracker(all_logits.to(torch.float64), all_tags.to(torch.long))
+                        if(firstLoop): print("got dist tracker update")
                         
                         # loss weighing
                         if FLAGS['norm_weighted_loss']:
@@ -1618,6 +1622,7 @@ def trainCycle(image_datasets, model):
                             else:
                                 offset = torch.special.logit(boundaryCalculator.thresholdPerClass.detach())
                             outputs_all = outputs_all + FLAGS['logit_offset_multiplier'] * offset
+                            if(firstLoop): print("got logit offset")
 
                         
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
@@ -1650,6 +1655,7 @@ def trainCycle(image_datasets, model):
                         #loss = -MLCSL.AUROC(outputs.sigmoid(), tagsModified).sum()
                         #model.zero_grad()
                         
+                        if(firstLoop): print("got loss")
                         
                         
                     # backward + optimize only if in training phase
@@ -1735,6 +1741,7 @@ def trainCycle(image_datasets, model):
                 #print(device)
                 if i % stepsPerPrintout == 0:
                     torch.cuda.synchronize()
+                    if(firstLoop): print("got printout sync")
 
                     imagesPerSecond = (dataloaders[phase].batch_size*stepsPerPrintout)/(time.time() - cycleTime)
                     cycleTime = time.time()
@@ -1745,7 +1752,8 @@ def trainCycle(image_datasets, model):
                         #imagesPerSecond = imagesPerSecond.cpu()
                         #imagesPerSecond = imagesPerSecond.item()
                         imagesPerSecond = imagesPerSecond * world_size
-                        
+
+                    if(firstLoop): print("got imgs/sec sync")
 
                     #currPostTags = []
                     #batchTagAccuracy = list(zip(tagNames, perTagAccuracy.tolist()))
@@ -1768,16 +1776,18 @@ def trainCycle(image_datasets, model):
                             preds_regular = torch.cat(preds_running).numpy(force=True)
                             #preds_ema = output_ema.cpu().detach().numpy()
                             accuracy = MLCSL.mAP(targets, preds_regular)
+                        if(firstLoop): print("got mAP")
                         torch.set_printoptions(linewidth = 200, sci_mode = False)
                         print(f"[{epoch}/{FLAGS['num_epochs']}][{i}/{len(dataloaders[phase])}]\tLoss: {loss:.4f}\tImages/Second: {imagesPerSecond:.4f}\tAccuracy: {accuracy:.2f}\t {[f'{num:.4f}' for num in list((multiAccuracy * 100))]}\t{textOutput}")
                         torch.set_printoptions(profile='default')
+                        if(firstLoop): print("info print call")
                         #print(dist_tracker.dump())
                         z_scores = (dist_tracker.pos_mean - dist_tracker.neg_mean) / ((dist_tracker.pos_var + dist_tracker.neg_var) ** 0.5 + 1e-8)
                         #t_stat = (dist_tracker.pos_mean-dist_tracker.neg_mean)/((dist_tracker.pos_var/(dist_tracker.pos_count + 1e-8) + dist_tracker.neg_var/(dist_tracker.neg_count + 1e-8)) ** 0.5 + 1e-8)
                         #print(f't score mean: {t_stat.mean()} std: {t_stat.std()}')
                         #t_p_values = scipy.stats.ttest_ind_from_stats(dist_tracker.pos_mean.cpu().numpy(), dist_tracker.pos_std.cpu().numpy(), dist_tracker.pos_count.cpu().numpy(), dist_tracker.neg_mean.cpu().numpy(), dist_tracker.neg_std.cpu().numpy(), dist_tracker.neg_count.cpu().numpy(), equal_var=False, alternative="greater").pvalue
                         print(f'z score mean: {z_scores.mean()}, std: {z_scores.std()}, pos mean: {dist_tracker.pos_mean.detach().mean()}, neg mean: {dist_tracker.neg_mean.detach().mean()}')
-                        
+                        if(firstLoop): print("dist print call")
                         '''
                         plotext.hist(dist_tracker.neg_mean.detach().clamp(min=-15), bins, label='Neg means')
                         plotext.hist(dist_tracker.pos_mean.detach(), bins, label='Pos means')
@@ -1805,10 +1815,12 @@ def trainCycle(image_datasets, model):
                 '''
                 if phase == 'train' and FLAGS['use_lr_scheduler']:
                     scheduler.step()
+                    if(firstLoop): print("called scheduler.step()")
                 
                 #print(device)
                 #if(FLAGS['ngpu'] > 0):
                     #torch.cuda.empty_cache()
+                firstLoop = False
             
                     
             if FLAGS['use_ddp'] == True:
