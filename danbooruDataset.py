@@ -63,7 +63,7 @@ def TarReaderrWorkerProcess(workQueue, tar_data, index):
             start_offset = member_info.offset_data
             file_size = member_info.size
             end_offset = start_offset + file_size
-            result = tar_data[start_offset:end_offset]
+            result = deepcopy(tar_data[start_offset:end_offset])
         returnConnection.send(result)
         returnConnection.close()
 
@@ -106,7 +106,7 @@ class TarReader:
         end_time = time.time()
         print(f"Loaded {len(tar_data) / (1024*1024):.2f} MB in {end_time - start_time:.2f} seconds.")
 
-        index = build_tar_index(self.tar_path)
+        index = build_tar_index(self.tar_path, tar_data)
 
 
         self.serverWorkerCount = worker_count
