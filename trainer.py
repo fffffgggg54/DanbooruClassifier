@@ -467,7 +467,7 @@ elif currGPU == 'sol_gh200':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 10
+    FLAGS['num_workers'] = 40
     FLAGS['postDataServerWorkerCount'] = 3
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
@@ -1233,7 +1233,7 @@ def getDataLoader(dataset, batch_size, epoch, use_dist_sampler):
         distSampler = DistributedSampler(dataset=dataset, shuffle=True, seed=17, drop_last=True)
         distSampler.set_epoch(epoch)
         return torch.utils.data.DataLoader(dataset, batch_size = batch_size, sampler=distSampler, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=3, pin_memory = True, generator=torch.Generator().manual_seed(41))
-    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=1, pin_memory = True, generator=torch.Generator().manual_seed(41))
+    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=2, pin_memory = True, generator=torch.Generator().manual_seed(41))
 
 def trainCycle(image_datasets, model):
     #print("starting training")
