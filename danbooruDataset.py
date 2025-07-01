@@ -73,8 +73,7 @@ class TarReader:
             
             with tarfile.open(self.tar_path, 'r:') as tar_file:
                 for member in tar_file.getmembers():
-                    if member.isfile():
-                        index_data[member.name] = (member.offset_data, member.size)
+                    index_data[member.name] = (member.offset_data, member.size)
             
             with gzip.open(self._index_path, 'wt', encoding='utf-8', compresslevel=6) as f:
                 json.dump(index_data, f)
