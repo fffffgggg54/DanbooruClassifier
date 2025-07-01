@@ -62,8 +62,8 @@ import re
 
 #currGPU = '3090'
 #currGPU = 'm40'
-#currGPU = 'v100'
-currGPU = 'sol_gh200'
+currGPU = 'v100'
+#currGPU = 'sol_gh200'
 #currGPU = 'none'
 
 
@@ -735,7 +735,6 @@ def getData():
         
         global myDataset
         if currGPU == 'v100':
-            '''
             myDataset = danbooruDataset.DanbooruDatasetWithServer(
                 postData,
                 tagData,
@@ -743,15 +742,6 @@ def getData():
                 FLAGS['cacheRoot'],
                 FLAGS['image_size'],
                 FLAGS['postDataServerWorkerCount'])
-            '''
-            myDataset = danbooruDataset.DanbooruDatasetWithServerAndReader(
-                postData,
-                tagData,
-                danbooruDataset.TarReader('/media/fredo/Storage1/danbooru_ds_backup/' + 'danbooru2021_' + str(FLAGS['image_size']) + '.tar', 1),
-                danbooruDataset.TarReader('/media/fredo/Storage1/danbooru_ds_backup/' + 'tags.tar', 1),
-                FLAGS['image_size'],
-                FLAGS['postDataServerWorkerCount']
-            )
         
         else:
             myDataset = danbooruDataset.DanbooruDatasetWithServerAndReader(
