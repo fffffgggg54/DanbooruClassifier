@@ -84,12 +84,19 @@ class TarReader:
             print(f"Index built for {len(self._index)} files in {end_time - start_time:.2f} seconds.")
 
     def read_file(self, file_path):
-        member_info = self._index.get(file_path)
+        member_data = self._index.get(file_path)
         
-        if not member_info:
+        if not member_data:
             print(f"Warning: File '{file_path}' not found in the archive index.")
             return None
 
+        offset, size = member_data
+        
+        # We must reconstruct a minimal TarInfo object for extractfile()
+        member_info = tarfile.TarInfo(name=file_path)
+        member_info.offset_data = offset
+        member_info.size = size
+            
         extracted_file = self._tar_file.extractfile(member_info)
         
         if extracted_file:
