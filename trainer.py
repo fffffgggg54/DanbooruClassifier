@@ -20,6 +20,7 @@ import time
 import glob
 import gc
 import os
+import sys
 
 import contextlib
 
@@ -1778,7 +1779,7 @@ def trainCycle(image_datasets, model):
                             accuracy = MLCSL.mAP(targets, preds_regular)
                         if(firstLoop): print("got mAP")
                         torch.set_printoptions(linewidth = 200, sci_mode = False)
-                        print(f"[{epoch}/{FLAGS['num_epochs']}][{i}/{len(dataloaders[phase])}]\tLoss: {loss:.4f}\tImages/Second: {imagesPerSecond:.4f}\tAccuracy: {accuracy:.2f}\t {[f'{num:.4f}' for num in list((multiAccuracy.detach() * 100))]}\t{textOutput}")
+                        print(f"[{epoch}/{FLAGS['num_epochs']}][{i}/{len(dataloaders[phase])}]\tLoss: {loss.detach():.4f}\tImages/Second: {imagesPerSecond:.4f}\tAccuracy: {accuracy:.2f}\t {[f'{num:.4f}' for num in list((multiAccuracy.detach() * 100))]}\t{textOutput}")
                         torch.set_printoptions(profile='default')
                         if(firstLoop): print("info print call")
                         #print(dist_tracker.dump())
@@ -1822,6 +1823,7 @@ def trainCycle(image_datasets, model):
                 #if(FLAGS['ngpu'] > 0):
                     #torch.cuda.empty_cache()
                 firstLoop = False
+                sys.stdout.flush()
             
                     
             if FLAGS['use_ddp'] == True:
