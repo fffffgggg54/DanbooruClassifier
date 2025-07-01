@@ -1481,25 +1481,37 @@ def trainCycle(image_datasets, model):
                             preds = model(imageBatch)
                             outputs = torch.special.logit(preds)
                         elif FLAGS['use_matryoshka_head'] == True:
-                            latent_features = model.module[0](imageBatch)
-                            outputs_all = model.module[1](latent_features)
+                            if FLAGS['use_ddp']:
+                                latent_features = model.module[0](imageBatch)
+                                outputs_all = model.module[1](latent_features)
+                            else:
+                                latent_features = model[0](imageBatch)
+                                outputs_all = model[1](latent_features)
                             outputs_all = outputs_all.float()
                             outputs = outputs_all[0]
                             preds = torch.sigmoid(outputs)
                             matryoshka_loss_weights = torch.ones_like(outputs_all, requires_grad=False)
                             matryoshka_loss_weights[0] = outputs_all.shape[0] - 1
                         elif FLAGS['use_class_embed_head'] == True:
-                            latent_features = model.module[0](imageBatch)
-                            outputs_all = model.module[1](latent_features)
+                            if FLAGS['use_ddp']:
+                                latent_features = model.module[0](imageBatch)
+                                outputs_all = model.module[1](latent_features)
+                            else:
+                                latent_features = model[0](imageBatch)
+                                outputs_all = model[1](latent_features)
                             outputs_all = outputs_all.float()
                             outputs = outputs_all
                             preds = torch.sigmoid(outputs)
                         else:
                             if(phase == 'val'):
-                                latent_features = model.module[0].forward_features(imageBatch)
-                                outputs = model.module[0].forward_head(latent_features)
-                                #latent_features = model.module[0](imageBatch)
-                                #outputs = model.module[1](latent_features)
+                                if FLAGS['use_ddp']:
+                                    latent_features = model.module[0].forward_features(imageBatch)
+                                    outputs = model.module[0].forward_head(latent_features)
+                                    #latent_features = model.module[0](imageBatch)
+                                    #outputs = model.module[1](latent_features)
+                                else:
+                                    latent_features = model[0].forward_features(imageBatch)
+                                    outputs = model[0].forward_head(latent_features)
                             else:
                                 outputs = model(imageBatch).float()
                             #outputs = model(imageBatch).logits

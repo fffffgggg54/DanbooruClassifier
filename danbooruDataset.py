@@ -70,6 +70,7 @@ class TarReader:
         print(f"Loaded {len(self._tar_data) / (1024*1024):.2f} MB in {end_time - start_time:.2f} seconds.")
 
         self._build_index()
+        self.launch_time = time.time()
     
     def _build_index(self):
         
@@ -122,6 +123,7 @@ class TarReader:
         start_offset = member_info.offset_data
         file_size = member_info.size
         end_offset = start_offset + file_size
+        print(f"Got {file_path} {time.time() - self.launch_time} seconds after TarReader creation")
         
         # Perform a direct, highly efficient slice on the in-memory bytes.
         return self._tar_data[start_offset:end_offset]
