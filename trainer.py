@@ -1350,7 +1350,7 @@ def trainCycle(image_datasets, model):
     best = None
     tagNames = list(classes.values())
 
-    world_size = dist.get_world_size if FLAGS['use_ddp'] else 1
+    world_size = dist.get_world_size() if FLAGS['use_ddp'] else 1
     
     # histogram bins
     bins=100
