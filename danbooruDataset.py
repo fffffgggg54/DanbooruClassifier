@@ -83,6 +83,7 @@ class TarReader:
             print(f"Index built for {len(self._index)} files in {end_time - start_time:.2f} seconds.")
 
     def read_file(self, file_path):
+        print(file_path)
         member_data = self._index.get(file_path)
         
         if not member_data:
