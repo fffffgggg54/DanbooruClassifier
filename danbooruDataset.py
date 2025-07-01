@@ -51,82 +51,89 @@ class FileReader:
         with open(rootPath + file_path, 'rb') as f:
             return f.read()
 
-class TarReader:
-    def __init__(self, tar_path):
-        self.tar_path = tar_path
-        self._index = {}
-        self._tar_file = None
-        self._tar_bytesio = None
-        self._tar_data = None  # The in-memory bytes of the entire .tar file
-        
-        # 1. Load the entire tar file into memory
-        print(f"Loading '{os.path.basename(self.tar_path)}' into memory...")
-        start_time = time.time()
-        with open(self.tar_path, 'rb') as f:
-            self._tar_data = f.read()
-            self._tar_bytesio=io.BytesIO(self._tar_data)
-        self._tar_file = tarfile.open(fileobj=self._tar_bytesio, mode='r:')
-        end_time = time.time()
-        print(f"Loaded {len(self._tar_data) / (1024*1024):.2f} MB in {end_time - start_time:.2f} seconds.")
-
-        self._build_index()
-        self.launch_time = time.time()
-    
-    def _build_index(self):
-        
-        index_path = self.tar_path + '.TARINFO.pkl.bz2'
-        if os.path.exists(index_path):
-            gc.disable()
-            cached_index = bz2.BZ2File(index_path, 'rb')
-            self._index = cPickle.load(cached_index)
-            gc.enable()
-            cached_index.close()
+def TarReaderrWorkerProcess(workQueue, tar_data, index):
+    while(1):
+        (file_path, returnConnection) = workQueue.get()
+        member_info = index.get(file_path)
+        result = None
+        if not member_info:
+            print(f"Warning: File '{file_path}' not found in the archive index.")
+            result = None
         else:
-            print(f"Building index for {self.tar_path}. This may take a while...")
-            start_time = time.time()
-            '''
-            tar_file = tarfile.open(self.tar_path, 'r:')
-            # Open the tar file from the in-memory buffer
-            with tarfile.open(self._tar_bytesio, mode='r:') as tar_obj:
-                for member in tar_obj.getmembers():
-                    if member.isfile():
-                        self._index[member.name] = member
-            '''
-            for member in self._tar_file.getmembers():
+            start_offset = member_info.offset_data
+            file_size = member_info.size
+            end_offset = start_offset + file_size
+            result = tar_data[start_offset:end_offset]
+        returnConnection.send(result)
+        returnConnection.close()
+
+
+def build_tar_index(tar_path):
+    
+    index_path = tar_path + '.TARINFO.pkl.bz2'
+    if os.path.exists(index_path):
+        gc.disable()
+        cached_index = bz2.BZ2File(index_path, 'rb')
+        index = cPickle.load(cached_index)
+        gc.enable()
+        cached_index.close()
+    else:
+        print(f"Building index for {tar_path}. This may take a while...")
+        start_time = time.time()
+
+        with tarfile.open(tar_path, 'r:') as tar_obj:
+            for member in tar_obj.getmembers():
                 if member.isfile():
                     self._index[member.name] = member
 
-            with bz2.BZ2File(index_path, 'w') as cached_index: cPickle.dump(self._index, cached_index)
+        with bz2.BZ2File(index_path, 'w') as cached_index: cPickle.dump(index, cached_index)
 
-            end_time = time.time()
-            print(f"Index built for {len(self._index)} files in {end_time - start_time:.2f} seconds.")
+        end_time = time.time()
+        print(f"Index built for {len(index)} files in {end_time - start_time:.2f} seconds.")
+    return index
+
+class TarReader:
+    def __init__(self, tar_path, worker_count):
+        self.tar_path = tar_path
+
+        tar_data = None
+        index = None
+        
+        print(f"Loading '{os.path.basename(self.tar_path)}' into memory...")
+        start_time = time.time()
+        with open(self.tar_path, 'rb') as f:
+            tar_data = f.read()
+        end_time = time.time()
+        print(f"Loaded {len(tar_data) / (1024*1024):.2f} MB in {end_time - start_time:.2f} seconds.")
+
+        index = build_tar_index(self.tar_path)
+
+
+        self.serverWorkerCount = worker_count
+        self.serverProcessPool = []
+        self.workQueue = multiprocessing.Queue()
+
+        for nthWorkerProcess in range(self.serverWorkerCount):
+            currProcess = multiprocessing.Process(target=TarReaderrWorkerProcess,
+                args=(self.workQueue,
+                    deepcopy(tar_data),
+                    deepcopy(index),),
+                daemon = True)
+            currProcess.start()
+            self.serverProcessPool.append(currProcess)
+
+        del tar_data
+        tar_data = None
+        del index
+        index = None
 
     def read_file(self, file_path):
-        """
-        Reads a single file from the archive using the index for fast access.
-        Returns the file content as bytes, or None if not found.
-        """
-        member_info = self._index.get(file_path)
-        
-        if not member_info:
-            print(f"Warning: File '{file_path}' not found in the archive index.")
-            return None
-        '''
-        extracted_file = self._tar_file.extractfile(member_info)
-        
-        if extracted_file:
-            content = extracted_file.read()
-            extracted_file.close()
-            return content
-        return None
-        '''
-        start_offset = member_info.offset_data
-        file_size = member_info.size
-        end_offset = start_offset + file_size
-        print(f"Got {file_path} {time.time() - self.launch_time} seconds after TarReader creation")
-        
-        # Perform a direct, highly efficient slice on the in-memory bytes.
-        return self._tar_data[start_offset:end_offset]
+        recvConn, sendConn = multiprocessing.Pipe()
+
+        self.workQueue.put((file_path, sendConn))
+
+        result = recvConn.recv()
+        return result
 
 class CocoDataset(torchvision.datasets.coco.CocoDetection):
     def __init__(

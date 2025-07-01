@@ -747,8 +747,8 @@ def getData():
             myDataset = danbooruDataset.DanbooruDatasetWithServerAndReader(
                 postData,
                 tagData,
-                danbooruDataset.TarReader(FLAGS['rootPath'] + '/' + 'danbooru2021_' + str(FLAGS['image_size']) + '.tar'),
-                danbooruDataset.TarReader(FLAGS['rootPath'] + '/' + 'tags.tar'),
+                danbooruDataset.TarReader(FLAGS['rootPath'] + '/' + 'danbooru2021_' + str(FLAGS['image_size']) + '.tar', 1),
+                danbooruDataset.TarReader(FLAGS['rootPath'] + '/' + 'tags.tar', 1),
                 FLAGS['image_size'],
                 FLAGS['postDataServerWorkerCount']
             )
@@ -1232,7 +1232,8 @@ def getDataLoader(dataset, batch_size, epoch, use_dist_sampler):
     if(use_dist_sampler):
         distSampler = DistributedSampler(dataset=dataset, shuffle=True, seed=17, drop_last=True)
         distSampler.set_epoch(epoch)
-    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, sampler=distSampler, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=3, pin_memory = True, generator=torch.Generator().manual_seed(41))
+        return torch.utils.data.DataLoader(dataset, batch_size = batch_size, sampler=distSampler, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=3, pin_memory = True, generator=torch.Generator().manual_seed(41))
+    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=1, pin_memory = True, generator=torch.Generator().manual_seed(41))
 
 def trainCycle(image_datasets, model):
     #print("starting training")
