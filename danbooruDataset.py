@@ -56,7 +56,7 @@ class TarReader:
     def __init__(self, tar_path):
         self.tar_path = tar_path
         self._index = {}
-        self._tar_file = tarfile.open(self.tar_path, 'r:')
+        self._tar_file = None
         self._index_path = self.tar_path + '.tarindex.json.gz'
         
         self._load_or_build_index()
@@ -96,6 +96,9 @@ class TarReader:
         member_info = tarfile.TarInfo(name=file_path)
         member_info.offset_data = offset
         member_info.size = size
+
+        if self._tar_file is None:
+            self._tar_file = tarfile.open(self.tar_path, 'r:')
             
         extracted_file = self._tar_file.extractfile(member_info)
         
