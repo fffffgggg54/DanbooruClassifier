@@ -62,8 +62,8 @@ import re
 
 #currGPU = '3090'
 #currGPU = 'm40'
-currGPU = 'v100'
-#currGPU = 'sol_gh200'
+#currGPU = 'v100'
+currGPU = 'sol_gh200'
 #currGPU = 'none'
 
 
@@ -1526,8 +1526,8 @@ def trainCycle(image_datasets, model):
                             else:
                                 outputs = model(imageBatch).float()
                             #outputs = model(imageBatch).logits
-                            outputs_all = outputs
-                            preds = torch.sigmoid(outputs)
+                            outputs_all = outputs.float()
+                            preds = torch.sigmoid(outputs).float()
                         
                         with torch.amp.autocast('cuda', enabled=False):
                         
