@@ -81,7 +81,7 @@ def build_tar_index(tar_path, tar_data):
         print(f"Building index for {tar_path}. This may take a while...")
         start_time = time.time()
         index = {}
-        with tarfile.open(fileobj=BytesIO(tar_data), 'r:') as tar_obj:
+        with tarfile.open(fileobj=BytesIO(tar_data), mode='r:') as tar_obj:
             for member in tar_obj.getmembers():
                 if member.isfile():
                     index[member.name] = member
