@@ -68,7 +68,7 @@ def TarReaderrWorkerProcess(workQueue, tar_data, index):
         returnConnection.close()
 
 
-def build_tar_index(tar_path):
+def build_tar_index(tar_path, tar_data):
     
     index_path = tar_path + '.TARINFO.pkl.bz2'
     if os.path.exists(index_path):
@@ -80,11 +80,11 @@ def build_tar_index(tar_path):
     else:
         print(f"Building index for {tar_path}. This may take a while...")
         start_time = time.time()
-
-        with tarfile.open(tar_path, 'r:') as tar_obj:
+        index = {}
+        with tarfile.open(fileobj=BytesIO(tar_data), 'r:') as tar_obj:
             for member in tar_obj.getmembers():
                 if member.isfile():
-                    self._index[member.name] = member
+                    index[member.name] = member
 
         with bz2.BZ2File(index_path, 'w') as cached_index: cPickle.dump(index, cached_index)
 
