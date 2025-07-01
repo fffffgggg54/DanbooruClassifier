@@ -66,7 +66,7 @@ class TarReader:
             with gzip.open(self._index_path, 'rt', encoding='utf-8') as f:
                 self._index = json.load(f)
         
-         else:
+        else:
             print(f"Building index for {self.tar_path}. This may take a while...")
             start_time = time.time()
             index_data = {}
