@@ -19,6 +19,7 @@ import bz2
 import pickle
 import _pickle as cPickle
 import json
+import gzip
 
 from copy import deepcopy
 import gc
@@ -51,7 +52,53 @@ class FileReader:
         with open(rootPath + file_path, 'rb') as f:
             return f.read()
 
-def TarReaderrWorkerProcess(workQueue, tar_data, index):
+class TarReader:
+    def __init__(self, tar_path):
+        self.tar_path = tar_path
+        self._index = {}
+        self._tar_file = tarfile.open(self.tar_path, 'r:')
+        self._index_path = self.tar_path + '.tarindex.json.gz'
+        
+        self._load_or_build_index()
+    
+    def _load_or_build_index(self):
+        if os.path.exists(self._index_path):
+            with gzip.open(self._index_path, 'rt', encoding='utf-8') as f:
+                self._index = json.load(f)
+        
+         else:
+            print(f"Building index for {self.tar_path}. This may take a while...")
+            start_time = time.time()
+            index_data = {}
+            
+            with tarfile.open(self.tar_path, 'r:') as tar_file:
+                for member in tar_file.getmembers():
+                    if member.isfile():
+                        index_data[member.name] = (member.offset_data, member.size)
+            
+            with gzip.open(self._index_path, 'wt', encoding='utf-8', compresslevel=6) as f:
+                json.dump(index_data, f)
+
+            self._index = index_data
+            end_time = time.time()
+            print(f"Index built for {len(self._index)} files in {end_time - start_time:.2f} seconds.")
+
+    def read_file(self, file_path):
+        member_info = self._index.get(file_path)
+        
+        if not member_info:
+            print(f"Warning: File '{file_path}' not found in the archive index.")
+            return None
+
+        extracted_file = self._tar_file.extractfile(member_info)
+        
+        if extracted_file:
+            content = extracted_file.read()
+            extracted_file.close()
+            return content
+        return None
+
+def TarReaderWorkerProcess(workQueue, tar_data, index):
     while(1):
         (file_path, returnConnection) = workQueue.get()
         member_info = index.get(file_path)
@@ -92,7 +139,7 @@ def build_tar_index(tar_path, tar_data):
         print(f"Index built for {len(index)} files in {end_time - start_time:.2f} seconds.")
     return index
 
-class TarReader:
+class TarReaderWithServer:
     def __init__(self, tar_path, worker_count):
         self.tar_path = tar_path
 
@@ -114,7 +161,7 @@ class TarReader:
         self.workQueue = multiprocessing.Queue()
 
         for nthWorkerProcess in range(self.serverWorkerCount):
-            currProcess = multiprocessing.Process(target=TarReaderrWorkerProcess,
+            currProcess = multiprocessing.Process(target=TarReaderWorkerProcess,
                 args=(self.workQueue,
                     deepcopy(tar_data),
                     deepcopy(index),),

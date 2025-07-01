@@ -62,8 +62,8 @@ import re
 
 #currGPU = '3090'
 #currGPU = 'm40'
-currGPU = 'v100'
-#currGPU = 'sol_gh200'
+#currGPU = 'v100'
+currGPU = 'sol_gh200'
 #currGPU = 'none'
 
 
@@ -747,8 +747,8 @@ def getData():
             myDataset = danbooruDataset.DanbooruDatasetWithServerAndReader(
                 postData,
                 tagData,
-                danbooruDataset.TarReader(FLAGS['rootPath'] + '/' + 'danbooru2021_' + str(FLAGS['image_size']) + '.tar', 1),
-                danbooruDataset.TarReader(FLAGS['rootPath'] + '/' + 'tags.tar', 1),
+                danbooruDataset.TarReader(FLAGS['rootPath'] + '/' + 'danbooru2021_' + str(FLAGS['image_size']) + '.tar'),
+                danbooruDataset.TarReader(FLAGS['rootPath'] + '/' + 'tags.tar'),
                 FLAGS['image_size'],
                 FLAGS['postDataServerWorkerCount']
             )
@@ -1175,7 +1175,7 @@ def modelSetup(classes):
         post_input_proj_act = False,
         use_input_proj = True,
         attn_out_proj = True,
-        use_mlp = False,
+        use_mlp = True,
     )
     
     num_features = model.num_features
