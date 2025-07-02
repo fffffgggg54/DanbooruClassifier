@@ -435,7 +435,8 @@ elif currGPU == 'v100':
 
 elif currGPU == 'sol_gh200':
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch"
-    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-ml_decoder_NoPostInProjAct_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-ml_decoder_NoPostInProjAct_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-5500-50epoch/"
 
     # post importer config
 
@@ -446,7 +447,7 @@ elif currGPU == 'sol_gh200':
     # dataset config
     FLAGS['dataset'] = 'danbooru'
     #FLAGS['dataset'] = 'coco'
-    FLAGS['tagCount'] = 1588
+    FLAGS['tagCount'] = 5500
     FLAGS['image_size'] = 224
     FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
@@ -501,7 +502,7 @@ elif currGPU == 'sol_gh200':
     FLAGS['norm_weighted_loss'] = False
 
     FLAGS['finetune'] = False    #actually a linear probe of a frozen model
-    FLAGS['compile_model'] = False
+    FLAGS['compile_model'] = True
     FLAGS['fast_norm'] = False
     FLAGS['channels_last'] = True
 
@@ -1173,7 +1174,7 @@ def modelSetup(classes):
         class_embed = torch.load('./DanbooruWikiEmbeddings1588_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
         class_embed_merge = '',
         shared_fc = True,
-        post_input_proj_act = False,
+        post_input_proj_act = True,
         use_input_proj = True,
         attn_out_proj = True,
         use_mlp = True,
