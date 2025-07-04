@@ -436,7 +436,7 @@ elif currGPU == 'v100':
 elif currGPU == 'sol_gh200':
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-ml_decoder_NoPostInProjAct_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-5500-50epoch/"
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/fasternet_l-ml_decoder_NoMlp_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
 
     # post importer config
 
@@ -447,7 +447,7 @@ elif currGPU == 'sol_gh200':
     # dataset config
     FLAGS['dataset'] = 'danbooru'
     #FLAGS['dataset'] = 'coco'
-    FLAGS['tagCount'] = 5500
+    FLAGS['tagCount'] = 1588
     FLAGS['image_size'] = 224
     FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
@@ -1040,7 +1040,7 @@ def modelSetup(classes):
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
     #model = timm.create_model('resnet152', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15)
-    model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
+    model = timm.create_model('fasternet_l', pretrained=False, num_classes=len(classes), drop_path_rate = 0.3)
     #model = timm.create_model('vit_medium_shallow_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_base_patch16_siglip_gap_224.v2_webli', pretrained=True, num_classes=len(classes), drop_path_rate = 0.3)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
@@ -1171,7 +1171,7 @@ def modelSetup(classes):
     model = ml_decoder.add_ml_decoder_head(
         model,
         num_groups = 0,
-        class_embed = torch.load('./DanbooruWikiEmbeddings5500_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
+        class_embed = torch.load('./DanbooruWikiEmbeddings1588_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
         class_embed_merge = '',
         shared_fc = True,
         post_input_proj_act = True,
