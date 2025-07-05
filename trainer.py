@@ -63,8 +63,8 @@ import re
 
 #currGPU = '3090'
 #currGPU = 'm40'
-#currGPU = 'v100'
-currGPU = 'sol_gh200'
+currGPU = 'v100'
+#currGPU = 'sol_gh200'
 #currGPU = 'none'
 
 
@@ -1038,9 +1038,9 @@ def modelSetup(classes):
     #model = timm.create_model('efficientformerv2_s0', pretrained=False, num_classes=len(classes), drop_path_rate=0.05)
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
-    #model = timm.create_model('resnet152', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
+    model = timm.create_model('resnet152', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15)
-    model = timm.create_model('convformer_s18', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15)
+    #model = timm.create_model('convformer_s18', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15)
     #model = timm.create_model('vit_medium_shallow_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_base_patch16_siglip_gap_224.v2_webli', pretrained=True, num_classes=len(classes), drop_path_rate = 0.3)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
