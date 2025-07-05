@@ -331,7 +331,7 @@ elif currGPU == 'v100':
     #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/regnetz_040_224-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-MLRHead_ExplicitTrain-ASL_BCE-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE-448-1588-100epoch/"
-    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/resnet152-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/resnet152-ml_decoder_NoMlp_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/vit_base_patch16_gap_448-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-448-1588-100epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/davit_tiny-MatryoshkaHead_K6_full_embedding_half_weight-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/media/fredo/Storage1/coco_models/davit_tiny-ASL_BCE_T-dist_log_odds-448-coco-300epoch/"
@@ -1177,7 +1177,7 @@ def modelSetup(classes):
         post_input_proj_act = True,
         use_input_proj = True,
         attn_out_proj = True,
-        use_mlp = True,
+        use_mlp = False,
     )
     
     num_features = model.num_features
