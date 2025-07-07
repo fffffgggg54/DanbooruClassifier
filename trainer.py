@@ -436,8 +436,8 @@ elif currGPU == 'v100':
 elif currGPU == 'sol_gh200':
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-ml_decoder_NoPostInProjAct_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/convformer_s18-ml_decoder_NoMlp_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-5500-50epoch/"
-
+    #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/convformer_s18-ml_decoder_NoMlp_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-5500-50epoch/"
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/convformer_s18-ml_decoder_NoMlp_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     # post importer config
 
     FLAGS['chunkSize'] = 1000
@@ -447,7 +447,7 @@ elif currGPU == 'sol_gh200':
     # dataset config
     FLAGS['dataset'] = 'danbooru'
     #FLAGS['dataset'] = 'coco'
-    FLAGS['tagCount'] = 5500
+    FLAGS['tagCount'] = 1588
     FLAGS['image_size'] = 224
     FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
@@ -487,7 +487,7 @@ elif currGPU == 'sol_gh200':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 0
+    FLAGS['resume_epoch'] = 41
     
     FLAGS['use_mlr_act'] = False
     FLAGS['use_matryoshka_head'] = False
@@ -1171,7 +1171,7 @@ def modelSetup(classes):
     model = ml_decoder.add_ml_decoder_head(
         model,
         num_groups = 0,
-        class_embed = torch.load('./DanbooruWikiEmbeddings5500_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
+        class_embed = torch.load(f'./DanbooruWikiEmbeddings{str(FLAGS['tag_count'])}_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
         class_embed_merge = '',
         shared_fc = True,
         post_input_proj_act = True,
