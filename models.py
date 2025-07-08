@@ -225,6 +225,7 @@ class TagEmbedCrossAttentionViT(VisionTransformer):
         B, _, H, W = x.shape
         x = self.patch_embed(x)
         x = self._pos_embed(x)
+        print(x.shape)
         x = self.patch_drop(x)
         x = self.norm_pre(x)
         H, W = self.patch_embed.dynamic_feat_size((H, W))
