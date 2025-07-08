@@ -240,4 +240,5 @@ class TagEmbedCrossAttentionViT(VisionTransformer):
         x = x.flatten(2).transpose(1, 2) # BCHW -> BNC
         x = torch.cat([registers, x], dim=1) # cat img and reg to [B, H*W+K, C]
         x = self.norm(x)
+        print(x.isnan())
         return x
