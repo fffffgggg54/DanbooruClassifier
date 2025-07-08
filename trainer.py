@@ -1098,10 +1098,10 @@ def modelSetup(classes):
         img_size = FLAGS['actual_image_size'], 
         patch_size = 16,
         num_classes = len(classes), 
-        embed_dim=512, 
-        depth=10, 
-        num_heads=8, 
-        drop_path_rate=0.2,
+        embed_dim=384, 
+        depth=8, 
+        num_heads=6, 
+        drop_path_rate=0.1,
     )
     r'''
     model.reset_classifier(0)

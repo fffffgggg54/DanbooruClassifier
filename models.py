@@ -139,11 +139,16 @@ class MaskedRegisterAttentionBlock(nn.Module):
         # mask off register self attention
         mask[:K, :K] = False
         x = x + self.drop_path2(self.ls2(self.attn(self.norm2(x), mask=mask)))
-        x = x + self.drop_path3(self.ls3(self.mlp(self.norm3(x))))
 
-        
+        # separate before mlp, no register mlp
         registers = x[:, :K]
         x = x[:, K:]
+
+        x = x + self.drop_path3(self.ls3(self.mlp(self.norm3(x))))
+
+        #registers = x[:, :K]
+        #x = x[:, K:]
+        
         # BNC -> BCHW
         x = x.transpose(1, 2).reshape(B, C, H, W)
         return (x, registers)
