@@ -44,6 +44,7 @@ class MaskingAttention(nn.Module):
         q, k, v = qkv.unbind(0)
         q, k = self.q_norm(q), self.k_norm(k)
 
+        '''
         if self.fused_attn:
             x = F.scaled_dot_product_attention(
                 q, k, v,
@@ -56,6 +57,12 @@ class MaskingAttention(nn.Module):
             attn = attn.softmax(dim=-1)
             attn = self.attn_drop(attn)
             x = attn @ v
+        '''
+        # hardcode for now
+        # with img SA
+        #x = torch.cat([F.scaled_dot_product_attention(q[:,:,:1588], k[:,:,1588:], v[:,:,1588:]), F.scaled_dot_product_attention(q[:,:,1588:], k, v)], dim=2)
+        # without img SA
+        x = torch.cat([F.scaled_dot_product_attention(q[:,:,:1588], k[:,:,1588:], v[:,:,1588:]), F.scaled_dot_product_attention(q[:,:,1588:], kq[:,:,:1588], vq[:,:,:1588])], dim=2)
 
         x = x.transpose(1, 2).reshape(B, N, C)
         x = self.proj(x)
