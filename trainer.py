@@ -1101,7 +1101,7 @@ def modelSetup(classes):
         embed_dim=512, 
         depth=10, 
         num_heads=8, 
-        drop_path_rate=0.3,
+        drop_path_rate=0.2,
     )
     r'''
     model.reset_classifier(0)
@@ -1368,7 +1368,7 @@ def trainCycle(image_datasets, model):
     # histogram bins
     bins=100
 
-    firstLoop = True
+    firstLoop = False
     
     MeanStackedAccuracyStored = torch.Tensor([2,1,2,1])
     if(is_head_proc):
