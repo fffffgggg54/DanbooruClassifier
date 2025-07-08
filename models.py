@@ -224,14 +224,18 @@ class TagEmbedCrossAttentionViT(VisionTransformer):
     def forward_features(self, x: torch.Tensor) -> torch.Tensor:
         B, _, H, W = x.shape
         x = self.patch_embed(x)
+        print(x)
         x = self._pos_embed(x)
+        print(x)
         x = self.patch_drop(x)
         x = self.norm_pre(x)
+        print(x)
         H, W = self.patch_embed.dynamic_feat_size((H, W))
         # separate img and reg
         x = x[:, -(H*W):, :] # [B, N, C]
         registers = x[:, :self.num_reg_tokens, :] # [B, K, C]
         x = x.transpose(1, 2).reshape(B, -1, H, W) # [B, N, C] -> [B, C, H, W]
+        print(x)
         if self.grad_checkpointing and not torch.jit.is_scripting():
             x, registers = checkpoint_seq(self.blocks, (x, registers))
         else:
