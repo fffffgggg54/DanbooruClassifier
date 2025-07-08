@@ -1094,7 +1094,7 @@ def modelSetup(classes):
         drop_path_rate=0.3)
     '''
     model = models.TagEmbedCrossAttentionViT(
-        torch.load(f'./DanbooruWikiEmbeddings{str(FLAGS['tag_count'])}_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
+        torch.load(f'./DanbooruWikiEmbeddings{str(FLAGS['tagCount'])}_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
         img_size = FLAGS['actual_image_size'], 
         patch_size = 16,
         num_classes = len(classes), 
