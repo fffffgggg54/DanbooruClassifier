@@ -1531,6 +1531,7 @@ def trainCycle(image_datasets, model):
                                     outputs = model[0].forward_head(latent_features)
                             else:
                                 outputs = model(imageBatch).float()
+                                print(outputs)
                             #outputs = model(imageBatch).logits
                             outputs_all = outputs.float()
                             preds = torch.sigmoid(outputs).float()
