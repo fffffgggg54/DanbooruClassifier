@@ -167,7 +167,7 @@ class TagEmbedCrossAttentionViT(VisionTransformer):
             fc_norm=False,
             no_embed_class=True,
         )
-        self.reg_token = nn.Parameter(class_embed)
+        self.reg_token = nn.Parameter(class_embed, requires_grad=False)
         self.num_reg_tokens, self.class_embed_dim = class_embed.shape
         self.num_prefix_tokens += self.num_reg_tokens
 
@@ -238,13 +238,12 @@ class TagEmbedCrossAttentionViT(VisionTransformer):
         else:
             x, registers = self.blocks((x, registers))
         x = x.flatten(2).transpose(1, 2) # BCHW -> BNC
-        x = torch.cat([registers, x], dim=1) # cat img and reg to [B, H*W+K, C]
+        x = torch.cat([registers, x], dim=1) # cat img and reg to [B, K+H*W, C]
         x = self.norm(x)
-        print(x.mean(dim=1).isnan())
         return x
     
     def forward_head(self, x: torch.Tensor, pre_logits: bool = False) -> torch.Tensor:
-        print(x.sum().isnan())
+        print(x[:, self.num_prefix_tokens:].mean(dim=1).sum().isnan())
         x = self.pool(x)
         print(x.sum().isnan())
         x = self.fc_norm(x)
