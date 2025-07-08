@@ -1098,9 +1098,9 @@ def modelSetup(classes):
         img_size = FLAGS['actual_image_size'], 
         patch_size = 16,
         num_classes = len(classes), 
-        embed_dim=768, 
-        depth=12, 
-        num_heads=12, 
+        embed_dim=512, 
+        depth=10, 
+        num_heads=8, 
         drop_path_rate=0.3,
     )
     r'''
