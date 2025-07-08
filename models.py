@@ -167,8 +167,8 @@ class TagEmbedCrossAttentionViT(VisionTransformer):
             fc_norm=False,
             no_embed_class=True,
         )
-        self.reg_token = nn.Parameter(class_embed, requires_grad=False)
-        self.num_reg_tokens, self.class_embed_dim = class_embed.shape
+        self.reg_token = nn.Parameter(class_embed.transpose(0,1), requires_grad=False)
+        self.class_embed_dim, self.num_reg_tokens = class_embed.shape
         self.num_prefix_tokens += self.num_reg_tokens
 
         self.reg_proj = nn.Linear(self.class_embed_dim, self.embed_dim)
