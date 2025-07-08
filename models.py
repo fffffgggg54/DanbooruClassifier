@@ -62,7 +62,7 @@ class MaskingAttention(nn.Module):
         # with img SA
         #x = torch.cat([F.scaled_dot_product_attention(q[:,:,:1588], k[:,:,1588:], v[:,:,1588:]), F.scaled_dot_product_attention(q[:,:,1588:], k, v)], dim=2)
         # without img SA
-        x = torch.cat([F.scaled_dot_product_attention(q[:,:,:1588], k[:,:,1588:], v[:,:,1588:]), F.scaled_dot_product_attention(q[:,:,1588:], kq[:,:,:1588], vq[:,:,:1588])], dim=2)
+        x = torch.cat([F.scaled_dot_product_attention(q[:,:,:1588], k[:,:,1588:], v[:,:,1588:]), F.scaled_dot_product_attention(q[:,:,1588:], k[:,:,:1588], v[:,:,:1588])], dim=2)
 
         x = x.transpose(1, 2).reshape(B, N, C)
         x = self.proj(x)
