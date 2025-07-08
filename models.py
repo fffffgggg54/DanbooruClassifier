@@ -134,14 +134,18 @@ class MaskedRegisterAttentionBlock(nn.Module):
         _, K, _ = registers.shape
         x = x.flatten(2).transpose(1, 2) # BCHW -> BNC
         x = x + self.drop_path1(self.ls1(self.token_mixer(self.norm1(x).transpose(1, 2).reshape(B, C, H, W)).flatten(2).transpose(1, 2)))
+        print(x.shape)
         x = torch.cat((registers, x), dim=1)
+        print(x.shape)
         mask = torch.ones(K+H*W, K+H*W, dtype=torch.bool, device = x.device, requires_grad = False)
         # mask off image token self attention
         mask[K:K+H*W, K:K+H*W] = False
         # mask off register self attention
         mask[:K, :K] = False
         x = x + self.drop_path2(self.ls2(self.attn(self.norm2(x), mask=mask)))
+        print(x.shape)
         x = x + self.drop_path3(self.ls3(self.mlp(self.norm3(x))))
+        print(x.shape)
 
         
         registers = x[:, :K]
