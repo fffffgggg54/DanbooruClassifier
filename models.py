@@ -242,3 +242,13 @@ class TagEmbedCrossAttentionViT(VisionTransformer):
         x = self.norm(x)
         print(x.mean(dim=1).isnan())
         return x
+    
+    def forward_head(self, x: torch.Tensor, pre_logits: bool = False) -> torch.Tensor:
+        print(x.sum().isnan())
+        x = self.pool(x)
+        print(x.sum().isnan())
+        x = self.fc_norm(x)
+        print(x.sum().isnan())
+        x = self.head_drop(x)
+        print(x.sum().isnan())
+        return x if pre_logits else self.head(x)
