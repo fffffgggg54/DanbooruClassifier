@@ -128,24 +128,18 @@ class MaskedRegisterAttentionBlock(nn.Module):
         
     def forward(self, in_tuple: Tuple[torch.Tensor, torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
         x, registers = in_tuple
-        print(x.shape)
-        print(registers.shape)
         B, C, H, W = x.shape
         _, K, _ = registers.shape
         x = x.flatten(2).transpose(1, 2) # BCHW -> BNC
         x = x + self.drop_path1(self.ls1(self.token_mixer(self.norm1(x).transpose(1, 2).reshape(B, C, H, W)).flatten(2).transpose(1, 2)))
-        print(x.shape)
         x = torch.cat((registers, x), dim=1)
-        print(x.shape)
         mask = torch.ones(K+H*W, K+H*W, dtype=torch.bool, device = x.device, requires_grad = False)
         # mask off image token self attention
         mask[K:K+H*W, K:K+H*W] = False
         # mask off register self attention
         mask[:K, :K] = False
         x = x + self.drop_path2(self.ls2(self.attn(self.norm2(x), mask=mask)))
-        print(x.shape)
         x = x + self.drop_path3(self.ls3(self.mlp(self.norm3(x))))
-        print(x.shape)
 
         
         registers = x[:, :K]
@@ -231,7 +225,6 @@ class TagEmbedCrossAttentionViT(VisionTransformer):
         B, _, H, W = x.shape
         x = self.patch_embed(x)
         x = self._pos_embed(x)
-        print(x.shape)
         x = self.patch_drop(x)
         x = self.norm_pre(x)
         H, W = self.patch_embed.dynamic_feat_size((H, W))
@@ -250,13 +243,7 @@ class TagEmbedCrossAttentionViT(VisionTransformer):
         return x
     
     def forward_head(self, x: torch.Tensor, pre_logits: bool = False) -> torch.Tensor:
-        print(self.num_prefix_tokens)
-        print(x.shape)
-        print(x[:, self.num_prefix_tokens:].sum().isnan())
         x = self.pool(x)
-        print(x.sum().isnan())
         x = self.fc_norm(x)
-        print(x.sum().isnan())
         x = self.head_drop(x)
-        print(x.sum().isnan())
         return x if pre_logits else self.head(x)
