@@ -243,6 +243,8 @@ class TagEmbedCrossAttentionViT(VisionTransformer):
         return x
     
     def forward_head(self, x: torch.Tensor, pre_logits: bool = False) -> torch.Tensor:
+        print(self.num_prefix_tokens)
+        print(x.shape)
         print(x[:, self.num_prefix_tokens:].sum().isnan())
         x = self.pool(x)
         print(x.sum().isnan())
