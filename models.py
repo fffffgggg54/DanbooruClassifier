@@ -128,6 +128,8 @@ class MaskedRegisterAttentionBlock(nn.Module):
         
     def forward(self, in_tuple: Tuple[torch.Tensor, torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
         x, registers = in_tuple
+        print(x.shape)
+        print(registers.shape)
         B, C, H, W = x.shape
         _, K, _ = registers.shape
         x = x.flatten(2).transpose(1, 2) # BCHW -> BNC
@@ -135,7 +137,7 @@ class MaskedRegisterAttentionBlock(nn.Module):
         x = torch.cat((registers, x), dim=1)
         mask = torch.ones(K+H*W, K+H*W, dtype=torch.bool, device = x.device, requires_grad = False)
         # mask off image token self attention
-        #mask[K:K+H*W, K:K+H*W] = False
+        mask[K:K+H*W, K:K+H*W] = False
         # mask off register self attention
         mask[:K, :K] = False
         x = x + self.drop_path2(self.ls2(self.attn(self.norm2(x), mask=mask)))
