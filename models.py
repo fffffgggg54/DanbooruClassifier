@@ -259,3 +259,10 @@ class TagEmbedCrossAttentionViT(VisionTransformer):
         x = self.fc_norm(x)
         x = self.head_drop(x)
         return x if pre_logits else self.head(x)
+
+    def forward_labels(self, x):
+        # extract registers
+        x = x[:, :self.num_reg_tokens, :] # [B, K, C]
+        x = self.fc_norm(x)
+        x = self.head(x).flatten(1) # [B, K]
+        return x
