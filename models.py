@@ -184,6 +184,7 @@ class TagEmbedCrossAttentionViT(VisionTransformer):
         self.num_prefix_tokens += self.num_reg_tokens
 
         self.reg_proj = nn.Linear(self.class_embed_dim, self.embed_dim)
+        self.forward_head = self.forward_register_head
     
     def _pos_embed(self, x: torch.Tensor) -> torch.Tensor:
         if self.pos_embed is None:
@@ -254,13 +255,13 @@ class TagEmbedCrossAttentionViT(VisionTransformer):
         x = self.norm(x)
         return x
     
-    def forward_head(self, x: torch.Tensor, pre_logits: bool = False) -> torch.Tensor:
+    def forward_patch_head(self, x: torch.Tensor, pre_logits: bool = False) -> torch.Tensor:
         x = self.pool(x)
         x = self.fc_norm(x)
         x = self.head_drop(x)
         return x if pre_logits else self.head(x)
 
-    def forward_labels(self, x):
+    def forward_register_head(self, x, pre_logits=False):
         # extract registers
         x = x[:, :self.num_reg_tokens, :] # [B, K, C]
         x = self.fc_norm(x)
