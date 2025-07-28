@@ -510,7 +510,8 @@ class ClassEmbedClassifierHead(nn.Module):
 
     def forward(self, x, q=None): # [B, C], [K, D]
         q = self.embed_drop(self.embed_norm(q or self.class_embed)).unsqueeze(0) # [1, K, D]
-        x = torch.cat([x.unsqueeze(1), q], dim=-1) # [B, K, C+D]
+        q = q.expand(x.shape[0], -1, -1) # [B, K, D]
+        x = torch.cat([x.unsqueeze(1).expand(-1, q.shape[1], -1), q], dim=-1) # [B, K, C+D]
         x = self.ffn(x).flatten(-1) # [B, K]
 
         return x
