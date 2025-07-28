@@ -512,8 +512,7 @@ class ClassEmbedClassifierHead(nn.Module):
         q = self.embed_drop(self.embed_norm(q or self.class_embed)).unsqueeze(0) # [1, K, D]
         q = q.expand(x.shape[0], -1, -1) # [B, K, D]
         x = torch.cat([x.unsqueeze(1).expand(-1, q.shape[1], -1), q], dim=-1) # [B, K, C+D]
-        x = self.ffn(x).flatten(-1) # [B, K]
-        print(x.shape)
+        x = self.ffn(x).squeeze(-1) # [B, K]
 
         return x
 
