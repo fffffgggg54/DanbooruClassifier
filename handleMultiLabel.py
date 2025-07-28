@@ -506,7 +506,7 @@ class ClassEmbedClassifierHead(nn.Module):
         self.register_buffer("class_embed", class_embed)
 
         self.embed_drop = nn.Dropout(embed_drop)
-        self.embed_norm = norm_layer(num_features) if embed_norm else nn.Identity()
+        self.embed_norm = norm_layer(self.embed_dim) if embed_norm else nn.Identity()
 
     def forward(self, x, q=None): # [B, C], [K, D]
         q = self.embed_drop(self.embed_norm(q or self.class_embed)).unsqueeze(0) # [1, K, D]
