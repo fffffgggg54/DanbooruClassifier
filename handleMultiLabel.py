@@ -445,6 +445,7 @@ class MatryoshkaClassificationHead(nn.Module):
         x = self.head(x)
         return x
 
+'''
 class ClassEmbedClassifierHead(nn.Module):
     def __init__(
         self,
@@ -473,8 +474,46 @@ class ClassEmbedClassifierHead(nn.Module):
         x = x @ proj[:-1] + proj[-1]
         return x
 
+'''
 
+from timm.layers import Mlp, GluMlp
 
+class ClassEmbedClassifierHead(nn.Module):
+    def __init__(
+        self,
+        num_features, 
+        num_classes, 
+        class_embed, 
+        embed_drop=0.1, 
+        embed_norm=True,
+        norm_layer: nn.Module = nn.LayerNorm,
+    ):
+        super().__init__()
+        self.num_features = num_features
+        self.num_classes = num_classes
+        self.embed_dim = class_embed.shape[1]
+
+        self.concat_feature_size = self.embed_dim + self.num_features
+        
+        self.ffn = GluMlp(
+            self.concat_feature_size, 
+            hidden_features = self.concat_feature_size * 4,
+            out_features = 1,
+            norm_layer = norm_layer,
+        )
+        assert len(class_embed) == num_classes, 'ClassEmbedClassifierHead got class_embed where dim 0 != num_classes'
+        class_embed = class_embed.clone().detach() # copy instead of reference, detach gradient flow
+        self.register_buffer("class_embed", class_embed)
+
+        self.embed_drop = nn.Dropout(embed_drop)
+        self.embed_norm = norm_layer(num_features) if embed_norm else nn.Identity()
+
+    def forward(self, x, q=None): # [B, C], [K, D]
+        q = self.embed_drop(self.embed_norm(q or self.class_embed)).unsqueeze(0) # [1, K, D]
+        x = torch.cat([x.unsqueeze(1), q], dim=-1) # [B, K, C+D]
+        x = self.ffn(x).flatten(-1) # [B, K]
+
+        return x
 
 def stepAtThreshold(x, threshold, k=5, base=10):
     return 1 / (1 + torch.pow(base, (0 - k) * (x - threshold)))

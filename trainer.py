@@ -64,8 +64,8 @@ import re
 
 #currGPU = '3090'
 #currGPU = 'm40'
-currGPU = 'v100'
-#currGPU = 'sol_gh200'
+#currGPU = 'v100'
+currGPU = 'sol_gh200'
 #currGPU = 'none'
 
 
@@ -435,10 +435,10 @@ elif currGPU == 'v100':
     FLAGS['val'] = False
 
 elif currGPU == 'sol_gh200':
-    #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch"
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-ml_decoder_NoPostInProjAct_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/convformer_s18-ml_decoder_NoMlp_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-5500-50epoch/"
-    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/convformer_s18-ml_decoder_NoMlp_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/convformer_s18-ml_decoder_NoMlp_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     # post importer config
 
     FLAGS['chunkSize'] = 1000
@@ -488,11 +488,11 @@ elif currGPU == 'sol_gh200':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 41
+    FLAGS['resume_epoch'] = 0
     
     FLAGS['use_mlr_act'] = False
     FLAGS['use_matryoshka_head'] = False
-    FLAGS['use_class_embed_head'] = False
+    FLAGS['use_class_embed_head'] = True
 
     FLAGS['logit_offset'] = True
     FLAGS['logit_offset_multiplier'] = 1.0
@@ -1041,7 +1041,7 @@ def modelSetup(classes):
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
     #model = timm.create_model('resnet152', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15)
-    #model = timm.create_model('convformer_s18', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15)
+    model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('vit_medium_shallow_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_base_patch16_siglip_gap_224.v2_webli', pretrained=True, num_classes=len(classes), drop_path_rate = 0.3)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
@@ -1093,7 +1093,7 @@ def modelSetup(classes):
         fc_norm=False,
         drop_path_rate=0.3)
     '''
-    
+    '''
     model = models.TagEmbedCrossAttentionViT(
         torch.load(f'./DanbooruWikiEmbeddings{str(FLAGS['tagCount'])}_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
         img_size = FLAGS['actual_image_size'], 
@@ -1104,7 +1104,7 @@ def modelSetup(classes):
         num_heads=6, 
         drop_path_rate=0.1,
     )
-    
+    '''
     r'''
     model.reset_classifier(0)
     state_dict = torch.load('/media/fredo/Storage3/danbooru_models/vit_base_patch16_gap_448-ml_decoder_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE-448-1588-100epoch/saved_model_epoch_99.pth', map_location=torch.device('cpu'), weights_only=True)
