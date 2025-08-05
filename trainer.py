@@ -437,7 +437,7 @@ elif currGPU == 'v100':
 elif currGPU == 'sol_gh200':
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-ml_decoder_NoPostInProjAct_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-ml_decoder_NoMlp_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-classEmbedConcatHead_SwiGLU_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/convformer_s18-ml_decoder_NoMlp_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     # post importer config
 
@@ -488,11 +488,11 @@ elif currGPU == 'sol_gh200':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 30
+    FLAGS['resume_epoch'] = 0
     
     FLAGS['use_mlr_act'] = False
     FLAGS['use_matryoshka_head'] = False
-    FLAGS['use_class_embed_head'] = False
+    FLAGS['use_class_embed_head'] = True
 
     FLAGS['logit_offset'] = True
     FLAGS['logit_offset_multiplier'] = 1.0
@@ -1180,7 +1180,7 @@ def modelSetup(classes):
         use_mlp = False,
     )
     '''
-    
+    '''
     model = ml_decoder.add_ml_decoder_head(
         model,
         num_groups = 0,
@@ -1192,7 +1192,7 @@ def modelSetup(classes):
         attn_out_proj = True,
         use_mlp = False,
     )
-    
+    '''
     num_features = model.num_features
 
     if FLAGS['use_mlr_act'] == True or FLAGS['use_matryoshka_head'] == True or FLAGS['use_class_embed_head'] == True:

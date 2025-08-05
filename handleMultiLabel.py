@@ -494,9 +494,16 @@ class ClassEmbedClassifierHead(nn.Module):
         self.embed_dim = class_embed.shape[1]
 
         self.concat_feature_size = self.embed_dim + self.num_features
-        
+        '''
         self.ffn = GluMlp(
             self.concat_feature_size, 
+            hidden_features = self.concat_feature_size * 4,
+            out_features = 1,
+            norm_layer = norm_layer,
+        )
+        '''
+        self.ffn = Mlp(
+            self.concat_feature_size,
             hidden_features = self.concat_feature_size * 4,
             out_features = 1,
             norm_layer = norm_layer,
