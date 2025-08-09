@@ -502,12 +502,14 @@ class ClassEmbedClassifierHead(nn.Module):
             norm_layer = norm_layer,
         )
         '''
+        
         self.ffn = Mlp(
             self.concat_feature_size,
             hidden_features = self.concat_feature_size * 4,
             out_features = 1,
             norm_layer = norm_layer,
         )
+        
         assert len(class_embed) == num_classes, 'ClassEmbedClassifierHead got class_embed where dim 0 != num_classes'
         class_embed = class_embed.clone().detach() # copy instead of reference, detach gradient flow
         self.register_buffer("class_embed", class_embed)
@@ -516,9 +518,11 @@ class ClassEmbedClassifierHead(nn.Module):
         self.embed_norm = norm_layer(self.embed_dim) if embed_norm else nn.Identity()
 
     def forward(self, x, q=None): # [B, C], [K, D]
+        
         q = self.embed_drop(self.embed_norm(q or self.class_embed)).unsqueeze(0) # [1, K, D]
         q = q.expand(x.shape[0], -1, -1) # [B, K, D]
-        x = torch.cat([x.unsqueeze(1).expand(-1, q.shape[1], -1), q], dim=-1) # [B, K, C+D]
+        x = x.unsqueeze(1).expand(-1, q.shape[1], -1) # [B, K, C]
+        x = torch.cat([x, q], dim=-1) # [B, K, C+D]
         x = self.ffn(x).squeeze(-1) # [B, K]
 
         return x
