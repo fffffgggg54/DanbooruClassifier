@@ -506,7 +506,7 @@ class CrossSwiGLU(nn.Module):
 
     def forward(self, x, q):
         x = self.fc1_x(x)
-        gate = self.fc1_q(x)
+        gate = self.fc1_q(q)
         x = self.act(gate) * x
         x = self.drop1(x)
         x = self.norm(x)
