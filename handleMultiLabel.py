@@ -477,6 +477,7 @@ class ClassEmbedClassifierHead(nn.Module):
 '''
 
 from timm.layers import Mlp, GluMlp
+from timm.layers.helpers import to_2tuple
 
 
 class CrossSwiGLU(nn.Module):
