@@ -478,6 +478,41 @@ class ClassEmbedClassifierHead(nn.Module):
 
 from timm.layers import Mlp, GluMlp
 
+
+class CrossSwiGLU(nn.Module):
+    def __init__(
+            self,
+            in_features,
+            query_features,
+            hidden_features,
+            out_features,
+            act_layer=nn.SiLU,
+            norm_layer=None,
+            bias=True,
+            drop=0.,
+    ):
+        super().__init__()
+        bias = to_2tuple(bias)
+        drop_probs = to_2tuple(drop)
+
+        self.fc1_x = nn.Linear(in_features, hidden_features, bias=bias[0])
+        self.fc1_q = nn.Linear(query_features_features, hidden_features, bias=bias[0])
+        self.act = act_layer()
+        self.drop1 = nn.Dropout(drop_probs[0])
+        self.norm = norm_layer(hidden_features) if norm_layer is not None else nn.Identity()
+        self.fc2 = nn.Linear(hidden_features, out_features, bias=bias[1])
+        self.drop2 = nn.Dropout(drop_probs[1])
+
+    def forward(self, x, q):
+        x = self.fc1_x(x)
+        gate = self.fc1_q(x)
+        x = self.act(gate) * x
+        x = self.drop1(x)
+        x = self.norm(x)
+        x = self.fc2(x)
+        x = self.drop2(x)
+        return x
+
 class ClassEmbedClassifierHead(nn.Module):
     def __init__(
         self,
@@ -502,14 +537,21 @@ class ClassEmbedClassifierHead(nn.Module):
             norm_layer = norm_layer,
         )
         '''
-        
+        '''
         self.ffn = Mlp(
             self.concat_feature_size,
             hidden_features = self.concat_feature_size * 4,
             out_features = 1,
             norm_layer = norm_layer,
         )
-        
+        '''
+        self.ffn = CrossSwiGLU(
+            self.num_features,
+            self.embed_dim,
+            self.concat_feature_size,
+            1,
+            norm_layer = norm_layer,
+        )
         assert len(class_embed) == num_classes, 'ClassEmbedClassifierHead got class_embed where dim 0 != num_classes'
         class_embed = class_embed.clone().detach() # copy instead of reference, detach gradient flow
         self.register_buffer("class_embed", class_embed)
@@ -522,9 +564,9 @@ class ClassEmbedClassifierHead(nn.Module):
         q = self.embed_drop(self.embed_norm(q or self.class_embed)).unsqueeze(0) # [1, K, D]
         q = q.expand(x.shape[0], -1, -1) # [B, K, D]
         x = x.unsqueeze(1).expand(-1, q.shape[1], -1) # [B, K, C]
-        x = torch.cat([x, q], dim=-1) # [B, K, C+D]
-        x = self.ffn(x).squeeze(-1) # [B, K]
-
+        #x = torch.cat([x, q], dim=-1) # [B, K, C+D]
+        #x = self.ffn(x).squeeze(-1) # [B, K]
+        x = self.ffn(x, q).squeeze(-1) # [B, K]
         return x
 
 def stepAtThreshold(x, threshold, k=5, base=10):
