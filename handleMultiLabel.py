@@ -497,7 +497,7 @@ class CrossSwiGLU(nn.Module):
         drop_probs = to_2tuple(drop)
 
         self.fc1_x = nn.Linear(in_features, hidden_features, bias=bias[0])
-        self.fc1_q = nn.Linear(query_features_features, hidden_features, bias=bias[0])
+        self.fc1_q = nn.Linear(query_features, hidden_features, bias=bias[0])
         self.act = act_layer()
         self.drop1 = nn.Dropout(drop_probs[0])
         self.norm = norm_layer(hidden_features) if norm_layer is not None else nn.Identity()
