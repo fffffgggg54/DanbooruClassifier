@@ -549,7 +549,7 @@ class ClassEmbedClassifierHead(nn.Module):
         self.ffn = CrossSwiGLU(
             self.num_features,
             self.embed_dim,
-            self.concat_feature_size * 4,
+            2048,
             1,
             norm_layer = norm_layer,
         )
@@ -864,7 +864,7 @@ class DistributionTracker(nn.Module):
     def pos_count(self): return self._pos_count
     
     @property
-    def pos_var(self): return self._neg_var #return self._pos_M2/(self._pos_count - 1)
+    def pos_var(self): return self._pos_var #return self._pos_M2/(self._pos_count - 1)
     
     @property
     def pos_std(self): return self.pos_var ** 0.5
