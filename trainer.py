@@ -1583,7 +1583,6 @@ def trainCycle(image_datasets, model):
                                 all_logits = outputs
 
                             dist_tracker.set_device(all_logits.device)
-                            if FLAGS['use_tag_kfold']: dist_tracker_holdout.set_device(all_logits.device)
                             with torch.no_grad():
                                 if FLAGS['use_tag_kfold']:
                                     multiAccuracy = cm_tracker.update(preds.detach()[:, inv_mask], tagBatch.to(device)[:, inv_mask])
