@@ -470,8 +470,8 @@ elif currGPU == 'sol_gh200':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 25
-    FLAGS['postDataServerWorkerCount'] = 3
+    FLAGS['num_workers'] = 40
+    FLAGS['postDataServerWorkerCount'] = 6
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
     # training config
@@ -1090,7 +1090,7 @@ def modelSetup(classes):
     # vit_large_patch16_gap_448: p16 d1024 L24 nh16
     # vit_base_patch16_gap_448: p16 d768 L12 nh12
     # vit_medium_patch16_gap_224: p16 d512 L12 nh8
-    
+    '''
     model = timm.models.VisionTransformer(
         img_size = FLAGS['actual_image_size'], 
         patch_size = 16,
