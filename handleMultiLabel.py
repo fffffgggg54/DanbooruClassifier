@@ -549,7 +549,7 @@ class ClassEmbedClassifierHead(nn.Module):
         self.ffn = CrossSwiGLU(
             self.num_features,
             self.embed_dim,
-            1024,
+            2048,
             1,
             norm_layer = norm_layer,
         )

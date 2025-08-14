@@ -435,9 +435,9 @@ elif currGPU == 'v100':
     FLAGS['val'] = False
 
 elif currGPU == 'sol_gh200':
-    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch/"
+    #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-ml_decoder_NoPostInProjAct_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-classEmbedGatingHead2048_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-classEmbedGatingHead2048_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/convformer_s18-ml_decoder_NoMlp_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     # post importer config
 
@@ -470,8 +470,8 @@ elif currGPU == 'sol_gh200':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 40
-    FLAGS['postDataServerWorkerCount'] = 6
+    FLAGS['num_workers'] = 20
+    FLAGS['postDataServerWorkerCount'] = 3
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
     # training config
