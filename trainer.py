@@ -998,13 +998,7 @@ class FeaturePyramid2Token(nn.Module):
         
 def modelSetup(classes):
     
-    if FLAGS['use_tag_kfold']:
-        mask = torch.rand(len(classes), generator = torch.Generator().manual_seed(42)) * FLAGS['n_folds']
-        mask = (mask >= (FLAGS['current_fold'] - 1)) & (mask < FLAGS['current_fold'])
-        inv_mask = ~mask
-        print(sum(mask))
-        print((sum(inv_mask)))
-        exit()
+    
 
     '''
     myCvtConfig = transformers.CvtConfig(num_channels=3,
@@ -1267,13 +1261,20 @@ def trainCycle(image_datasets, model):
     #print("starting training")
     startTime = time.time()
 
-    #timm.utils.jit.set_jit_fuser("te")
+    
     
     
     
     dataset_sizes = {x: len(image_datasets[x]) for x in image_datasets}
     device = FLAGS['device']
-        
+
+    if FLAGS['use_tag_kfold']:
+        mask = torch.rand(len(classes), generator = torch.Generator().manual_seed(42)) * FLAGS['n_folds']
+        mask = (mask >= (FLAGS['current_fold'] - 1)) & (mask < FLAGS['current_fold'])
+        mask = mask.to(device)
+        inv_mask = ~mask
+        print(sum(mask))
+        print((sum(inv_mask)))
     
     is_head_proc = not FLAGS['use_ddp'] or dist.get_rank() == 0
     
@@ -1432,6 +1433,9 @@ def trainCycle(image_datasets, model):
             cm_tracker = MLCSL.MetricTracker()
             dist_tracker = MLCSL.DistributionTracker()
 
+            if FLAGS['use_tag_kfold']:
+                cm_tracker_holdout = MLCSL.MetricTracker()
+
             #try:
             if phase == 'train':
                 model.train()  # Set model to training mode
@@ -1441,8 +1445,6 @@ def trainCycle(image_datasets, model):
                 if(is_head_proc): print("training set")
                 
                 if FLAGS['progressiveImageSize'] == True:
-                    
-                    
                     dynamicResizeDim = int(FLAGS['image_size']*FLAGS['progressiveSizeStart'] + epoch * (FLAGS['image_size']-FLAGS['image_size']*FLAGS['progressiveSizeStart'])/FLAGS['num_epochs'])
                 else:
                     dynamicResizeDim = FLAGS['actual_image_size']
@@ -1456,13 +1458,11 @@ def trainCycle(image_datasets, model):
                                                           transforms.RandomHorizontalFlip(),
                                                           #transforms.TrivialAugmentWide(),
                                                           #danbooruDataset.CutoutPIL(cutout_factor=0.2),
-                                                          
                                                           transforms.ToTensor(),
                                                           RandomErasing(probability=0.3, mode='pixel', device='cpu'),
                                                           #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                                                           ])
-                
-                
+
             if phase == 'val':
 
                 model.eval()   # Set model to evaluate mode
@@ -1583,9 +1583,14 @@ def trainCycle(image_datasets, model):
                                 all_logits = outputs
 
                             dist_tracker.set_device(all_logits.device)
+                            if FLAGS['use_tag_kfold']: dist_tracker_holdout.set_device(all_logits.device)
                             with torch.no_grad():
-                                #multiAccuracy = cm_tracker.update((preds.detach() > offset.detach()).float().to(device), tagBatch.to(device))
-                                multiAccuracy = cm_tracker.update(preds.detach(), tagBatch.to(device))
+                                if FLAGS['use_tag_kfold']:
+                                    multiAccuracy = cm_tracker.update(preds.detach()[:, inv_mask], tagBatch.to(device)[:, inv_mask])
+                                    multiAccuracyHoldout = cm_tracker_holdout.update(preds.detach()[:, mask], tagBatch.to(device)[:, mask])
+                                else:
+                                    #multiAccuracy = cm_tracker.update((preds.detach() > offset.detach()).float().to(device), tagBatch.to(device))
+                                    multiAccuracy = cm_tracker.update(preds.detach(), tagBatch.to(device))
                                 if(firstLoop): print("got CM update")
                                 
                                 
@@ -1654,7 +1659,7 @@ def trainCycle(image_datasets, model):
 
                         
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        loss = criterion(outputs_all.to(device), tagsModified.to(device))
+                        loss = criterion(outputs_all.to(device)[:, inv_mask], tagsModified.to(device)[:, inv_mask])
                         #loss = criterion(outputs_all.to(device), tagsModified.to(device), weight = matryoshka_loss_weights)
                         #loss = criterion(outputs.to(device), tagsModified.to(device), weight = loss_weight)
                         #loss += (((dist_tracker.pos_mean + dist_tracker.neg_mean) ** 2) ** 0.25).sum() #+ dist_tracker.pos_std.sum() + dist_tracker.neg_std.sum()
@@ -1807,15 +1812,21 @@ def trainCycle(image_datasets, model):
                         if(firstLoop): print("got mAP")
                         torch.set_printoptions(linewidth = 200, sci_mode = False)
                         print(f"[{epoch}/{FLAGS['num_epochs']}][{i}/{len(dataloaders[phase])}]\tLoss: {loss.detach():.4f}\tImages/Second: {imagesPerSecond:.4f}\tAccuracy: {accuracy:.2f}\t {[f'{num:.4f}' for num in list((multiAccuracy.detach() * 100))]}\t{textOutput}")
+                        if FLAGS['use_tag_kfold']: print(f'kfold holdout perfomance metrics: {[f'{num:.4f}' for num in list((multiAccuracy.detach() * 100))]}')
                         torch.set_printoptions(profile='default')
                         if(firstLoop): print("info print call")
                         #print(dist_tracker.dump())
+                        # FIXME this is actually cohen's d I think, also should add a few more distribution things
                         z_scores = (dist_tracker.pos_mean - dist_tracker.neg_mean) / ((dist_tracker.pos_var + dist_tracker.neg_var) ** 0.5 + 1e-8)
                         z_scores = z_scores.detach()
                         #t_stat = (dist_tracker.pos_mean-dist_tracker.neg_mean)/((dist_tracker.pos_var/(dist_tracker.pos_count + 1e-8) + dist_tracker.neg_var/(dist_tracker.neg_count + 1e-8)) ** 0.5 + 1e-8)
                         #print(f't score mean: {t_stat.mean()} std: {t_stat.std()}')
                         #t_p_values = scipy.stats.ttest_ind_from_stats(dist_tracker.pos_mean.cpu().numpy(), dist_tracker.pos_std.cpu().numpy(), dist_tracker.pos_count.cpu().numpy(), dist_tracker.neg_mean.cpu().numpy(), dist_tracker.neg_std.cpu().numpy(), dist_tracker.neg_count.cpu().numpy(), equal_var=False, alternative="greater").pvalue
-                        print(f'z score mean: {z_scores.mean()}, std: {z_scores.std()}, pos mean: {dist_tracker.pos_mean.detach().mean()}, neg mean: {dist_tracker.neg_mean.detach().mean()}')
+                        if FLAGS['use_tag_kfold']:
+                            print(f'z score mean: {z_scores[inv_mask].mean()}, std: {z_scores[inv_mask].std()}, pos mean: {dist_tracker.pos_mean.detach()[inv_mask].mean()}, neg mean: {dist_tracker.neg_mean.detach()[inv_mask].mean()}')
+                            print(f'holdout: z score mean: {z_scores[mask].mean()}, std: {z_scores[mask].std()}, pos mean: {dist_tracker.pos_mean.detach()[mask].mean()}, neg mean: {dist_tracker.neg_mean.detach()[mask].mean()}')
+                        else:
+                            print(f'z score mean: {z_scores.mean()}, std: {z_scores.std()}, pos mean: {dist_tracker.pos_mean.detach().mean()}, neg mean: {dist_tracker.neg_mean.detach().mean()}')
                         if(firstLoop): print("dist print call")
                         '''
                         plotext.hist(dist_tracker.neg_mean.detach().clamp(min=-15), bins, label='Neg means')
@@ -1856,6 +1867,7 @@ def trainCycle(image_datasets, model):
             if FLAGS['use_ddp'] == True:
                 torch.cuda.synchronize()
                 torch.distributed.all_reduce(cm_tracker.running_confusion_matrix, op=torch.distributed.ReduceOp.AVG)
+                if FLAGS['use_tag_kfold']: torch.distributed.all_reduce(cm_tracker_holdout.running_confusion_matrix, op=torch.distributed.ReduceOp.AVG)
                 
                 #torch.distributed.all_reduce(criterion.gamma_neg_per_class, op = torch.distributed.ReduceOp.AVG)
             if ((phase == 'val') and (FLAGS['skip_test_set'] == False or epoch == FLAGS['num_epochs'] - 1) and is_head_proc):
@@ -1877,7 +1889,9 @@ def trainCycle(image_datasets, model):
                     #torch.set_printoptions(profile="default")
                 MeanStackedAccuracy = cm_tracker.get_aggregate_metrics()
                 MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
-                if(is_head_proc): print((MeanStackedAccuracy*100).tolist())
+                if(is_head_proc):
+                    print((MeanStackedAccuracy*100).tolist())
+                    if(FLAGS['use_tag_kfold']): print((cm_tracker_holdout.get_aggregate_metrics()*100).tolist())
                 
                 if dist_tracker.neg_mean.sum().isnan() == False and do_plot:
                     plotext.hist(dist_tracker.neg_mean.detach().clamp(min=-15), bins, label='Neg means')
