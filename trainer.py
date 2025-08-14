@@ -1811,7 +1811,7 @@ def trainCycle(image_datasets, model):
                         if(firstLoop): print("got mAP")
                         torch.set_printoptions(linewidth = 200, sci_mode = False)
                         print(f"[{epoch}/{FLAGS['num_epochs']}][{i}/{len(dataloaders[phase])}]\tLoss: {loss.detach():.4f}\tImages/Second: {imagesPerSecond:.4f}\tAccuracy: {accuracy:.2f}\t {[f'{num:.4f}' for num in list((multiAccuracy.detach() * 100))]}\t{textOutput}")
-                        if FLAGS['use_tag_kfold']: print(f'kfold holdout perfomance metrics: {[f'{num:.4f}' for num in list((multiAccuracy.detach() * 100))]}')
+                        if FLAGS['use_tag_kfold']: print(f'kfold holdout perfomance metrics: {[f'{num:.4f}' for num in list((multiAccuracyHoldout.detach() * 100))]}')
                         torch.set_printoptions(profile='default')
                         if(firstLoop): print("info print call")
                         #print(dist_tracker.dump())
