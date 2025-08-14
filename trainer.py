@@ -437,7 +437,7 @@ elif currGPU == 'v100':
 elif currGPU == 'sol_gh200':
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-ml_decoder_NoPostInProjAct_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-classEmbedGatingHead2048_ReverseGate_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-classEmbedGatingHead2048_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/convformer_s18-ml_decoder_NoMlp_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     # post importer config
 
@@ -506,6 +506,11 @@ elif currGPU == 'sol_gh200':
     FLAGS['compile_model'] = False
     FLAGS['fast_norm'] = False
     FLAGS['channels_last'] = True
+
+    # tag k-fold cv config
+    FLAGS['use_tag_kfold'] = True
+    FLAGS['n_folds'] = 5
+    FLAGS['current_fold'] = 1
 
     # debugging config
 
@@ -993,6 +998,14 @@ class FeaturePyramid2Token(nn.Module):
         
 def modelSetup(classes):
     
+    if FLAGS['use_tag_kfold']:
+        mask = torch.rand(len(classes), generator = torch.Generator().manual_seed(42)) * FLAGS['n_folds']
+        mask = (mask >= (FLAGS['current_fold'] - 1)) & (mask < FLAGS['current_fold'])
+        inv_mask = ~mask
+        print(sum(mask))
+        print((sum(inv_mask)))
+        exit()
+
     '''
     myCvtConfig = transformers.CvtConfig(num_channels=3,
         patch_sizes=[7, 5, 3, 3],
