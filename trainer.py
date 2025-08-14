@@ -435,9 +435,9 @@ elif currGPU == 'v100':
     FLAGS['val'] = False
 
 elif currGPU == 'sol_gh200':
-    #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch/"
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-ml_decoder_NoPostInProjAct_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-classEmbedGatingHead2048_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-classEmbedGatingHead2048_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/convformer_s18-ml_decoder_NoMlp_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     # post importer config
 
@@ -1052,9 +1052,9 @@ def modelSetup(classes):
     #model = timm.create_model('efficientformerv2_s0', pretrained=False, num_classes=len(classes), drop_path_rate=0.05)
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
-    #model = timm.create_model('resnet152', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
+    model = timm.create_model('resnet18', pretrained=False, num_classes=len(classes), drop_path_rate = 0.0)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15)
-    model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
+    #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('vit_medium_shallow_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_base_patch16_siglip_gap_224.v2_webli', pretrained=True, num_classes=len(classes), drop_path_rate = 0.3)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
@@ -1090,7 +1090,7 @@ def modelSetup(classes):
     # vit_large_patch16_gap_448: p16 d1024 L24 nh16
     # vit_base_patch16_gap_448: p16 d768 L12 nh12
     # vit_medium_patch16_gap_224: p16 d512 L12 nh8
-    '''
+    
     model = timm.models.VisionTransformer(
         img_size = FLAGS['actual_image_size'], 
         patch_size = 16,
