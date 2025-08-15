@@ -1893,11 +1893,24 @@ def trainCycle(image_datasets, model):
                     if(FLAGS['use_tag_kfold']): print((cm_tracker_holdout.get_aggregate_metrics()*100).tolist())
                 
                 if dist_tracker.neg_mean.sum().isnan() == False and do_plot:
-                    plotext.hist(dist_tracker.neg_mean.detach().clamp(min=-15), bins, label='Neg means')
-                    plotext.hist(dist_tracker.pos_mean.detach(), bins, label='Pos means')
-                    plotext.title("Distributions of per-class means")
-                    plotext.show()
-                    plotext.clear_figure()
+                    if FLAGS['use_tag_kfold']:
+                        plotext.hist(dist_tracker.neg_mean.detach()[inv_mask].clamp(min=-15), bins, label='Neg means')
+                        plotext.hist(dist_tracker.pos_mean.detach()[inv_mask], bins, label='Pos means')
+                        plotext.title("Distributions of per-class means (seen)")
+                        plotext.show()
+                        plotext.clear_figure()
+
+                        plotext.hist(dist_tracker.neg_mean.detach()[mask].clamp(min=-15), bins, label='Neg means')
+                        plotext.hist(dist_tracker.pos_mean.detach()[mask], bins, label='Pos means')
+                        plotext.title("Distributions of per-class means (holdout)")
+                        plotext.show()
+                        plotext.clear_figure()
+                    else:
+                        plotext.hist(dist_tracker.neg_mean.detach().clamp(min=-15), bins, label='Neg means')
+                        plotext.hist(dist_tracker.pos_mean.detach(), bins, label='Pos means')
+                        plotext.title("Distributions of per-class means")
+                        plotext.show()
+                        plotext.clear_figure()
 
                     plotext.hist(dist_tracker.log_odds.detach().clamp(min=-15, max=15), bins, label='Log odds')
                     plotext.title("Distributions of per-class log odds ratio")
