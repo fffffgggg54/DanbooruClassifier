@@ -436,8 +436,8 @@ elif currGPU == 'v100':
 
 elif currGPU == 'sol_gh200':
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch/"
-    #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-ml_decoder_NoPostInProjAct_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-classEmbedGatingHead2048_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-classEmbedGatingHead2048_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/convformer_s18-ml_decoder_NoMlp_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     # post importer config
 
@@ -492,7 +492,7 @@ elif currGPU == 'sol_gh200':
     
     FLAGS['use_mlr_act'] = False
     FLAGS['use_matryoshka_head'] = False
-    FLAGS['use_class_embed_head'] = True
+    FLAGS['use_class_embed_head'] = False
 
     FLAGS['logit_offset'] = True
     FLAGS['logit_offset_multiplier'] = 1.0
@@ -1173,12 +1173,12 @@ def modelSetup(classes):
         learnable_embed = True,
         shared_fc = True,)
     '''
-    '''
+    
     # ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC
     model = ml_decoder.add_ml_decoder_head(
         model,
         num_groups = 0,
-        class_embed = torch.load('./DanbooruWikiEmbeddings1588_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
+        class_embed = torch.load(f'./DanbooruWikiEmbeddings{str(FLAGS['tagCount'])}_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
         class_embed_merge = '',
         shared_fc = True,
         post_input_proj_act = True,
@@ -1186,7 +1186,7 @@ def modelSetup(classes):
         attn_out_proj = False,
         use_mlp = False,
     )
-    '''
+    
     '''
     model = ml_decoder.add_ml_decoder_head(
         model,
