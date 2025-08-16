@@ -436,8 +436,8 @@ elif currGPU == 'v100':
 
 elif currGPU == 'sol_gh200':
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch/"
-    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-classEmbedGatingHead2048_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-classEmbedGatingHeadLight_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/convformer_s18-ml_decoder_NoMlp_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     # post importer config
 
@@ -492,7 +492,7 @@ elif currGPU == 'sol_gh200':
     
     FLAGS['use_mlr_act'] = False
     FLAGS['use_matryoshka_head'] = False
-    FLAGS['use_class_embed_head'] = False
+    FLAGS['use_class_embed_head'] = True
 
     FLAGS['logit_offset'] = True
     FLAGS['logit_offset_multiplier'] = 1.0
@@ -1173,7 +1173,7 @@ def modelSetup(classes):
         learnable_embed = True,
         shared_fc = True,)
     '''
-    
+    '''
     # ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC
     model = ml_decoder.add_ml_decoder_head(
         model,
@@ -1186,7 +1186,7 @@ def modelSetup(classes):
         attn_out_proj = False,
         use_mlp = False,
     )
-    
+    '''
     '''
     model = ml_decoder.add_ml_decoder_head(
         model,
@@ -1815,17 +1815,16 @@ def trainCycle(image_datasets, model):
                         torch.set_printoptions(profile='default')
                         if(firstLoop): print("info print call")
                         #print(dist_tracker.dump())
-                        # FIXME this is actually cohen's d I think, also should add a few more distribution things
-                        z_scores = (dist_tracker.pos_mean - dist_tracker.neg_mean) / ((dist_tracker.pos_var + dist_tracker.neg_var) ** 0.5 + 1e-8)
-                        z_scores = z_scores.detach()
+                        cohen_d_scores = MLCSL.cohen_d_effect_size(dist_tracker.pos_mean, dist_tracker.pos_std, dist_tracker.neg_mean, dist_tracker.neg_std)
+                        cohen_d_scores = cohen_d_scores.detach()
                         #t_stat = (dist_tracker.pos_mean-dist_tracker.neg_mean)/((dist_tracker.pos_var/(dist_tracker.pos_count + 1e-8) + dist_tracker.neg_var/(dist_tracker.neg_count + 1e-8)) ** 0.5 + 1e-8)
                         #print(f't score mean: {t_stat.mean()} std: {t_stat.std()}')
                         #t_p_values = scipy.stats.ttest_ind_from_stats(dist_tracker.pos_mean.cpu().numpy(), dist_tracker.pos_std.cpu().numpy(), dist_tracker.pos_count.cpu().numpy(), dist_tracker.neg_mean.cpu().numpy(), dist_tracker.neg_std.cpu().numpy(), dist_tracker.neg_count.cpu().numpy(), equal_var=False, alternative="greater").pvalue
                         if FLAGS['use_tag_kfold']:
-                            print(f'z score mean: {z_scores[inv_mask].mean()}, std: {z_scores[inv_mask].std()}, pos mean: {dist_tracker.pos_mean.detach()[inv_mask].mean()}, neg mean: {dist_tracker.neg_mean.detach()[inv_mask].mean()}')
-                            print(f'holdout: z score mean: {z_scores[mask].mean()}, std: {z_scores[mask].std()}, pos mean: {dist_tracker.pos_mean.detach()[mask].mean()}, neg mean: {dist_tracker.neg_mean.detach()[mask].mean()}')
+                            print(f"cohen's d mean: {cohen_d_scores[inv_mask].mean()}, std: {cohen_d_scores[inv_mask].std()}, pos mean: {dist_tracker.pos_mean.detach()[inv_mask].mean()}, neg mean: {dist_tracker.neg_mean.detach()[inv_mask].mean()}")
+                            print(f"holdout: cohen's d mean: {cohen_d_scores[mask].mean()}, std: {cohen_d_scores[mask].std()}, pos mean: {dist_tracker.pos_mean.detach()[mask].mean()}, neg mean: {dist_tracker.neg_mean.detach()[mask].mean()}")
                         else:
-                            print(f'z score mean: {z_scores.mean()}, std: {z_scores.std()}, pos mean: {dist_tracker.pos_mean.detach().mean()}, neg mean: {dist_tracker.neg_mean.detach().mean()}')
+                            print(f"cohen's d mean: {cohen_d_scores.mean()}, std: {cohen_d_scores.std()}, pos mean: {dist_tracker.pos_mean.detach().mean()}, neg mean: {dist_tracker.neg_mean.detach().mean()}")
                         if(firstLoop): print("dist print call")
                         '''
                         plotext.hist(dist_tracker.neg_mean.detach().clamp(min=-15), bins, label='Neg means')
@@ -1922,12 +1921,68 @@ def trainCycle(image_datasets, model):
                         plotext.title("Distributions of per-class mean of means")
                         plotext.show()
                         plotext.clear_figure()
-                
-                        z_scores = (dist_tracker.pos_mean.detach() - dist_tracker.neg_mean.detach()) / ((dist_tracker.pos_var.detach() + dist_tracker.neg_var.detach()) ** 0.5 + 1e-8)
-                        plotext.hist(z_scores.clamp(min=-10, max=10), bins, label='z-score')
+
+                        z_scores = MLCSL.z_score(dist_tracker.pos_mean, dist_tracker.pos_std, dist_tracker.pos_count, dist_tracker.neg_mean, dist_tracker.neg_std, dist_tracker.neg_count).detach()
+                        if FLAGS['use_tag_kfold']:
+                            plotext.hist(z_scores[inv_mask], bins, label="z-score (seen)")
+                            plotext.hist(z_scores[mask], bins, label="z-score (holdout)")
+                        else:
+                            plotext.hist(z_scores, bins, label="z-score")
                         plotext.title("Distributions of per-class z-score")
                         plotext.show()
                         plotext.clear_figure()
+
+                        cohen_d_scores = MLCSL.cohen_d_effect_size(dist_tracker.pos_mean, dist_tracker.pos_std, dist_tracker.neg_mean, dist_tracker.neg_std).detach()
+                        if FLAGS['use_tag_kfold']:
+                            plotext.hist(cohen_d_scores[inv_mask], bins, label="cohen's d (seen)")
+                            plotext.hist(cohen_d_scores[mask], bins, label="cohen's d (holdout)")
+                        else:
+                            plotext.hist(cohen_d_scores, bins, label="cohen's d")
+                        plotext.title("Distributions of per-class cohen's d")
+                        plotext.show()
+                        plotext.clear_figure()
+
+                        kl_div = MLCSL.kl_divergence_univariate_normal(dist_tracker.pos_mean, dist_tracker.pos_std, dist_tracker.neg_mean, dist_tracker.neg_std).detach()
+                        if FLAGS['use_tag_kfold']:
+                            plotext.hist(kl_div[inv_mask], bins, label="KL divergence (seen)")
+                            plotext.hist(kl_div[mask], bins, label="KL divergence (holdout)")
+                        else:
+                            plotext.hist(kl_div, bins, label="KL divergence")
+                        plotext.title("Distributions of per-class KL divergence")
+                        plotext.show()
+                        plotext.clear_figure()
+
+                        hellinger_distance = MLCSL.hellinger_distance_univariate_normal(dist_tracker.pos_mean, dist_tracker.pos_std, dist_tracker.neg_mean, dist_tracker.neg_std).detach()
+                        if FLAGS['use_tag_kfold']:
+                            plotext.hist(hellinger_distance[inv_mask], bins, label="Hellinger distance (seen)")
+                            plotext.hist(hellinger_distance[mask], bins, label="Hellinger distance (holdout)")
+                        else:
+                            plotext.hist(hellinger_distance, bins, label="Hellinger distance")
+                        plotext.title("Distributions of per-class Hellinger distance")
+                        plotext.show()
+                        plotext.clear_figure()
+
+                        bhattacharyya_distance = MLCSL.bhattacharyya_distance_univariate_normal(dist_tracker.pos_mean, dist_tracker.pos_std, dist_tracker.neg_mean, dist_tracker.neg_std).detach()
+                        if FLAGS['use_tag_kfold']:
+                            plotext.hist(bhattacharyya_distance[inv_mask], bins, label="Bhattacharyya distance (seen)")
+                            plotext.hist(bhattacharyya_distance[mask], bins, label="Bhattacharyya distance (holdout)")
+                        else:
+                            plotext.hist(bhattacharyya_distance, bins, label="Bhattacharyya distance")
+                        plotext.title("Distributions of per-class Bhattacharyya distance")
+                        plotext.show()
+                        plotext.clear_figure()
+
+                        wasserstein_2_distance = MLCSL.wasserstein_2_distance_univariate_normal(dist_tracker.pos_mean, dist_tracker.pos_std, dist_tracker.neg_mean, dist_tracker.neg_std).detach()
+                        if FLAGS['use_tag_kfold']:
+                            plotext.hist(wasserstein_2_distance[inv_mask], bins, label="2-Wasserstein distance (seen)")
+                            plotext.hist(wasserstein_2_distance[mask], bins, label="2-Wasserstein distance (holdout)")
+                        else:
+                            plotext.hist(wasserstein_2_distance, bins, label="2-Wasserstein distance")
+                        plotext.title("Distributions of per-class 2-Wasserstein distance")
+                        plotext.show()
+                        plotext.clear_figure()
+
+                        
                 
                 
                 #prior.save_prior()

@@ -514,6 +514,38 @@ class CrossSwiGLU(nn.Module):
         x = self.drop2(x)
         return x
 
+class CrossSwiGLULight(nn.Module):
+    def __init__(
+            self,
+            in_features,
+            query_features,
+            out_features,
+            act_layer=nn.SiLU,
+            norm_layer=None,
+            bias=True,
+            drop=0.,
+    ):
+        super().__init__()
+        bias = to_2tuple(bias)
+        drop_probs = to_2tuple(drop)
+
+        self.fc1_x = nn.Linear(in_features, query_features, bias=bias[0])
+        self.act = act_layer()
+        self.drop1 = nn.Dropout(drop_probs[0])
+        self.norm = norm_layer(query_features) if norm_layer is not None else nn.Identity()
+        self.fc2 = nn.Linear(query_features, out_features, bias=bias[1])
+        self.drop2 = nn.Dropout(drop_probs[1])
+
+    def forward(self, x, q):
+        x = self.fc1_x(x)
+        gate = q
+        x = self.act(gate) * x
+        x = self.drop1(x)
+        x = self.norm(x)
+        x = self.fc2(x)
+        x = self.drop2(x)
+        return x
+
 class ClassEmbedClassifierHead(nn.Module):
     def __init__(
         self,
@@ -546,12 +578,20 @@ class ClassEmbedClassifierHead(nn.Module):
             norm_layer = norm_layer,
         )
         '''
+        '''
         self.ffn = CrossSwiGLU(
             self.num_features,
             self.embed_dim,
             2048,
             1,
             norm_layer = norm_layer,
+        )
+        '''
+        self.ffn = CrossSwiGLULight(
+            self.num_features,
+            self.embed_dim,
+            1,
+            norm_layer = None,
         )
         assert len(class_embed) == num_classes, 'ClassEmbedClassifierHead got class_embed where dim 0 != num_classes'
         class_embed = class_embed.clone().detach() # copy instead of reference, detach gradient flow
@@ -803,6 +843,113 @@ class getDecisionBoundaryOld(nn.Module):
             self.thresholdPerClass = self.thresholdPerClass * (1 - toUpdate)  + threshold * toUpdate
             
         return self.thresholdPerClass
+
+def z_score(mu1, sigma1, n1, mu2, sigma2, n2):
+    return (mu1 - mu2) / ((sigma1 ** 2)/(n1+ 1e-12) + (sigma2 ** 2)/(n2 + 1e-12)).sqrt()
+
+def cohen_d_effect_size(mu1, sigma1, mu2, sigma2):
+    return (mu1 - mu2) / ((((sigma1 ** 2) + (sigma2 ** 2)) * 0.5).sqrt() + 1e-12)
+
+def kl_divergence_univariate_normal(mu1, sigma1, mu2, sigma2):
+    """
+    Calculates the KL divergence D_KL(P1 || P2) between two univariate normal distributions.
+
+    Args:
+        mu1 (torch.Tensor): Mean of the first distribution.
+        sigma1 (torch.Tensor): Standard deviation of the first distribution.
+        mu2 (torch.Tensor): Mean of the second distribution.
+        sigma2 (torch.Tensor): Standard deviation of the second distribution.
+
+    Returns:
+        torch.Tensor: The KL divergence.
+    """
+    # Ensure standard deviations are positive
+    sigma1 = torch.abs(sigma1)
+    sigma2 = torch.abs(sigma2)
+    
+    # Formula for D_KL(P1 || P2)
+    kl_div = (torch.log(sigma2 / (sigma1 + 1e-12)) + (sigma1**2 + (mu1 - mu2)**2) / (2 * sigma2**2 + 1e-12) - 0.5)
+              
+    return kl_div
+
+def hellinger_distance_univariate_normal(mu1, sigma1, mu2, sigma2):
+    """
+    Calculates the Hellinger distance between two univariate normal distributions.
+
+    Args:
+        mu1 (torch.Tensor): Mean of the first distribution.
+        sigma1 (torch.Tensor): Standard deviation of the first distribution.
+        mu2 (torch.Tensor): Mean of the second distribution.
+        sigma2 (torch.Tensor): Standard deviation of the second distribution.
+
+    Returns:
+        torch.Tensor: The Hellinger distance.
+    """
+    # Ensure standard deviations are positive
+    sigma1 = torch.abs(sigma1)
+    sigma2 = torch.abs(sigma2)
+    
+    # Squared Hellinger distance formula
+    var1 = sigma1**2
+    var2 = sigma2**2
+    
+    term1 = torch.sqrt((2 * sigma1 * sigma2) / (var1 + var2 + 1e-12))
+    term2 = torch.exp(-0.25 * (mu1 - mu2)**2 / (var1 + var2 + 1e-12))
+    
+    h_squared = 1 - term1 * term2
+    
+    # Hellinger distance is the square root of the squared distance
+    return torch.sqrt(h_squared)
+
+def bhattacharyya_distance_univariate_normal(mu1, sigma1, mu2, sigma2):
+    """
+    Calculates the Bhattacharyya distance between two univariate normal distributions.
+
+    Args:
+        mu1 (torch.Tensor): Mean of the first distribution.
+        sigma1 (torch.Tensor): Standard deviation of the first distribution.
+        mu2 (torch.Tensor): Mean of the second distribution.
+        sigma2 (torch.Tensor): Standard deviation of the second distribution.
+
+    Returns:
+        torch.Tensor: The Bhattacharyya distance.
+    """
+    # Ensure standard deviations are positive
+    sigma1 = torch.abs(sigma1)
+    sigma2 = torch.abs(sigma2)
+
+    var1 = sigma1**2
+    var2 = sigma2**2
+    
+    # Bhattacharyya distance formula
+    term1 = 0.25 * (mu1 - mu2)**2 / (var1 + var2 + 1e-12)
+    term2 = 0.5 * torch.log((var1 + var2) / (2 * sigma1 * sigma2 + 1e-12))
+    
+    return term1 + term2
+
+def wasserstein_2_distance_univariate_normal(mu1, sigma1, mu2, sigma2):
+    """
+    Calculates the 2-Wasserstein distance between two univariate normal distributions.
+    This is also known as the Earth Mover's Distance.
+
+    Args:
+        mu1 (torch.Tensor): Mean of the first distribution.
+        sigma1 (torch.Tensor): Standard deviation of the first distribution.
+        mu2 (torch.Tensor): Mean of the second distribution.
+        sigma2 (torch.Tensor): Standard deviation of the second distribution.
+
+    Returns:
+        torch.Tensor: The 2-Wasserstein distance.
+    """
+    # Ensure standard deviations are positive
+    sigma1 = torch.abs(sigma1)
+    sigma2 = torch.abs(sigma2)
+
+    # The squared 2-Wasserstein distance for univariate normals is a simple form
+    w2_squared = (mu1 - mu2)**2 + (sigma1 - sigma2)**2
+    
+    # The distance is the square root of this value
+    return torch.sqrt(w2_squared)
 
 def z_score_to_p_value(x):
     return 0.5 * (1 + torch.erf(x/math.sqrt(2)))
