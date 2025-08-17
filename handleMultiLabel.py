@@ -539,7 +539,7 @@ class CrossSwiGLULight(nn.Module):
     def forward(self, x, q):
         x = self.fc1_x(x)
         gate = q
-        x = self.act(gate) * x
+        x = self.act(x) * gate
         x = self.drop1(x)
         x = self.norm(x)
         x = self.fc2(x)
