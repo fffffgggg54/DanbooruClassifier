@@ -437,7 +437,7 @@ elif currGPU == 'v100':
 elif currGPU == 'sol_gh200':
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_2_of_5_seed42-classEmbedGatingHeadLight_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_small-OV_1_of_5_seed42-classEmbedGatingHeadLight_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-448-1588-50epoch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/convformer_s18-ml_decoder_NoMlp_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     # post importer config
 
@@ -449,8 +449,8 @@ elif currGPU == 'sol_gh200':
     FLAGS['dataset'] = 'danbooru'
     #FLAGS['dataset'] = 'coco'
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 224
-    FLAGS['actual_image_size'] = 224
+    FLAGS['image_size'] = 448
+    FLAGS['actual_image_size'] = 448
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 3.0
@@ -477,8 +477,8 @@ elif currGPU == 'sol_gh200':
     # training config
 
     FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 256
-    FLAGS['gradient_accumulation_iterations'] = 12
+    FLAGS['batch_size'] = 128
+    FLAGS['gradient_accumulation_iterations'] = 24
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -510,7 +510,7 @@ elif currGPU == 'sol_gh200':
     # tag k-fold cv config
     FLAGS['use_tag_kfold'] = True
     FLAGS['n_folds'] = 5
-    FLAGS['current_fold'] = 2
+    FLAGS['current_fold'] = 1
 
     # debugging config
 
