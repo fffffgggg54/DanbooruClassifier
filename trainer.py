@@ -450,7 +450,7 @@ elif currGPU == 'sol_gh200':
     #FLAGS['dataset'] = 'coco'
     FLAGS['tagCount'] = 1588
     FLAGS['image_size'] = 448
-    FLAGS['actual_image_size'] = 448
+    FLAGS['actual_image_size'] = 336
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 3.0
@@ -477,8 +477,8 @@ elif currGPU == 'sol_gh200':
     # training config
 
     FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 128
-    FLAGS['gradient_accumulation_iterations'] = 24
+    FLAGS['batch_size'] = 256
+    FLAGS['gradient_accumulation_iterations'] = 12
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -913,7 +913,7 @@ def add_ml_decoder_head(model):
     return model
 
 from timm.layers import create_norm_layer, GluMlp, Mlp, SelectAdaptivePool2d, get_act_layer, create_act_layer
-class StarAct(nn.Module):
+class StarAct(nn.Module):Reverse
     """
     StarAct: s * act(x) ** 2 + b
     """
