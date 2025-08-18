@@ -913,7 +913,7 @@ def add_ml_decoder_head(model):
     return model
 
 from timm.layers import create_norm_layer, GluMlp, Mlp, SelectAdaptivePool2d, get_act_layer, create_act_layer
-class StarAct(nn.Module):Reverse
+class StarAct(nn.Module):
     """
     StarAct: s * act(x) ** 2 + b
     """
