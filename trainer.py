@@ -65,8 +65,8 @@ import re
 #currGPU = '3090'
 #currGPU = 'm40'
 #currGPU = 'v100'
-#currGPU = 'sol_gh200'
-currGPU = 'sol_multi'
+currGPU = 'sol_gh200'
+#currGPU = 'sol_multi'
 #currGPU = 'none'
 
 
@@ -1343,9 +1343,9 @@ def modelSetup(classes):
             num_features, 
             len(classes), 
             torch.load('./DanbooruWikiEmbeddings1588_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
-            in_drop=0.0,
-            embed_drop=0.1,
-            head_drop=0.0,
+            in_drop=0.3,
+            embed_drop=0.3,
+            head_drop=0.3,
         ))
     #model = torch.compile(model, options={'max_autotune': True, 'epilogue_fusion': True})
 
