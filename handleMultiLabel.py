@@ -506,12 +506,12 @@ class CrossSwiGLU(nn.Module):
 
     def forward(self, x, q):
         x = self.fc1_x(x)
+        x = self.drop1(x)
         gate = self.fc1_q(q)
         x = self.act(gate) * x
-        x = self.drop1(x)
+        x = self.drop2(x)
         x = self.norm(x)
         x = self.fc2(x)
-        x = self.drop2(x)
         return x
 
 class CrossSwiGLULight(nn.Module):
@@ -552,7 +552,9 @@ class ClassEmbedClassifierHead(nn.Module):
         num_features, 
         num_classes, 
         class_embed, 
-        embed_drop=0.1, 
+        in_drop=0.3,
+        embed_drop=0.3,
+        head_drop=0.3,
         embed_norm=True,
         norm_layer: nn.Module = nn.LayerNorm,
     ):
@@ -592,11 +594,13 @@ class ClassEmbedClassifierHead(nn.Module):
             self.embed_dim,
             1,
             norm_layer = None,
+            drop=head_drop,
         )
         assert len(class_embed) == num_classes, 'ClassEmbedClassifierHead got class_embed where dim 0 != num_classes'
         class_embed = class_embed.clone().detach() # copy instead of reference, detach gradient flow
         self.register_buffer("class_embed", class_embed)
 
+        self.in_drop = nn.Dropout(in_drop)
         self.embed_drop = nn.Dropout(embed_drop)
         self.embed_norm = norm_layer(self.embed_dim) if embed_norm else nn.Identity()
 
@@ -604,7 +608,7 @@ class ClassEmbedClassifierHead(nn.Module):
         
         q = self.embed_drop(self.embed_norm(q or self.class_embed)).unsqueeze(0) # [1, K, D]
         q = q.expand(x.shape[0], -1, -1) # [B, K, D]
-        x = x.unsqueeze(1).expand(-1, q.shape[1], -1) # [B, K, C]
+        x = self.in_drop(x).unsqueeze(1).expand(-1, q.shape[1], -1) # [B, K, C]
         #x = torch.cat([x, q], dim=-1) # [B, K, C+D]
         #x = self.ffn(x).squeeze(-1) # [B, K]
         x = self.ffn(x, q).squeeze(-1) # [B, K]
@@ -983,7 +987,8 @@ def generate_loss_weights(logits, labels, dist_tracker, clip_dist=0.95, eps=1e-8
     logit_p_values = z_score_to_p_value(logit_z_scores)
     
     # [B, K]
-    loss_weights = torch.exp(-logit_z_scores)
+    loss_weights = (dist_tracker.pos_count + dist_tracker.neg_count) / dist_tracker(.neg_count + eps)
+    #loss_weights = torch.exp(-logit_z_scores)
     #loss_weights = torch.ones_like(labels)
     #loss_weights = loss_weights.where(class_p_values > clip_dist, 1).where(labels == 1, 1)
     #loss_weights *= (dist_tracker.neg_count / (dist_tracker.pos_count + eps)).where(labels == 1, 1)

@@ -65,7 +65,8 @@ import re
 #currGPU = '3090'
 #currGPU = 'm40'
 #currGPU = 'v100'
-currGPU = 'sol_gh200'
+#currGPU = 'sol_gh200'
+currGPU = 'sol_multi'
 #currGPU = 'none'
 
 
@@ -79,7 +80,7 @@ FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
 if currGPU == 'v100':
     FLAGS['rootPath'] = "/media/fredo/SAMSUNG_500GB/danbooru2021/"
     FLAGS['cocoRoot'] = "/media/fredo/SAMSUNG_500GB/coco2014/"
-elif currGPU == 'sol_gh200':
+elif currGPU == 'sol_gh200' or currGPU == 'sol_multi':
     FLAGS['rootPath'] = "/scratch/fyguan/danbooru/"
 if(torch.backends.mps.is_built() == True): FLAGS['rootPath'] = "/Users/fredoguan/Datasets/danbooru2021/"
 FLAGS['postMetaRoot'] = FLAGS['rootPath'] #+ "TenthMeta/"
@@ -173,7 +174,7 @@ if currGPU == '3090':
 
 
 
-    FLAGS['modelDir'] = FLAGS['rootPath'] + "models/vit_small_patch16_224-ASL_BCE-224-1588-50epoch/"
+    FLAGS['modelDir'] = FLAGS['rootPath'] + "models/regnetx_002-OV_1_of_5_seed42-classEmbedGatingHeadLight-HighRegTest_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     
     
     # post importer config
@@ -183,6 +184,8 @@ if currGPU == '3090':
     FLAGS['stopReadingAt'] = 5000
 
     # dataset config
+    FLAGS['dataset'] = 'danbooru'
+    #FLAGS['dataset'] = 'coco'
     FLAGS['tagCount'] = 1588
     FLAGS['image_size'] = 224
     FLAGS['actual_image_size'] = 224
@@ -197,49 +200,61 @@ if currGPU == '3090':
 
     # device config
 
-    FLAGS['use_ddp'] = True
-    FLAGS['device'] = None 
+    FLAGS['use_ddp'] = False
+    FLAGS['device'] = "cuda"
     FLAGS['use_AMP'] = True
     FLAGS['use_scaler'] = FLAGS['use_AMP']
     #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
 
     # dataloader config
 
-    FLAGS['num_workers'] = 32
-    FLAGS['postDataServerWorkerCount'] = 5
+    FLAGS['num_workers'] = 20
+    FLAGS['postDataServerWorkerCount'] = 3
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
     # training config
 
     FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 192
-    FLAGS['gradient_accumulation_iterations'] = 16
+    FLAGS['batch_size'] = 256
+    FLAGS['gradient_accumulation_iterations'] = 12
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
     FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
     FLAGS['lr_warmup_epochs'] = 5
+    FLAGS['use_lr_scheduler'] = True
 
     FLAGS['weight_decay'] = 2e-2
 
     FLAGS['resume_epoch'] = 0
     
     FLAGS['use_mlr_act'] = False
+    FLAGS['use_matryoshka_head'] = False
+    FLAGS['use_class_embed_head'] = True
 
-    FLAGS['logit_offset'] = False
-    FLAGS['logit_offset_multiplier'] = 0.0
+    FLAGS['logit_offset'] = True
+    FLAGS['logit_offset_multiplier'] = 1.0
+    FLAGS['logit_offset_source'] = 'dist'
+    FLAGS['opt_dist'] = False
     FLAGS['splc'] = False
-    FLAGS['splc_start_epoch'] = 1
+    FLAGS['splc_start_epoch'] = 0
+    FLAGS['norm_weighted_loss'] = False
 
     FLAGS['finetune'] = False    #actually a linear probe of a frozen model
     FLAGS['compile_model'] = False
     FLAGS['fast_norm'] = False
-    FLAGS['channels_last'] = FLAGS['use_AMP']
+    FLAGS['channels_last'] = True
+
+    # tag k-fold cv config
+    FLAGS['use_tag_kfold'] = True
+    FLAGS['n_folds'] = 5
+    FLAGS['current_fold'] = 1
 
     # debugging config
 
     FLAGS['verbose_debug'] = False
-    FLAGS['skip_test_set'] = True
+    FLAGS['skip_test_set'] = False
+    FLAGS['store_latents'] = False
     FLAGS['stepsPerPrintout'] = 50
     FLAGS['val'] = False
     
@@ -437,7 +452,7 @@ elif currGPU == 'v100':
 elif currGPU == 'sol_gh200':
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_small-OV_1_of_5_seed42-classEmbedGatingHeadLight_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-336-1588-50epoch/"
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-classEmbedGatingHeadLight_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-336-1588-50epoch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/convformer_s18-ml_decoder_NoMlp_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     # post importer config
 
@@ -501,6 +516,90 @@ elif currGPU == 'sol_gh200':
     FLAGS['splc'] = False
     FLAGS['splc_start_epoch'] = 0
     FLAGS['norm_weighted_loss'] = False
+
+    FLAGS['finetune'] = False    #actually a linear probe of a frozen model
+    FLAGS['compile_model'] = False
+    FLAGS['fast_norm'] = False
+    FLAGS['channels_last'] = True
+
+    # tag k-fold cv config
+    FLAGS['use_tag_kfold'] = True
+    FLAGS['n_folds'] = 5
+    FLAGS['current_fold'] = 1
+
+    # debugging config
+
+    FLAGS['verbose_debug'] = False
+    FLAGS['skip_test_set'] = False
+    FLAGS['store_latents'] = False
+    FLAGS['stepsPerPrintout'] = 50
+    FLAGS['val'] = False
+
+elif currGPU == 'sol_multi':
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch/"
+
+    # post importer config
+
+    FLAGS['chunkSize'] = 1000
+    FLAGS['importerProcessCount'] = 10
+    FLAGS['stopReadingAt'] = 5000
+
+    # dataset config
+    FLAGS['dataset'] = 'danbooru'
+    #FLAGS['dataset'] = 'coco'
+    FLAGS['tagCount'] = 1588
+    FLAGS['image_size'] = 224
+    FLAGS['actual_image_size'] = 224
+    FLAGS['progressiveImageSize'] = False
+    FLAGS['progressiveSizeStart'] = 0.5
+    FLAGS['progressiveAugRatio'] = 3.0
+    FLAGS['cacheRoot'] = FLAGS['rootPath'] + "cache/"
+    #FLAGS['cacheRoot'] = None
+
+    FLAGS['workingSetSize'] = 1
+    FLAGS['trainSetSize'] = 0.8
+
+    # device config
+
+    FLAGS['use_ddp'] = True
+    FLAGS['device'] = None
+    FLAGS['use_AMP'] = True
+    FLAGS['use_scaler'] = FLAGS['use_AMP']
+    #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
+
+    # dataloader config
+
+    FLAGS['num_workers'] = 12
+    FLAGS['postDataServerWorkerCount'] = 2
+    if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
+
+    # training config
+
+    FLAGS['num_epochs'] = 50
+    FLAGS['batch_size'] = 256
+    FLAGS['gradient_accumulation_iterations'] = 6
+
+    FLAGS['base_learning_rate'] = 3e-3
+    FLAGS['base_batch_size'] = 2048
+    FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
+    FLAGS['lr_warmup_epochs'] = 5
+    FLAGS['use_lr_scheduler'] = True
+
+    FLAGS['weight_decay'] = 2e-2
+
+    FLAGS['resume_epoch'] = 0
+    
+    FLAGS['use_mlr_act'] = False
+    FLAGS['use_matryoshka_head'] = False
+    FLAGS['use_class_embed_head'] = True
+
+    FLAGS['logit_offset'] = True
+    FLAGS['logit_offset_multiplier'] = 1.0
+    FLAGS['logit_offset_source'] = 'dist'
+    FLAGS['opt_dist'] = False
+    FLAGS['splc'] = False
+    FLAGS['splc_start_epoch'] = 0
+    FLAGS['norm_weighted_loss'] = True
 
     FLAGS['finetune'] = False    #actually a linear probe of a frozen model
     FLAGS['compile_model'] = False
@@ -742,7 +841,7 @@ def getData():
         
         
         global myDataset
-        if currGPU == 'v100':
+        if currGPU == 'v100' or currGPU == '3090':
             myDataset = danbooruDataset.DanbooruDatasetWithServer(
                 postData,
                 tagData,
@@ -1048,7 +1147,7 @@ def modelSetup(classes):
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.0)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15)
-    model = timm.create_model('davit_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.3)
+    model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('vit_medium_shallow_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_base_patch16_siglip_gap_224.v2_webli', pretrained=True, num_classes=len(classes), drop_path_rate = 0.3)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
@@ -1205,7 +1304,6 @@ def modelSetup(classes):
     if FLAGS['use_mlr_act'] == True or FLAGS['use_matryoshka_head'] == True or FLAGS['use_class_embed_head'] == True:
         model.reset_classifier(0)
         
-    
     model = nn.Sequential(model)
     
 
@@ -1347,7 +1445,7 @@ def trainCycle(image_datasets, model):
         #mlr_act = DDP(mlr_act, device_ids=[FLAGS['device']], gradient_as_bucket_view=True)
         
     if(FLAGS['compile_model'] == True):
-        model.compile()
+        model = torch.compile(model)
     
     #mlr_act_opt = timm.optim.Adan(mlr_act.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     
@@ -1658,7 +1756,7 @@ def trainCycle(image_datasets, model):
 
                         
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        loss = criterion(outputs_all.to(device)[:, inv_mask], tagsModified.to(device)[:, inv_mask])
+                        loss = criterion(outputs_all.to(device)[:, inv_mask], tagsModified.to(device)[:, inv_mask], weight = loss_weight[inv_mask])
                         #loss = criterion(outputs_all.to(device), tagsModified.to(device), weight = matryoshka_loss_weights)
                         #loss = criterion(outputs.to(device), tagsModified.to(device), weight = loss_weight)
                         #loss += (((dist_tracker.pos_mean + dist_tracker.neg_mean) ** 2) ** 0.25).sum() #+ dist_tracker.pos_std.sum() + dist_tracker.neg_std.sum()
