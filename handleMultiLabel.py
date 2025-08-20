@@ -557,11 +557,18 @@ class ClassEmbedClassifierHead(nn.Module):
         head_drop=0.0,
         embed_norm=True,
         norm_layer: nn.Module = nn.LayerNorm,
+        query_noise=None,
+        use_random_query=False,
     ):
         super().__init__()
         self.num_features = num_features
         self.num_classes = num_classes
         self.embed_dim = class_embed.shape[1]
+
+        # agumentation from ml-decoder ZSL
+        self.use_query_noise = True if query_noise is not None else None
+        self.query_noise_strength = query_noise
+        self.use_random_query = use_random_query
 
         self.concat_feature_size = self.embed_dim + self.num_features
         '''
@@ -603,11 +610,19 @@ class ClassEmbedClassifierHead(nn.Module):
         class_embed = class_embed.clone().detach() # copy instead of reference, detach gradient flow
         self.register_buffer("class_embed", class_embed)
 
+        if self.use_random_query: self.register_buffer("class_embed_mean", class_embed.mean(dim=1))
+        if self.use_query_noise or self.use_random_query: self.register_buffer("class_embed_stdev", class_embed.std(dim=1))
+
         self.in_drop = nn.Dropout(in_drop)
         self.embed_drop = nn.Dropout(embed_drop)
         self.embed_norm = norm_layer(self.embed_dim) if embed_norm else nn.Identity()
+        
 
     def forward(self, x, q=None): # [B, C], [K, D]
+        if self.use_query_noise and self.training:
+            q = q + torch.randn_like(q) * self.query_noise_strength * self.class_embed_stdev
+        if self.use_random_query and self.training:
+            q = torch.cat([q, torch.randn(x.shape[0], q.shape[1], dtype=q.dtype, layout=q.layout, device=q.device)], dim=1)
         
         q = self.embed_drop(self.embed_norm(q or self.class_embed)).unsqueeze(0) # [1, K, D]
         q = q.expand(x.shape[0], -1, -1) # [B, K, D]
