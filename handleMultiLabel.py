@@ -987,7 +987,7 @@ def generate_loss_weights(logits, labels, dist_tracker, clip_dist=0.95, eps=1e-8
     logit_p_values = z_score_to_p_value(logit_z_scores)
     
     # [B, K]
-    loss_weights = (dist_tracker.pos_count + dist_tracker.neg_count) / dist_tracker(.neg_count + eps)
+    loss_weights = (dist_tracker.pos_count + dist_tracker.neg_count) / (dist_tracker.neg_count + eps)
     #loss_weights = torch.exp(-logit_z_scores)
     #loss_weights = torch.ones_like(labels)
     #loss_weights = loss_weights.where(class_p_values > clip_dist, 1).where(labels == 1, 1)
