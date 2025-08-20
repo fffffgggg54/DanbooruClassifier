@@ -65,8 +65,8 @@ import re
 #currGPU = '3090'
 #currGPU = 'm40'
 #currGPU = 'v100'
-#currGPU = 'sol_gh200'
-currGPU = 'sol_multi'
+currGPU = 'sol_gh200'
+#currGPU = 'sol_multi'
 #currGPU = 'none'
 
 
@@ -452,7 +452,7 @@ elif currGPU == 'v100':
 elif currGPU == 'sol_gh200':
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-classEmbedGatingHeadLight_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-336-1588-50epoch/"
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-classEmbedGatingHead2048-HighDrop_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/convformer_s18-ml_decoder_NoMlp_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     # post importer config
 
@@ -464,8 +464,8 @@ elif currGPU == 'sol_gh200':
     FLAGS['dataset'] = 'danbooru'
     #FLAGS['dataset'] = 'coco'
     FLAGS['tagCount'] = 1588
-    FLAGS['image_size'] = 448
-    FLAGS['actual_image_size'] = 336
+    FLAGS['image_size'] = 224
+    FLAGS['actual_image_size'] = 224
     FLAGS['progressiveImageSize'] = False
     FLAGS['progressiveSizeStart'] = 0.5
     FLAGS['progressiveAugRatio'] = 3.0
@@ -1340,7 +1340,10 @@ def modelSetup(classes):
         model.append(MLCSL.ClassEmbedClassifierHead(
             num_features, 
             len(classes), 
-            torch.load('./DanbooruWikiEmbeddings1588_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True)
+            torch.load('./DanbooruWikiEmbeddings1588_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
+            in_drop=0.3,
+            embed_drop=0.3,
+            head_drop=0.3,
         ))
     #model = torch.compile(model, options={'max_autotune': True, 'epilogue_fusion': True})
 
