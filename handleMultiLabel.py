@@ -610,8 +610,8 @@ class ClassEmbedClassifierHead(nn.Module):
         class_embed = class_embed.clone().detach() # copy instead of reference, detach gradient flow
         self.register_buffer("class_embed", class_embed)
 
-        if self.use_random_query: self.register_buffer("class_embed_mean", class_embed.mean(dim=1))
-        if self.use_query_noise or self.use_random_query: self.register_buffer("class_embed_stdev", class_embed.std(dim=1))
+        if self.use_random_query: self.register_buffer("class_embed_mean", class_embed.mean(dim=0))
+        if self.use_query_noise or self.use_random_query: self.register_buffer("class_embed_stdev", class_embed.std(dim=0))
 
         self.in_drop = nn.Dropout(in_drop)
         self.embed_drop = nn.Dropout(embed_drop)
@@ -620,14 +620,17 @@ class ClassEmbedClassifierHead(nn.Module):
 
     def forward(self, x, q=None): # [B, C], [K, D]
         q = q or self.class_embed
-        
+
         if self.use_query_noise and self.training:
-            q = q + torch.randn_like(q) * self.query_noise_strength * self.class_embed_stdev
-        if self.use_random_query and self.training:
-            q = torch.cat([q, torch.randn(x.shape[0], q.shape[1], dtype=q.dtype, layout=q.layout, device=q.device)], dim=1)
+            q = q + torch.randn_like(q) * self.query_noise_strength * self.class_embed_stdev.unsqueeze(0)
+        
         
         q = self.embed_drop(self.embed_norm(q)).unsqueeze(0) # [1, K, D]
         q = q.expand(x.shape[0], -1, -1) # [B, K, D]
+
+        if self.use_random_query and self.training:
+            q = torch.cat([q, self.embed_drop(self.embed_norm(torch.randn(x.shape[0], 1, q.shape[1], dtype=q.dtype, layout=q.layout, device=q.device)))], dim=1)
+            
         x = self.in_drop(x).unsqueeze(1).expand(-1, q.shape[1], -1) # [B, K, C]
         #x = torch.cat([x, q], dim=-1) # [B, K, C+D]
         #x = self.ffn(x).squeeze(-1) # [B, K]
