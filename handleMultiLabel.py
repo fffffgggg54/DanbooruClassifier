@@ -580,14 +580,16 @@ class ClassEmbedClassifierHead(nn.Module):
             norm_layer = norm_layer,
         )
         '''
-        '''
+        
         self.ffn = CrossSwiGLU(
             self.num_features,
             self.embed_dim,
             2048,
             1,
             norm_layer = norm_layer,
+            drop=head_drop,
         )
+        
         '''
         self.ffn = CrossSwiGLULight(
             self.num_features,
@@ -596,6 +598,7 @@ class ClassEmbedClassifierHead(nn.Module):
             norm_layer = None,
             drop=head_drop,
         )
+        '''
         assert len(class_embed) == num_classes, 'ClassEmbedClassifierHead got class_embed where dim 0 != num_classes'
         class_embed = class_embed.clone().detach() # copy instead of reference, detach gradient flow
         self.register_buffer("class_embed", class_embed)
