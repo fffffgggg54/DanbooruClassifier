@@ -552,9 +552,9 @@ class ClassEmbedClassifierHead(nn.Module):
         num_features, 
         num_classes, 
         class_embed, 
-        in_drop=0.3,
-        embed_drop=0.3,
-        head_drop=0.3,
+        in_drop=0.0,
+        embed_drop=0.1,
+        head_drop=0.0,
         embed_norm=True,
         norm_layer: nn.Module = nn.LayerNorm,
     ):
