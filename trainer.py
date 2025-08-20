@@ -1736,7 +1736,7 @@ def trainCycle(image_datasets, model):
                         # loss weighing
                         if FLAGS['norm_weighted_loss']:
                             loss_weight = MLCSL.generate_loss_weights(outputs.detach(), tagBatch, dist_tracker)
-                        else: loss_weight = 1
+                        else: loss_weight = torch.ones(len(classes), device=device)
                         if(phase == 'train' and hasattr(criterion, 'update')):
                             criterion.update(outputs.detach(), tagsModified.to(device), update=(phase == "train"),
                                 step_opt=((i+1) % FLAGS['gradient_accumulation_iterations'] == 0))
