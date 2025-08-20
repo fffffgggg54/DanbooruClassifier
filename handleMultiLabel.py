@@ -619,12 +619,14 @@ class ClassEmbedClassifierHead(nn.Module):
         
 
     def forward(self, x, q=None): # [B, C], [K, D]
+        q = q or self.class_embed
+        
         if self.use_query_noise and self.training:
             q = q + torch.randn_like(q) * self.query_noise_strength * self.class_embed_stdev
         if self.use_random_query and self.training:
             q = torch.cat([q, torch.randn(x.shape[0], q.shape[1], dtype=q.dtype, layout=q.layout, device=q.device)], dim=1)
         
-        q = self.embed_drop(self.embed_norm(q or self.class_embed)).unsqueeze(0) # [1, K, D]
+        q = self.embed_drop(self.embed_norm(q)).unsqueeze(0) # [1, K, D]
         q = q.expand(x.shape[0], -1, -1) # [B, K, D]
         x = self.in_drop(x).unsqueeze(1).expand(-1, q.shape[1], -1) # [B, K, C]
         #x = torch.cat([x, q], dim=-1) # [B, K, C+D]
