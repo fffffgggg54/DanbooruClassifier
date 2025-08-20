@@ -65,8 +65,8 @@ import re
 #currGPU = '3090'
 #currGPU = 'm40'
 #currGPU = 'v100'
-currGPU = 'sol_gh200'
-#currGPU = 'sol_multi'
+#currGPU = 'sol_gh200'
+currGPU = 'sol_multi'
 #currGPU = 'none'
 
 
@@ -536,7 +536,9 @@ elif currGPU == 'sol_gh200':
     FLAGS['val'] = False
 
 elif currGPU == 'sol_multi':
-    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch/"
+    #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch/"
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-classEmbedGatingHead2048_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds_W-InvClassProp-224-1588-50epoch/"
+
 
     # post importer config
 
@@ -576,8 +578,8 @@ elif currGPU == 'sol_multi':
     # training config
 
     FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 384
-    FLAGS['gradient_accumulation_iterations'] = 4
+    FLAGS['batch_size'] = 256
+    FLAGS['gradient_accumulation_iterations'] = 6
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -1341,9 +1343,9 @@ def modelSetup(classes):
             num_features, 
             len(classes), 
             torch.load('./DanbooruWikiEmbeddings1588_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
-            in_drop=0.3,
-            embed_drop=0.3,
-            head_drop=0.3,
+            in_drop=0.0,
+            embed_drop=0.1,
+            head_drop=0.0,
         ))
     #model = torch.compile(model, options={'max_autotune': True, 'epilogue_fusion': True})
 
