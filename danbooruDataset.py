@@ -27,6 +27,7 @@ import gc
 import multiprocessing
 
 import tarfile
+import sys
 
 
 
@@ -652,8 +653,10 @@ class DanbooruDatasetWithServerAndReader(torch.utils.data.Dataset):
 
         except Exception as e:
             print(e)
+            print(postData)
             imageURL = postData.loc["file_url"]
             print("Getting image from " + imageURL)
+            sys.stdout.flush()
             response = requests.get(imageURL)
             image = Image.open(BytesIO(response.content))
             image = transforms.functional.resize(image, (self.size, self.size))
