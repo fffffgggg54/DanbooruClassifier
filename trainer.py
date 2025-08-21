@@ -65,8 +65,8 @@ import re
 #currGPU = '3090'
 #currGPU = 'm40'
 #currGPU = 'v100'
-currGPU = 'sol_gh200'
-#currGPU = 'sol_multi'
+#currGPU = 'sol_gh200'
+currGPU = 'sol_multi'
 #currGPU = 'none'
 
 
@@ -450,9 +450,9 @@ elif currGPU == 'v100':
     FLAGS['val'] = False
 
 elif currGPU == 'sol_gh200':
-    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch/"
+    #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-classEmbedGatingHead2048_QueryNoiseAug_RandQueryAug_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-classEmbedGatingHead2048_QueryNoiseAug_RandQueryAug_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/convformer_s18-ml_decoder_NoMlp_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     # post importer config
 
@@ -485,8 +485,8 @@ elif currGPU == 'sol_gh200':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 9
-    FLAGS['postDataServerWorkerCount'] = 2
+    FLAGS['num_workers'] = 20
+    FLAGS['postDataServerWorkerCount'] = 3
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
     # training config
@@ -589,7 +589,7 @@ elif currGPU == 'sol_multi':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 0
+    FLAGS['resume_epoch'] = 17
     
     FLAGS['use_mlr_act'] = False
     FLAGS['use_matryoshka_head'] = False
@@ -1305,8 +1305,7 @@ def modelSetup(classes):
 
     if FLAGS['use_mlr_act'] == True or FLAGS['use_matryoshka_head'] == True or FLAGS['use_class_embed_head'] == True:
         model.reset_classifier(0)
-    
-    model = torch.compile(model)
+        
     model = nn.Sequential(model)
     
 
