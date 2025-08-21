@@ -485,8 +485,8 @@ elif currGPU == 'sol_gh200':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 20
-    FLAGS['postDataServerWorkerCount'] = 3
+    FLAGS['num_workers'] = 9
+    FLAGS['postDataServerWorkerCount'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
     # training config
