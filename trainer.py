@@ -518,7 +518,7 @@ elif currGPU == 'sol_gh200':
     FLAGS['norm_weighted_loss'] = False
 
     FLAGS['finetune'] = False    #actually a linear probe of a frozen model
-    FLAGS['compile_model'] = True
+    FLAGS['compile_model'] = False
     FLAGS['fast_norm'] = False
     FLAGS['channels_last'] = True
 
@@ -1305,7 +1305,8 @@ def modelSetup(classes):
 
     if FLAGS['use_mlr_act'] == True or FLAGS['use_matryoshka_head'] == True or FLAGS['use_class_embed_head'] == True:
         model.reset_classifier(0)
-        
+    
+    model = torch.compile(model)
     model = nn.Sequential(model)
     
 
