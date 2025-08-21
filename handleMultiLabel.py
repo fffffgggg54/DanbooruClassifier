@@ -565,6 +565,7 @@ class ClassEmbedClassifierHead(nn.Module):
         norm_layer: nn.Module = nn.LayerNorm,
         query_noise=None,
         use_random_query=False,
+        pre_norm=False,
     ):
         super().__init__()
         self.num_features = num_features
@@ -601,6 +602,7 @@ class ClassEmbedClassifierHead(nn.Module):
             1,
             norm_layer = norm_layer,
             drop=head_drop,
+            pre_norm=pre_norm,
         )
         
         '''
