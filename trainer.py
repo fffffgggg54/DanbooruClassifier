@@ -1640,7 +1640,7 @@ def trainCycle(image_datasets, model):
                             # random query agumentation
                             if outputs_all.shape[1] == len(classes) + 1:
                                 random_query_logits = outputs_all[:, -1]
-                                outputs_all = outputs_all[:, :-1]
+                                outputs_all = outputs_all[:, :-1].contiguous()
                                 use_random_query = True
                             else:
                                 use_random_query = False
