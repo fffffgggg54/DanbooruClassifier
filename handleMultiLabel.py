@@ -491,7 +491,7 @@ class CrossSwiGLU(nn.Module):
             norm_layer=None,
             bias=True,
             drop=0.,
-            pre_norm=True,
+            pre_norm=False,
     ):
         super().__init__()
         bias = to_2tuple(bias)
