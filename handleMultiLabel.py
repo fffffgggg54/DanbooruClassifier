@@ -491,6 +491,7 @@ class CrossSwiGLU(nn.Module):
             norm_layer=None,
             bias=True,
             drop=0.,
+            pre_norm=True,
     ):
         super().__init__()
         bias = to_2tuple(bias)
@@ -503,14 +504,19 @@ class CrossSwiGLU(nn.Module):
         self.norm = norm_layer(hidden_features) if norm_layer is not None else nn.Identity()
         self.fc2 = nn.Linear(hidden_features, out_features, bias=bias[1])
         self.drop2 = nn.Dropout(drop_probs[1])
+        self.pre_norm = pre_norm
 
     def forward(self, x, q):
         x = self.fc1_x(x)
         x = self.drop1(x)
         gate = self.fc1_q(q)
         x = self.act(gate) * x
-        x = self.drop2(x)
-        x = self.norm(x)
+        if self.pre_norm:
+            x = self.norm(x)
+            x = self.drop2(x)
+        else:
+            x = self.drop2(x)
+            x = self.norm(x)
         x = self.fc2(x)
         return x
 
