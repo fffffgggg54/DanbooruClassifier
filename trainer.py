@@ -1346,7 +1346,7 @@ def modelSetup(classes):
             in_drop=0.0,
             embed_drop=0.1,
             head_drop=0.0,
-            query_noise=True,
+            query_noise=0.3,
             use_random_query=True,
         ))
     #model = torch.compile(model, options={'max_autotune': True, 'epilogue_fusion': True})
