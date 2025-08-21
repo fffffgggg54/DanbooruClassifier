@@ -571,7 +571,7 @@ elif currGPU == 'sol_multi':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 8
+    FLAGS['num_workers'] = 9
     FLAGS['postDataServerWorkerCount'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
@@ -579,7 +579,7 @@ elif currGPU == 'sol_multi':
 
     FLAGS['num_epochs'] = 50
     FLAGS['batch_size'] = 256
-    FLAGS['gradient_accumulation_iterations'] = 2
+    FLAGS['gradient_accumulation_iterations'] = 6
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
