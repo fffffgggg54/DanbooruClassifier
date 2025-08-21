@@ -1641,6 +1641,9 @@ def trainCycle(image_datasets, model):
                             if outputs_all.shape[1] == len(classes) + 1:
                                 random_query_logits = outputs_all[:, -1]
                                 outputs_all = outputs_all[:, :-1]
+                                use_random_query = True
+                            else:
+                                use_random_query = False
                             outputs = outputs_all
                             preds = torch.sigmoid(outputs)
                         else:
@@ -1767,8 +1770,10 @@ def trainCycle(image_datasets, model):
 
                         
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        #loss = criterion(outputs_all.to(device)[:, inv_mask], tagsModified.to(device)[:, inv_mask], weight = loss_weight[inv_mask])
-                        loss = criterion(torch.cat([outputs_all.to(device)[:, inv_mask], random_query_logits.unsqueeze(1)], dim=1), torch.cat([tagsModified.to(device)[:, inv_mask], torch.ones_like(tagsModified[:,0]).unsqueeze(1)], dim=1), weight = torch.cat([loss_weight[inv_mask], torch.tensor([1], device=device)]))
+                        if FLAGS['use_class_embed_head'] and use_random_query:
+                            loss = criterion(torch.cat([outputs_all.to(device)[:, inv_mask], random_query_logits.unsqueeze(1)], dim=1), torch.cat([tagsModified.to(device)[:, inv_mask], torch.ones_like(tagsModified[:,0]).unsqueeze(1)], dim=1), weight = torch.cat([loss_weight[inv_mask], torch.tensor([1], device=device)]))
+                        else:
+                            loss = criterion(outputs_all.to(device)[:, inv_mask], tagsModified.to(device)[:, inv_mask], weight = loss_weight[inv_mask])
                         #loss = criterion(outputs_all.to(device), tagsModified.to(device), weight = matryoshka_loss_weights)
                         #loss = criterion(outputs.to(device), tagsModified.to(device), weight = loss_weight)
                         #loss += (((dist_tracker.pos_mean + dist_tracker.neg_mean) ** 2) ** 0.25).sum() #+ dist_tracker.pos_std.sum() + dist_tracker.neg_std.sum()
