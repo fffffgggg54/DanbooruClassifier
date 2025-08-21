@@ -537,8 +537,8 @@ elif currGPU == 'sol_gh200':
 
 elif currGPU == 'sol_multi':
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch/"
-    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-classEmbedGatingHead2048_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds_W-InvClassProp-224-1588-50epoch/"
-
+    #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-classEmbedGatingHead2048_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds_W-InvClassProp-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-classEmbedGatingHead2048_HighDrop_QueryNoiseAug_RandQueryAug_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
 
     # post importer config
 
@@ -571,7 +571,7 @@ elif currGPU == 'sol_multi':
 
     # dataloader config
 
-    FLAGS['num_workers'] = 12
+    FLAGS['num_workers'] = 8
     FLAGS['postDataServerWorkerCount'] = 2
     if(FLAGS['device'] == 'cpu'): FLAGS['num_workers'] = 2
 
@@ -579,7 +579,7 @@ elif currGPU == 'sol_multi':
 
     FLAGS['num_epochs'] = 50
     FLAGS['batch_size'] = 256
-    FLAGS['gradient_accumulation_iterations'] = 6
+    FLAGS['gradient_accumulation_iterations'] = 2
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -1343,9 +1343,9 @@ def modelSetup(classes):
             num_features, 
             len(classes), 
             torch.load('./DanbooruWikiEmbeddings1588_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
-            in_drop=0.0,
-            embed_drop=0.1,
-            head_drop=0.0,
+            in_drop=0.3,
+            embed_drop=0.3,
+            head_drop=0.3,
             query_noise=0.3,
             use_random_query=True,
         ))
