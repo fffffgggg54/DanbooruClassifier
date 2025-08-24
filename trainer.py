@@ -1780,7 +1780,7 @@ def trainCycle(image_datasets, model):
                                 augmented_targs = torch.cat([tagsModified.to(device)[:, inv_mask], torch.ones_like(tagsModified[:,0]).unsqueeze(1), torch.zeros_like(tagsModified[:,0]).unsqueeze(1)], dim=1)
                             else:
                                 augmented_targs = torch.cat([tagsModified.to(device)[:, inv_mask], *([torch.ones_like(tagsModified[:,0]).unsqueeze(1)] * num_random_query)], dim=1)
-                            loss = criterion(torch.cat([outputs_all.to(device)[:, inv_mask], random_query_logits.unsqueeze(1)], dim=1), augmented_targs, weight = loss_weight)
+                            loss = criterion(torch.cat([outputs_all.to(device)[:, inv_mask], random_query_logits], dim=1), augmented_targs, weight = loss_weight)
                         else:
                             loss = criterion(outputs_all.to(device)[:, inv_mask], tagsModified.to(device)[:, inv_mask], weight = loss_weight[inv_mask])
                         #loss = criterion(outputs_all.to(device), tagsModified.to(device), weight = matryoshka_loss_weights)
