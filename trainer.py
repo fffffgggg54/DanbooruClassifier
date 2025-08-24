@@ -452,7 +452,7 @@ elif currGPU == 'v100':
 elif currGPU == 'sol_gh200':
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-classEmbedGatingHead2048_gte_L_en_v1_5dNoNorm1024-ASL_BCE_W-InvClassProp-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-classEmbedGatingHead2048_HighQueryNoiseAug_RandQueryAug_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/convformer_s18-ml_decoder_NoMlp_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     # post importer config
 
@@ -509,13 +509,13 @@ elif currGPU == 'sol_gh200':
     FLAGS['use_matryoshka_head'] = False
     FLAGS['use_class_embed_head'] = True
 
-    FLAGS['logit_offset'] = False
+    FLAGS['logit_offset'] = True
     FLAGS['logit_offset_multiplier'] = 1.0
     FLAGS['logit_offset_source'] = 'dist'
     FLAGS['opt_dist'] = False
     FLAGS['splc'] = False
     FLAGS['splc_start_epoch'] = 0
-    FLAGS['norm_weighted_loss'] = True
+    FLAGS['norm_weighted_loss'] = False
 
     FLAGS['finetune'] = False    #actually a linear probe of a frozen model
     FLAGS['compile_model'] = False
@@ -1346,8 +1346,8 @@ def modelSetup(classes):
             in_drop=0.0,
             embed_drop=0.1,
             head_drop=0.0,
-            query_noise=None,
-            use_random_query=False,
+            query_noise=1.0,
+            use_random_query=True,
             pre_norm=False,
         ))
     #model = torch.compile(model, options={'max_autotune': True, 'epilogue_fusion': True})
