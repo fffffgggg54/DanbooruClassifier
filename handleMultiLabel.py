@@ -637,7 +637,8 @@ class ClassEmbedClassifierHead(nn.Module):
         q = q.expand(x.shape[0], -1, -1) # [B, K, D]
 
         if self.use_random_query and self.training:
-            q = torch.cat([q, self.embed_drop(self.embed_norm(torch.randn(q.shape[0], 1, q.shape[2], dtype=q.dtype, layout=q.layout, device=q.device)))], dim=1)
+            random_query = torch.randn(q.shape[0], 1, q.shape[2], dtype=q.dtype, layout=q.layout, device=q.device) * self.class_embed_stdev + self.class_embed_mean
+            q = torch.cat([q, self.embed_drop(self.embed_norm(random_query))], dim=1)
 
         x = self.in_drop(x).unsqueeze(1).expand(-1, q.shape[1], -1) # [B, K, C]
         #x = torch.cat([x, q], dim=-1) # [B, K, C+D]
