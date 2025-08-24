@@ -563,8 +563,10 @@ class ClassEmbedClassifierHead(nn.Module):
         head_drop=0.0,
         embed_norm=True,
         norm_layer: nn.Module = nn.LayerNorm,
-        query_noise=None,
+        use_query_noise=False,
+        query_noise_strength=1.0,
         use_random_query=False,
+        num_random_query=1,
         pre_norm=False,
     ):
         super().__init__()
@@ -573,9 +575,10 @@ class ClassEmbedClassifierHead(nn.Module):
         self.embed_dim = class_embed.shape[1]
 
         # agumentation from ml-decoder ZSL
-        self.use_query_noise = True if query_noise is not None else None
-        self.query_noise_strength = query_noise
+        self.use_query_noise = use_query_noise
+        self.query_noise_strength = query_noise_strength
         self.use_random_query = use_random_query
+        self.num_random_query = num_random_query
 
         self.concat_feature_size = self.embed_dim + self.num_features
         '''
@@ -637,7 +640,7 @@ class ClassEmbedClassifierHead(nn.Module):
         q = q.expand(x.shape[0], -1, -1) # [B, K, D]
 
         if self.use_random_query and self.training:
-            random_query = torch.randn(q.shape[0], 1, q.shape[2], dtype=q.dtype, layout=q.layout, device=q.device) * self.class_embed_stdev + self.class_embed_mean
+            random_query = torch.randn(q.shape[0], self.num_random_query, q.shape[2], dtype=q.dtype, layout=q.layout, device=q.device) * self.class_embed_stdev + self.class_embed_mean
             q = torch.cat([q, self.embed_drop(self.embed_norm(random_query))], dim=1)
 
         x = self.in_drop(x).unsqueeze(1).expand(-1, q.shape[1], -1) # [B, K, C]
