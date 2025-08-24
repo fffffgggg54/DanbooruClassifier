@@ -452,7 +452,7 @@ elif currGPU == 'v100':
 elif currGPU == 'sol_gh200':
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-classEmbedGatingHead2048_HighQueryNoiseAug_RandQueryAug_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-classEmbedGatingHead2048_HighQueryNoiseAug_NegRandQueryAug_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/convformer_s18-ml_decoder_NoMlp_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     # post importer config
 
@@ -1772,7 +1772,7 @@ def trainCycle(image_datasets, model):
                         
                         #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
                         if FLAGS['use_class_embed_head'] and use_random_query:
-                            loss = criterion(torch.cat([outputs_all.to(device)[:, inv_mask], random_query_logits.unsqueeze(1)], dim=1), torch.cat([tagsModified.to(device)[:, inv_mask], torch.ones_like(tagsModified[:,0]).unsqueeze(1)], dim=1), weight = torch.cat([loss_weight[inv_mask], torch.tensor([1], device=device)]))
+                            loss = criterion(torch.cat([outputs_all.to(device)[:, inv_mask], random_query_logits.unsqueeze(1)], dim=1), torch.cat([tagsModified.to(device)[:, inv_mask], torch.zeros_like(tagsModified[:,0]).unsqueeze(1)], dim=1), weight = torch.cat([loss_weight[inv_mask], torch.tensor([1], device=device)]))
                         else:
                             loss = criterion(outputs_all.to(device)[:, inv_mask], tagsModified.to(device)[:, inv_mask], weight = loss_weight[inv_mask])
                         #loss = criterion(outputs_all.to(device), tagsModified.to(device), weight = matryoshka_loss_weights)
