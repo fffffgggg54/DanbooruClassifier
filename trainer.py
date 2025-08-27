@@ -65,8 +65,8 @@ import re
 #currGPU = '3090'
 #currGPU = 'm40'
 #currGPU = 'v100'
-currGPU = 'sol_gh200'
-#currGPU = 'sol_multi'
+#currGPU = 'sol_gh200'
+currGPU = 'sol_multi'
 #currGPU = 'none'
 
 
