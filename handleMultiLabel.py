@@ -1022,7 +1022,7 @@ def generate_loss_weights(logits, labels, dist_tracker, clip_dist=0.95, eps=1e-8
     logit_p_values = z_score_to_p_value(logit_z_scores)
     
     # [B, K]
-    loss_weights = (dist_tracker.pos_count + dist_tracker.neg_count) / (dist_tracker.neg_count + eps)
+    loss_weights = dist_tracker.neg_count / (dist_tracker.pos_count + eps)
     #loss_weights = torch.exp(-logit_z_scores)
     #loss_weights = torch.ones_like(labels)
     #loss_weights = loss_weights.where(class_p_values > clip_dist, 1).where(labels == 1, 1)
@@ -1319,7 +1319,7 @@ class AsymmetricLoss(nn.Module):
         self.disable_torch_grad_focal_loss = disable_torch_grad_focal_loss
         self.eps = eps
 
-    def forward(self, x, y, weight = 1):
+    def forward(self, x, y, weight = 1, neg_weight = 1):
         """"
         Parameters
         ----------
@@ -1338,7 +1338,7 @@ class AsymmetricLoss(nn.Module):
 
         # Basic CE calculation
         los_pos = y * torch.log(xs_pos.clamp(min=self.eps))
-        los_neg = (1 - y) * torch.log(xs_neg.clamp(min=self.eps))
+        los_neg = (1 - y) * torch.log(xs_neg.clamp(min=self.eps)) * neg_weight
         loss = los_pos + los_neg
 
         # Asymmetric Focusing

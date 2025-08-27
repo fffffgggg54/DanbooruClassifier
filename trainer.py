@@ -452,7 +452,7 @@ elif currGPU == 'v100':
 elif currGPU == 'sol_gh200':
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-classEmbedGatingHead2048_QueryDrop3_QueryNoiseAug_PosNegRandQueryAug_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-classEmbedGatingHead2048_QueryDrop3_QueryNoiseAug_PosNegRandQueryAug_gte_L_en_v1_5dNoNorm1024-ASL_BCE_WNeg-InvClassProp-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/convformer_s18-ml_decoder_NoMlp_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     # post importer config
 
@@ -509,13 +509,13 @@ elif currGPU == 'sol_gh200':
     FLAGS['use_matryoshka_head'] = False
     FLAGS['use_class_embed_head'] = True
 
-    FLAGS['logit_offset'] = True
+    FLAGS['logit_offset'] = False
     FLAGS['logit_offset_multiplier'] = 1.0
     FLAGS['logit_offset_source'] = 'dist'
     FLAGS['opt_dist'] = False
     FLAGS['splc'] = False
     FLAGS['splc_start_epoch'] = 0
-    FLAGS['norm_weighted_loss'] = False
+    FLAGS['norm_weighted_loss'] = True
 
     FLAGS['finetune'] = False    #actually a linear probe of a frozen model
     FLAGS['compile_model'] = False
@@ -1780,9 +1780,9 @@ def trainCycle(image_datasets, model):
                                 augmented_targs = torch.cat([tagsModified.to(device)[:, inv_mask], torch.ones_like(tagsModified[:,0]).unsqueeze(1), torch.zeros_like(tagsModified[:,0]).unsqueeze(1)], dim=1)
                             else:
                                 augmented_targs = torch.cat([tagsModified.to(device)[:, inv_mask], *([torch.ones_like(tagsModified[:,0]).unsqueeze(1)] * num_random_query)], dim=1)
-                            loss = criterion(torch.cat([outputs_all.to(device)[:, inv_mask], random_query_logits], dim=1), augmented_targs, weight = loss_weight)
+                            loss = criterion(torch.cat([outputs_all.to(device)[:, inv_mask], random_query_logits], dim=1), augmented_targs, neg_weight = loss_weight)
                         else:
-                            loss = criterion(outputs_all.to(device)[:, inv_mask], tagsModified.to(device)[:, inv_mask], weight = loss_weight[inv_mask])
+                            loss = criterion(outputs_all.to(device)[:, inv_mask], tagsModified.to(device)[:, inv_mask], neg_weight = loss_weight[inv_mask])
                         #loss = criterion(outputs_all.to(device), tagsModified.to(device), weight = matryoshka_loss_weights)
                         #loss = criterion(outputs.to(device), tagsModified.to(device), weight = loss_weight)
                         #loss += (((dist_tracker.pos_mean + dist_tracker.neg_mean) ** 2) ** 0.25).sum() #+ dist_tracker.pos_std.sum() + dist_tracker.neg_std.sum()
