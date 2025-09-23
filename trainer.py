@@ -2,6 +2,7 @@ import torch
 import torch.cuda.amp
 import torch.distributed as dist
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.nn.parallel
 from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.profiler
@@ -57,15 +58,16 @@ except:
     do_plot = False
 import re
 
+import torchmetrics
 
 # ================================================
 #           CONFIGURATION OPTIONS
 # ================================================
 
-#currGPU = '3090'
+currGPU = '3090'
 #currGPU = 'm40'
 #currGPU = 'v100'
-currGPU = 'sol_gh200'
+#currGPU = 'sol_gh200'
 #currGPU = 'sol_multi'
 #currGPU = 'none'
 
@@ -77,6 +79,7 @@ FLAGS = {}
 # path config for various directories and files
 # TODO replace string appending with os.path.join()
 FLAGS['rootPath'] = "/media/fredo/KIOXIA/Datasets/danbooru2021/"
+FLAGS['imagenetRoot'] = "/media/fredo/KIOXIA/Datasets/imagenet"
 if currGPU == 'v100':
     FLAGS['rootPath'] = "/media/fredo/SAMSUNG_500GB/danbooru2021/"
     FLAGS['cocoRoot'] = "/media/fredo/SAMSUNG_500GB/coco2014/"
@@ -171,10 +174,7 @@ if currGPU == '3090':
 '''
 
 if currGPU == '3090':
-
-
-
-    FLAGS['modelDir'] = FLAGS['rootPath'] + "models/regnetx_002-OV_1_of_5_seed42-classEmbedGatingHeadLight-HighRegTest_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    FLAGS['modelDir'] = FLAGS['rootPath'] + "models/scratch/"
     
     
     # post importer config
@@ -186,6 +186,7 @@ if currGPU == '3090':
     # dataset config
     FLAGS['dataset'] = 'danbooru'
     #FLAGS['dataset'] = 'coco'
+    #FLAGS['dataset'] = 'imagenet'
     FLAGS['tagCount'] = 1588
     FLAGS['image_size'] = 224
     FLAGS['actual_image_size'] = 224
@@ -215,8 +216,8 @@ if currGPU == '3090':
     # training config
 
     FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 256
-    FLAGS['gradient_accumulation_iterations'] = 12
+    FLAGS['batch_size'] = 384
+    FLAGS['gradient_accumulation_iterations'] = 8
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -230,9 +231,9 @@ if currGPU == '3090':
     
     FLAGS['use_mlr_act'] = False
     FLAGS['use_matryoshka_head'] = False
-    FLAGS['use_class_embed_head'] = True
+    FLAGS['use_class_embed_head'] = False
 
-    FLAGS['logit_offset'] = True
+    FLAGS['logit_offset'] = False
     FLAGS['logit_offset_multiplier'] = 1.0
     FLAGS['logit_offset_source'] = 'dist'
     FLAGS['opt_dist'] = False
@@ -246,7 +247,7 @@ if currGPU == '3090':
     FLAGS['channels_last'] = True
 
     # tag k-fold cv config
-    FLAGS['use_tag_kfold'] = True
+    FLAGS['use_tag_kfold'] = False
     FLAGS['n_folds'] = 5
     FLAGS['current_fold'] = 1
 
@@ -892,6 +893,11 @@ def getData():
             FLAGS['cocoRoot']+'annotations/instances_val2014.json'
         )
         classes = {classIndex : className for classIndex, className in enumerate(trainSet.classes)}
+
+    elif FLAGS['dataset'] == 'imagenet':
+        trainSet = timm.data.create_dataset("", root=FLAGS['imagenetRoot'], split='ILSVRC2012_img_train.tar')
+        testSet = timm.data.create_dataset("torch/imagenet", root=FLAGS['imagenetRoot'], split='val')
+        classes = trainSet.reader.class_idx_to_name
     
     image_datasets = {'train': trainSet, 'val' : testSet}   # put dataset into a list for easy handling
     return image_datasets
@@ -1148,9 +1154,9 @@ def modelSetup(classes):
     #model = timm.create_model('efficientformerv2_s0', pretrained=False, num_classes=len(classes), drop_path_rate=0.05)
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
-    #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.0)
+    model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.0)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15)
-    model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
+    #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('vit_medium_shallow_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_base_patch16_siglip_gap_224.v2_webli', pretrained=True, num_classes=len(classes), drop_path_rate = 0.3)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
@@ -1175,20 +1181,32 @@ def modelSetup(classes):
         qkv_bias=False, 
         init_values=1e-6, 
         fc_norm=False,
-        pretrained=False, 
-        num_classes=len(classes), 
-        drop_path_rate = 0.4, 
-        drop_rate=0.02
-    )
-    '''
-    
-    # gap model
-    # vit_large_patch16_gap_448: p16 d1024 L24 nh16
-    # vit_base_patch16_gap_448: p16 d768 L12 nh12
-    # vit_medium_patch16_gap_224: p16 d512 L12 nh8
-    '''
-    model = timm.models.VisionTransformer(
-        img_size = FLAGS['actual_image_size'], 
+        pretrained=False,     #loss = criterion(outputs_all.to(device), tagsModified.to(device), weight = matryoshka_loss_weights)
+                                loss = criterion(outputs_all.to(device), tagsModified.to(device), weight = loss_weight)
+                                #loss += (((dist_tracker.pos_mean + dist_tracker.neg_mean) ** 2) ** 0.25).sum() #+ dist_tracker.pos_std.sum() + dist_tracker.neg_std.sum()
+                                #loss -= ((dist_tracker.pos_mean - dist_tracker.neg_mean) / ((dist_tracker.pos_var + dist_tracker.neg_var) ** 0.5 + 1e-8)).sum()
+                                #loss = criterion(outputs.to(device), tagsModified.to(device), ddp=FLAGS['use_ddp'])
+                                #loss = criterion(outputs.to(device) - torch.special.logit(offset), tagBatch.to(device))
+                                #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
+                                #loss, textOutput = criterion(outputs.to(device), tagsModified.to(device), updateAdaptive = (phase == 'train'), printAdaptive = ((i % stepsPerPrintout == 0) and is_head_proc))
+                                #loss, textOutput = criterion(outputs.to(device), tagBatch.to(device), updateAdaptive = (phase == 'train'))
+                                #loss = criterion(outputs.cpu(), tags.cpu())
+                                
+                                #loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([2,1,2,1]).to(device2)).sum()
+                                #loss = (1 - multiAccuracy[:,4:]).pow(2).sum()
+                                #loss = (1 - multiAccuracy[:,6:7]).pow(2).sum()     # high precision with easy classes
+                                #loss = (multiAccuracy[:,1] + multiAccuracy[:,2]).pow(2).sum()
+                                #loss = criterion(multiAccuracy, referenceTable)
+                                #loss = (multiAccuracy - referenceTable).pow(2).sum()
+                                #loss = (-torch.log(multiAccuracy[0,4:])).sum()
+                                #loss = (1 - multiAccuracy[:,4:]).pow(2).div(MeanStackedAccuracyStored.to(device2)).sum()
+                                #loss = (1 - multiAccuracy[:,4:]).sum()
+                                #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).sum()
+                                #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).pow(2).sum()
+                                #loss = (1 - multiAccuracy[:,8]).pow(2).sum()
+                                #loss = -MLCSL.getSingleMetric(outputs.sigmoid(), tagsModified, MLCSL.P4).sum()
+                                #loss = -MLCSL.AUL(outputs.sigmoid(), tagsModified).sum()
+                                #loss = -MLCSL.AUROC(outputs.sigmoid(), tagsModified).sum()
         patch_size = 16,
         num_classes = len(classes), 
         embed_dim=768, 
@@ -1363,8 +1381,8 @@ def getDataLoader(dataset, batch_size, epoch, use_dist_sampler):
     if(use_dist_sampler):
         distSampler = DistributedSampler(dataset=dataset, shuffle=True, seed=17, drop_last=True)
         distSampler.set_epoch(epoch)
-        return torch.utils.data.DataLoader(dataset, batch_size = batch_size, sampler=distSampler, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=3, pin_memory = True, generator=torch.Generator().manual_seed(41))
-    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = True, prefetch_factor=2, pin_memory = True, generator=torch.Generator().manual_seed(41))
+        return torch.utils.data.DataLoader(dataset, batch_size = batch_size, sampler=distSampler, num_workers=FLAGS['num_workers'], persistent_workers = False, prefetch_factor=3, pin_memory = True, generator=torch.Generator().manual_seed(41))
+    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, shuffle=True, num_workers=FLAGS['num_workers'], persistent_workers = False, prefetch_factor=2, pin_memory = True, generator=torch.Generator().manual_seed(41))
 
 def trainCycle(image_datasets, model):
     #print("starting training")
@@ -1431,17 +1449,19 @@ def trainCycle(image_datasets, model):
     # use partial label approaches from http://arxiv.org/abs/2110.10955v1
     #ema = MLCSL.ModelEma(model, 0.9997)  # 0.9997^641=0.82
     
-    
-    #criterion = MLCSL.Hill()
-    #criterion = MLCSL.SPLC(gamma=2.0)
-    #criterion = MLCSL.SPLCModified(gamma=2.0)
-    #criterion = MLCSL.AdaptiveWeightedLoss(initial_weight = 0.0, lr = 1e-4, weight_limit = 1e5)
-    criterion = MLCSL.AsymmetricLoss(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
-    #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=5, gamma_pos=1, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
-    #criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=1, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False, adaptive = True, gap_target = 0.1, gamma_step = 0.003)
-    #criterion = MLCSL.AsymmetricLossAdaptiveWorking(gamma_neg=1, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.003)
-    #criterion = MLCSL.GapWeightLoss(initial_weight=0., gap_target=0.1, weight_step=1e-3)
-    #criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0.05, gamma_pos=1, gamma_neg=6, gamma_unann=4, alpha_pos=1, alpha_neg=1, alpha_unann=1)
+    if FLAGS['dataset'] == 'imagenet':
+        criterion = nn.CrossEntropyLoss()
+    else:
+        #criterion = MLCSL.Hill()
+        #criterion = MLCSL.SPLC(gamma=2.0)
+        #criterion = MLCSL.SPLCModified(gamma=2.0)
+        #criterion = MLCSL.AdaptiveWeightedLoss(initial_weight = 0.0, lr = 1e-4, weight_limit = 1e5)
+        criterion = MLCSL.AsymmetricLoss(gamma_neg=0, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False)
+        #criterion = MLCSL.AsymmetricLossOptimized(gamma_neg=5, gamma_pos=1, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=False)
+        #criterion = MLCSL.AsymmetricLossAdaptive(gamma_neg=1, gamma_pos=1, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=False, adaptive = True, gap_target = 0.1, gamma_step = 0.003)
+        #criterion = MLCSL.AsymmetricLossAdaptiveWorking(gamma_neg=1, gamma_pos=0, clip=0.0, eps=1e-8, disable_torch_grad_focal_loss=True, adaptive = True, gap_target = 0.1, gamma_step = 0.003)
+        #criterion = MLCSL.GapWeightLoss(initial_weight=0., gap_target=0.1, weight_step=1e-3)
+        #criterion = MLCSL.PartialSelectiveLoss(device, prior_path=None, clip=0.05, gamma_pos=1, gamma_neg=6, gamma_unann=4, alpha_pos=1, alpha_neg=1, alpha_unann=1)
     #parameters = MLCSL.add_weight_decay(model, FLAGS['weight_decay'])
     #optimizer = optim.Adam(params=parameters, lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'])
     #optimizer = optim.SGD(model.parameters(), lr=FLAGS['learning_rate'], weight_decay=FLAGS['weight_decay'], momentum=0.9)
@@ -1588,7 +1608,8 @@ def trainCycle(image_datasets, model):
                                                           ])
             
             #myDataset.transform = newTransform
-            if hasattr(dataloaders[phase].dataset, 'dataset'):
+            #if hasattr(dataloaders[phase].dataset, 'dataset'):
+            if FLAGS['dataset'] == 'danbooru':
                 # modify original dataset if using a subset
                 dataloaders[phase].dataset.dataset.transform = newTransform
             else:
@@ -1609,6 +1630,9 @@ def trainCycle(image_datasets, model):
             if(firstLoop): print("got loader iterable")
             #if(is_head_proc): torch.cuda.memory._record_memory_history(enabled='all')
             for i, (images, tags) in loaderIterable:
+                if FLAGS['dataset'] == 'imagenet':
+                    correct_classes = tags.to(device, non_blocking=True)
+                    tags = F.one_hot(correct_classes, num_classes=1000)
 
                 imageBatch = images.to(device, memory_format=memory_format, non_blocking=True)
                 tagBatch = tags.to(device, non_blocking=True)
@@ -1630,7 +1654,7 @@ def trainCycle(image_datasets, model):
                                 outputs_all = model[1](latent_features)
                             outputs_all = outputs_all.float()
                             outputs = outputs_all[0]
-                            preds = torch.sigmoid(outputs)
+                            #preds = torch.sigmoid(outputs)
                             matryoshka_loss_weights = torch.ones_like(outputs_all, requires_grad=False)
                             matryoshka_loss_weights[0] = outputs_all.shape[0] - 1
                         elif FLAGS['use_class_embed_head'] == True:
@@ -1650,7 +1674,7 @@ def trainCycle(image_datasets, model):
                             else:
                                 use_random_query = False
                             outputs = outputs_all
-                            preds = torch.sigmoid(outputs)
+                            #preds = torch.sigmoid(outputs)
                         else:
                             if(phase == 'val'):
                                 if FLAGS['use_ddp']:
@@ -1665,28 +1689,34 @@ def trainCycle(image_datasets, model):
                                 outputs = model(imageBatch).float()
                             #outputs = model(imageBatch).logits
                             outputs_all = outputs.float()
-                            preds = torch.sigmoid(outputs).float()
+                            #preds = torch.sigmoid(outputs).float()
+
+                        if FLAGS['dataset'] == 'imagenet':
+                            preds = outputs.softmax(-1)
+                        else:
+                            preds = outputs.sigmoid().float()
 
                         if(firstLoop): print("got fwd pass")
 
                         with torch.amp.autocast('cuda', enabled=False):
                         
-                            # update boundary
-                            boundaryCalculator(
-                                preds.detach(),
-                                tagBatch,
-                                update=(phase == "train"),
-                                step_opt=((i+1) % FLAGS['gradient_accumulation_iterations'] == 0)
-                            )
-                            if(firstLoop): print("got boundary update")
-                            
-                            # allreduce boundary during boundary optimizer updates
-                            if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
-                                torch.cuda.synchronize()
-                                if FLAGS['use_ddp'] == True:
-                                    with torch.no_grad():
-                                        torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
-                            #offset = torch.Tensor([0.5]).to(device) if boundaryCalculator.needs_init else boundaryCalculator.thresholdPerClass.detach()
+                            if FLAGS['dataset'] != 'imagenet':
+                                # update boundary
+                                boundaryCalculator(
+                                    preds.detach(),
+                                    tagBatch,
+                                    update=(phase == "train"),
+                                    step_opt=((i+1) % FLAGS['gradient_accumulation_iterations'] == 0)
+                                )
+                                if(firstLoop): print("got boundary update")
+                                
+                                # allreduce boundary during boundary optimizer updates
+                                if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
+                                    torch.cuda.synchronize()
+                                    if FLAGS['use_ddp'] == True:
+                                        with torch.no_grad():
+                                            torch.distributed.all_reduce(boundaryCalculator.thresholdPerClass, op = torch.distributed.ReduceOp.AVG)
+                                #offset = torch.Tensor([0.5]).to(device) if boundaryCalculator.needs_init else boundaryCalculator.thresholdPerClass.detach()
                             
                             # performance metric tracking
                             #predsModified=preds
@@ -1700,14 +1730,17 @@ def trainCycle(image_datasets, model):
                                 all_logits = outputs
 
                             dist_tracker.set_device(all_logits.device)
+                            
                             with torch.no_grad():
-                                if FLAGS['use_tag_kfold']:
-                                    multiAccuracy = cm_tracker.update(preds.detach()[:, inv_mask], tagBatch.to(device)[:, inv_mask])
-                                    multiAccuracyHoldout = cm_tracker_holdout.update(preds.detach()[:, mask], tagBatch.to(device)[:, mask])
-                                else:
-                                    #multiAccuracy = cm_tracker.update((preds.detach() > offset.detach()).float().to(device), tagBatch.to(device))
-                                    multiAccuracy = cm_tracker.update(preds.detach(), tagBatch.to(device))
-                                if(firstLoop): print("got CM update")
+                                if FLAGS['dataset'] != 'imagenet':
+                                    
+                                    if FLAGS['use_tag_kfold']:
+                                        multiAccuracy = cm_tracker.update(preds.detach()[:, inv_mask], tagBatch.to(device)[:, inv_mask])
+                                        multiAccuracyHoldout = cm_tracker_holdout.update(preds.detach()[:, mask], tagBatch.to(device)[:, mask])
+                                    else:
+                                        #multiAccuracy = cm_tracker.update((preds.detach() > offset.detach()).float().to(device), tagBatch.to(device))
+                                        multiAccuracy = cm_tracker.update(preds.detach(), tagBatch.to(device))
+                                    if(firstLoop): print("got CM update")
                                 
                                 
                                 if not FLAGS['splc']:
@@ -1772,44 +1805,52 @@ def trainCycle(image_datasets, model):
                                 offset = torch.special.logit(boundaryCalculator.thresholdPerClass.detach())
                             outputs_all = outputs_all + FLAGS['logit_offset_multiplier'] * offset
                             if(firstLoop): print("got logit offset")
-
-                        
-                        #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
-                        if FLAGS['use_class_embed_head'] and use_random_query:
-                            loss_weight = torch.cat([loss_weight[inv_mask], torch.tensor([1] * num_random_query, device=device)])
-                            if num_random_query == 2:
-                                augmented_targs = torch.cat([tagsModified.to(device)[:, inv_mask], torch.ones_like(tagsModified[:,0]).unsqueeze(1), torch.zeros_like(tagsModified[:,0]).unsqueeze(1)], dim=1)
-                            else:
-                                augmented_targs = torch.cat([tagsModified.to(device)[:, inv_mask], *([torch.ones_like(tagsModified[:,0]).unsqueeze(1)] * num_random_query)], dim=1)
-                            loss = criterion(torch.cat([outputs_all.to(device)[:, inv_mask], random_query_logits], dim=1), augmented_targs, neg_weight = loss_weight)
+                        if FLAGS['dataset'] == 'imagenet':
+                            loss = criterion(outputs_all.to(device), correct_classes.to(device))
                         else:
-                            loss = criterion(outputs_all.to(device)[:, inv_mask], tagsModified.to(device)[:, inv_mask], neg_weight = loss_weight[inv_mask])
-                        #loss = criterion(outputs_all.to(device), tagsModified.to(device), weight = matryoshka_loss_weights)
-                        #loss = criterion(outputs.to(device), tagsModified.to(device), weight = loss_weight)
-                        #loss += (((dist_tracker.pos_mean + dist_tracker.neg_mean) ** 2) ** 0.25).sum() #+ dist_tracker.pos_std.sum() + dist_tracker.neg_std.sum()
-                        #loss -= ((dist_tracker.pos_mean - dist_tracker.neg_mean) / ((dist_tracker.pos_var + dist_tracker.neg_var) ** 0.5 + 1e-8)).sum()
-                        #loss = criterion(outputs.to(device), tagsModified.to(device), ddp=FLAGS['use_ddp'])
-                        #loss = criterion(outputs.to(device) - torch.special.logit(offset), tagBatch.to(device))
-                        #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
-                        #loss, textOutput = criterion(outputs.to(device), tagsModified.to(device), updateAdaptive = (phase == 'train'), printAdaptive = ((i % stepsPerPrintout == 0) and is_head_proc))
-                        #loss, textOutput = criterion(outputs.to(device), tagBatch.to(device), updateAdaptive = (phase == 'train'))
-                        #loss = criterion(outputs.cpu(), tags.cpu())
-                        
-                        #loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([2,1,2,1]).to(device2)).sum()
-                        #loss = (1 - multiAccuracy[:,4:]).pow(2).sum()
-                        #loss = (1 - multiAccuracy[:,6:7]).pow(2).sum()     # high precision with easy classes
-                        #loss = (multiAccuracy[:,1] + multiAccuracy[:,2]).pow(2).sum()
-                        #loss = criterion(multiAccuracy, referenceTable)
-                        #loss = (multiAccuracy - referenceTable).pow(2).sum()
-                        #loss = (-torch.log(multiAccuracy[0,4:])).sum()
-                        #loss = (1 - multiAccuracy[:,4:]).pow(2).div(MeanStackedAccuracyStored.to(device2)).sum()
-                        #loss = (1 - multiAccuracy[:,4:]).sum()
-                        #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).sum()
-                        #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).pow(2).sum()
-                        #loss = (1 - multiAccuracy[:,8]).pow(2).sum()
-                        #loss = -MLCSL.getSingleMetric(outputs.sigmoid(), tagsModified, MLCSL.P4).sum()
-                        #loss = -MLCSL.AUL(outputs.sigmoid(), tagsModified).sum()
-                        #loss = -MLCSL.AUROC(outputs.sigmoid(), tagsModified).sum()
+                            #loss = criterion(outputs.to(device2), tagBatch.to(device2), lastPrior)
+
+                            # FIXME use cases: 
+                            # no class embedding head (regular loss calculation)
+                            # class embedding head - no kfold no randQ, no kfold randQ, kfold no randQ, kfold randQ
+                            if FLAGS['use_tag_kfold']:
+                                if use_random_query:
+                                    loss_weight = torch.cat([loss_weight[inv_mask], torch.tensor([1] * num_random_query, device=device)])
+                                    if num_random_query == 2:
+                                        augmented_targs = torch.cat([tagsModified.to(device)[:, inv_mask], torch.ones_like(tagsModified[:,0]).unsqueeze(1), torch.zeros_like(tagsModified[:,0]).unsqueeze(1)], dim=1)
+                                    else:
+                                        augmented_targs = torch.cat([tagsModified.to(device)[:, inv_mask], *([torch.ones_like(tagsModified[:,0]).unsqueeze(1)] * num_random_query)], dim=1)
+                                    loss = criterion(torch.cat([outputs_all.to(device)[:, inv_mask], random_query_logits], dim=1), augmented_targs, neg_weight = loss_weight)
+                                else:
+                                    loss = criterion(outputs_all.to(device)[:, inv_mask], tagsModified.to(device)[:, inv_mask], neg_weight = loss_weight[inv_mask])
+                            else:
+                                #loss = criterion(outputs_all.to(device), tagsModified.to(device), weight = matryoshka_loss_weights)
+                                loss = criterion(outputs_all.to(device), tagsModified.to(device), weight = loss_weight)
+                                #loss += (((dist_tracker.pos_mean + dist_tracker.neg_mean) ** 2) ** 0.25).sum() #+ dist_tracker.pos_std.sum() + dist_tracker.neg_std.sum()
+                                #loss -= ((dist_tracker.pos_mean - dist_tracker.neg_mean) / ((dist_tracker.pos_var + dist_tracker.neg_var) ** 0.5 + 1e-8)).sum()
+                                #loss = criterion(outputs.to(device), tagsModified.to(device), ddp=FLAGS['use_ddp'])
+                                #loss = criterion(outputs.to(device) - torch.special.logit(offset), tagBatch.to(device))
+                                #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
+                                #loss, textOutput = criterion(outputs.to(device), tagsModified.to(device), updateAdaptive = (phase == 'train'), printAdaptive = ((i % stepsPerPrintout == 0) and is_head_proc))
+                                #loss, textOutput = criterion(outputs.to(device), tagBatch.to(device), updateAdaptive = (phase == 'train'))
+                                #loss = criterion(outputs.cpu(), tags.cpu())
+                                
+                                #loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([2,1,2,1]).to(device2)).sum()
+                                #loss = (1 - multiAccuracy[:,4:]).pow(2).sum()
+                                #loss = (1 - multiAccuracy[:,6:7]).pow(2).sum()     # high precision with easy classes
+                                #loss = (multiAccuracy[:,1] + multiAccuracy[:,2]).pow(2).sum()
+                                #loss = criterion(multiAccuracy, referenceTable)
+                                #loss = (multiAccuracy - referenceTable).pow(2).sum()
+                                #loss = (-torch.log(multiAccuracy[0,4:])).sum()
+                                #loss = (1 - multiAccuracy[:,4:]).pow(2).div(MeanStackedAccuracyStored.to(device2)).sum()
+                                #loss = (1 - multiAccuracy[:,4:]).sum()
+                                #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).sum()
+                                #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).pow(2).sum()
+                                #loss = (1 - multiAccuracy[:,8]).pow(2).sum()
+                                #loss = -MLCSL.getSingleMetric(outputs.sigmoid(), tagsModified, MLCSL.P4).sum()
+                                #loss = -MLCSL.AUL(outputs.sigmoid(), tagsModified).sum()
+                                #loss = -MLCSL.AUROC(outputs.sigmoid(), tagsModified).sum()
+
                         #model.zero_grad()
                         
                         if(firstLoop): print("got loss")
@@ -1925,17 +1966,20 @@ def trainCycle(image_datasets, model):
                     
                     if is_head_proc:
                         if (phase == 'train'):
-                            targets_batch = tags.numpy(force=True)
-                            preds_regular_batch = preds.detach().numpy(force=True)
-                            accuracy = MLCSL.mAP(targets_batch, preds_regular_batch)
+                            #targets_batch = tags.numpy(force=True)
+                            #preds_regular_batch = preds.detach().numpy(force=True)
+                            #accuracy = MLCSL.mAP(targets_batch, preds_regular_batch)
+                            accuracy = torchmetrics.functional.classification.multilabel_average_precision(preds.detach().to(device), tagBatch.long().to(device), len(classes))
                         else:
-                            targets = torch.cat(targets_running).numpy(force=True)
-                            preds_regular = torch.cat(preds_running).numpy(force=True)
+                            targets = torch.cat(targets_running)
+                            preds_regular = torch.cat(preds_running)
                             #preds_ema = output_ema.cpu().detach().numpy()
-                            accuracy = MLCSL.mAP(targets, preds_regular)
+                            #accuracy = MLCSL.mAP(targets.numpy(force=True), preds_regular.numpy(force=True))
+                            accuracy = torchmetrics.functional.classification.multilabel_average_precision(preds_regular.to(device), targets.long().to(device), len(classes))
+                        
                         if(firstLoop): print("got mAP")
                         torch.set_printoptions(linewidth = 200, sci_mode = False)
-                        print(f"[{epoch}/{FLAGS['num_epochs']}][{i}/{len(dataloaders[phase])}]\tLoss: {loss.detach():.4f}\tImages/Second: {imagesPerSecond:.4f}\tAccuracy: {accuracy:.2f}\t {[f'{num:.4f}' for num in list((multiAccuracy.detach() * 100))]}\t{textOutput}")
+                        print(f"[{epoch}/{FLAGS['num_epochs']}][{i}/{len(dataloaders[phase])}]\tLoss: {loss.detach():.4f}\tImages/Second: {imagesPerSecond:.4f}\tAccuracy: {accuracy * 100:.2f}\t {[f'{num:.4f}' for num in list((multiAccuracy.detach() * 100))]}\t{textOutput}")
                         if FLAGS['use_tag_kfold']: print(f'kfold holdout perfomance metrics: {[f'{num:.4f}' for num in list((multiAccuracyHoldout.detach() * 100))]}')
                         torch.set_printoptions(profile='default')
                         if(firstLoop): print("info print call")
