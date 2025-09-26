@@ -1562,7 +1562,7 @@ def trainCycle(image_datasets, model):
             phase = phases[currPhase]
             
             #cm_tracker = MLCSL.MetricTracker()
-            dist_tracker = MLCSL.DistributionTracker().to(device)
+            dist_tracker = MLCSL.DistributionTracker(num_features = len(classes)).to(device)
 
             #if FLAGS['use_tag_kfold']:
             #    cm_tracker_holdout = MLCSL.MetricTracker()
