@@ -23,7 +23,6 @@ import math
 import torch.distributed
 import scipy.stats
 
-metrics_to_track = [TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision, P4, F1, PU_F_Metric]
 
 
 
@@ -1062,6 +1061,57 @@ class DistributionTracker(nn.Module):
         self.register_buffer('_neg_mean', torch.zeros(num_features))
         self.register_buffer('_neg_m2', torch.zeros(num_features))
 
+    def sync_buffers(self):
+        """
+        Syncs the buffers for a CUMULATIVE tracker across all DDP processes.
+        
+        IMPORTANT: This method merges statistics for a cumulative (non-EMA) distrubiton tracker.
+        It uses a parallelized version of Welford's algorithm to combine counts, means, and M2 from different processes.
+        """
+        if not (torch.distributed.is_available() and torch.distributed.is_initialized()):
+            # Return if not in a distributed setting
+            return
+
+        world_size = torch.distributed.get_world_size()
+        if world_size == 1:
+            # No need to sync if there's only one process
+            return
+
+        # Helper function to sync one set of statistics (e.g., for the positive class)
+        def _sync_set(count, mean, m2):
+            # 1. Sync count by summing
+            total_count = count.clone()
+            torch.distributed.all_reduce(total_count, op=ReduceOp.SUM)
+
+            # Prevent division by zero if a feature has no samples across all processes
+            if total_count.sum() == 0:
+                return
+
+            # 2. Sync mean by weighted average
+            prod = count * mean
+            torch.distributed.all_reduce(prod, op=ReduceOp.SUM)
+            total_mean = prod / (total_count + self.eps)
+
+            # 3. Sync M2 using the parallel algorithm
+            # Sum of M2 correction terms: sum(count_i * (mean_i - total_mean)**2)
+            m2_correction = count * (mean - total_mean)**2
+            torch.distributed.all_reduce(m2_correction, op=ReduceOp.SUM)
+            
+            # Sum of the original M2 values
+            total_m2 = m2.clone()
+            torch.distributed.all_reduce(total_m2, op=ReduceOp.SUM)
+            
+            total_m2 += m2_correction
+
+            # Update buffers in-place with the synced values
+            count.data.copy_(total_count)
+            mean.data.copy_(total_mean)
+            m2.data.copy_(total_m2)
+
+        # Sync statistics for both positive and negative classes
+        _sync_set(self._pos_count, self._pos_mean, self._pos_m2)
+        _sync_set(self._neg_count, self._neg_mean, self._neg_m2)
+
     @property
     def pos_mean(self):
         return self._pos_mean
@@ -1308,6 +1358,40 @@ class DistributionTrackerEMA(nn.Module):
         self.register_buffer('_neg_count', torch.zeros(num_features))
         self.register_buffer('_neg_mean', torch.zeros(num_features))
         self.register_buffer('_neg_m2', torch.zeros(num_features)) # EMA of M2
+
+    def sync_buffers(self):
+        """
+        Syncs the buffers across all DDP processes by averaging them.
+
+        This method should be called after each forward pass in a Distributed Data Parallel (DDP)
+        training setup to ensure that the tracked statistics are consistent across all processes.
+        
+        Example Usage in training loop:
+        ...
+        tracker(logits, labels)
+        tracker.sync_buffers()
+        ...
+        """
+        if not (torch.distributed.is_available() and torch.distributed.is_initialized()):
+            # Return if not in a distributed setting
+            return
+
+        world_size = torch.distributed.get_world_size()
+        if world_size == 1:
+            # No need to sync if there's only one process
+            return
+
+        # Gather all buffers to be synchronized
+        buffers_to_sync = [
+            self._pos_count, self._pos_mean, self._pos_m2,
+            self._neg_count, self._neg_mean, self._neg_m2
+        ]
+
+        for buf in buffers_to_sync:
+            # Sum buffer values across all processes
+            torch.distributed.all_reduce(buf.data, op=torch.distributed.ReduceOp.SUM)
+            # Divide by the world size to get the average
+            buf.data /= world_size
 
     @property
     def pos_mean(self):
@@ -2264,10 +2348,10 @@ def getSingleMetric(preds, targs, metric):
     
     return metric(TP, FN, FP, TN, epsilon)
 
-def TP(TP, FN, FP, TN, epsilon): return TP
-def FN(TP, FN, FP, TN, epsilon): return FN
-def FP(TP, FN, FP, TN, epsilon): return FP
-def TN(TP, FN, FP, TN, epsilon): return TN
+def TP(TP, FN, FP, TN, epsilon): return TP / (TP + FN + FP + TN + epsilon)
+def FN(TP, FN, FP, TN, epsilon): return FN / (TP + FN + FP + TN + epsilon)
+def FP(TP, FN, FP, TN, epsilon): return FP / (TP + FN + FP + TN + epsilon)
+def TN(TP, FN, FP, TN, epsilon): return TN / (TP + FN + FP + TN + epsilon)
 
 # recall
 def Precall(TP, FN, FP, TN, epsilon):
@@ -2305,6 +2389,9 @@ def F1(TP, FN, FP, TN, epsilon):
 # In Proceedings of the twentieth international conference on machine learning (pp. 448–455).
 def PU_F_Metric(TP, FN, FP, TN, epsilon):
     return (Precall(TP, FN, FP, TN, epsilon) ** 2) / (TP + FN + epsilon)
+
+metrics_to_track = [TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision, P4, F1, PU_F_Metric]
+
 
 # AUL and AUROC helper, implements shared portion of eqs 1 and 2 in paper
 # https://openreview.net/forum?id=2NU7a9AHo-6

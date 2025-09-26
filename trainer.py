@@ -66,11 +66,11 @@ from torchmetrics.classification import MultilabelRecall, MultilabelPrecision, M
 #           CONFIGURATION OPTIONS
 # ================================================
 
-currGPU = '3090'
+#currGPU = '3090'
 #currGPU = 'm40'
 #currGPU = 'v100'
 #currGPU = 'sol_gh200'
-#currGPU = 'sol_multi'
+currGPU = 'sol_multi'
 #currGPU = 'none'
 
 
@@ -542,7 +542,7 @@ elif currGPU == 'sol_multi':
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-classEmbedGatingHead2048_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds_W-InvClassProp-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-classEmbedGatingHead2048_HighDrop_PreNorm_QueryNoiseAug_RandQueryAug_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds_W-InvClassProp-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_2_of_5_seed42_4xL40_Rep1-classEmbedGatingHead2048_QueryDrop3_QueryNoiseAug_PosNegRandQueryAug_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_2_of_5_seed42_4xL40_Rep3-classEmbedGatingHead2048_QueryDrop3_QueryNoiseAug_PosNegRandQueryAug_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
 
     # post importer config
 
@@ -1158,7 +1158,7 @@ def modelSetup(classes):
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.0)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15)
-    #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
+    model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('vit_medium_shallow_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_base_patch16_siglip_gap_224.v2_webli', pretrained=True, num_classes=len(classes), drop_path_rate = 0.3)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
@@ -1166,7 +1166,7 @@ def modelSetup(classes):
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, patch_size=32, img_size=FLAGS['actual_image_size'])
     #model = timm.create_model('vit_huge_patch14_gap_224', pretrained=True, pretrained_cfg_overlay=dict(file="./jepa-latest.pth.tar"))
     #model = timm.create_model('ese_vovnet99b_iabn', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.02)
-    model = timm.create_model('regnety_006', pretrained=False, num_classes=len(classes))
+    #model = timm.create_model('regnety_004', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('efficientvit_b3', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('eva02_large_patch14_224.mim_m38m', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, img_size=448)
@@ -1183,32 +1183,7 @@ def modelSetup(classes):
         qkv_bias=False, 
         init_values=1e-6, 
         fc_norm=False,
-        pretrained=False,     #loss = criterion(outputs_all.to(device), tagsModified.to(device), weight = matryoshka_loss_weights)
-                                loss = criterion(outputs_all.to(device), tagsModified.to(device), weight = loss_weight)
-                                #loss += (((dist_tracker.pos_mean + dist_tracker.neg_mean) ** 2) ** 0.25).sum() #+ dist_tracker.pos_std.sum() + dist_tracker.neg_std.sum()
-                                #loss -= ((dist_tracker.pos_mean - dist_tracker.neg_mean) / ((dist_tracker.pos_var + dist_tracker.neg_var) ** 0.5 + 1e-8)).sum()
-                                #loss = criterion(outputs.to(device), tagsModified.to(device), ddp=FLAGS['use_ddp'])
-                                #loss = criterion(outputs.to(device) - torch.special.logit(offset), tagBatch.to(device))
-                                #loss = criterion(outputs.to(device2), tagBatch.to(device2), epoch)
-                                #loss, textOutput = criterion(outputs.to(device), tagsModified.to(device), updateAdaptive = (phase == 'train'), printAdaptive = ((i % stepsPerPrintout == 0) and is_head_proc))
-                                #loss, textOutput = criterion(outputs.to(device), tagBatch.to(device), updateAdaptive = (phase == 'train'))
-                                #loss = criterion(outputs.cpu(), tags.cpu())
-                                
-                                #loss = (1 - multiAccuracy[:,4:]).pow(2).mul(torch.Tensor([2,1,2,1]).to(device2)).sum()
-                                #loss = (1 - multiAccuracy[:,4:]).pow(2).sum()
-                                #loss = (1 - multiAccuracy[:,6:7]).pow(2).sum()     # high precision with easy classes
-                                #loss = (multiAccuracy[:,1] + multiAccuracy[:,2]).pow(2).sum()
-                                #loss = criterion(multiAccuracy, referenceTable)
-                                #loss = (multiAccuracy - referenceTable).pow(2).sum()
-                                #loss = (-torch.log(multiAccuracy[0,4:])).sum()
-                                #loss = (1 - multiAccuracy[:,4:]).pow(2).div(MeanStackedAccuracyStored.to(device2)).sum()
-                                #loss = (1 - multiAccuracy[:,4:]).sum()
-                                #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).sum()
-                                #loss = (1 - multiAccuracy[:,4:]).div(MeanStackedAccuracyStored.to(device2)).pow(2).sum()
-                                #loss = (1 - multiAccuracy[:,8]).pow(2).sum()
-                                #loss = -MLCSL.getSingleMetric(outputs.sigmoid(), tagsModified, MLCSL.P4).sum()
-                                #loss = -MLCSL.AUL(outputs.sigmoid(), tagsModified).sum()
-                                #loss = -MLCSL.AUROC(outputs.sigmoid(), tagsModified).sum()
+        pretrained=False,
         patch_size = 16,
         num_classes = len(classes), 
         embed_dim=768, 
@@ -1567,8 +1542,8 @@ def trainCycle(image_datasets, model):
             #if FLAGS['use_tag_kfold']:
             #    cm_tracker_holdout = MLCSL.MetricTracker()
 
-            metrics_to_track = {metric.__name__, MLCSL.ConfusionMatrixBasedMetric(num_labels=len(classes), metric = metric) for metric in MLCSL.metrics_to_track}
-            metric_names = [metric.__name__ for metric in MLCSL.metrics]
+            metrics_to_track = {metric.__name__: MLCSL.ConfusionMatrixBasedMetric(num_labels=len(classes), metric = metric) for metric in MLCSL.metrics_to_track}
+            metric_names = [metric.__name__ for metric in MLCSL.metrics_to_track]
             # Create the MetricCollection
             metric_tracker = MetricCollection(metrics_to_track).to(device)
 
@@ -1790,6 +1765,8 @@ def trainCycle(image_datasets, model):
                                 else:
                                     all_tags = tagsModified
                         dist_tracker(all_logits.to(torch.float64), all_tags.to(torch.long))
+                        torch.cuda.synchronize()
+                        dist_tracker.sync_buffers()
                         if(firstLoop): print("got dist tracker update")
                         
                         # loss weighing
@@ -1880,7 +1857,8 @@ def trainCycle(image_datasets, model):
                                 scaler.step(optimizer)
                                 scaler.update()
                                 optimizer.zero_grad(set_to_none=True)
-                                dist_tracker._zero_grad()
+                                # FIXME new dist tracker doesn't support dist_opt
+                                #dist_tracker._zero_grad()
                                 
                                 #nn.utils.clip_grad_norm_(mlr_act.parameters(), max_norm=1.0, norm_type=2)
                                 #scaler.step(mlr_act_opt)
