@@ -1070,7 +1070,7 @@ class DistributionTracker(nn.Module):
     def pos_var(self):
         # The variance is M2 / (count - 1) for an unbiased estimator.
         # We only compute variance if we have more than one sample.
-        return self._pos_m2 / (self._pos_count - 1).clamp(min=0)
+        return self._pos_m2 / (self._pos_count - 1).clamp(min=self.eps)
 
     @property
     def pos_std(self):
@@ -1084,7 +1084,7 @@ class DistributionTracker(nn.Module):
     def neg_var(self):
         # The variance is M2 / (count - 1) for an unbiased estimator.
         # We only compute variance if we have more than one sample.
-        return self._neg_m2 / (self._neg_count - 1).clamp(min=0)
+        return self._neg_m2 / (self._neg_count - 1).clamp(min=self.eps)
 
     @property
     def neg_std(self):
