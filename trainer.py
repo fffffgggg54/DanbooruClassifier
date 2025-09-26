@@ -218,8 +218,8 @@ if currGPU == '3090':
     # training config
 
     FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 256
-    FLAGS['gradient_accumulation_iterations'] = 12
+    FLAGS['batch_size'] = 384
+    FLAGS['gradient_accumulation_iterations'] = 8
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -2028,14 +2028,15 @@ def trainCycle(image_datasets, model):
                 firstLoop = False
                 sys.stdout.flush()
             
-                    
+            '''        
             if FLAGS['use_ddp'] == True:
                 torch.cuda.synchronize()
                 torch.distributed.all_reduce(cm_tracker.running_confusion_matrix, op=torch.distributed.ReduceOp.AVG)
                 if FLAGS['use_tag_kfold']: torch.distributed.all_reduce(cm_tracker_holdout.running_confusion_matrix, op=torch.distributed.ReduceOp.AVG)
                 
                 #torch.distributed.all_reduce(criterion.gamma_neg_per_class, op = torch.distributed.ReduceOp.AVG)
-            
+            '''
+
             full_metrics = metric_tracker.compute()
             full_metrics = torch.column_stack([full_metrics[name] for name in metric_names])
             if ((phase == 'val') and (FLAGS['skip_test_set'] == False or epoch == FLAGS['num_epochs'] - 1) and is_head_proc):
