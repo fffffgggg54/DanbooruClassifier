@@ -2053,10 +2053,27 @@ def add_weight_decay(model, weight_decay=1e-4, skip_list=()):
         {'params': no_decay, 'weight_decay': 0.},
         {'params': decay, 'weight_decay': weight_decay}]
 
+# torchmetrics uses hard thresholding for metrics
+# use our own soft CM calculation, do gate if we want hard metrics
+def getSoftCM(preds, targs):
+    epsilon = 1e-12
+
+    targs_inv = 1 - targs
+    batchSize = targs.size(dim=0)
+    P = targs * preds
+    N = targs_inv * preds
+    
+    # [K]
+    TP = P.sum(dim=0) / batchSize
+    FN = (targs - P).sum(dim=0) / batchSize
+    FP = N.sum(dim=0) / batchSize
+    TN = (targs_inv - N).sum(dim=0) / batchSize
+
+    return TP, FP, TN, FN    
+
 # torchmetrics multilabel metrics
-# gemini-2.5-pro
 from torchmetrics import Metric
-from torchmetrics.functional.classification import multilabel_stat_scores
+#from torchmetrics.functional.classification import multilabel_stat_scores
 
 class ConfusionMatrixBasedMetric(Metric):
     """
@@ -2067,7 +2084,7 @@ class ConfusionMatrixBasedMetric(Metric):
     # not the entire history of stats. It's the default but good to be explicit.
     full_state_update: bool = False
 
-    def __init__(self, num_labels, **kwargs):
+    def __init__(self, num_labels = 1, metric = None, **kwargs):
         super().__init__(**kwargs)
         self.num_labels = num_labels
         
@@ -2079,12 +2096,15 @@ class ConfusionMatrixBasedMetric(Metric):
         self.add_state("tn", default=torch.zeros(num_labels), dist_reduce_fx="sum")
         self.add_state("fn", default=torch.zeros(num_labels), dist_reduce_fx="sum")
 
+        self.metric = metric
+
     def update(self, preds: torch.Tensor, target: torch.Tensor):
         """
         Update state with statistics from a new batch.
         """
         # Calculate stats for the current batch
-        tp, fp, tn, fn = multilabel_stat_scores(preds, target, num_labels=self.num_labels)
+        #tp, fp, tn, fn = multilabel_stat_scores(preds, target, num_labels=self.num_labels)
+        tp, fp, tn, fn = getSoftCM(preds, target)
         
         # Update the running totals
         self.tp += tp
@@ -2092,33 +2112,9 @@ class ConfusionMatrixBasedMetric(Metric):
         self.tn += tn
         self.fn += fn
 
-# Nprecision
-class NegativePredictiveValue(ConfusionMatrixBasedMetric):
     def compute(self):
-        # TN / (TN + FN)
-        denominator = self.tn + self.fn
-        return self.tn / (denominator + 1e-12)
+        return self.metric(self.tp, self.fn, self.fp, self.tn)
 
-class P4Metric(ConfusionMatrixBasedMetric):
-    def compute(self):
-        # (4 * TP * TN) / ((4 * TP * TN) + (TP + TN)*(FP + FN))
-        term1 = 4 * self.tp * self.tn
-        term2 = (self.tp + self.tn) * (self.fp + self.fn)
-        return term1 / (term1 + term2 + 1e-12)
-
-# https://www.cs.uic.edu/~liub/publications/icml-03.pdf
-# metric proposed in 
-# Lee, W. S., & Liu, B. (2003).
-# Learning with positive and unlabeled examples using weighted logistic regression.
-# In Proceedings of the twentieth international conference on machine learning (pp. 448–455).
-class PUFMetric(ConfusionMatrixBasedMetric):
-    def compute(self):
-        # Recall^2 / Precision_denominator = (TP / (TP + FN))^2 / (TP + FP)
-        # Note: This is an unusual metric. The denominator is typically TP / (TP+FP), which is precision.
-        # This implementation matches the formula in your code: Precall**2 / (FP + TP)
-        recall = self.tp / (self.tp + self.fn + 1e-12)
-        precision_denominator = self.tp + self.fp
-        return (recall**2) / (precision_denominator + 1e-12)
 
 
 # non-torchmetrics-based metrics

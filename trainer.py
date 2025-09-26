@@ -218,8 +218,8 @@ if currGPU == '3090':
     # training config
 
     FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 384
-    FLAGS['gradient_accumulation_iterations'] = 8
+    FLAGS['batch_size'] = 256
+    FLAGS['gradient_accumulation_iterations'] = 12
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -1156,7 +1156,7 @@ def modelSetup(classes):
     #model = timm.create_model('efficientformerv2_s0', pretrained=False, num_classes=len(classes), drop_path_rate=0.05)
     #model = timm.create_model('tf_efficientnetv2_s', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
-    model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.0)
+    #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.0)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15)
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('vit_medium_shallow_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
@@ -1166,7 +1166,7 @@ def modelSetup(classes):
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, patch_size=32, img_size=FLAGS['actual_image_size'])
     #model = timm.create_model('vit_huge_patch14_gap_224', pretrained=True, pretrained_cfg_overlay=dict(file="./jepa-latest.pth.tar"))
     #model = timm.create_model('ese_vovnet99b_iabn', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.02)
-    #model = timm.create_model('tresnet_m', pretrained=False, num_classes=len(classes))
+    model = timm.create_model('regnety_008', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('efficientvit_b3', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('eva02_large_patch14_224.mim_m38m', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, img_size=448)
@@ -1571,13 +1571,13 @@ def trainCycle(image_datasets, model):
             # We use 'none' for the average parameter to get per-class scores,
             metrics_to_track = {
                 # Standard metrics from torchmetrics
-                'Precall': MultilabelRecall(num_labels=len(classes), average='none'),
-                'Nrecall': MultilabelSpecificity(num_labels=len(classes), average='none'),
-                'Pprecision': MultilabelPrecision(num_labels=len(classes), average='none'),
-                'Nprecision': MLCSL.NegativePredictiveValue(num_labels=len(classes)),
-                'F1': MultilabelF1Score(num_labels=len(classes), average='none'),
-                'P4': MLCSL.P4Metric(num_labels=len(classes)),
-                'PU_F': MLCSL.PUFMetric(num_labels=len(classes))
+                'Precall': MLCSL.ConfusionMatrixBasedMetric(num_labels=len(classes), metric = MLCSL.Precall),
+                'Nrecall': MLCSL.ConfusionMatrixBasedMetric(num_labels=len(classes), metric = MLCSL.Nrecall),
+                'Pprecision': MLCSL.ConfusionMatrixBasedMetric(num_labels=len(classes), metric = MLCSL.Pprecision),
+                'Nprecision': MLCSL.ConfusionMatrixBasedMetric(num_labels=len(classes), metric = MLCSL.Nprecision),
+                'P4': MLCSL.ConfusionMatrixBasedMetric(num_labels=len(classes), metric = MLCSL.P4),
+                'F1': MLCSL.ConfusionMatrixBasedMetric(num_labels=len(classes), metric = MLCSL.F1),
+                'PU_F': MLCSL.ConfusionMatrixBasedMetric(num_labels=len(classes), metric = MLCSL.PU_F_Metric),
             }
 
             # Create the MetricCollection
@@ -1739,7 +1739,7 @@ def trainCycle(image_datasets, model):
                             # performance metric tracking
                             #predsModified=preds
                             #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
-                            '''
+                            
                             if FLAGS['use_ddp']:
                                 all_logits = [torch.ones_like(outputs) for _ in range(dist.get_world_size())]
                                 torch.distributed.all_gather(all_logits, outputs)
@@ -1748,10 +1748,11 @@ def trainCycle(image_datasets, model):
                             else:
                                 all_logits = outputs
 
-                            dist_tracker.set_device(all_logits.device)
-                            '''
+                            
+                            
                             with torch.no_grad():
                                 '''
+                                dist_tracker.set_device(all_logits.device)
                                 if FLAGS['dataset'] != 'imagenet':
                                     
                                     if FLAGS['use_tag_kfold']:
