@@ -1576,7 +1576,7 @@ def trainCycle(image_datasets, model):
                 'Pprecision': MultilabelPrecision(num_labels=len(classes), average='none'),
                 'Nprecision': MLCSL.NegativePredictiveValue(num_labels=len(classes)),
                 'F1': MultilabelF1Score(num_labels=len(classes), average='none'),
-                'P4': MLCSL.P4(num_labels=len(classes)),
+                'P4': MLCSL.P4Metric(num_labels=len(classes)),
                 'PU_F': MLCSL.PUFMetric(num_labels=len(classes))
             }
 
