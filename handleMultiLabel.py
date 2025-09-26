@@ -2084,7 +2084,7 @@ class ConfusionMatrixBasedMetric(Metric):
     # not the entire history of stats. It's the default but good to be explicit.
     full_state_update: bool = False
 
-    def __init__(self, num_labels = 1, metric = None, eps = 1e-12 **kwargs):
+    def __init__(self, num_labels = 1, metric = None, eps = 1e-12, **kwargs):
         super().__init__(**kwargs)
         self.num_labels = num_labels
         
