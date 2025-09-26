@@ -1966,9 +1966,9 @@ def trainCycle(image_datasets, model):
                     # macro average
                     if FLAGS['use_tag_kfold']:
                         multiAccuracy = torch.tensor(list({name: value[inv_mask].mean() for name, value in full_metrics.items()}.values()))
-                        multiAccuracyHoldout = torch.tensor(list({name: value[mask].mean() for name, value in full_metrics.items()}))
+                        multiAccuracyHoldout = torch.tensor(list({name: value[mask].mean() for name, value in full_metrics.items()}.values()))
                     else:
-                        multiAccuracy = torch.tensor(list({name: value.mean() for name, value in full_metrics.items()}))
+                        multiAccuracy = torch.tensor(list({name: value.mean() for name, value in full_metrics.items()}.values()))
                     
                     if(firstLoop): print("got printout sync")
 
