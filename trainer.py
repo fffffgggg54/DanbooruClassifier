@@ -2037,7 +2037,7 @@ def trainCycle(image_datasets, model):
                 #torch.distributed.all_reduce(criterion.gamma_neg_per_class, op = torch.distributed.ReduceOp.AVG)
             
             full_metrics = metric_tracker.compute()
-            full_metrics = torch.tensor([full_metrics[name] for name in metric_names]).transpose(0,1)
+            full_metrics = torch.column_stack([full_metrics[name] for name in metric_names])
             if ((phase == 'val') and (FLAGS['skip_test_set'] == False or epoch == FLAGS['num_epochs'] - 1) and is_head_proc):
                 if(epoch == FLAGS['num_epochs'] - 1):
                     print("saving eval data")
