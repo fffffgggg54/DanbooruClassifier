@@ -1142,10 +1142,7 @@ class DistributionTracker(nn.Module):
         
     @property
     def log_odds(self):
-        """Calculates the log-odds of the positive class."""
-        total_count = self._pos_count + self._neg_count
-        p_pos = (self._pos_count + self.eps) / (total_count + self.eps)
-        return torch.log(p_pos / (1 - p_pos + self.eps))
+        return torch.special.logit((self._pos_count + self.eps) / (self._pos_count + self._neg_count + self.eps))
 
     def forward(self, logits: torch.Tensor, labels: torch.Tensor):
         """

@@ -233,7 +233,7 @@ if currGPU == '3090':
     
     FLAGS['use_mlr_act'] = False
     FLAGS['use_matryoshka_head'] = False
-    FLAGS['use_class_embed_head'] = True
+    FLAGS['use_class_embed_head'] = False
 
     FLAGS['logit_offset'] = True
     FLAGS['logit_offset_multiplier'] = 1.0
@@ -249,7 +249,7 @@ if currGPU == '3090':
     FLAGS['channels_last'] = True
 
     # tag k-fold cv config
-    FLAGS['use_tag_kfold'] = True
+    FLAGS['use_tag_kfold'] = False
     FLAGS['n_folds'] = 5
     FLAGS['current_fold'] = 1
 
