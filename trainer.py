@@ -1574,7 +1574,7 @@ def trainCycle(image_datasets, model):
                 'Precall': MultilabelRecall(num_labels=len(classes), average='none'),
                 'Nrecall': MultilabelSpecificity(num_labels=len(classes), average='none'),
                 'Pprecision': MultilabelPrecision(num_labels=len(classes), average='none'),
-                'Nprecision': MCSL.NegativePredictiveValue(num_labels=len(classes)),
+                'Nprecision': MLCSL.NegativePredictiveValue(num_labels=len(classes)),
                 'F1': MultilabelF1Score(num_labels=len(classes), average='none'),
                 'P4': MLCSL.P4(num_labels=len(classes)),
                 'PU_F': MLCSL.PUFMetric(num_labels=len(classes))
