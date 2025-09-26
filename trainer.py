@@ -1571,13 +1571,13 @@ def trainCycle(image_datasets, model):
             # We use 'none' for the average parameter to get per-class scores,
             metrics_to_track = {
                 # Standard metrics from torchmetrics
-                'Precall': MultilabelRecall(num_labels=NUM_CLASSES, average='none'),
-                'Nrecall': MultilabelSpecificity(num_labels=NUM_CLASSES, average='none'),
-                'Pprecision': MultilabelPrecision(num_labels=NUM_CLASSES, average='none'),
-                'Nprecision': MCSL.NegativePredictiveValue(num_labels=NUM_CLASSES),
-                'F1': MultilabelF1Score(num_labels=NUM_CLASSES, average='none'),
-                'P4': MLCSL.P4(num_labels=NUM_CLASSES),
-                'PU_F': MLCSL.PUFMetric(num_labels=NUM_CLASSES)
+                'Precall': MultilabelRecall(num_labels=len(classes), average='none'),
+                'Nrecall': MultilabelSpecificity(num_labels=len(classes), average='none'),
+                'Pprecision': MultilabelPrecision(num_labels=len(classes), average='none'),
+                'Nprecision': MCSL.NegativePredictiveValue(num_labels=len(classes)),
+                'F1': MultilabelF1Score(num_labels=len(classes), average='none'),
+                'P4': MLCSL.P4(num_labels=len(classes)),
+                'PU_F': MLCSL.PUFMetric(num_labels=len(classes))
             }
 
             # Create the MetricCollection
