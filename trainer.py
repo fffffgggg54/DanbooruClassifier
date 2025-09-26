@@ -59,6 +59,8 @@ except:
 import re
 
 import torchmetrics
+from torchmetrics import MetricCollection
+from torchmetrics.classification import MultilabelRecall, MultilabelPrecision, MultilabelF1Score, MultilabelSpecificity
 
 # ================================================
 #           CONFIGURATION OPTIONS
@@ -231,9 +233,9 @@ if currGPU == '3090':
     
     FLAGS['use_mlr_act'] = False
     FLAGS['use_matryoshka_head'] = False
-    FLAGS['use_class_embed_head'] = False
+    FLAGS['use_class_embed_head'] = True
 
-    FLAGS['logit_offset'] = False
+    FLAGS['logit_offset'] = True
     FLAGS['logit_offset_multiplier'] = 1.0
     FLAGS['logit_offset_source'] = 'dist'
     FLAGS['opt_dist'] = False
@@ -247,7 +249,7 @@ if currGPU == '3090':
     FLAGS['channels_last'] = True
 
     # tag k-fold cv config
-    FLAGS['use_tag_kfold'] = False
+    FLAGS['use_tag_kfold'] = True
     FLAGS['n_folds'] = 5
     FLAGS['current_fold'] = 1
 
@@ -1559,11 +1561,27 @@ def trainCycle(image_datasets, model):
         while currPhase < len(phases):
             phase = phases[currPhase]
             
-            cm_tracker = MLCSL.MetricTracker()
+            #cm_tracker = MLCSL.MetricTracker()
             dist_tracker = MLCSL.DistributionTracker()
 
-            if FLAGS['use_tag_kfold']:
-                cm_tracker_holdout = MLCSL.MetricTracker()
+            #if FLAGS['use_tag_kfold']:
+            #    cm_tracker_holdout = MLCSL.MetricTracker()
+
+            # Define a dictionary of metrics
+            # We use 'none' for the average parameter to get per-class scores,
+            metrics_to_track = {
+                # Standard metrics from torchmetrics
+                'Precall': MultilabelRecall(num_labels=NUM_CLASSES, average='none'),
+                'Nrecall': MultilabelSpecificity(num_labels=NUM_CLASSES, average='none'),
+                'Pprecision': MultilabelPrecision(num_labels=NUM_CLASSES, average='none'),
+                'Nprecision': MCSL.NegativePredictiveValue(num_labels=NUM_CLASSES),
+                'F1': MultilabelF1Score(num_labels=NUM_CLASSES, average='none'),
+                'P4': MLCSL.P4(num_labels=NUM_CLASSES),
+                'PU_F': MLCSL.PUFMetric(num_labels=NUM_CLASSES)
+            }
+
+            # Create the MetricCollection
+            metric_tracker = MetricCollection(metrics_to_track).to(device)
 
             #try:
             if phase == 'train':
@@ -1721,6 +1739,7 @@ def trainCycle(image_datasets, model):
                             # performance metric tracking
                             #predsModified=preds
                             #multiAccuracy = MLCSL.getAccuracy(predsModified.to(device2), tagBatch.to(device2))
+                            '''
                             if FLAGS['use_ddp']:
                                 all_logits = [torch.ones_like(outputs) for _ in range(dist.get_world_size())]
                                 torch.distributed.all_gather(all_logits, outputs)
@@ -1730,8 +1749,9 @@ def trainCycle(image_datasets, model):
                                 all_logits = outputs
 
                             dist_tracker.set_device(all_logits.device)
-                            
+                            '''
                             with torch.no_grad():
+                                '''
                                 if FLAGS['dataset'] != 'imagenet':
                                     
                                     if FLAGS['use_tag_kfold']:
@@ -1741,6 +1761,8 @@ def trainCycle(image_datasets, model):
                                         #multiAccuracy = cm_tracker.update((preds.detach() > offset.detach()).float().to(device), tagBatch.to(device))
                                         multiAccuracy = cm_tracker.update(preds.detach(), tagBatch.to(device))
                                     if(firstLoop): print("got CM update")
+                                '''
+                                metric_tracker.update(preds.detach(), tagBatch)
                                 
                                 
                                 if not FLAGS['splc']:
@@ -1750,7 +1772,7 @@ def trainCycle(image_datasets, model):
                                     else:
                                         all_tags = tagBatch
                                     #dist_tracker(all_logits.to(torch.float64), all_tags.to(torch.long))
-
+                            
                         outputs = outputs.float()
                         '''
                         if phase == 'val':
@@ -1939,6 +1961,14 @@ def trainCycle(image_datasets, model):
                 #print(device)
                 if i % stepsPerPrintout == 0:
                     torch.cuda.synchronize()
+                    full_metrics = metric_tracker.compute()
+                    # macro average
+                    if FLAGS['use_tag_kfold']:
+                        multiAccuracy = torch.tensor(list({name: value[inv_mask].mean() for name, value in full_metrics.items()}.values()))
+                        multiAccuracyHoldout = torch.tensor(list({name: value[mask].mean() for name, value in full_metrics.items()}))
+                    else:
+                        multiAccuracy = torch.tensor(list({name: value.mean() for name, value in full_metrics.items()}))
+                    
                     if(firstLoop): print("got printout sync")
 
                     imagesPerSecond = (dataloaders[phase].batch_size*stepsPerPrintout)/(time.time() - cycleTime)
@@ -2037,6 +2067,7 @@ def trainCycle(image_datasets, model):
                 if FLAGS['use_tag_kfold']: torch.distributed.all_reduce(cm_tracker_holdout.running_confusion_matrix, op=torch.distributed.ReduceOp.AVG)
                 
                 #torch.distributed.all_reduce(criterion.gamma_neg_per_class, op = torch.distributed.ReduceOp.AVG)
+            full_metrics = torch.tensor(list(metric_tracker.compute().values())).transpose(0,1)
             if ((phase == 'val') and (FLAGS['skip_test_set'] == False or epoch == FLAGS['num_epochs'] - 1) and is_head_proc):
                 if(epoch == FLAGS['num_epochs'] - 1):
                     print("saving eval data")
@@ -2048,17 +2079,24 @@ def trainCycle(image_datasets, model):
                     
                     #AvgAccuracy = torch.stack(AccuracyRunning)
                     #AvgAccuracy = AvgAccuracy.mean(dim=0)
-                    AvgAccuracy = cm_tracker.get_full_metrics()
+                    #AvgAccuracy = cm_tracker.get_full_metrics()
+                    AvgAccuracy = full_metrics
                     LabelledAccuracy = list(zip(AvgAccuracy.tolist(), tagNames, boundaryCalculator.thresholdPerClass.data))
                     LabelledAccuracySorted = sorted(LabelledAccuracy, key = lambda x: x[0][8], reverse=True)
                     
                     if(is_head_proc): print(*LabelledAccuracySorted, sep="\n")
                     #torch.set_printoptions(profile="default")
-                MeanStackedAccuracy = cm_tracker.get_aggregate_metrics()
-                MeanStackedAccuracyStored = MeanStackedAccuracy[4:]
+                
                 if(is_head_proc):
-                    print((MeanStackedAccuracy*100).tolist())
-                    if(FLAGS['use_tag_kfold']): print((cm_tracker_holdout.get_aggregate_metrics()*100).tolist())
+                    #MeanStackedAccuracy = cm_tracker.get_aggregate_metrics()
+                    #print((MeanStackedAccuracy*100).tolist())
+                    #if(FLAGS['use_tag_kfold']): print((cm_tracker_holdout.get_aggregate_metrics()*100).tolist())
+                    if FLAGS['use_tag_kfold']:
+                        print((full_metrics[inv_mask, :].mean(dim=0)*100).tolist())
+                        print((full_metrics[mask, :].mean(dim=0)*100).tolist())
+                    else:
+                        print((full_metrics.mean(dim=0)*100).tolist())
+
                 
                 if dist_tracker.neg_mean.sum().isnan() == False and do_plot:
                     if FLAGS['use_tag_kfold']:

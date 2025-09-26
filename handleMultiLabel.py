@@ -1029,7 +1029,140 @@ def generate_loss_weights(logits, labels, dist_tracker, clip_dist=0.95, eps=1e-8
     #loss_weights *= (dist_tracker.neg_count / (dist_tracker.pos_count + eps)).where(labels == 1, 1)
     return loss_weights
 
+# gemini-2.5-pro
 class DistributionTracker(nn.Module):
+    """
+    A PyTorch module to track the cumulative running statistics of distributions 
+    for positive and negative classes using a numerically stable, vectorized, one-pass algorithm.
+
+    This implementation is based on the parallel algorithm for updating variance, which is an
+    extension of Welford's online algorithm. It processes entire batches of data at once,
+    ensuring high efficiency and numerical stability without using an Exponential Moving Average (EMA).
+    It's suitable for scenarios where you need the statistics of the entire dataset seen so far.
+    """
+    def __init__(self, num_features: int = 1, eps: float = 1e-8):
+        """
+        Initializes the tracker.
+
+        Args:
+            num_features (int): The number of features or classes to track independently.
+            eps (float): A small epsilon value to prevent division by zero for numerical stability.
+        """
+        super().__init__()
+        self.eps = eps
+        
+        # We will use register_buffer to ensure these tensors are part of the module's state
+        # and are moved to the correct device (e.g., GPU) along with the module.
+        # We track the cumulative count, mean, and sum of squared deviations from the mean (M2).
+        self.register_buffer('_pos_count', torch.zeros(num_features))
+        self.register_buffer('_pos_mean', torch.zeros(num_features))
+        self.register_buffer('_pos_m2', torch.zeros(num_features)) # M2 = Sum of squares of differences from the current mean
+
+        self.register_buffer('_neg_count', torch.zeros(num_features))
+        self.register_buffer('_neg_mean', torch.zeros(num_features))
+        self.register_buffer('_neg_m2', torch.zeros(num_features))
+
+    @property
+    def pos_mean(self):
+        return self._pos_mean
+
+    @property
+    def pos_var(self):
+        # The variance is M2 / (count - 1) for an unbiased estimator.
+        # We only compute variance if we have more than one sample.
+        return self._pos_m2 / (self._pos_count - 1).clamp(min=0)
+
+    @property
+    def pos_std(self):
+        return torch.sqrt(self.pos_var.clamp(min=self.eps))
+
+    @property
+    def neg_mean(self):
+        return self._neg_mean
+
+    @property
+    def neg_var(self):
+        # The variance is M2 / (count - 1) for an unbiased estimator.
+        # We only compute variance if we have more than one sample.
+        return self._neg_m2 / (self._neg_count - 1).clamp(min=0)
+
+    @property
+    def neg_std(self):
+        return torch.sqrt(self.neg_var.clamp(min=self.eps))
+        
+    @property
+    def log_odds(self):
+        """Calculates the log-odds of the positive class."""
+        total_count = self._pos_count + self._neg_count
+        p_pos = (self._pos_count + self.eps) / (total_count + self.eps)
+        return torch.log(p_pos / (1 - p_pos + self.eps))
+
+    def forward(self, logits: torch.Tensor, labels: torch.Tensor):
+        """
+        Updates the running statistics with a new batch of data using a cumulative,
+        vectorized, and numerically stable algorithm.
+
+        Args:
+            logits (torch.Tensor): The input logits, shape [B, K].
+            labels (torch.Tensor): The corresponding binary labels (0 or 1), shape [B, K].
+        """
+        # Ensure logits and labels are detached from the computation graph and have the same dtype
+        logits = logits.detach().to(self._pos_mean.dtype)
+        labels = labels.detach().to(self._pos_mean.dtype)
+
+        # --- Update Positive Statistics ---
+        pos_labels = labels
+        batch_pos_count = pos_labels.sum(dim=0)
+        
+        # Only perform updates if there are positive samples in the batch for any feature
+        if batch_pos_count.sum() > 0:
+            # Calculate stats for the new batch
+            batch_pos_sum = (logits * pos_labels).sum(dim=0)
+            batch_pos_mean = batch_pos_sum / (batch_pos_count + self.eps)
+            batch_pos_m2 = (((logits - batch_pos_mean)**2) * pos_labels).sum(dim=0)
+
+            # Combine batch stats with existing stats using the parallel algorithm
+            old_pos_count = self._pos_count
+            new_pos_count = old_pos_count + batch_pos_count
+            delta = batch_pos_mean - self._pos_mean
+            
+            # Update mean
+            self._pos_mean += delta * batch_pos_count / (new_pos_count + self.eps)
+            
+            # Update M2 (sum of squared deviations)
+            self._pos_m2 += batch_pos_m2 + delta**2 * old_pos_count * batch_pos_count / (new_pos_count + self.eps)
+            
+            # Update count
+            self._pos_count = new_pos_count
+
+        # --- Update Negative Statistics ---
+        neg_labels = 1 - labels
+        batch_neg_count = neg_labels.sum(dim=0)
+
+        # Only perform updates if there are negative samples in the batch for any feature
+        if batch_neg_count.sum() > 0:
+            # Calculate stats for the new batch
+            batch_neg_sum = (logits * neg_labels).sum(dim=0)
+            batch_neg_mean = batch_neg_sum / (batch_neg_count + self.eps)
+            batch_neg_m2 = (((logits - batch_neg_mean)**2) * neg_labels).sum(dim=0)
+
+            # Combine batch stats with existing stats using the parallel algorithm
+            old_neg_count = self._neg_count
+            new_neg_count = old_neg_count + batch_neg_count
+            delta = batch_neg_mean - self._neg_mean
+            
+            # Update mean
+            self._neg_mean += delta * batch_neg_count / (new_neg_count + self.eps)
+            
+            # Update M2 (sum of squared deviations)
+            self._neg_m2 += batch_neg_m2 + delta**2 * old_neg_count * batch_neg_count / (new_neg_count + self.eps)
+            
+            # Update count
+            self._neg_count = new_neg_count
+
+        return self.pos_mean, self.pos_std, self.neg_mean, self.neg_std
+
+class DistributionTrackerOld(nn.Module):
     def __init__(
         self,
     ):
@@ -1140,94 +1273,133 @@ class DistributionTracker(nn.Module):
         return self.pos_mean, self.pos_std, self.neg_mean, self.neg_std
         
 
+# gemini-2.5-pro
 class DistributionTrackerEMA(nn.Module):
-    def __init__(
-        self,
-    ):
+    """
+    A PyTorch module to track the running statistics of distributions for positive and negative classes
+    using a numerically stable, vectorized, and efficient Exponential Moving Average (EMA) variant.
+
+    This implementation adapts the parallel algorithm for updating variance for an EMA context,
+    processing entire batches of data at once for high efficiency and numerical accuracy.
+    """
+    def __init__(self, num_features: int = 1, alpha: float = 0.99, eps: float = 1e-8):
+        """
+        Initializes the tracker.
+
+        Args:
+            num_features (int): The number of features or classes to track independently.
+            alpha (float): The decay factor for the EMA. A higher value gives more weight to recent observations.
+                           It's equivalent to the 'momentum' parameter in other contexts.
+            eps (float): A small epsilon value to prevent division by zero for numerical stability.
+        """
         super().__init__()
-        self._pos_mean = 0
-        self._pos_count = 0
-        self._pos_M2 = 0
-        #self._pos_var = 0
-        self._neg_mean = 0
-        self._neg_count = 0
-        self._neg_M2 = 0
-        #self._neg_var = 0
-        self.eps = 1e-8
-    
+        if not (0.0 < alpha <= 1.0):
+            raise ValueError("Alpha must be in the (0, 1] range.")
+
+        self.alpha = alpha
+        self.eps = eps
+
+        # Register buffers to track EMA of count, mean, and sum of squared deviations (M2).
+        # These will be moved to the correct device automatically with the module.
+        self.register_buffer('_pos_count', torch.zeros(num_features))
+        self.register_buffer('_pos_mean', torch.zeros(num_features))
+        self.register_buffer('_pos_m2', torch.zeros(num_features)) # EMA of M2
+
+        self.register_buffer('_neg_count', torch.zeros(num_features))
+        self.register_buffer('_neg_mean', torch.zeros(num_features))
+        self.register_buffer('_neg_m2', torch.zeros(num_features)) # EMA of M2
+
     @property
-    def pos_mean(self): return self._pos_mean
-    
+    def pos_mean(self):
+        return self._pos_mean
+
     @property
-    def pos_count(self): return self._pos_count
-    
+    def pos_var(self):
+        # Unbiased variance estimate from the EMA of M2 and count
+        return self._pos_m2 / (self._pos_count - 1).clamp(min=0)
+
     @property
-    def pos_var(self): return self._pos_M2/(self._pos_count - 1)
-    
+    def pos_std(self):
+        return torch.sqrt(self.pos_var.clamp(min=self.eps))
+
     @property
-    def pos_std(self): return self.pos_var ** 0.5
-    
+    def neg_mean(self):
+        return self._neg_mean
+
     @property
-    def neg_mean(self): return self._neg_mean
-    
+    def neg_var(self):
+        # Unbiased variance estimate from the EMA of M2 and count
+        return self._neg_m2 / (self._neg_count - 1).clamp(min=0)
+
     @property
-    def neg_count(self): return self._neg_count
-    
+    def neg_std(self):
+        return torch.sqrt(self.neg_var.clamp(min=self.eps))
+        
     @property
-    def neg_var(self): return self._neg_M2/(self._neg_count - 1)
-    
-    @property
-    def neg_std(self): return self.neg_var ** 0.5
-    
-    def dump(self):
-        #return torch.stack([self._pos_mean, self._pos_count, self._pos_M2, self._neg_mean, self._neg_count, self._neg_M2])
-    
-        return torch.stack([self._pos_mean, self._pos_count, self._pos_var, self._neg_mean, self._neg_count, self._neg_var])
-    
-    def forward(self, logits, labels, alpha=0.998):
-        # ([B, K], [B, K])
+    def log_odds(self):
+        """Calculates the log-odds of the positive class based on the EMA counts."""
+        total_count = self._pos_count + self._neg_count
+        p_pos = (self._pos_count + self.eps) / (total_count + self.eps)
+        return torch.log(p_pos / (1 - p_pos + self.eps))
+
+    def forward(self, logits: torch.Tensor, labels: torch.Tensor):
+        """
+        Updates the running EMA statistics with a new batch of data using a vectorized algorithm.
+
+        Args:
+            logits (torch.Tensor): The input logits, shape [B, K].
+            labels (torch.Tensor): The corresponding binary labels (0 or 1), shape [B, K].
+        """
+        # Ensure logits and labels are detached and have the correct dtype
+        logits = logits.detach().to(self._pos_mean.dtype)
+        labels = labels.detach().to(self._pos_mean.dtype)
+
+        # --- Update Positive Statistics ---
+        pos_labels = labels
+        batch_pos_count = pos_labels.sum(dim=0)
         
-        # [K]
-        classSizePos = labels.sum(dim=0)
-        #print(classSizePos)
-        classSizeNeg = (1-labels).sum(dim=0)
-        
-        # [K]
-        batchMeanPos = logits.where(labels == 1, 0).sum(dim=0) / (classSizePos + self.eps)
-        #print(batchMeanPos)
-        batchMeanNeg = logits.where(labels == 0, 0).sum(dim=0) / (classSizeNeg + self.eps)
-        
-        # [K]
-        deltaPos = batchMeanPos - self._pos_mean
-        #print(deltaPos)
-        deltaNeg = batchMeanNeg - self._neg_mean
-        
-        # [K]
-        self._pos_mean = self._pos_mean + classSizePos / ((classSizePos + self._pos_count) + self.eps) * deltaPos 
-        #print(self._pos_mean)
-        self._neg_mean = self._neg_mean + classSizeNeg / ((classSizeNeg + self._neg_count) + self.eps) * deltaNeg
-        
-        # [K]
-        
-        self._pos_M2 = self._pos_M2 * alpha + ((logits.where(labels == 1, 0) - batchMeanPos) ** 2).sum(0) * (1 - alpha)
-        self._pos_M2 = self._pos_M2 + (self._pos_count * classSizePos) / (self._pos_count + classSizePos + self.eps) * deltaPos ** 2 * (1 - alpha)
-        self._neg_M2 = self._neg_M2 * alpha + ((logits.where(labels == 0, 0) - batchMeanNeg) ** 2).sum(0) * (1 - alpha)
-        self._neg_M2 = self._neg_M2 + (self._neg_count * classSizeNeg) / (self._neg_count + classSizeNeg + self.eps) * deltaNeg ** 2 * (1 - alpha)
-        
-        '''
-        self._pos_var = self._pos_var * ((self._pos_count - 1) / (self._pos_count + classSizePos - 1 + self.eps)) + \
-            ((logits.where(labels == 1, 0) - batchMeanPos) ** 2).sum(0) / (self._pos_count + classSizePos - 1 + self.eps) + \
-            (self._pos_count * classSizePos) / ((self._pos_count + classSizePos - 1 + self.eps) * (self._pos_count + classSizePos + self.eps)) * deltaPos ** 2 
-        #print(self._pos_var)
-        self._neg_var = self._neg_var * ((self._neg_count - 1) / (self._neg_count + classSizeNeg - 1 + self.eps)) + \
-            ((logits.where(labels == 0, 0) - batchMeanNeg) ** 2).sum(0) / (self._neg_count + classSizeNeg - 1 + self.eps) + \
-            (self._neg_count * classSizeNeg) / ((self._neg_count + classSizeNeg - 1 + self.eps) * (self._neg_count + classSizeNeg + self.eps)) * deltaNeg ** 2
-        '''
-        
-        # [K]
-        self._pos_count = self._pos_count * alpha + classSizePos * (1 - alpha)
-        self._neg_count = self._neg_count * alpha + classSizeNeg * (1 - alpha)
-        
+        if batch_pos_count.sum() > 0:
+            # Calculate stats for the new batch
+            batch_pos_sum = (logits * pos_labels).sum(dim=0)
+            batch_pos_mean = batch_pos_sum / (batch_pos_count + self.eps)
+            batch_pos_m2 = (((logits - batch_pos_mean)**2) * pos_labels).sum(dim=0)
+
+            # EMA update for count
+            self._pos_count = self.alpha * self._pos_count + (1 - self.alpha) * batch_pos_count
+            
+            # Difference between old EMA mean and new batch mean
+            delta = batch_pos_mean - self._pos_mean
+            
+            # Update mean with EMA
+            self._pos_mean += (1 - self.alpha) * delta
+            
+            # Update M2 with EMA, adapted from the parallel variance algorithm
+            self._pos_m2 = self.alpha * self._pos_m2 + (1 - self.alpha) * batch_pos_m2 + \
+                         self.alpha * (1 - self.alpha) * (delta ** 2) * batch_pos_count
+
+        # --- Update Negative Statistics ---
+        neg_labels = 1 - labels
+        batch_neg_count = neg_labels.sum(dim=0)
+
+        if batch_neg_count.sum() > 0:
+            # Calculate stats for the new batch
+            batch_neg_sum = (logits * neg_labels).sum(dim=0)
+            batch_neg_mean = batch_neg_sum / (batch_neg_count + self.eps)
+            batch_neg_m2 = (((logits - batch_neg_mean)**2) * neg_labels).sum(dim=0)
+
+            # EMA update for count
+            self._neg_count = self.alpha * self._neg_count + (1 - self.alpha) * batch_neg_count
+            
+            # Difference between old EMA mean and new batch mean
+            delta = batch_neg_mean - self._neg_mean
+            
+            # Update mean with EMA
+            self._neg_mean += (1 - self.alpha) * delta
+            
+            # Update M2 with EMA
+            self._neg_m2 = self.alpha * self._neg_m2 + (1 - self.alpha) * batch_neg_m2 + \
+                         self.alpha * (1 - self.alpha) * (delta ** 2) * batch_neg_count
+
         return self.pos_mean, self.pos_std, self.neg_mean, self.neg_std
 
 class AdaptiveWeightedLoss(nn.Module):
@@ -1881,6 +2053,76 @@ def add_weight_decay(model, weight_decay=1e-4, skip_list=()):
         {'params': no_decay, 'weight_decay': 0.},
         {'params': decay, 'weight_decay': weight_decay}]
 
+# torchmetrics multilabel metrics
+# gemini-2.5-pro
+from torchmetrics import Metric
+from torchmetrics.functional.classification import multilabel_stat_scores
+
+class ConfusionMatrixBasedMetric(Metric):
+    """
+    Base class for metrics that are calculated from the components of a confusion matrix
+    (TP, FP, TN, FN). This class handles the state management and updates.
+    """
+    # This is necessary to ensure that the update method is called on batch-level stats,
+    # not the entire history of stats. It's the default but good to be explicit.
+    full_state_update: bool = False
+
+    def __init__(self, num_labels, **kwargs):
+        super().__init__(**kwargs)
+        self.num_labels = num_labels
+        
+        # Add state for true positives, false positives, false negatives, and true negatives
+        # dist_reduce_fx="sum" ensures that in a distributed setting, the values are
+        # summed across all processes.
+        self.add_state("tp", default=torch.zeros(num_labels), dist_reduce_fx="sum")
+        self.add_state("fp", default=torch.zeros(num_labels), dist_reduce_fx="sum")
+        self.add_state("tn", default=torch.zeros(num_labels), dist_reduce_fx="sum")
+        self.add_state("fn", default=torch.zeros(num_labels), dist_reduce_fx="sum")
+
+    def update(self, preds: torch.Tensor, target: torch.Tensor):
+        """
+        Update state with statistics from a new batch.
+        """
+        # Calculate stats for the current batch
+        tp, fp, tn, fn = multilabel_stat_scores(preds, target, num_labels=self.num_labels)
+        
+        # Update the running totals
+        self.tp += tp
+        self.fp += fp
+        self.tn += tn
+        self.fn += fn
+
+# Nprecision
+class NegativePredictiveValue(ConfusionMatrixBasedMetric):
+    def compute(self):
+        # TN / (TN + FN)
+        denominator = self.tn + self.fn
+        return self.tn / (denominator + 1e-12)
+
+class P4Metric(ConfusionMatrixBasedMetric):
+    def compute(self):
+        # (4 * TP * TN) / ((4 * TP * TN) + (TP + TN)*(FP + FN))
+        term1 = 4 * self.tp * self.tn
+        term2 = (self.tp + self.tn) * (self.fp + self.fn)
+        return term1 / (term1 + term2 + 1e-12)
+
+# https://www.cs.uic.edu/~liub/publications/icml-03.pdf
+# metric proposed in 
+# Lee, W. S., & Liu, B. (2003).
+# Learning with positive and unlabeled examples using weighted logistic regression.
+# In Proceedings of the twentieth international conference on machine learning (pp. 448–455).
+class PUFMetric(ConfusionMatrixBasedMetric):
+    def compute(self):
+        # Recall^2 / Precision_denominator = (TP / (TP + FN))^2 / (TP + FP)
+        # Note: This is an unusual metric. The denominator is typically TP / (TP+FP), which is precision.
+        # This implementation matches the formula in your code: Precall**2 / (FP + TP)
+        recall = self.tp / (self.tp + self.fn + 1e-12)
+        precision_denominator = self.tp + self.fp
+        return (recall**2) / (precision_denominator + 1e-12)
+
+
+# non-torchmetrics-based metrics
+
 def average_precision(output, target):
     epsilon = 1e-8
 
@@ -2060,7 +2302,7 @@ def F1(TP, FN, FP, TN, epsilon):
 # Learning with positive and unlabeled examples using weighted logistic regression.
 # In Proceedings of the twentieth international conference on machine learning (pp. 448–455).
 def PU_F_Metric(TP, FN, FP, TN, epsilon):
-    return (Precall(TP, FN, FP, TN, epsilon) ** 2) / (FP + TP + epsilon)
+    return (Precall(TP, FN, FP, TN, epsilon) ** 2) / (TP + FN + epsilon)
 
 # AUL and AUROC helper, implements shared portion of eqs 1 and 2 in paper
 # https://openreview.net/forum?id=2NU7a9AHo-6
