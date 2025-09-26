@@ -1166,7 +1166,7 @@ def modelSetup(classes):
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, patch_size=32, img_size=FLAGS['actual_image_size'])
     #model = timm.create_model('vit_huge_patch14_gap_224', pretrained=True, pretrained_cfg_overlay=dict(file="./jepa-latest.pth.tar"))
     #model = timm.create_model('ese_vovnet99b_iabn', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1, drop_rate=0.02)
-    model = timm.create_model('regnety_008', pretrained=False, num_classes=len(classes))
+    model = timm.create_model('regnety_006', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('efficientvit_b3', pretrained=False, num_classes=len(classes))
     #model = timm.create_model('eva02_large_patch14_224.mim_m38m', pretrained=True, num_classes=len(classes))
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4, img_size=448)
@@ -1567,19 +1567,8 @@ def trainCycle(image_datasets, model):
             #if FLAGS['use_tag_kfold']:
             #    cm_tracker_holdout = MLCSL.MetricTracker()
 
-            # Define a dictionary of metrics
-            # We use 'none' for the average parameter to get per-class scores,
-            metrics_to_track = {
-                # Standard metrics from torchmetrics
-                'Precall': MLCSL.ConfusionMatrixBasedMetric(num_labels=len(classes), metric = MLCSL.Precall),
-                'Nrecall': MLCSL.ConfusionMatrixBasedMetric(num_labels=len(classes), metric = MLCSL.Nrecall),
-                'Pprecision': MLCSL.ConfusionMatrixBasedMetric(num_labels=len(classes), metric = MLCSL.Pprecision),
-                'Nprecision': MLCSL.ConfusionMatrixBasedMetric(num_labels=len(classes), metric = MLCSL.Nprecision),
-                'P4': MLCSL.ConfusionMatrixBasedMetric(num_labels=len(classes), metric = MLCSL.P4),
-                'F1': MLCSL.ConfusionMatrixBasedMetric(num_labels=len(classes), metric = MLCSL.F1),
-                'PU_F': MLCSL.ConfusionMatrixBasedMetric(num_labels=len(classes), metric = MLCSL.PU_F_Metric),
-            }
-
+            metrics_to_track = {metric.__name__, MLCSL.ConfusionMatrixBasedMetric(num_labels=len(classes), metric = metric) for metric in MLCSL.metrics_to_track}
+            metric_names = [metric.__name__ for metric in MLCSL.metrics]
             # Create the MetricCollection
             metric_tracker = MetricCollection(metrics_to_track).to(device)
 
@@ -1965,10 +1954,10 @@ def trainCycle(image_datasets, model):
                     full_metrics = metric_tracker.compute()
                     # macro average
                     if FLAGS['use_tag_kfold']:
-                        multiAccuracy = torch.tensor(list({name: value[inv_mask].mean() for name, value in full_metrics.items()}.values()))
-                        multiAccuracyHoldout = torch.tensor(list({name: value[mask].mean() for name, value in full_metrics.items()}.values()))
+                        multiAccuracy = torch.tensor([full_metrics[name][inv_mask].mean() for name in metric_names])
+                        multiAccuracyHoldout = torch.tensor([full_metrics[name][mask].mean() for name in metric_names])
                     else:
-                        multiAccuracy = torch.tensor(list({name: value.mean() for name, value in full_metrics.items()}.values()))
+                        multiAccuracy = torch.tensor([full_metrics[name].mean() for name in metric_names])
                     
                     if(firstLoop): print("got printout sync")
 
@@ -2068,7 +2057,9 @@ def trainCycle(image_datasets, model):
                 if FLAGS['use_tag_kfold']: torch.distributed.all_reduce(cm_tracker_holdout.running_confusion_matrix, op=torch.distributed.ReduceOp.AVG)
                 
                 #torch.distributed.all_reduce(criterion.gamma_neg_per_class, op = torch.distributed.ReduceOp.AVG)
-            full_metrics = torch.tensor(list(metric_tracker.compute().values())).transpose(0,1)
+            
+            full_metrics = metric_tracker.compute()
+            full_metrics = torch.tensor([full_metrics[name] for name in metric_names]).transpose(0,1)
             if ((phase == 'val') and (FLAGS['skip_test_set'] == False or epoch == FLAGS['num_epochs'] - 1) and is_head_proc):
                 if(epoch == FLAGS['num_epochs'] - 1):
                     print("saving eval data")

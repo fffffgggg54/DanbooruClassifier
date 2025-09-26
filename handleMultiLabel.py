@@ -23,7 +23,7 @@ import math
 import torch.distributed
 import scipy.stats
 
-
+metrics_to_track = [TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision, P4, F1, PU_F_Metric]
 
 
 
@@ -2263,7 +2263,12 @@ def getSingleMetric(preds, targs, metric):
     TN = (targs_inv - N).sum(dim=0) / batchSize
     
     return metric(TP, FN, FP, TN, epsilon)
-    
+
+def TP(TP, FN, FP, TN, epsilon): return TP
+def FN(TP, FN, FP, TN, epsilon): return FN
+def FP(TP, FN, FP, TN, epsilon): return FP
+def TN(TP, FN, FP, TN, epsilon): return TN
+
 # recall
 def Precall(TP, FN, FP, TN, epsilon):
     zero_grad(FP)
