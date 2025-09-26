@@ -1562,7 +1562,7 @@ def trainCycle(image_datasets, model):
             phase = phases[currPhase]
             
             #cm_tracker = MLCSL.MetricTracker()
-            dist_tracker = MLCSL.DistributionTracker()
+            dist_tracker = MLCSL.DistributionTracker().to(device)
 
             #if FLAGS['use_tag_kfold']:
             #    cm_tracker_holdout = MLCSL.MetricTracker()
@@ -1747,7 +1747,7 @@ def trainCycle(image_datasets, model):
                                 all_logits = torch.cat(all_logits)
                             else:
                                 all_logits = outputs
-                            dist_tracker.set_device(all_logits.device)
+                            #dist_tracker.set_device(all_logits.device)
                             
                             
                             with torch.no_grad():
