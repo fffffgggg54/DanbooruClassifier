@@ -1081,7 +1081,7 @@ class DistributionTracker(nn.Module):
         def _sync_set(count, mean, m2):
             # 1. Sync count by summing
             total_count = count.clone()
-            torch.distributed.all_reduce(total_count, op=ReduceOp.SUM)
+            torch.distributed.all_reduce(total_count, op=torch.distributed.ReduceOp.SUM)
 
             # Prevent division by zero if a feature has no samples across all processes
             if total_count.sum() == 0:
@@ -1089,17 +1089,17 @@ class DistributionTracker(nn.Module):
 
             # 2. Sync mean by weighted average
             prod = count * mean
-            torch.distributed.all_reduce(prod, op=ReduceOp.SUM)
+            torch.distributed.all_reduce(prod, op=torch.distributed.ReduceOp.SUM)
             total_mean = prod / (total_count + self.eps)
 
             # 3. Sync M2 using the parallel algorithm
             # Sum of M2 correction terms: sum(count_i * (mean_i - total_mean)**2)
             m2_correction = count * (mean - total_mean)**2
-            torch.distributed.all_reduce(m2_correction, op=ReduceOp.SUM)
+            torch.distributed.all_reduce(m2_correction, op=torch.distributed.ReduceOp.SUM)
             
             # Sum of the original M2 values
             total_m2 = m2.clone()
-            torch.distributed.all_reduce(total_m2, op=ReduceOp.SUM)
+            torch.distributed.all_reduce(total_m2, op=torch.distributed.ReduceOp.SUM)
             
             total_m2 += m2_correction
 
