@@ -507,7 +507,7 @@ elif currGPU == 'sol_gh200':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 0
+    FLAGS['resume_epoch'] = 9
     
     FLAGS['use_mlr_act'] = False
     FLAGS['use_matryoshka_head'] = False
@@ -1475,7 +1475,7 @@ def trainCycle(image_datasets, model):
         boundaryCalculator.thresholdPerClass = torch.load(FLAGS['modelDir'] + 'thresholds.pth', weights_only=True).to(device)
     
     if (FLAGS['resume_epoch'] > 0):
-        optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth', map_location=torch.device("cpu"), weights_only=True))
+        optimizer.load_state_dict(torch.load(FLAGS['modelDir'] + 'optimizer' + '.pth', map_location=torch.device("cpu")))
         
     
     if (FLAGS['use_scaler'] == True): scaler = torch.amp.GradScaler('cuda')
