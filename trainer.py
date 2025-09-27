@@ -330,7 +330,7 @@ elif currGPU == 'm40':
     FLAGS['stepsPerPrintout'] = 50
     FLAGS['val'] = False
 
-elif currGPU == 'v1build_tar_index00':
+elif currGPU == 'v100':
 
 
     FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/scratch/"
