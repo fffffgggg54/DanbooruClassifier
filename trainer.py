@@ -69,8 +69,8 @@ from torchmetrics.classification import MultilabelRecall, MultilabelPrecision, M
 #currGPU = '3090'
 #currGPU = 'm40'
 #currGPU = 'v100'
-#currGPU = 'sol_gh200'
-currGPU = 'sol_multi'
+currGPU = 'sol_gh200'
+#currGPU = 'sol_multi'
 #currGPU = 'none'
 
 
@@ -330,7 +330,7 @@ elif currGPU == 'm40':
     FLAGS['stepsPerPrintout'] = 50
     FLAGS['val'] = False
 
-elif currGPU == 'v100':
+elif currGPU == 'v1build_tar_index00':
 
 
     FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/scratch/"
@@ -453,6 +453,7 @@ elif currGPU == 'v100':
     FLAGS['val'] = False
 
 elif currGPU == 'sol_gh200':
+    FLAGS['rootPath'] = '/tmp/'
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-ml_decoder_NoInProj_NoAttnOutProj_NoMLP_no_dupe_OnlyClassEmbed_gte_L_en_v1_5dNoNorm1024_sharedFC-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
     FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_3_of_5_seed42_gh200-classEmbedGatingHead2048_QueryDrop3_QueryNoiseAug_PosNegRandQueryAug_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
