@@ -507,7 +507,7 @@ elif currGPU == 'sol_gh200':
 
     FLAGS['weight_decay'] = 2e-2
 
-    FLAGS['resume_epoch'] = 0
+    FLAGS['resume_epoch'] = 9
     
     FLAGS['use_mlr_act'] = False
     FLAGS['use_matryoshka_head'] = False

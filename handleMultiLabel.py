@@ -2413,7 +2413,7 @@ def F1(TP, FN, FP, TN, epsilon):
 # Learning with positive and unlabeled examples using weighted logistic regression.
 # In Proceedings of the twentieth international conference on machine learning (pp. 448–455).
 def PU_F_Metric(TP, FN, FP, TN, epsilon):
-    return (Precall(TP, FN, FP, TN, epsilon) ** 2) / (TP + FN + epsilon)
+    return (Precall(TP, FN, FP, TN, epsilon) ** 2) / (TP + FP + epsilon)
 
 metrics_to_track = [TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision, P4, F1, PU_F_Metric]
 
