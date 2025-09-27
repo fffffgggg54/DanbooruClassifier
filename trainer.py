@@ -69,8 +69,8 @@ from torchmetrics.classification import MultilabelRecall, MultilabelPrecision, M
 #currGPU = '3090'
 #currGPU = 'm40'
 #currGPU = 'v100'
-currGPU = 'sol_gh200'
-#currGPU = 'sol_multi'
+#currGPU = 'sol_gh200'
+currGPU = 'sol_multi'
 #currGPU = 'none'
 
 
@@ -542,7 +542,7 @@ elif currGPU == 'sol_multi':
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/scratch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-classEmbedGatingHead2048_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds_W-InvClassProp-224-1588-50epoch/"
     #FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_1_of_5_seed42-classEmbedGatingHead2048_HighDrop_PreNorm_QueryNoiseAug_RandQueryAug_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds_W-InvClassProp-224-1588-50epoch/"
-    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_2_of_5_seed42_4xL40_Rep3-classEmbedGatingHead2048_QueryDrop3_QueryNoiseAug_PosNegRandQueryAug_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
+    FLAGS['modelDir'] = "/scratch/fyguan/danbooru_models/davit_tiny-OV_4_of_5_seed42_4xL40-classEmbedGatingHead2048_QueryDrop3_QueryNoiseAug_PosNegRandQueryAug_gte_L_en_v1_5dNoNorm1024-ASL_BCE_T-dist_log_odds-224-1588-50epoch/"
 
     # post importer config
 
@@ -615,7 +615,7 @@ elif currGPU == 'sol_multi':
     # tag k-fold cv config
     FLAGS['use_tag_kfold'] = True
     FLAGS['n_folds'] = 5
-    FLAGS['current_fold'] = 2
+    FLAGS['current_fold'] = 4
 
     # debugging config
 
