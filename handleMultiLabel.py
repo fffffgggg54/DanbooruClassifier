@@ -1083,38 +1083,51 @@ class DistributionTracker(nn.Module):
             total_count = count.clone()
             torch.distributed.all_reduce(total_count, op=torch.distributed.ReduceOp.SUM)
 
-            # Prevent division by zero if a feature has no samples across all processes
-            if total_count.sum() == 0:
+            # Create a mask for features that have been observed (count > 0)
+            mask = total_count > 0
+            if not mask.any():
+                # Skip if no features have been seen across all processes
                 return
 
+            # --- Proceed with only the active features ---
+            
             # 2. Sync mean by weighted average
-            prod = count * mean
+            prod = count[mask] * mean[mask]
             torch.distributed.all_reduce(prod, op=torch.distributed.ReduceOp.SUM)
-            total_mean = prod / (total_count + self.eps)
+            total_mean = prod / (total_count[mask] + self.eps)
 
             # 3. Sync M2 using the parallel algorithm
             # Sum of M2 correction terms: sum(count_i * (mean_i - total_mean)**2)
-            m2_correction = count * (mean - total_mean)**2
+            m2_correction = count[mask] * (mean[mask] - total_mean)**2
             torch.distributed.all_reduce(m2_correction, op=torch.distributed.ReduceOp.SUM)
             
             # Sum of the original M2 values
-            total_m2 = m2.clone()
+            total_m2 = m2[mask].clone()
             torch.distributed.all_reduce(total_m2, op=torch.distributed.ReduceOp.SUM)
             
             total_m2 += m2_correction
 
             # Update buffers in-place with the synced values
             count.data.copy_(total_count)
-            mean.data.copy_(total_mean)
-            m2.data.copy_(total_m2)
+            # Only update mean and m2 for features that were observed
+            mean.data[mask] = total_mean
+            m2.data[mask] = total_m2
+            # Ensure stats for unobserved features remain 0
+            mean.data[~mask] = 0
+            m2.data[~mask] = 0
 
         # Sync statistics for both positive and negative classes
         _sync_set(self._pos_count, self._pos_mean, self._pos_m2)
         _sync_set(self._neg_count, self._neg_mean, self._neg_m2)
 
+
     @property
     def pos_mean(self):
         return self._pos_mean
+
+    @property
+    def pos_count(self):
+        return self._pos_count
 
     @property
     def pos_var(self):
@@ -1129,6 +1142,10 @@ class DistributionTracker(nn.Module):
     @property
     def neg_mean(self):
         return self._neg_mean
+
+    @property
+    def neg_count(self):
+        return self._neg_count
 
     @property
     def neg_var(self):
@@ -1162,50 +1179,61 @@ class DistributionTracker(nn.Module):
         batch_pos_count = pos_labels.sum(dim=0)
         
         # Only perform updates if there are positive samples in the batch for any feature
-        if batch_pos_count.sum() > 0:
-            # Calculate stats for the new batch
-            batch_pos_sum = (logits * pos_labels).sum(dim=0)
-            batch_pos_mean = batch_pos_sum / (batch_pos_count + self.eps)
-            batch_pos_m2 = (((logits - batch_pos_mean)**2) * pos_labels).sum(dim=0)
+        active_features_pos = batch_pos_count > 0
+        if active_features_pos.any():
+            # Slice to only active features before calculations
+            logits_pos_active = logits[:, active_features_pos]
+            pos_labels_active = pos_labels[:, active_features_pos]
+            
+            # Calculate stats for the new batch for active features only
+            batch_pos_sum = (logits_pos_active * pos_labels_active).sum(dim=0)
+            batch_pos_mean = batch_pos_sum / (batch_pos_count[active_features_pos] + self.eps)
+            batch_pos_m2 = (((logits_pos_active - batch_pos_mean.unsqueeze(0))**2) * pos_labels_active).sum(dim=0)
 
             # Combine batch stats with existing stats using the parallel algorithm
-            old_pos_count = self._pos_count
-            new_pos_count = old_pos_count + batch_pos_count
-            delta = batch_pos_mean - self._pos_mean
+            old_pos_count = self._pos_count[active_features_pos]
+            new_pos_count = old_pos_count + batch_pos_count[active_features_pos]
+            delta = batch_pos_mean - self._pos_mean[active_features_pos]
             
-            # Update mean
-            self._pos_mean += delta * batch_pos_count / (new_pos_count + self.eps)
+            # Create temporary variables for updated stats
+            new_pos_mean = self._pos_mean[active_features_pos] + delta * batch_pos_count[active_features_pos] / (new_pos_count + self.eps)
+            new_pos_m2 = self._pos_m2[active_features_pos] + batch_pos_m2 + delta**2 * old_pos_count * batch_pos_count[active_features_pos] / (new_pos_count + self.eps)
             
-            # Update M2 (sum of squared deviations)
-            self._pos_m2 += batch_pos_m2 + delta**2 * old_pos_count * batch_pos_count / (new_pos_count + self.eps)
-            
-            # Update count
-            self._pos_count = new_pos_count
+            # Update buffers in-place for active features
+            self._pos_count[active_features_pos] = new_pos_count
+            self._pos_mean[active_features_pos] = new_pos_mean
+            self._pos_m2[active_features_pos] = new_pos_m2
+
 
         # --- Update Negative Statistics ---
         neg_labels = 1 - labels
         batch_neg_count = neg_labels.sum(dim=0)
 
         # Only perform updates if there are negative samples in the batch for any feature
-        if batch_neg_count.sum() > 0:
-            # Calculate stats for the new batch
-            batch_neg_sum = (logits * neg_labels).sum(dim=0)
-            batch_neg_mean = batch_neg_sum / (batch_neg_count + self.eps)
-            batch_neg_m2 = (((logits - batch_neg_mean)**2) * neg_labels).sum(dim=0)
+        active_features_neg = batch_neg_count > 0
+        if active_features_neg.any():
+            # Slice to only active features before calculations
+            logits_neg_active = logits[:, active_features_neg]
+            neg_labels_active = neg_labels[:, active_features_neg]
+
+            # Calculate stats for the new batch for active features only
+            batch_neg_sum = (logits_neg_active * neg_labels_active).sum(dim=0)
+            batch_neg_mean = batch_neg_sum / (batch_neg_count[active_features_neg] + self.eps)
+            batch_neg_m2 = (((logits_neg_active - batch_neg_mean.unsqueeze(0))**2) * neg_labels_active).sum(dim=0)
 
             # Combine batch stats with existing stats using the parallel algorithm
-            old_neg_count = self._neg_count
-            new_neg_count = old_neg_count + batch_neg_count
-            delta = batch_neg_mean - self._neg_mean
+            old_neg_count = self._neg_count[active_features_neg]
+            new_neg_count = old_neg_count + batch_neg_count[active_features_neg]
+            delta = batch_neg_mean - self._neg_mean[active_features_neg]
             
-            # Update mean
-            self._neg_mean += delta * batch_neg_count / (new_neg_count + self.eps)
-            
-            # Update M2 (sum of squared deviations)
-            self._neg_m2 += batch_neg_m2 + delta**2 * old_neg_count * batch_neg_count / (new_neg_count + self.eps)
-            
-            # Update count
-            self._neg_count = new_neg_count
+            # Create temporary variables for updated stats
+            new_neg_mean = self._neg_mean[active_features_neg] + delta * batch_neg_count[active_features_neg] / (new_neg_count + self.eps)
+            new_neg_m2 = self._neg_m2[active_features_neg] + batch_neg_m2 + delta**2 * old_neg_count * batch_neg_count[active_features_neg] / (new_neg_count + self.eps)
+
+            # Update buffers in-place for active features
+            self._neg_count[active_features_neg] = new_neg_count
+            self._neg_mean[active_features_neg] = new_neg_mean
+            self._neg_m2[active_features_neg] = new_neg_m2
 
         return self.pos_mean, self.pos_std, self.neg_mean, self.neg_std
 
@@ -1608,7 +1636,7 @@ class AsymmetricLoss(nn.Module):
             loss *= one_sided_w
         
         loss *= weight
-        return -loss.sum()
+        return -loss.mean()#.sum()
 
 
 class AsymmetricLossOptimized(nn.Module):
