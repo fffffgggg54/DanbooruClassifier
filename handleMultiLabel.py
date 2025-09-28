@@ -2375,7 +2375,7 @@ def getSingleMetric(preds, targs, metric):
 
 def TP(TP, FN, FP, TN, epsilon): return TP / (TP + FN + FP + TN + epsilon)
 def FN(TP, FN, FP, TN, epsilon): return FN / (TP + FN + FP + TN + epsilon)
-def FP(TP, FN, FP, TN, epsilon): return FP / (TP + FN + FP + TN + epsilon)
+def TP(TP, FN, FP, TN, epsilon): return FP / (TP + FN + FP + TN + epsilon)
 def TN(TP, FN, FP, TN, epsilon): return TN / (TP + FN + FP + TN + epsilon)
 
 # recall
@@ -2413,7 +2413,7 @@ def F1(TP, FN, FP, TN, epsilon):
 # Learning with positive and unlabeled examples using weighted logistic regression.
 # In Proceedings of the twentieth international conference on machine learning (pp. 448–455).
 def PU_F_Metric(TP, FN, FP, TN, epsilon):
-    return (Precall(TP, FN, FP, TN, epsilon) ** 2) / (TP + FP + epsilon)
+    return (Precall(TP, FN, FP, TN, epsilon) ** 2) / (TP(TP, FN, FP, TN, epsilon) + TP(TP, FN, FP, TN, epsilon) + epsilon)
 
 metrics_to_track = [TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision, P4, F1, PU_F_Metric]
 
