@@ -68,8 +68,8 @@ from torchmetrics.classification import MultilabelRecall, MultilabelPrecision, M
 
 #currGPU = '3090'
 #currGPU = 'm40'
-#currGPU = 'v100'
-currGPU = 'sol_gh200'
+currGPU = 'v100'
+#currGPU = 'sol_gh200'
 #currGPU = 'sol_multi'
 #currGPU = 'none'
 
@@ -429,7 +429,7 @@ elif currGPU == 'v100':
     
     FLAGS['use_mlr_act'] = False
     FLAGS['use_matryoshka_head'] = False
-    FLAGS['use_class_embed_head'] = False
+    FLAGS['use_class_embed_head'] = True
 
     FLAGS['logit_offset'] = True
     FLAGS['logit_offset_multiplier'] = 1.0
