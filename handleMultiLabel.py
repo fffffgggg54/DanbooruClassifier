@@ -2375,7 +2375,7 @@ def getSingleMetric(preds, targs, metric):
 
 def TP(TP, FN, FP, TN, epsilon): return TP / (TP + FN + FP + TN + epsilon)
 def FN(TP, FN, FP, TN, epsilon): return FN / (TP + FN + FP + TN + epsilon)
-def TP(TP, FN, FP, TN, epsilon): return FP / (TP + FN + FP + TN + epsilon)
+def FP(TP, FN, FP, TN, epsilon): return FP / (TP + FN + FP + TN + epsilon)
 def TN(TP, FN, FP, TN, epsilon): return TN / (TP + FN + FP + TN + epsilon)
 
 # recall
