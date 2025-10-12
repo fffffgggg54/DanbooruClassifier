@@ -445,7 +445,7 @@ elif currGPU == 'v100':
     FLAGS['channels_last'] = True
 
     # tag k-fold cv config
-    FLAGS['use_tag_kfold'] = False
+    FLAGS['use_tag_kfold'] = True
     FLAGS['n_folds'] = 5
     FLAGS['current_fold'] = 1
 
