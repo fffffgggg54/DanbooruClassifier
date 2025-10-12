@@ -2373,10 +2373,10 @@ def getSingleMetric(preds, targs, metric):
     
     return metric(TP, FN, FP, TN, epsilon)
 
-def TP(TP, FN, FP, TN, epsilon): return TP / (TP + FN + FP + TN + epsilon)
-def FN(TP, FN, FP, TN, epsilon): return FN / (TP + FN + FP + TN + epsilon)
-def FP(TP, FN, FP, TN, epsilon): return FP / (TP + FN + FP + TN + epsilon)
-def TN(TP, FN, FP, TN, epsilon): return TN / (TP + FN + FP + TN + epsilon)
+def TP_Score(TP, FN, FP, TN, epsilon): return TP / (TP + FN + FP + TN + epsilon)
+def FN_Score(TP, FN, FP, TN, epsilon): return FN / (TP + FN + FP + TN + epsilon)
+def FP_Score(TP, FN, FP, TN, epsilon): return FP / (TP + FN + FP + TN + epsilon)
+def TN_Score(TP, FN, FP, TN, epsilon): return TN / (TP + FN + FP + TN + epsilon)
 
 # recall
 def Precall(TP, FN, FP, TN, epsilon):
@@ -2413,9 +2413,9 @@ def F1(TP, FN, FP, TN, epsilon):
 # Learning with positive and unlabeled examples using weighted logistic regression.
 # In Proceedings of the twentieth international conference on machine learning (pp. 448–455).
 def PU_F_Metric(TP, FN, FP, TN, epsilon):
-    return (Precall(TP, FN, FP, TN, epsilon) ** 2) / (TP(TP, FN, FP, TN, epsilon) + TP(TP, FN, FP, TN, epsilon) + epsilon)
+    return (Precall(TP, FN, FP, TN, epsilon) ** 2) / (TP_Score(TP, FN, FP, TN, epsilon) + FP_Score(TP, FN, FP, TN, epsilon) + epsilon)
 
-metrics_to_track = [TP, FN, FP, TN, Precall, Nrecall, Pprecision, Nprecision, P4, F1, PU_F_Metric]
+metrics_to_track = [TP_Score, FN_Score, FP_Score, TN_Score, Precall, Nrecall, Pprecision, Nprecision, P4, F1, PU_F_Metric]
 
 
 # AUL and AUROC helper, implements shared portion of eqs 1 and 2 in paper
