@@ -400,7 +400,7 @@ elif currGPU == 'v100':
     # device config
 
     FLAGS['use_ddp'] = False
-    FLAGS['device'] = None 
+    FLAGS['device'] = "cuda"
     FLAGS['use_AMP'] = True
     FLAGS['use_scaler'] = FLAGS['use_AMP']
     #if(FLAGS['device'].type == 'cuda'): FLAGS['use_sclaer'] = True
