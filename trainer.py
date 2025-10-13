@@ -333,7 +333,7 @@ elif currGPU == 'm40':
 elif currGPU == 'v100':
 
 
-    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/scratch_kfold_1_of_5_rep1_1gpu_ddp/"
+    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/scratch_kfold_1_of_5_rep1_1gpu_noddp/"
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
@@ -399,7 +399,7 @@ elif currGPU == 'v100':
 
     # device config
 
-    FLAGS['use_ddp'] = True
+    FLAGS['use_ddp'] = False
     FLAGS['device'] = None 
     FLAGS['use_AMP'] = True
     FLAGS['use_scaler'] = FLAGS['use_AMP']
