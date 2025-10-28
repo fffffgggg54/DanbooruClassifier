@@ -2075,7 +2075,7 @@ def trainCycle(image_datasets, model):
                         print((full_metrics.mean(dim=0)*100).tolist())
 
                 
-                if dist_tracker.neg_mean.sum().isnan() == False and do_plot:
+                if dist_tracker.neg_mean.sum().isnan() == False and do_plot and FLAGS['do_plot']:
                     if FLAGS['use_tag_kfold']:
                         plotext.hist(dist_tracker.neg_mean.detach()[inv_mask].clamp(min=-15), bins, label='Neg means')
                         plotext.hist(dist_tracker.pos_mean.detach()[inv_mask], bins, label='Pos means')
