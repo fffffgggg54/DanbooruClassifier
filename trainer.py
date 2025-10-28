@@ -254,7 +254,7 @@ if currGPU == '3090':
     FLAGS['current_fold'] = 1
 
     # debugging config
-
+    FLAGS['do_plot'] = True
     FLAGS['verbose_debug'] = False
     FLAGS['skip_test_set'] = False
     FLAGS['store_latents'] = False
@@ -333,7 +333,7 @@ elif currGPU == 'm40':
 elif currGPU == 'v100':
 
 
-    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/scratch_kfold_1_of_5_rep1_4gpu_ddp_noLogitShift/"
+    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/scratch_kfold_1_of_5_rep1_1gpu_ddp_noLogitShift/"
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
@@ -415,7 +415,7 @@ elif currGPU == 'v100':
 
     FLAGS['num_epochs'] = 50
     FLAGS['batch_size'] = 64
-    FLAGS['gradient_accumulation_iterations'] = 6 * 2
+    FLAGS['gradient_accumulation_iterations'] = 6 * 8
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -450,7 +450,7 @@ elif currGPU == 'v100':
     FLAGS['current_fold'] = 1
 
     # debugging config
-
+    FLAGS['do_plot'] = False
     FLAGS['verbose_debug'] = False
     FLAGS['skip_test_set'] = False
     FLAGS['store_latents'] = False
@@ -537,7 +537,7 @@ elif currGPU == 'sol_gh200':
     FLAGS['current_fold'] = 3
 
     # debugging config
-
+    FLAGS['do_plot'] = True
     FLAGS['verbose_debug'] = False
     FLAGS['skip_test_set'] = False
     FLAGS['store_latents'] = False
@@ -624,7 +624,7 @@ elif currGPU == 'sol_multi':
     FLAGS['current_fold'] = 4
 
     # debugging config
-
+    FLAGS['do_plot'] = True
     FLAGS['verbose_debug'] = False
     FLAGS['skip_test_set'] = False
     FLAGS['store_latents'] = False
