@@ -1079,31 +1079,62 @@ class DistributionTracker(nn.Module):
 
         # Helper function to sync one set of statistics (e.g., for the positive class)
         def _sync_set(count, mean, m2):
-            # 1. Sync count by summing
-            total_count = count.clone()
-            torch.distributed.all_reduce(total_count, op=torch.distributed.ReduceOp.SUM)
-            
-            # 2. Sync mean by weighted average
-            prod = count * mean
-            torch.distributed.all_reduce(prod, op=torch.distributed.ReduceOp.SUM)
-            total_mean = prod / (total_count + self.eps)
+            # 1. Gather all tensors from all processes
+            # Use lists of tensors to store gathered data
+            count_list = [torch.zeros_like(count) for _ in range(world_size)]
+            mean_list = [torch.zeros_like(mean) for _ in range(world_size)]
+            m2_list = [torch.zeros_like(m2) for _ in range(world_size)]
 
-            # 3. Sync M2 using the parallel algorithm
-            # Sum of M2 correction terms: sum(count_i * (mean_i - total_mean)**2)
-            m2_correction = count * (mean - total_mean)**2
-            torch.distributed.all_reduce(m2_correction, op=torch.distributed.ReduceOp.SUM)
-            
-            # Sum of the original M2 values
-            total_m2 = m2.clone()
-            torch.distributed.all_reduce(total_m2, op=torch.distributed.ReduceOp.SUM)
-            
-            total_m2 += m2_correction
+            torch.distributed.all_gather(count_list, count)
+            torch.distributed.all_gather(mean_list, mean)
+            torch.distributed.all_gather(m2_list, m2)
 
-            # Update buffers in-place with the synced values
-            count.data.copy_(total_count)
-            # Only update mean and m2 for features that were observed
-            mean.data = total_mean
-            m2.data = total_m2
+            # Perform the combination on rank 0 and then broadcast the result
+            if torch.distributed.get_rank() == 0:
+                # Stack the lists into a single tensor for vectorized operations
+                # Shape: [world_size, num_features]
+                counts = torch.stack(count_list)
+                means = torch.stack(mean_list)
+                m2s = torch.stack(m2_list)
+
+                # 2. Combine stats using the parallel variance algorithm
+                total_count = counts.sum(dim=0)
+                
+                # Create a mask for features that have been observed
+                active_mask = total_count > 0
+
+                # Initialize final tensors
+                final_mean = torch.zeros_like(mean)
+                final_m2 = torch.zeros_like(m2)
+
+                if active_mask.any():
+                    # --- Combine Mean ---
+                    # Calculate weighted mean only for active features
+                    weighted_means = means * counts
+                    total_weighted_mean = weighted_means.sum(dim=0)[active_mask]
+                    final_mean[active_mask] = total_weighted_mean / (total_count[active_mask] + self.eps)
+
+                    # --- Combine M2 (Sum of Squared Deviations) ---
+                    # The delta is the difference between each process's mean and the new final mean
+                    delta = means[:, active_mask] - final_mean[active_mask]
+                    
+                    # The correction term for combining M2 values
+                    m2_correction = (delta ** 2 * counts[:, active_mask]).sum(dim=0)
+
+                    # Sum the original M2s and add the correction
+                    final_m2[active_mask] = m2s.sum(dim=0)[active_mask] + m2_correction
+                
+                # Update the buffers with the final combined statistics
+                count.copy_(total_count)
+                mean.copy_(final_mean)
+                m2.copy_(final_m2)
+
+            # Broadcast the updated buffers from rank 0 to all other processes
+            # This ensures all processes have the identical, correct statistics
+            torch.distributed.broadcast(count, src=0)
+            torch.distributed.broadcast(mean, src=0)
+            torch.distributed.broadcast(m2, src=0)
+
 
         # Sync statistics for both positive and negative classes
         _sync_set(self._pos_count, self._pos_mean, self._pos_m2)
