@@ -1082,27 +1082,19 @@ class DistributionTracker(nn.Module):
             # 1. Sync count by summing
             total_count = count.clone()
             torch.distributed.all_reduce(total_count, op=torch.distributed.ReduceOp.SUM)
-
-            # Create a mask for features that have been observed (count > 0)
-            mask = total_count > 0
-            if not mask.any():
-                # Skip if no features have been seen across all processes
-                return
-
-            # --- Proceed with only the active features ---
             
             # 2. Sync mean by weighted average
-            prod = count[mask] * mean[mask]
+            prod = count * mean
             torch.distributed.all_reduce(prod, op=torch.distributed.ReduceOp.SUM)
-            total_mean = prod / (total_count[mask] + self.eps)
+            total_mean = prod / (total_count + self.eps)
 
             # 3. Sync M2 using the parallel algorithm
             # Sum of M2 correction terms: sum(count_i * (mean_i - total_mean)**2)
-            m2_correction = count[mask] * (mean[mask] - total_mean)**2
+            m2_correction = count * (mean - total_mean)**2
             torch.distributed.all_reduce(m2_correction, op=torch.distributed.ReduceOp.SUM)
             
             # Sum of the original M2 values
-            total_m2 = m2[mask].clone()
+            total_m2 = m2.clone()
             torch.distributed.all_reduce(total_m2, op=torch.distributed.ReduceOp.SUM)
             
             total_m2 += m2_correction
@@ -1110,11 +1102,8 @@ class DistributionTracker(nn.Module):
             # Update buffers in-place with the synced values
             count.data.copy_(total_count)
             # Only update mean and m2 for features that were observed
-            mean.data[mask] = total_mean
-            m2.data[mask] = total_m2
-            # Ensure stats for unobserved features remain 0
-            mean.data[~mask] = 0
-            m2.data[~mask] = 0
+            mean.data = total_mean
+            m2.data = total_m2
 
         # Sync statistics for both positive and negative classes
         _sync_set(self._pos_count, self._pos_mean, self._pos_m2)
