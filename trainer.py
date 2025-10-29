@@ -1772,7 +1772,6 @@ def trainCycle(image_datasets, model):
                                     all_tags = tagsModified
                         dist_tracker(all_logits.to(torch.float64), all_tags.to(torch.long))
                         torch.cuda.synchronize()
-                        dist_tracker.sync_buffers()
                         if(firstLoop): print("got dist tracker update")
                         
                         # loss weighing

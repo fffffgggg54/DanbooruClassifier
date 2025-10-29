@@ -1035,9 +1035,8 @@ class DistributionTracker(nn.Module):
     for positive and negative classes using a numerically stable, vectorized, one-pass algorithm.
 
     This implementation is based on the parallel algorithm for updating variance, which is an
-    extension of Welford's online algorithm. It processes entire batches of data at once,
-    ensuring high efficiency and numerical stability without using an Exponential Moving Average (EMA).
-    It's suitable for scenarios where you need the statistics of the entire dataset seen so far.
+    extension of Welford's online algorithm. It is DDP-aware and correctly synchronizes
+    batch-level statistics to avoid feedback loops and numerical explosion.
     """
     def __init__(self, num_features: int = 1, eps: float = 1e-8):
         """
@@ -1050,9 +1049,7 @@ class DistributionTracker(nn.Module):
         super().__init__()
         self.eps = eps
         
-        # We will use register_buffer to ensure these tensors are part of the module's state
-        # and are moved to the correct device (e.g., GPU) along with the module.
-        # We track the cumulative count, mean, and sum of squared deviations from the mean (M2).
+        # Buffers to store the CUMULATIVE statistics for the entire dataset seen so far.
         self.register_buffer('_pos_count', torch.zeros(num_features))
         self.register_buffer('_pos_mean', torch.zeros(num_features))
         self.register_buffer('_pos_m2', torch.zeros(num_features)) # M2 = Sum of squares of differences from the current mean
@@ -1061,202 +1058,164 @@ class DistributionTracker(nn.Module):
         self.register_buffer('_neg_mean', torch.zeros(num_features))
         self.register_buffer('_neg_m2', torch.zeros(num_features))
 
-    def sync_buffers(self):
+    def _combine_stats(self, counts, means, m2s):
         """
-        Syncs the buffers for a CUMULATIVE tracker across all DDP processes.
+        Combines statistics from multiple disjoint sets into one, using the parallel variance algorithm.
         
-        This implementation uses a robust all_gather -> compute -> broadcast pattern.
-        It correctly combines the statistics from each GPU, which are treated as
-        disjoint sets of data accumulated since the last sync. This avoids the
-        feedback loop and numerical explosion seen with a naive all_reduce approach.
+        Args:
+            counts (torch.Tensor): Tensor of shape [N, K] where N is number of sets, K is num_features.
+            means (torch.Tensor): Tensor of shape [N, K].
+            m2s (torch.Tensor): Tensor of shape [N, K].
+        
+        Returns:
+            A tuple of (combined_count, combined_mean, combined_m2).
         """
-        if not (torch.distributed.is_available() and torch.distributed.is_initialized()):
-            # Return if not in a distributed setting
-            return
+        total_count = counts.sum(dim=0)
+        active_mask = total_count > 0
+        
+        combined_mean = torch.zeros_like(self._pos_mean)
+        combined_m2 = torch.zeros_like(self._pos_m2)
 
-        world_size = torch.distributed.get_world_size()
-        if world_size == 1:
-            # No need to sync if there's only one process
-            return
+        if active_mask.any():
+            # Calculate the new global mean via a weighted average of the local means
+            weighted_means = means * counts
+            combined_mean[active_mask] = weighted_means.sum(dim=0)[active_mask] / (total_count[active_mask] + self.eps)
 
-        # Helper function to sync one set of statistics (e.g., for the positive class)
-        def _sync_set(count, mean, m2):
-            # 1. Gather all tensors from all processes into lists
-            count_list = [torch.zeros_like(count) for _ in range(world_size)]
-            mean_list = [torch.zeros_like(mean) for _ in range(world_size)]
-            m2_list = [torch.zeros_like(m2) for _ in range(world_size)]
+            # Calculate the M2 correction term
+            delta = means[:, active_mask] - combined_mean[active_mask]
+            m2_correction = (delta**2 * counts[:, active_mask]).sum(dim=0)
+            
+            combined_m2[active_mask] = m2s.sum(dim=0)[active_mask] + m2_correction
+            
+        return total_count, combined_mean, combined_m2
 
-            torch.distributed.all_gather(count_list, count)
-            torch.distributed.all_gather(mean_list, mean)
-            torch.distributed.all_gather(m2_list, m2)
+    def _update_buffers(self, batch_count, batch_mean, batch_m2, is_positive):
+        """
+        Updates the module's cumulative buffers with a new set of batch statistics.
+        """
+        if batch_count.sum() == 0:
+            return # Nothing to update
 
-            # 2. Perform the combination on the master process (rank 0)
-            if torch.distributed.get_rank() == 0:
-                # Stack the lists into single tensors for efficient, vectorized operations
-                # The shape of each will be [world_size, num_features]
-                counts = torch.stack(count_list)
-                means = torch.stack(mean_list)
-                m2s = torch.stack(m2_list)
+        if is_positive:
+            old_count, old_mean, old_m2 = self._pos_count, self._pos_mean, self._pos_m2
+        else:
+            old_count, old_mean, old_m2 = self._neg_count, self._neg_mean, self._neg_m2
+        
+        # Combine the existing cumulative stats with the new batch stats
+        combined_count, combined_mean, combined_m2 = self._combine_stats(
+            torch.stack([old_count, batch_count]),
+            torch.stack([old_mean, batch_mean]),
+            torch.stack([old_m2, batch_m2])
+        )
 
-                # Combine stats using the N-way parallel variance algorithm from the paper
-                global_count = counts.sum(dim=0)
+        # Update the buffers in-place
+        if is_positive:
+            self._pos_count.copy_(combined_count)
+            self._pos_mean.copy_(combined_mean)
+            self._pos_m2.copy_(combined_m2)
+        else:
+            self._neg_count.copy_(combined_count)
+            self._neg_mean.copy_(combined_mean)
+            self._neg_m2.copy_(combined_m2)
 
-                # Create a mask for features that have been observed across any process
-                active_mask = global_count > 0
-                
-                # Initialize final tensors to ensure unobserved features remain zero
-                global_mean = torch.zeros_like(mean)
-                global_m2 = torch.zeros_like(m2)
+    def forward(self, logits: torch.Tensor, labels: torch.Tensor):
+        """
+        Updates the running statistics. In a DDP environment, this method
+        gathers batch statistics from all processes, combines them, and then applies
+        a single, correct update to the cumulative state on all processes.
 
-                if active_mask.any():
-                    # Calculate the new global mean via a weighted average of the local means
-                    weighted_means = means * counts
-                    global_mean[active_mask] = weighted_means.sum(dim=0)[active_mask] / (global_count[active_mask] + self.eps)
+        Args:
+            logits (torch.Tensor): The input logits, shape [B, K].
+            labels (torch.Tensor): The corresponding binary labels (0 or 1), shape [B, K].
+        """
+        logits = logits.detach().to(self._pos_mean.dtype)
+        labels = labels.detach().to(self._pos_mean.dtype)
 
-                    # Calculate the M2 correction term. The delta is the difference
-                    # between each process's local mean and the new global mean.
-                    # This is the sum of sum(n_i * (mean_i - mean_global)^2)
-                    delta = means[:, active_mask] - global_mean[active_mask]
-                    m2_correction = (delta**2 * counts[:, active_mask]).sum(dim=0)
+        # 1. CALCULATE LOCAL BATCH STATISTICS (DELTAS)
+        # --- Positive Stats ---
+        pos_labels = labels
+        batch_pos_count = pos_labels.sum(dim=0)
+        batch_pos_mean = torch.zeros_like(self._pos_mean)
+        batch_pos_m2 = torch.zeros_like(self._pos_m2)
+        
+        active_pos = batch_pos_count > 0
+        if active_pos.any():
+            batch_pos_sum = (logits[:, active_pos] * pos_labels[:, active_pos]).sum(dim=0)
+            batch_pos_mean[active_pos] = batch_pos_sum / (batch_pos_count[active_pos] + self.eps)
+            batch_pos_m2[active_pos] = (((logits[:, active_pos] - batch_pos_mean[active_pos])**2) * pos_labels[:, active_pos]).sum(dim=0)
 
-                    # The new global M2 is the sum of local M2s plus the correction term
-                    global_m2[active_mask] = m2s.sum(dim=0)[active_mask] + m2_correction
+        # --- Negative Stats ---
+        neg_labels = 1 - labels
+        batch_neg_count = neg_labels.sum(dim=0)
+        batch_neg_mean = torch.zeros_like(self._neg_mean)
+        batch_neg_m2 = torch.zeros_like(self._neg_m2)
 
-                # Copy the final combined values into the rank 0 buffers
-                count.copy_(global_count)
-                mean.copy_(global_mean)
-                m2.copy_(global_m2)
-                print(count, mean, m2)
+        active_neg = batch_neg_count > 0
+        if active_neg.any():
+            batch_neg_sum = (logits[:, active_neg] * neg_labels[:, active_neg]).sum(dim=0)
+            batch_neg_mean[active_neg] = batch_neg_sum / (batch_neg_count[active_neg] + self.eps)
+            batch_neg_m2[active_neg] = (((logits[:, active_neg] - batch_neg_mean[active_neg])**2) * neg_labels[:, active_neg]).sum(dim=0)
 
-            # 3. Broadcast the correct, globally combined statistics from rank 0 to all other processes.
-            # This ensures all processes have the identical, correct state for the next iteration.
-            torch.distributed.broadcast(count, src=0)
-            torch.distributed.broadcast(mean, src=0)
-            torch.distributed.broadcast(m2, src=0)
+        # 2. SYNCHRONIZE BATCH STATISTICS IN DDP
+        if torch.distributed.is_available() and torch.distributed.is_initialized():
+            world_size = torch.distributed.get_world_size()
+            
+            # Gather all local batch stats from all GPUs
+            pos_counts = [torch.zeros_like(batch_pos_count) for _ in range(world_size)]
+            pos_means = [torch.zeros_like(batch_pos_mean) for _ in range(world_size)]
+            pos_m2s = [torch.zeros_like(batch_pos_m2) for _ in range(world_size)]
+            neg_counts = [torch.zeros_like(batch_neg_count) for _ in range(world_size)]
+            neg_means = [torch.zeros_like(batch_neg_mean) for _ in range(world_size)]
+            neg_m2s = [torch.zeros_like(batch_neg_m2) for _ in range(world_size)]
 
-        # Sync statistics for both positive and negative classes
-        _sync_set(self._pos_count, self._pos_mean, self._pos_m2)
-        _sync_set(self._neg_count, self._neg_mean, self._neg_m2)
+            torch.distributed.all_gather(pos_counts, batch_pos_count)
+            torch.distributed.all_gather(pos_means, batch_pos_mean)
+            torch.distributed.all_gather(pos_m2s, batch_pos_m2)
+            torch.distributed.all_gather(neg_counts, batch_neg_count)
+            torch.distributed.all_gather(neg_means, batch_neg_mean)
+            torch.distributed.all_gather(neg_m2s, batch_neg_m2)
+            
+            # Combine the gathered stats into a single "mega-batch"
+            batch_pos_count, batch_pos_mean, batch_pos_m2 = self._combine_stats(
+                torch.stack(pos_counts), torch.stack(pos_means), torch.stack(pos_m2s))
+            batch_neg_count, batch_neg_mean, batch_neg_m2 = self._combine_stats(
+                torch.stack(neg_counts), torch.stack(neg_means), torch.stack(neg_m2s))
+        
+        # 3. UPDATE CUMULATIVE BUFFERS with the (potentially synced) batch statistics
+        # This update is now identical across all processes.
+        self._update_buffers(batch_pos_count, batch_pos_mean, batch_pos_m2, is_positive=True)
+        self._update_buffers(batch_neg_count, batch_neg_mean, batch_neg_m2, is_positive=False)
 
 
+    # --- Property definitions for easy access to statistics ---
     @property
-    def pos_mean(self):
-        return self._pos_mean
-
+    def pos_mean(self): return self._pos_mean
     @property
-    def pos_count(self):
-        return self._pos_count
-
+    def pos_count(self): return self._pos_count
     @property
     def pos_var(self):
-        count = self._pos_count.clamp(min=1.0) # Ensure minimum count of 1
-        variance = self._pos_m2 / (count - 1 + self.eps)
+        # Use count-1 for unbiased estimate, clamp to avoid division by zero
+        variance = self._pos_m2 / (self._pos_count - 1).clamp(min=self.eps)
         return variance.clamp(min=self.eps)
+    @property
+    def pos_std(self): return torch.sqrt(self.pos_var)
 
     @property
-    def pos_std(self):
-        return torch.sqrt(self.pos_var.clamp(min=self.eps))
-
+    def neg_mean(self): return self._neg_mean
     @property
-    def neg_mean(self):
-        return self._neg_mean
-
-    @property
-    def neg_count(self):
-        return self._neg_count
-
+    def neg_count(self): return self._neg_count
     @property
     def neg_var(self):
-        count = self._neg_count.clamp(min=1.0) # Ensure minimum count of 1
-        variance = self._neg_m2 / (count - 1 + self.eps)
+        variance = self._neg_m2 / (self._neg_count - 1).clamp(min=self.eps)
         return variance.clamp(min=self.eps)
-
     @property
-    def neg_std(self):
-        return torch.sqrt(self.neg_var.clamp(min=self.eps))
+    def neg_std(self): return torch.sqrt(self.neg_var)
         
     @property
     def log_odds(self):
         p_pos = (self._pos_count + self.eps) / (self._pos_count + self._neg_count + self.eps)
         p_pos = p_pos.clamp(min=self.eps, max=1 - self.eps)
         return torch.special.logit(p_pos)
-
-    def forward(self, logits: torch.Tensor, labels: torch.Tensor):
-        """
-        Updates the running statistics with a new batch of data using a cumulative,
-        vectorized, and numerically stable algorithm.
-
-        Args:
-            logits (torch.Tensor): The input logits, shape [B, K].
-            labels (torch.Tensor): The corresponding binary labels (0 or 1), shape [B, K].
-        """
-        # Ensure logits and labels are detached from the computation graph and have the same dtype
-        logits = logits.detach().to(self._pos_mean.dtype)
-        labels = labels.detach().to(self._pos_mean.dtype)
-
-        # --- Update Positive Statistics ---
-        pos_labels = labels
-        batch_pos_count = pos_labels.sum(dim=0)
-        
-        # Only perform updates if there are positive samples in the batch for any feature
-        active_features_pos = batch_pos_count > 0
-        if active_features_pos.any():
-            # Slice to only active features before calculations
-            logits_pos_active = logits[:, active_features_pos]
-            pos_labels_active = pos_labels[:, active_features_pos]
-            
-            # Calculate stats for the new batch for active features only
-            batch_pos_sum = (logits_pos_active * pos_labels_active).sum(dim=0)
-            batch_pos_mean = batch_pos_sum / (batch_pos_count[active_features_pos] + self.eps)
-            batch_pos_m2 = (((logits_pos_active - batch_pos_mean.unsqueeze(0))**2) * pos_labels_active).sum(dim=0)
-
-            # Combine batch stats with existing stats using the parallel algorithm
-            old_pos_count = self._pos_count[active_features_pos]
-            new_pos_count = old_pos_count + batch_pos_count[active_features_pos]
-            delta = batch_pos_mean - self._pos_mean[active_features_pos]
-            
-            # Create temporary variables for updated stats
-            new_pos_mean = self._pos_mean[active_features_pos] + delta * batch_pos_count[active_features_pos] / (new_pos_count + self.eps)
-            new_pos_m2 = self._pos_m2[active_features_pos] + batch_pos_m2 + delta**2 * old_pos_count * batch_pos_count[active_features_pos] / (new_pos_count + self.eps)
-            
-            # Update buffers in-place for active features
-            self._pos_count[active_features_pos] = new_pos_count
-            self._pos_mean[active_features_pos] = new_pos_mean
-            self._pos_m2[active_features_pos] = new_pos_m2
-
-
-        # --- Update Negative Statistics ---
-        neg_labels = 1 - labels
-        batch_neg_count = neg_labels.sum(dim=0)
-
-        # Only perform updates if there are negative samples in the batch for any feature
-        active_features_neg = batch_neg_count > 0
-        if active_features_neg.any():
-            # Slice to only active features before calculations
-            logits_neg_active = logits[:, active_features_neg]
-            neg_labels_active = neg_labels[:, active_features_neg]
-
-            # Calculate stats for the new batch for active features only
-            batch_neg_sum = (logits_neg_active * neg_labels_active).sum(dim=0)
-            batch_neg_mean = batch_neg_sum / (batch_neg_count[active_features_neg] + self.eps)
-            batch_neg_m2 = (((logits_neg_active - batch_neg_mean.unsqueeze(0))**2) * neg_labels_active).sum(dim=0)
-
-            # Combine batch stats with existing stats using the parallel algorithm
-            old_neg_count = self._neg_count[active_features_neg]
-            new_neg_count = old_neg_count + batch_neg_count[active_features_neg]
-            delta = batch_neg_mean - self._neg_mean[active_features_neg]
-            
-            # Create temporary variables for updated stats
-            new_neg_mean = self._neg_mean[active_features_neg] + delta * batch_neg_count[active_features_neg] / (new_neg_count + self.eps)
-            new_neg_m2 = self._neg_m2[active_features_neg] + batch_neg_m2 + delta**2 * old_neg_count * batch_neg_count[active_features_neg] / (new_neg_count + self.eps)
-
-            # Update buffers in-place for active features
-            self._neg_count[active_features_neg] = new_neg_count
-            self._neg_mean[active_features_neg] = new_neg_mean
-            self._neg_m2[active_features_neg] = new_neg_m2
-
-        return self.pos_mean, self.pos_std, self.neg_mean, self.neg_std
-
 class DistributionTrackerOld(nn.Module):
     def __init__(
         self,
