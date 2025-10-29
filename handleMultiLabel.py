@@ -1120,9 +1120,9 @@ class DistributionTracker(nn.Module):
 
     @property
     def pos_var(self):
-        # The variance is M2 / (count - 1) for an unbiased estimator.
-        # We only compute variance if we have more than one sample.
-        return self._pos_m2 / (self._pos_count - 1).clamp(min=self.eps)
+        count = self._pos_count.clamp(min=1.0) # Ensure minimum count of 1
+        variance = self._pos_m2 / (count - 1 + self.eps)
+        return variance.clamp(min=self.eps)
 
     @property
     def pos_std(self):
@@ -1138,9 +1138,9 @@ class DistributionTracker(nn.Module):
 
     @property
     def neg_var(self):
-        # The variance is M2 / (count - 1) for an unbiased estimator.
-        # We only compute variance if we have more than one sample.
-        return self._neg_m2 / (self._neg_count - 1).clamp(min=self.eps)
+        count = self._neg_count.clamp(min=1.0) # Ensure minimum count of 1
+        variance = self._neg_m2 / (count - 1 + self.eps)
+        return variance.clamp(min=self.eps)
 
     @property
     def neg_std(self):
@@ -1148,7 +1148,9 @@ class DistributionTracker(nn.Module):
         
     @property
     def log_odds(self):
-        return torch.special.logit((self._pos_count + self.eps) / (self._pos_count + self._neg_count + self.eps))
+        p_pos = (self._pos_count + self.eps) / (self._pos_count + self._neg_count + self.eps)
+        p_pos = p_pos.clamp(min=self.eps, max=1 - self.eps)
+        return torch.special.logit(p_pos)
 
     def forward(self, logits: torch.Tensor, labels: torch.Tensor):
         """
