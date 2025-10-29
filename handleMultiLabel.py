@@ -1126,6 +1126,7 @@ class DistributionTracker(nn.Module):
                 count.copy_(global_count)
                 mean.copy_(global_mean)
                 m2.copy_(global_m2)
+                print(count, mean, m2)
 
             # 3. Broadcast the correct, globally combined statistics from rank 0 to all other processes.
             # This ensures all processes have the identical, correct state for the next iteration.
