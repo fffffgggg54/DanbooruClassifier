@@ -1128,6 +1128,7 @@ class DistributionTracker(nn.Module):
                 count.copy_(total_count)
                 mean.copy_(final_mean)
                 m2.copy_(final_m2)
+                print(count, mean, m2)
 
             # Broadcast the updated buffers from rank 0 to all other processes
             # This ensures all processes have the identical, correct statistics
