@@ -1065,8 +1065,10 @@ class DistributionTracker(nn.Module):
         """
         Syncs the buffers for a CUMULATIVE tracker across all DDP processes.
         
-        IMPORTANT: This method merges statistics for a cumulative (non-EMA) distrubiton tracker.
-        It uses a parallelized version of Welford's algorithm to combine counts, means, and M2 from different processes.
+        This implementation uses a robust all_gather -> compute -> broadcast pattern.
+        It correctly combines the statistics from each GPU, which are treated as
+        disjoint sets of data accumulated since the last sync. This avoids the
+        feedback loop and numerical explosion seen with a naive all_reduce approach.
         """
         if not (torch.distributed.is_available() and torch.distributed.is_initialized()):
             # Return if not in a distributed setting
@@ -1079,8 +1081,7 @@ class DistributionTracker(nn.Module):
 
         # Helper function to sync one set of statistics (e.g., for the positive class)
         def _sync_set(count, mean, m2):
-            # 1. Gather all tensors from all processes
-            # Use lists of tensors to store gathered data
+            # 1. Gather all tensors from all processes into lists
             count_list = [torch.zeros_like(count) for _ in range(world_size)]
             mean_list = [torch.zeros_like(mean) for _ in range(world_size)]
             m2_list = [torch.zeros_like(m2) for _ in range(world_size)]
@@ -1089,53 +1090,48 @@ class DistributionTracker(nn.Module):
             torch.distributed.all_gather(mean_list, mean)
             torch.distributed.all_gather(m2_list, m2)
 
-            # Perform the combination on rank 0 and then broadcast the result
+            # 2. Perform the combination on the master process (rank 0)
             if torch.distributed.get_rank() == 0:
-                # Stack the lists into a single tensor for vectorized operations
-                # Shape: [world_size, num_features]
+                # Stack the lists into single tensors for efficient, vectorized operations
+                # The shape of each will be [world_size, num_features]
                 counts = torch.stack(count_list)
                 means = torch.stack(mean_list)
                 m2s = torch.stack(m2_list)
 
-                # 2. Combine stats using the parallel variance algorithm
-                total_count = counts.sum(dim=0)
-                
-                # Create a mask for features that have been observed
-                active_mask = total_count > 0
+                # Combine stats using the N-way parallel variance algorithm from the paper
+                global_count = counts.sum(dim=0)
 
-                # Initialize final tensors
-                final_mean = torch.zeros_like(mean)
-                final_m2 = torch.zeros_like(m2)
+                # Create a mask for features that have been observed across any process
+                active_mask = global_count > 0
+                
+                # Initialize final tensors to ensure unobserved features remain zero
+                global_mean = torch.zeros_like(mean)
+                global_m2 = torch.zeros_like(m2)
 
                 if active_mask.any():
-                    # --- Combine Mean ---
-                    # Calculate weighted mean only for active features
+                    # Calculate the new global mean via a weighted average of the local means
                     weighted_means = means * counts
-                    total_weighted_mean = weighted_means.sum(dim=0)[active_mask]
-                    final_mean[active_mask] = total_weighted_mean / (total_count[active_mask] + self.eps)
+                    global_mean[active_mask] = weighted_means.sum(dim=0)[active_mask] / (global_count[active_mask] + self.eps)
 
-                    # --- Combine M2 (Sum of Squared Deviations) ---
-                    # The delta is the difference between each process's mean and the new final mean
-                    delta = means[:, active_mask] - final_mean[active_mask]
-                    
-                    # The correction term for combining M2 values
-                    m2_correction = (delta ** 2 * counts[:, active_mask]).sum(dim=0)
+                    # Calculate the M2 correction term. The delta is the difference
+                    # between each process's local mean and the new global mean.
+                    # This is the sum of sum(n_i * (mean_i - mean_global)^2)
+                    delta = means[:, active_mask] - global_mean[active_mask]
+                    m2_correction = (delta**2 * counts[:, active_mask]).sum(dim=0)
 
-                    # Sum the original M2s and add the correction
-                    final_m2[active_mask] = m2s.sum(dim=0)[active_mask] + m2_correction
-                
-                # Update the buffers with the final combined statistics
-                count.copy_(total_count)
-                mean.copy_(final_mean)
-                m2.copy_(final_m2)
-                print(count, mean, m2)
+                    # The new global M2 is the sum of local M2s plus the correction term
+                    global_m2[active_mask] = m2s.sum(dim=0)[active_mask] + m2_correction
 
-            # Broadcast the updated buffers from rank 0 to all other processes
-            # This ensures all processes have the identical, correct statistics
+                # Copy the final combined values into the rank 0 buffers
+                count.copy_(global_count)
+                mean.copy_(global_mean)
+                m2.copy_(global_m2)
+
+            # 3. Broadcast the correct, globally combined statistics from rank 0 to all other processes.
+            # This ensures all processes have the identical, correct state for the next iteration.
             torch.distributed.broadcast(count, src=0)
             torch.distributed.broadcast(mean, src=0)
             torch.distributed.broadcast(m2, src=0)
-
 
         # Sync statistics for both positive and negative classes
         _sync_set(self._pos_count, self._pos_mean, self._pos_m2)
