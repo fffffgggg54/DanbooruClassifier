@@ -333,7 +333,7 @@ elif currGPU == 'm40':
 elif currGPU == 'v100':
 
 
-    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/scratch_kfold_1_of_5_rep1_8gpu_ddp_syncBuffers_noLRScale/"
+    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/scratch_kfold_1_of_5_rep1_8gpu_ddp_syncBuffers/"
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
@@ -2260,7 +2260,7 @@ def main():
         FLAGS['device'] = rank % torch.cuda.device_count()
         torch.cuda.set_device(FLAGS['device'])
         torch.cuda.empty_cache()
-        #FLAGS['learning_rate'] *= dist.get_world_size()
+        FLAGS['learning_rate'] *= dist.get_world_size()
     image_datasets = getData()
     model = modelSetup(classes)
     trainCycle(image_datasets, model)
