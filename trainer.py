@@ -333,7 +333,7 @@ elif currGPU == 'm40':
 elif currGPU == 'v100':
 
 
-    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/scratch_kfold_1_of_5_rep1_8gpu_ddp_noLogitShift/"
+    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/scratch_nokfold_rep1_8gpu_ddp_noLogitShift/"
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
@@ -445,7 +445,7 @@ elif currGPU == 'v100':
     FLAGS['channels_last'] = True
 
     # tag k-fold cv config
-    FLAGS['use_tag_kfold'] = True
+    FLAGS['use_tag_kfold'] = False
     FLAGS['n_folds'] = 5
     FLAGS['current_fold'] = 1
 
