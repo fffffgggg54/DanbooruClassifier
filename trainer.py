@@ -333,7 +333,7 @@ elif currGPU == 'm40':
 elif currGPU == 'v100':
 
 
-    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/scratch_nokfold_rep1_4gpu_ddp_noLogitShift/"
+    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/scratch_nokfold_rep1_4gpu_ddp_noLogitShift_noCrossSwiGLU/"
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
@@ -429,7 +429,7 @@ elif currGPU == 'v100':
     
     FLAGS['use_mlr_act'] = False
     FLAGS['use_matryoshka_head'] = False
-    FLAGS['use_class_embed_head'] = True
+    FLAGS['use_class_embed_head'] = False
 
     FLAGS['logit_offset'] = False
     FLAGS['logit_offset_multiplier'] = 1.0
