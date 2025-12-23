@@ -333,7 +333,7 @@ elif currGPU == 'm40':
 elif currGPU == 'v100':
 
 
-    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/scratch_nokfold_rep1_8gpu_ddp_noLogitShift_noCrossSwiGLU/"
+    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/scratch_nokfold_rep1_8gpu_ddp_noLogitShift_CrossSwiGLUHeadNoAug/"
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
@@ -429,7 +429,7 @@ elif currGPU == 'v100':
     
     FLAGS['use_mlr_act'] = False
     FLAGS['use_matryoshka_head'] = False
-    FLAGS['use_class_embed_head'] = False
+    FLAGS['use_class_embed_head'] = True
 
     FLAGS['logit_offset'] = False
     FLAGS['logit_offset_multiplier'] = 1.0
@@ -1341,16 +1341,31 @@ def modelSetup(classes):
     elif FLAGS['use_matryoshka_head'] == True:
         model.append(MLCSL.MatryoshkaClassificationHead(num_features, len(classes), k=6))
     elif FLAGS['use_class_embed_head'] == True:
+        '''
         model.append(MLCSL.ClassEmbedClassifierHead(
             num_features, 
             len(classes), 
-            torch.load('./DanbooruWikiEmbeddings1588_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
+            torch.load(f'./DanbooruWikiEmbeddings{str(FLAGS['tagCount'])}_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
             in_drop=0.0,
             embed_drop=0.3,
             head_drop=0.0,
             use_query_noise=True,
             query_noise_strength=0.3,
             use_random_query=True,
+            num_random_query=2,
+            pre_norm=False,
+        ))
+        '''
+        model.append(MLCSL.ClassEmbedClassifierHead(
+            num_features, 
+            len(classes), 
+            torch.load(f'./DanbooruWikiEmbeddings{str(FLAGS['tagCount'])}_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
+            in_drop=0.0,
+            embed_drop=0.0,
+            head_drop=0.0,
+            use_query_noise=False,
+            query_noise_strength=0.3,
+            use_random_query=False,
             num_random_query=2,
             pre_norm=False,
         ))
