@@ -506,18 +506,19 @@ class CrossSwiGLU(nn.Module):
         self.pre_norm = pre_norm
 
     def forward(self, x, q):
-        x = self.fc1_x(x)
-        x = self.drop1(x)
-        gate = self.fc1_q(q)
-        x = self.act(gate) * x
-        if self.pre_norm:
-            x = self.norm(x)
-            x = self.drop2(x)
-        else:
-            x = self.drop2(x)
-            x = self.norm(x)
-        x = self.fc2(x)
-        return x
+        torch.autocast('cuda', enabled=False):
+            x = self.fc1_x(x)
+            x = self.drop1(x)
+            gate = self.fc1_q(q)
+            x = self.act(gate) * x
+            if self.pre_norm:
+                x = self.norm(x)
+                x = self.drop2(x)
+            else:
+                x = self.drop2(x)
+                x = self.norm(x)
+            x = self.fc2(x)
+            return x
 
 class CrossSwiGLULight(nn.Module):
     def __init__(
@@ -629,24 +630,25 @@ class ClassEmbedClassifierHead(nn.Module):
         
 
     def forward(self, x, q=None): # [B, C], [K, D]
-        q = q or self.class_embed
+        torch.autocast('cuda', enabled=False):
+            q = q or self.class_embed
 
-        if self.use_query_noise and self.training:
-            q = q + torch.randn_like(q) * self.query_noise_strength * self.class_embed_stdev.unsqueeze(0)
-        
-        
-        q = self.embed_drop(self.embed_norm(q)).unsqueeze(0) # [1, K, D]
-        q = q.expand(x.shape[0], -1, -1) # [B, K, D]
+            if self.use_query_noise and self.training:
+                q = q + torch.randn_like(q) * self.query_noise_strength * self.class_embed_stdev.unsqueeze(0)
+            
+            
+            q = self.embed_drop(self.embed_norm(q)).unsqueeze(0) # [1, K, D]
+            q = q.expand(x.shape[0], -1, -1) # [B, K, D]
 
-        if self.use_random_query and self.training:
-            random_query = torch.randn(q.shape[0], self.num_random_query, q.shape[2], dtype=q.dtype, layout=q.layout, device=q.device) * self.class_embed_stdev + self.class_embed_mean
-            q = torch.cat([q, self.embed_drop(self.embed_norm(random_query))], dim=1)
+            if self.use_random_query and self.training:
+                random_query = torch.randn(q.shape[0], self.num_random_query, q.shape[2], dtype=q.dtype, layout=q.layout, device=q.device) * self.class_embed_stdev + self.class_embed_mean
+                q = torch.cat([q, self.embed_drop(self.embed_norm(random_query))], dim=1)
 
-        x = self.in_drop(x).unsqueeze(1).expand(-1, q.shape[1], -1) # [B, K, C]
-        #x = torch.cat([x, q], dim=-1) # [B, K, C+D]
-        #x = self.ffn(x).squeeze(-1) # [B, K]
-        x = self.ffn(x, q).squeeze(-1) # [B, K]
-        return x
+            x = self.in_drop(x).unsqueeze(1).expand(-1, q.shape[1], -1) # [B, K, C]
+            #x = torch.cat([x, q], dim=-1) # [B, K, C+D]
+            #x = self.ffn(x).squeeze(-1) # [B, K]
+            x = self.ffn(x, q).squeeze(-1) # [B, K]
+            return x
 
 def stepAtThreshold(x, threshold, k=5, base=10):
     return 1 / (1 + torch.pow(base, (0 - k) * (x - threshold)))
