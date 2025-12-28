@@ -632,11 +632,10 @@ class ClassEmbedClassifierHead(nn.Module):
         
 
     def forward(self, x, q=None): # [B, C], [K, D]
+        q = q or self.class_embed
         x = x.float()
         q = q.float()
         with torch.autocast('cuda', enabled=False):
-            q = q or self.class_embed
-
             if self.use_query_noise and self.training:
                 q = q + torch.randn_like(q) * self.query_noise_strength * self.class_embed_stdev.unsqueeze(0)
             
