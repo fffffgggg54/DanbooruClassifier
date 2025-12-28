@@ -506,7 +506,7 @@ class CrossSwiGLU(nn.Module):
         self.pre_norm = pre_norm
 
     def forward(self, x, q):
-        torch.autocast('cuda', enabled=False):
+        with torch.autocast('cuda', enabled=False):
             x = self.fc1_x(x)
             x = self.drop1(x)
             gate = self.fc1_q(q)
@@ -630,7 +630,7 @@ class ClassEmbedClassifierHead(nn.Module):
         
 
     def forward(self, x, q=None): # [B, C], [K, D]
-        torch.autocast('cuda', enabled=False):
+        with torch.autocast('cuda', enabled=False):
             q = q or self.class_embed
 
             if self.use_query_noise and self.training:
