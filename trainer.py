@@ -1676,6 +1676,7 @@ def trainCycle(image_datasets, model):
                                 use_random_query = True
                             else:
                                 use_random_query = False
+                            print(use_random_query)
                             outputs = outputs_all
                             #preds = torch.sigmoid(outputs)
                         else:
