@@ -333,7 +333,7 @@ elif currGPU == 'm40':
 elif currGPU == 'v100':
 
 
-    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/scratch_nokfold_rep1_4gpu_ddp_noLogitShift_CrossSwiGLUHeadNoAugFP32/"
+    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/scratch_nokfold_rep1_4gpu_ddp_noLogitShift_CrossSwiGLUHeadNoAugFP32_Cleaned/"
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
@@ -1368,6 +1368,7 @@ def modelSetup(classes):
             use_random_query=False,
             num_random_query=2,
             pre_norm=False,
+            norm_layer=nn.Identity,
         ))
     #model = torch.compile(model, options={'max_autotune': True, 'epilogue_fusion': True})
 
@@ -1676,7 +1677,6 @@ def trainCycle(image_datasets, model):
                                 use_random_query = True
                             else:
                                 use_random_query = False
-                            print(use_random_query)
                             outputs = outputs_all
                             #preds = torch.sigmoid(outputs)
                         else:
@@ -1874,7 +1874,7 @@ def trainCycle(image_datasets, model):
                             if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                                 torch.cuda.synchronize()
                                 scaler.unscale_(optimizer)
-                                nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                 scaler.step(optimizer)
                                 scaler.update()
                                 optimizer.zero_grad(set_to_none=True)
@@ -1891,7 +1891,7 @@ def trainCycle(image_datasets, model):
                                 loss.backward()
                             if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                                 torch.cuda.synchronize()
-                                nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                 optimizer.step()
                                 optimizer.zero_grad(set_to_none=True)
                                 

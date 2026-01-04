@@ -621,7 +621,8 @@ class ClassEmbedClassifierHead(nn.Module):
         '''
         assert len(class_embed) == num_classes, 'ClassEmbedClassifierHead got class_embed where dim 0 != num_classes'
         class_embed = class_embed.clone().detach() # copy instead of reference, detach gradient flow
-        self.register_buffer("class_embed", class_embed)
+        #self.register_buffer("class_embed", class_embed)
+        self.class_embed = nn.Parameter(class_embed, requires_grad=False)
 
         if self.use_random_query: self.register_buffer("class_embed_mean", class_embed.mean(dim=0))
         if self.use_query_noise or self.use_random_query: self.register_buffer("class_embed_stdev", class_embed.std(dim=0))
@@ -639,7 +640,7 @@ class ClassEmbedClassifierHead(nn.Module):
             if self.use_query_noise and self.training:
                 q = q + torch.randn_like(q) * self.query_noise_strength * self.class_embed_stdev.unsqueeze(0)
             
-            
+            # FIXME x and q are expanded here, resulting in huge tensors. can expand later if random query shapes are changed
             q = self.embed_drop(self.embed_norm(q)).unsqueeze(0) # [1, K, D]
             q = q.expand(x.shape[0], -1, -1) # [B, K, D]
 
