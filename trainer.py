@@ -1874,7 +1874,7 @@ def trainCycle(image_datasets, model):
                             if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                                 torch.cuda.synchronize()
                                 scaler.unscale_(optimizer)
-                                #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                 scaler.step(optimizer)
                                 scaler.update()
                                 optimizer.zero_grad(set_to_none=True)
@@ -1891,7 +1891,7 @@ def trainCycle(image_datasets, model):
                                 loss.backward()
                             if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                                 torch.cuda.synchronize()
-                                #nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
+                                nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
                                 optimizer.step()
                                 optimizer.zero_grad(set_to_none=True)
                                 
