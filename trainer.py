@@ -1356,7 +1356,7 @@ def modelSetup(classes):
             pre_norm=False,
         ))
         '''
-        model.append(MLCSL.ClassEmbedClassifierHead(
+        model.append(MLCSL.ClassEmbedClassifierHeadOptimized(
             num_features, 
             len(classes), 
             torch.load(f'./DanbooruWikiEmbeddings{str(FLAGS['tagCount'])}_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
