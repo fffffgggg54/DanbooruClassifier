@@ -332,8 +332,8 @@ elif currGPU == 'm40':
 
 elif currGPU == 'v100':
 
-
-    FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/scratch_nokfold_rep1_4gpu_ddp_noLogitShift_CrossSwiGLUHeadNoAugFP32_Cleaned/"
+    FLAGS['modelDir'] =  "/media/fredo/Storage1/danbooru_models/scratch/"
+    #FLAGS['modelDir'] = "/media/fredo/Storage1/danbooru_models/scratch_nokfold_rep1_4gpu_ddp_noLogitShift_CrossSwiGLUHeadNoAugFP32_Cleaned/"
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/gc_efficientnetv2_rw_t-448-ASL_BCE_T-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE-1588/'
     #FLAGS['modelDir'] = FLAGS['rootPath'] + 'models/convnext_tiny-448-ASL_BCE_T-1588/'
@@ -415,7 +415,7 @@ elif currGPU == 'v100':
 
     FLAGS['num_epochs'] = 50
     FLAGS['batch_size'] = 64
-    FLAGS['gradient_accumulation_iterations'] = 6 * 2
+    FLAGS['gradient_accumulation_iterations'] = 6
 
     FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
@@ -431,7 +431,7 @@ elif currGPU == 'v100':
     FLAGS['use_matryoshka_head'] = False
     FLAGS['use_class_embed_head'] = True
 
-    FLAGS['logit_offset'] = False
+    FLAGS['logit_offset'] = True
     FLAGS['logit_offset_multiplier'] = 1.0
     FLAGS['logit_offset_source'] = 'dist'
     FLAGS['opt_dist'] = False
@@ -445,12 +445,12 @@ elif currGPU == 'v100':
     FLAGS['channels_last'] = True
 
     # tag k-fold cv config
-    FLAGS['use_tag_kfold'] = False
+    FLAGS['use_tag_kfold'] = True
     FLAGS['n_folds'] = 5
     FLAGS['current_fold'] = 1
 
     # debugging config
-    FLAGS['do_plot'] = False
+    FLAGS['do_plot'] = True
     FLAGS['verbose_debug'] = False
     FLAGS['skip_test_set'] = False
     FLAGS['store_latents'] = False
@@ -1363,9 +1363,9 @@ def modelSetup(classes):
             in_drop=0.0,
             embed_drop=0.0,
             head_drop=0.0,
-            use_query_noise=False,
+            use_query_noise=True,
             query_noise_strength=0.3,
-            use_random_query=False,
+            use_random_query=True,
             num_random_query=2,
             pre_norm=False,
             norm_layer=nn.Identity,
@@ -1865,11 +1865,19 @@ def trainCycle(image_datasets, model):
                         
                         if(firstLoop): print("got loss")
                         
-                        
+                    # account for gradient accumulation
+                    if (FLAGS['use_ddp']):
+                        loss_for_backward = loss / FLAGS["gradient_accumulation_iterations"]
+                    else:
+                        loss_for_backward = loss
+
+                    # only sync when using ddp and the current step will call the optimizer
+                    need_ddp_sync = FLAGS['use_ddp'] and (i+1) % FLAGS['gradient_accumulation_iterations'] == 0
+                    
                     # backward + optimize only if in training phase
                     if phase == 'train' and (loss.isnan() == False):
                         if (FLAGS['use_scaler'] == True):   # cuda gpu case
-                            with model.no_sync() if FLAGS['use_ddp'] else contextlib.nullcontext():
+                            with model.no_sync() if not need_ddp_sync else contextlib.nullcontext():
                                 scaler.scale(loss).backward()
                             if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                                 torch.cuda.synchronize()
@@ -1887,7 +1895,7 @@ def trainCycle(image_datasets, model):
                                 #mlr_act_opt.zero_grad(set_to_none=True)
                                 
                         else:                               # apple gpu/cpu case
-                            with model.no_sync() if FLAGS['use_ddp'] else contextlib.nullcontext():
+                            with model.no_sync() if not need_ddp_sync else contextlib.nullcontext():
                                 loss.backward()
                             if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                                 torch.cuda.synchronize()
@@ -1926,7 +1934,7 @@ def trainCycle(image_datasets, model):
                                 if FLAGS['store_latents']: latent_features_all = [torch.zeros_like(latent_features) for _ in range(dist.get_world_size())]
                             torch.distributed.gather(tagBatch, gather_list = targets_all, async_op=True)
                             torch.distributed.gather(preds, gather_list = preds_all, async_op=True)
-                            if FLAGS['store_latents']: torch.distributed.gather(latent_features, gather_list = latent_features_all, async_op=True)
+                            if FLAGS['store_latents']: torch.distributed.gather(latent_features, gather_list = latent_features_all, async_op=False)
                             if(is_head_proc):
                                 targets_all = torch.cat(targets_all).detach().cpu()
                                 preds_all = torch.cat(preds_all).detach().cpu()
