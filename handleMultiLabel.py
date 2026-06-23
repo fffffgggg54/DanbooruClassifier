@@ -23,6 +23,8 @@ import math
 import torch.distributed
 import scipy.stats
 
+from typing import Optional
+
 
 
 
@@ -653,6 +655,368 @@ class ClassEmbedClassifierHead(nn.Module):
             #x = self.ffn(x).squeeze(-1) # [B, K]
             x = self.ffn(x, q).squeeze(-1) # [B, K]
             return x
+
+# GPT 5.5 Pro
+def _to_2tuple(x):
+    return x if isinstance(x, tuple) else (x, x)
+
+
+def _is_identity(module: nn.Module) -> bool:
+    return isinstance(module, nn.Identity)
+
+
+class CrossSwiGLUOptimized(nn.Module):
+    """
+    Optimized CrossSwiGLU for class-embedding heads.
+
+    Fast path:
+        x: [B, C]
+        q: [K, D]
+        output: [B, K]
+
+    When norm is Identity and dropout is inactive, this avoids materializing
+    [B, K, H] and computes:
+
+        logits[b, k] = fc2( fc1_x(x[b]) * SiLU(fc1_q(q[k])) )
+
+    as a matrix multiplication.
+
+    Fallback path:
+        If LayerNorm or dropout is active, it still avoids recomputing fc1_x
+        per class and processes classes in chunks to reduce peak memory.
+    """
+
+    def __init__(
+        self,
+        in_features: int,
+        query_features: int,
+        hidden_features: int,
+        out_features: int = 1,
+        act_layer=nn.SiLU,
+        norm_layer=None,
+        bias=True,
+        drop=0.0,
+        pre_norm: bool = False,
+        chunk_size: int = 256,
+    ):
+        super().__init__()
+
+        bias = _to_2tuple(bias)
+        drop_probs = _to_2tuple(drop)
+
+        self.fc1_x = nn.Linear(in_features, hidden_features, bias=bias[0])
+        self.fc1_q = nn.Linear(query_features, hidden_features, bias=bias[0])
+
+        self.act = act_layer()
+        self.drop1 = nn.Dropout(drop_probs[0])
+        self.norm = norm_layer(hidden_features) if norm_layer is not None else nn.Identity()
+
+        self.fc2 = nn.Linear(hidden_features, out_features, bias=bias[1])
+        self.drop2 = nn.Dropout(drop_probs[1])
+
+        self.pre_norm = pre_norm
+        self.chunk_size = chunk_size
+
+    def _dropout_is_noop(self) -> bool:
+        return (not self.training) or (self.drop1.p == 0.0 and self.drop2.p == 0.0)
+
+    def _can_fuse(self) -> bool:
+        return _is_identity(self.norm) and self._dropout_is_noop()
+
+    def forward(self, x: torch.Tensor, q: torch.Tensor) -> torch.Tensor:
+        return self.forward_logits(x, q).unsqueeze(-1)
+
+    def forward_logits(
+        self,
+        x: torch.Tensor,
+        q: torch.Tensor,
+        chunk_size: Optional[int] = None,
+    ) -> torch.Tensor:
+        """
+        Args:
+            x:
+                [B, C]
+            q:
+                [K, D] for shared class queries, or [B, K, D] for per-sample
+                random queries.
+
+        Returns:
+            [B, K] when out_features == 1.
+        """
+        if x.dim() != 2:
+            raise ValueError(f"x must have shape [B, C], got {tuple(x.shape)}")
+
+        if q.dim() not in (2, 3):
+            raise ValueError(f"q must have shape [K, D] or [B, K, D], got {tuple(q.shape)}")
+
+        if self._can_fuse():
+            if q.dim() == 2:
+                return self._forward_logits_shared_q(x, q)
+            return self._forward_logits_batched_q(x, q, chunk_size)
+
+        return self._forward_logits_chunked(x, q, chunk_size)
+
+    def _forward_logits_shared_q(self, x: torch.Tensor, q: torch.Tensor) -> torch.Tensor:
+        """
+        Fast path for shared class queries.
+
+        x_proj: [B, H]
+        gate:   [K, H]
+        output: [B, K]
+        """
+        x_proj = self.fc1_x(x)
+        gate = self.act(self.fc1_q(q))
+
+        if self.fc2.out_features == 1:
+            weighted_gate = gate * self.fc2.weight[0].unsqueeze(0)
+            logits = x_proj.matmul(weighted_gate.transpose(0, 1))
+
+            if self.fc2.bias is not None:
+                logits = logits + self.fc2.bias[0]
+
+            return logits
+
+        logits = torch.einsum("bh,kh,oh->bko", x_proj, gate, self.fc2.weight)
+
+        if self.fc2.bias is not None:
+            logits = logits + self.fc2.bias.view(1, 1, -1)
+
+        return logits
+
+    def _forward_logits_batched_q(
+        self,
+        x: torch.Tensor,
+        q: torch.Tensor,
+        chunk_size: Optional[int] = None,
+    ) -> torch.Tensor:
+        """
+        Fast path for per-sample queries.
+
+        Used mainly for random query augmentation:
+            x: [B, C]
+            q: [B, K, D]
+        """
+        if q.shape[0] != x.shape[0]:
+            raise ValueError(
+                f"batched q first dim must match x batch size: "
+                f"x={tuple(x.shape)}, q={tuple(q.shape)}"
+            )
+
+        x_proj = self.fc1_x(x)
+        chunk_size = chunk_size or self.chunk_size or q.shape[1]
+
+        outs = []
+
+        for start in range(0, q.shape[1], chunk_size):
+            q_chunk = q[:, start:start + chunk_size]
+            gate = self.act(self.fc1_q(q_chunk))
+
+            if self.fc2.out_features == 1:
+                weighted_x = x_proj * self.fc2.weight[0].unsqueeze(0)
+                out = torch.einsum("bh,bkh->bk", weighted_x, gate)
+
+                if self.fc2.bias is not None:
+                    out = out + self.fc2.bias[0]
+            else:
+                out = torch.einsum("bh,bkh,oh->bko", x_proj, gate, self.fc2.weight)
+
+                if self.fc2.bias is not None:
+                    out = out + self.fc2.bias.view(1, 1, -1)
+
+            outs.append(out)
+
+        return torch.cat(outs, dim=1)
+
+    def _forward_logits_chunked(
+        self,
+        x: torch.Tensor,
+        q: torch.Tensor,
+        chunk_size: Optional[int] = None,
+    ) -> torch.Tensor:
+        """
+        Lower-memory fallback for dropout / LayerNorm cases.
+
+        This still computes fc1_x(x) only once, then chunks over class queries.
+        It may not be bitwise-identical to the old implementation when dropout
+        is active because the random mask generation order changes, but it is
+        distributionally equivalent.
+        """
+        x_proj = self.fc1_x(x)
+
+        k_total = q.shape[0] if q.dim() == 2 else q.shape[1]
+        chunk_size = chunk_size or self.chunk_size or k_total
+
+        outs = []
+
+        for start in range(0, k_total, chunk_size):
+            end = min(start + chunk_size, k_total)
+
+            if q.dim() == 2:
+                gate = self.act(self.fc1_q(q[start:end])).unsqueeze(0)
+            else:
+                gate = self.act(self.fc1_q(q[:, start:end]))
+
+            h = x_proj.unsqueeze(1).expand(-1, end - start, -1)
+            h = self.drop1(h)
+            h = gate * h
+
+            if self.pre_norm:
+                h = self.norm(h)
+                h = self.drop2(h)
+            else:
+                h = self.drop2(h)
+                h = self.norm(h)
+
+            out = self.fc2(h)
+
+            if out.shape[-1] == 1:
+                out = out.squeeze(-1)
+
+            outs.append(out)
+
+        return torch.cat(outs, dim=1)
+
+
+class ClassEmbedClassifierHeadOptimized(nn.Module):
+    def __init__(
+        self,
+        num_features: int,
+        num_classes: int,
+        class_embed: torch.Tensor,
+        in_drop: float = 0.0,
+        embed_drop: float = 0.1,
+        head_drop: float = 0.0,
+        embed_norm: bool = True,
+        norm_layer: type[nn.Module] = nn.LayerNorm,
+        use_query_noise: bool = False,
+        query_noise_strength: float = 1.0,
+        use_random_query: bool = False,
+        num_random_query: int = 1,
+        pre_norm: bool = False,
+        hidden_features: int = 2048,
+        chunk_size: int = 256,
+    ):
+        super().__init__()
+
+        if class_embed.ndim != 2:
+            raise ValueError(
+                f"class_embed must have shape [num_classes, embed_dim], "
+                f"got {tuple(class_embed.shape)}"
+            )
+
+        if class_embed.shape[0] != num_classes:
+            raise ValueError(
+                "ClassEmbedClassifierHead got class_embed where dim 0 != num_classes"
+            )
+
+        self.num_features = num_features
+        self.num_classes = num_classes
+        self.embed_dim = class_embed.shape[1]
+        self.concat_feature_size = self.embed_dim + self.num_features
+
+        self.use_query_noise = use_query_noise
+        self.query_noise_strength = query_noise_strength
+        self.use_random_query = use_random_query
+        self.num_random_query = num_random_query
+        self.chunk_size = chunk_size
+
+        self.ffn = CrossSwiGLUOptimized(
+            in_features=num_features,
+            query_features=self.embed_dim,
+            hidden_features=hidden_features,
+            out_features=1,
+            norm_layer=norm_layer,
+            drop=head_drop,
+            pre_norm=pre_norm,
+            chunk_size=chunk_size,
+        )
+
+        class_embed = class_embed.detach().clone().float()
+
+        # Kept as a frozen Parameter for state_dict compatibility with your
+        # current code and to avoid DDP broadcast_buffers overhead on this
+        # relatively large tensor.
+        self.class_embed = nn.Parameter(class_embed, requires_grad=False)
+
+        if use_random_query:
+            self.register_buffer(
+                "class_embed_mean",
+                class_embed.mean(dim=0),
+                persistent=True,
+            )
+
+        if use_query_noise or use_random_query:
+            self.register_buffer(
+                "class_embed_stdev",
+                class_embed.std(dim=0, unbiased=False),
+                persistent=True,
+            )
+
+        self.in_drop = nn.Dropout(in_drop)
+        self.embed_drop = nn.Dropout(embed_drop)
+        self.embed_norm = norm_layer(self.embed_dim) if embed_norm else nn.Identity()
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        q: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        """
+        Args:
+            x:
+                Image features, shape [B, C].
+            q:
+                Optional query embeddings, shape [K, D]. If None, uses the
+                frozen class embeddings.
+
+        Returns:
+            Logits, shape [B, K], or [B, K + num_random_query] when random
+            query augmentation is enabled during training.
+        """
+        if q is None:
+            q = self.class_embed
+
+        with torch.amp.autocast(device_type=x.device.type, enabled=False):
+            x = self.in_drop(x.float())
+            q = q.to(device=x.device, dtype=torch.float32)
+
+            if self.use_query_noise and self.training:
+                q = q + (
+                    torch.randn_like(q)
+                    * self.query_noise_strength
+                    * self.class_embed_stdev.to(q).unsqueeze(0)
+                )
+
+            q = self.embed_drop(self.embed_norm(q))
+
+            logits = self.ffn.forward_logits(
+                x,
+                q,
+                chunk_size=self.chunk_size,
+            )
+
+            if self.use_random_query and self.training:
+                random_q = torch.randn(
+                    x.shape[0],
+                    self.num_random_query,
+                    self.embed_dim,
+                    dtype=torch.float32,
+                    device=x.device,
+                )
+
+                random_q = random_q * self.class_embed_stdev.to(x).view(1, 1, -1)
+                random_q = random_q + self.class_embed_mean.to(x).view(1, 1, -1)
+                random_q = self.embed_drop(self.embed_norm(random_q))
+
+                random_logits = self.ffn.forward_logits(
+                    x,
+                    random_q,
+                    chunk_size=self.chunk_size,
+                )
+
+                logits = torch.cat([logits, random_logits], dim=1)
+
+            return logits
 
 def stepAtThreshold(x, threshold, k=5, base=10):
     return 1 / (1 + torch.pow(base, (0 - k) * (x - threshold)))
