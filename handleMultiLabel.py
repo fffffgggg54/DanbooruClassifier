@@ -892,6 +892,7 @@ class ClassEmbedClassifierHeadOptimized(nn.Module):
         query_noise_strength: float = 1.0,
         use_random_query: bool = False,
         num_random_query: int = 1,
+        share_random_queries: bool = True,
         pre_norm: bool = False,
         hidden_features: int = 2048,
         chunk_size: int = 256,
@@ -918,6 +919,7 @@ class ClassEmbedClassifierHeadOptimized(nn.Module):
         self.query_noise_strength = query_noise_strength
         self.use_random_query = use_random_query
         self.num_random_query = num_random_query
+        self.share_random_queries = share_random_queries
         self.chunk_size = chunk_size
 
         self.ffn = CrossSwiGLUOptimized(
@@ -933,9 +935,6 @@ class ClassEmbedClassifierHeadOptimized(nn.Module):
 
         class_embed = class_embed.detach().clone().float()
 
-        # Kept as a frozen Parameter for state_dict compatibility with your
-        # current code and to avoid DDP broadcast_buffers overhead on this
-        # relatively large tensor.
         self.class_embed = nn.Parameter(class_embed, requires_grad=False)
 
         if use_random_query:
@@ -956,6 +955,59 @@ class ClassEmbedClassifierHeadOptimized(nn.Module):
         self.embed_drop = nn.Dropout(embed_drop)
         self.embed_norm = norm_layer(self.embed_dim) if embed_norm else nn.Identity()
 
+    def _make_random_queries(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Returns:
+            [R, D] when self.share_random_queries=True.
+                This enables the shared-query fast path.
+
+            [B, R, D] when self.share_random_queries=False.
+                This preserves the old per-sample random-query behavior.
+        """
+        stdev = self.class_embed_stdev.to(
+            device=x.device,
+            dtype=torch.float32,
+        )
+
+        mean = self.class_embed_mean.to(
+            device=x.device,
+            dtype=torch.float32,
+        )
+
+        if self.share_random_queries:
+            # Shared across the local batch:
+            #     [R, D]
+            # This allows CrossSwiGLUOptimized to use the shared-query fused path.
+            random_q = torch.randn(
+                self.num_random_query,
+                self.embed_dim,
+                dtype=torch.float32,
+                device=x.device,
+            )
+
+            random_q = random_q * stdev.view(1, -1)
+            random_q = random_q + mean.view(1, -1)
+
+        else:
+            # Old behavior:
+            #     [B, R, D]
+            # Each sample gets its own random queries.
+            random_q = torch.randn(
+                x.shape[0],
+                self.num_random_query,
+                self.embed_dim,
+                dtype=torch.float32,
+                device=x.device,
+            )
+
+            random_q = random_q * stdev.view(1, 1, -1)
+            random_q = random_q + mean.view(1, 1, -1)
+
+        random_q = self.embed_norm(random_q)
+        random_q = self.embed_drop(random_q)
+
+        return random_q
+
     def forward(
         self,
         x: torch.Tensor,
@@ -965,29 +1017,46 @@ class ClassEmbedClassifierHeadOptimized(nn.Module):
         Args:
             x:
                 Image features, shape [B, C].
+
             q:
-                Optional query embeddings, shape [K, D]. If None, uses the
-                frozen class embeddings.
+                Optional query embeddings.
+
+                [K, D]:
+                    Shared class queries. Enables the best fast path.
+
+                [B, K, D]:
+                    Per-sample queries. Uses the batched-query path.
+
+                None:
+                    Uses self.class_embed.
 
         Returns:
-            Logits, shape [B, K], or [B, K + num_random_query] when random
-            query augmentation is enabled during training.
+            [B, K] when use_random_query=False.
+
+            [B, K + R] when use_random_query=True, where
+            R = num_random_query.
         """
         if q is None:
             q = self.class_embed
 
         with torch.amp.autocast(device_type=x.device.type, enabled=False):
-            x = self.in_drop(x.float())
+            x = x.float()
+            x = self.in_drop(x)
+
             q = q.to(device=x.device, dtype=torch.float32)
 
             if self.use_query_noise and self.training:
                 q = q + (
                     torch.randn_like(q)
                     * self.query_noise_strength
-                    * self.class_embed_stdev.to(q).unsqueeze(0)
+                    * self.class_embed_stdev.to(
+                        device=x.device,
+                        dtype=torch.float32,
+                    ).view(*([1] * (q.ndim - 1)), -1)
                 )
 
-            q = self.embed_drop(self.embed_norm(q))
+            q = self.embed_norm(q)
+            q = self.embed_drop(q)
 
             logits = self.ffn.forward_logits(
                 x,
@@ -996,17 +1065,7 @@ class ClassEmbedClassifierHeadOptimized(nn.Module):
             )
 
             if self.use_random_query and self.training:
-                random_q = torch.randn(
-                    x.shape[0],
-                    self.num_random_query,
-                    self.embed_dim,
-                    dtype=torch.float32,
-                    device=x.device,
-                )
-
-                random_q = random_q * self.class_embed_stdev.to(x).view(1, 1, -1)
-                random_q = random_q + self.class_embed_mean.to(x).view(1, 1, -1)
-                random_q = self.embed_drop(self.embed_norm(random_q))
+                random_q = self._make_random_queries(x)
 
                 random_logits = self.ffn.forward_logits(
                     x,
