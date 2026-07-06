@@ -414,10 +414,10 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 96
-    FLAGS['gradient_accumulation_iterations'] = 4
+    FLAGS['batch_size'] = 128
+    FLAGS['gradient_accumulation_iterations'] = 3 * 2
 
-    FLAGS['base_learning_rate'] = 1e-2
+    FLAGS['base_learning_rate'] = 3e-3
     FLAGS['base_batch_size'] = 2048
     FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
     FLAGS['lr_warmup_epochs'] = 5
@@ -1878,7 +1878,7 @@ def trainCycle(image_datasets, model):
                     if phase == 'train' and (loss.isnan() == False):
                         if (FLAGS['use_scaler'] == True):   # cuda gpu case
                             with model.no_sync() if not need_ddp_sync else contextlib.nullcontext():
-                                scaler.scale(loss).backward()
+                                scaler.scale(loss_for_backward).backward()
                             if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                                 torch.cuda.synchronize()
                                 scaler.unscale_(optimizer)
@@ -1896,7 +1896,7 @@ def trainCycle(image_datasets, model):
                                 
                         else:                               # apple gpu/cpu case
                             with model.no_sync() if not need_ddp_sync else contextlib.nullcontext():
-                                loss.backward()
+                                loss_for_backward.backward()
                             if((i+1) % FLAGS['gradient_accumulation_iterations'] == 0):
                                 torch.cuda.synchronize()
                                 nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0, norm_type=2)
