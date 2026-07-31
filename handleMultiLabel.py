@@ -2573,20 +2573,19 @@ def add_weight_decay(model, weight_decay=1e-4, skip_list=()):
 # torchmetrics uses hard thresholding for metrics
 # use our own soft CM calculation, do gate if we want hard metrics
 def getSoftCM(preds, targs):
-    epsilon = 1e-12
-
+    targs = targs.to(dtype=preds.dtype)
     targs_inv = 1 - targs
-    batchSize = targs.size(dim=0)
+
     P = targs * preds
     N = targs_inv * preds
-    
-    # [K]
-    TP = P.sum(dim=0) / batchSize
-    FN = (targs - P).sum(dim=0) / batchSize
-    FP = N.sum(dim=0) / batchSize
-    TN = (targs_inv - N).sum(dim=0) / batchSize
 
-    return TP, FP, TN, FN    
+    # [K]
+    TP = P.sum(dim=0)
+    FN = (targs - P).sum(dim=0)
+    FP = N.sum(dim=0)
+    TN = (targs_inv - N).sum(dim=0)
+
+    return TP, FP, TN, FN
 
 # torchmetrics multilabel metrics
 from torchmetrics import Metric
