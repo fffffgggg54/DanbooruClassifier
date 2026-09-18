@@ -1938,8 +1938,8 @@ def trainCycle(image_datasets, model):
                                 targets_all = [torch.zeros_like(tagBatch) for _ in range(dist.get_world_size())]
                                 preds_all = [torch.zeros_like(preds) for _ in range(dist.get_world_size())]
                                 if FLAGS['store_latents']: latent_features_all = [torch.zeros_like(latent_features) for _ in range(dist.get_world_size())]
-                            torch.distributed.gather(tagBatch, gather_list = targets_all, async_op=True)
-                            torch.distributed.gather(preds, gather_list = preds_all, async_op=True)
+                            torch.distributed.gather(tagBatch, gather_list = targets_all, async_op=False)
+                            torch.distributed.gather(preds, gather_list = preds_all, async_op=False)
                             if FLAGS['store_latents']: torch.distributed.gather(latent_features, gather_list = latent_features_all, async_op=False)
                             if(is_head_proc):
                                 targets_all = torch.cat(targets_all).detach().cpu()
