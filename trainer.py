@@ -1650,24 +1650,30 @@ def trainCycle(image_datasets, model):
                             preds = model(imageBatch)
                             outputs = torch.special.logit(preds)
                         elif FLAGS['use_matryoshka_head'] == True:
-                            if FLAGS['use_ddp']:
-                                latent_features = model.module[0](imageBatch)
-                                outputs_all = model.module[1](latent_features)
+                            if(phase == 'val'):
+                                if FLAGS['use_ddp']:
+                                    latent_features = model.module[0](imageBatch)
+                                    outputs_all = model.module[1](latent_features)
+                                else:
+                                    latent_features = model[0](imageBatch)
+                                    outputs_all = model[1](latent_features)
                             else:
-                                latent_features = model[0](imageBatch)
-                                outputs_all = model[1](latent_features)
+                                outputs_all = model(imageBatch)
                             outputs_all = outputs_all.float()
                             outputs = outputs_all[0]
                             #preds = torch.sigmoid(outputs)
                             matryoshka_loss_weights = torch.ones_like(outputs_all, requires_grad=False)
                             matryoshka_loss_weights[0] = outputs_all.shape[0] - 1
                         elif FLAGS['use_class_embed_head'] == True:
-                            if FLAGS['use_ddp']:
-                                latent_features = model.module[0](imageBatch)
-                                outputs_all = model.module[1](latent_features)
+                            if(phase == 'val'):
+                                if FLAGS['use_ddp']:
+                                    latent_features = model.module[0](imageBatch)
+                                    outputs_all = model.module[1](latent_features)
+                                else:
+                                    latent_features = model[0](imageBatch)
+                                    outputs_all = model[1](latent_features)
                             else:
-                                latent_features = model[0](imageBatch)
-                                outputs_all = model[1](latent_features)
+                                outputs_all = model(imageBatch)
                             outputs_all = outputs_all.float()
                             # random query agumentation
                             if outputs_all.shape[1] > len(classes):
