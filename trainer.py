@@ -1349,15 +1349,16 @@ def modelSetup(classes):
             pre_norm=False,
         ))
         '''
+        # FIXME dropout is slow af, some sort of bottleneck, probably head drop
         model.append(MLCSL.ClassEmbedClassifierHeadOptimized(
             num_features, 
             len(classes), 
             torch.load(f'./DanbooruWikiEmbeddings{str(FLAGS['tagCount'])}_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
-            in_drop=0.1,
-            embed_drop=0.0,
-            head_drop=0.3,
+            in_drop=0.3,
+            embed_drop=0.3,
+            head_drop=0.0,
             use_query_noise=True,
-            query_noise_strength=0.3,
+            query_noise_strength=0.5,
             use_random_query=True,
             num_random_query=2,
             pre_norm=False,
