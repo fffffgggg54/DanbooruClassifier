@@ -1361,7 +1361,7 @@ def modelSetup(classes):
             use_random_query=True,
             num_random_query=2,
             pre_norm=False,
-            norm_layer=nn.LayerNorm,
+            norm_layer=nn.Identity,
         ))
     #model = torch.compile(model, options={'max_autotune': True, 'epilogue_fusion': True})
 
