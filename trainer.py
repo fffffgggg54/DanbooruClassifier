@@ -1516,7 +1516,7 @@ def trainCycle(image_datasets, model):
     startTime = time.time()
     cycleTime = time.time()
     stepsPerPrintout = FLAGS['stepsPerPrintout']
-    torch.backends.cudnn.benchmark = True
+    torch.backends.cudnn.benchmark = False
     
     epoch = FLAGS['resume_epoch']
     
