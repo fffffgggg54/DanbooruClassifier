@@ -1354,7 +1354,7 @@ def modelSetup(classes):
             len(classes), 
             torch.load(f'./DanbooruWikiEmbeddings{str(FLAGS['tagCount'])}_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
             in_drop=0.1,
-            embed_drop=0.3,
+            embed_drop=0.0,
             head_drop=0.3,
             use_query_noise=True,
             query_noise_strength=0.3,
