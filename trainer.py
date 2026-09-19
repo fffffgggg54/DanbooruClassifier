@@ -414,8 +414,8 @@ elif currGPU == 'v100':
     # training config
 
     FLAGS['num_epochs'] = 50
-    FLAGS['batch_size'] = 128
-    FLAGS['gradient_accumulation_iterations'] = 3
+    FLAGS['batch_size'] = 96
+    FLAGS['gradient_accumulation_iterations'] = 1
 
     FLAGS['base_learning_rate'] = 3e-4
     FLAGS['base_batch_size'] = 2048
@@ -1164,7 +1164,7 @@ def modelSetup(classes):
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.0)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15)
-    model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
+    #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
     #model = timm.create_model('vit_medium_shallow_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_base_patch16_siglip_gap_224.v2_webli', pretrained=True, num_classes=len(classes), drop_path_rate = 0.3)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
@@ -1179,30 +1179,24 @@ def modelSetup(classes):
     
     #model = timm.create_model('davit_tiny', pretrained=False, features_only=True, drop_path_rate=0.2)
     #model = PyramidFeatureAggregationModel(model, len(classes), head_type='dlr')
-    '''
+    
     model = timm.create_model(
         'vit_base_patch16_224', 
         img_size = FLAGS['actual_image_size'], 
-        patch_size = 28, 
+        patch_size = 16, 
         global_pool='avg', 
         class_token = False, 
         qkv_bias=False, 
         init_values=1e-6, 
         fc_norm=False,
         pretrained=False,
-        patch_size = 16,
         num_classes = len(classes), 
         embed_dim=768, 
         depth=12, 
         num_heads=12, 
-        global_pool='avg', 
-        class_token = False,
         no_embed_class=True, 
-        qkv_bias=False, 
-        init_values=1e-6, 
-        fc_norm=False,
         drop_path_rate=0.3)
-    '''
+    
     '''
     model = models.TagEmbedCrossAttentionViT(
         torch.load(f'./DanbooruWikiEmbeddings{str(FLAGS['tagCount'])}_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
@@ -1360,15 +1354,15 @@ def modelSetup(classes):
             num_features, 
             len(classes), 
             torch.load(f'./DanbooruWikiEmbeddings{str(FLAGS['tagCount'])}_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
-            in_drop=0.0,
-            embed_drop=0.0,
-            head_drop=0.0,
+            in_drop=0.1,
+            embed_drop=0.3,
+            head_drop=0.3,
             use_query_noise=True,
             query_noise_strength=0.3,
             use_random_query=True,
             num_random_query=2,
             pre_norm=False,
-            norm_layer=nn.Identity,
+            norm_layer=nn.LayerNorm,
         ))
     #model = torch.compile(model, options={'max_autotune': True, 'epilogue_fusion': True})
 
