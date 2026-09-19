@@ -1165,7 +1165,7 @@ def modelSetup(classes):
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.0)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15)
     #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.2)
-    #model = timm.create_model('vit_medium_shallow_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
+    model = timm.create_model('vit_medium_shallow_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_base_patch16_siglip_gap_224.v2_webli', pretrained=True, num_classes=len(classes), drop_path_rate = 0.3)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4)
@@ -1179,7 +1179,7 @@ def modelSetup(classes):
     
     #model = timm.create_model('davit_tiny', pretrained=False, features_only=True, drop_path_rate=0.2)
     #model = PyramidFeatureAggregationModel(model, len(classes), head_type='dlr')
-    
+    '''
     model = timm.create_model(
         'vit_base_patch16_224', 
         img_size = FLAGS['actual_image_size'], 
@@ -1196,7 +1196,7 @@ def modelSetup(classes):
         num_heads=12, 
         no_embed_class=True, 
         drop_path_rate=0.3)
-    
+    '''
     '''
     model = models.TagEmbedCrossAttentionViT(
         torch.load(f'./DanbooruWikiEmbeddings{str(FLAGS['tagCount'])}_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
