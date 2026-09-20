@@ -418,7 +418,7 @@ elif currGPU == 'v100':
     FLAGS['batch_size'] = 128
     FLAGS['gradient_accumulation_iterations'] = 1
 
-    FLAGS['base_learning_rate'] = 3e-4
+    FLAGS['base_learning_rate'] = 1e-3
     FLAGS['base_batch_size'] = 2048
     FLAGS['learning_rate'] = ((FLAGS['batch_size'] * FLAGS['gradient_accumulation_iterations']) / FLAGS['base_batch_size']) * FLAGS['base_learning_rate']
     FLAGS['lr_warmup_epochs'] = 5
@@ -1355,9 +1355,9 @@ def modelSetup(classes):
             num_features, 
             len(classes), 
             torch.load(f'./DanbooruWikiEmbeddings{str(FLAGS['tagCount'])}_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
-            in_drop=0.0,
-            embed_drop=0.0,
-            head_drop=0.0,
+            in_drop=0.3,
+            embed_drop=0.3,
+            head_drop=0.3,
             use_query_noise=True,
             query_noise_strength=0.5,
             use_random_query=True,
