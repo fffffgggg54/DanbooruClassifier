@@ -415,7 +415,7 @@ elif currGPU == 'v100':
 
     FLAGS['num_epochs'] = 50
     # prefer 128 for davit_tiny
-    FLAGS['batch_size'] = 64
+    FLAGS['batch_size'] = 128
     FLAGS['gradient_accumulation_iterations'] = 1
 
     FLAGS['base_learning_rate'] = 3e-3
@@ -1165,7 +1165,7 @@ def modelSetup(classes):
     #model = timm.create_model('vit_large_patch14_clip_224.openai_ft_in12k_in1k', pretrained=True, num_classes=len(classes), drop_path_rate=0.6)
     #model = timm.create_model('gernet_s', pretrained=False, num_classes=len(classes), drop_path_rate = 0.0)
     #model = timm.create_model('edgenext_small', pretrained=False, num_classes=len(classes), drop_path_rate = 0.15)
-    #model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
+    model = timm.create_model('davit_tiny', pretrained=False, num_classes=len(classes), drop_path_rate = 0.1)
     #model = timm.create_model('vit_base_patch16_siglip_gap_224.v2_webli', pretrained=True, num_classes=len(classes), drop_path_rate = 0.3)
     #model = timm.create_model('regnetz_040', pretrained=False, num_classes=len(classes), drop_path_rate=0.15)
     #model = timm.create_model('vit_base_patch16_gap_224', pretrained=False, num_classes=len(classes), drop_path_rate=0.4)
@@ -1179,7 +1179,7 @@ def modelSetup(classes):
     
     #model = timm.create_model('davit_tiny', pretrained=False, features_only=True, drop_path_rate=0.2)
     #model = PyramidFeatureAggregationModel(model, len(classes), head_type='dlr')
-    
+    '''
     model = timm.create_model(
         'vit_base_patch16_224', 
         img_size = FLAGS['actual_image_size'], 
@@ -1196,7 +1196,7 @@ def modelSetup(classes):
         num_heads=12, 
         no_embed_class=True, 
         drop_path_rate=0.1)
-    
+    '''
     '''
     model = models.TagEmbedCrossAttentionViT(
         torch.load(f'./DanbooruWikiEmbeddings{str(FLAGS['tagCount'])}_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
@@ -1335,11 +1335,13 @@ def modelSetup(classes):
     elif FLAGS['use_matryoshka_head'] == True:
         model.append(MLCSL.MatryoshkaClassificationHead(num_features, len(classes), k=6))
     elif FLAGS['use_class_embed_head'] == True:
+        #tag_embeddings = torch.load(f'./DanbooruWikiEmbeddings{str(FLAGS['tagCount'])}_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True)
+        tag_embeddings = torch.load(f'./DanbooruWikiEmbeddings{str(FLAGS['tagCount'])}_Qwen3-Embedding-0.6B_no_norm_d1024.pth', map_location='cpu', weights_only=True)
         '''
         model.append(MLCSL.ClassEmbedClassifierHead(
             num_features, 
             len(classes), 
-            torch.load(f'./DanbooruWikiEmbeddings{str(FLAGS['tagCount'])}_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
+            tag_embeddings,
             in_drop=0.0,
             embed_drop=0.3,
             head_drop=0.0,
@@ -1354,7 +1356,7 @@ def modelSetup(classes):
         model.append(MLCSL.ClassEmbedClassifierHeadOptimized(
             num_features, 
             len(classes), 
-            torch.load(f'./DanbooruWikiEmbeddings{str(FLAGS['tagCount'])}_gte_large_en_v1.5_no_norm_d1024.pth', map_location='cpu', weights_only=True),
+            tag_embeddings,
             in_drop=0.3,
             embed_drop=0.3,
             head_drop=0.3,
